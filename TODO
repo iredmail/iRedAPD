@@ -1,0 +1,14 @@
+* RC script.
+* Check log type and log into correct logger handler.
+* Per-maillist restrictions:
+    - Verify recipient address is mail list.
+    - Show sender & recipient in logging.info.
+    - Handle multiple access policies.
+    - Always convert value of access policy to lower case string.
+    - Set filter attributes in config file instead of hardcode here
+    - If access policy is 'memberOnly', how about a fake email address?
+    - Set logging level in config file.
+
+* Per-user restrictions:
+    - http://www.iredmail.org/forum/topic211-block-sender-or-recipient.html
+    - http://www.iredmail.org/forum/topic235-restrict-sending-to-certain-domains.html

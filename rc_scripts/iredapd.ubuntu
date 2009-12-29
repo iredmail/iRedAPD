@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+#
+### BEGIN INIT INFO
+# Provides:          iredapd 
+# Required-Start:    $network $syslog
+# Required-Stop:     $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Control iredapd daemon.
+### END INIT INFO
+#
+
+PROG='iredapd'
+BINPATH='/opt/iredapd/src/iredapd.py'
+CONFIG='/opt/iredapd/etc/iredapd.ini'
+PIDFILE='/var/run/iredapd.pid'
+
+# Source function library.
+. /lib/lsb/init-functions
+
+start() {
+    start-stop-daemon --start --quiet --pidfile ${PIDFILE} --exec ${BINPATH} -- ${CONFIG} || return 2
+}
+
+stop() {
+    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile ${PIDFILE} --name ${PROG}
+    RETVAL="$?"
+    [ X"${RETVAL}" == X"2" ] && return 2
+
+    start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --pidfile ${PIDFILE} --name ${PROG}
+    [ "$?" = 2 ] && return 2
+
+    # Many daemons don't delete their pidfiles when they exit.
+    rm -f $PIDFILE
+    return "$RETVAL"
+}
+
+case "$1" in
+    start)
+        start
+        RETVAL=$?
+        ;;
+    stop)
+        stop
+        RETVAL=$?
+        ;;
+    status)
+        status_of_proc -p ${PIDFILE} ${PROG} ${PROG} && exit 0 || exit $?
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|restart|status}"
+        RETVAL=1
+        ;;
+esac
+
+exit $RETVAL

@@ -1,0 +1,45 @@
+- Requirements:
+
+    # Python 2.4+: http://www.python.org/
+    # python-daemon:
+    # python-ldap: http://www.python-ldap.org/
+
+- Install iredapd.
+
+    - Install required python modules:
+
+        # easy_install daemon python-ldap
+
+    - Copy iredapd to /opt:
+
+        # cp rc_scripts/iredapd.rhel /etc/init.d/iredapd
+
+- Run iredapd:
+
+    # bash bin/iredapd etc/iredapd.ini
+
+- Postfix configuration:
+
+    In postfix main.cf, modify 'smtpd_recipient_restrictions' setting:
+
+        smtpd_recipient_restrictions =
+            ...
+            permit_mynetworks,
+            reject_unauth_destination,                  # First
+            check_policy_service inet:127.0.0.1:7777,   # Second
+            permit_sasl_authenticated,                  # Third
+            ...
+
+    Note:
+        - iRedMail has 'permit_sasl_authenticated' in front of
+          'reject_unauth_destination' by default, you must swap them.
+        - 'check_policy_service inet:127.0.0.1:7777' MUST stay in
+          front of 'permit_sasl_authenticated'.
+        - Restart postfix to make it work.
+
+- Access policies:
+    - public        # Unrestricted.
+    - domain        # Restricted to users under same domain.
+    - membersOnly    # Only members are allowed.
+    - allowedOnly   # Only allowed addresses are allowed.
+
