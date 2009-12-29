@@ -1,22 +1,28 @@
 - Requirements:
 
-    # Python 2.4+: http://www.python.org/
-    # python-daemon:
+    # Python >= 2.4: http://www.python.org/
     # python-ldap: http://www.python-ldap.org/
 
 - Install iredapd.
 
     - Install required python modules:
 
-        # easy_install daemon python-ldap
+        # easy_install python-ldap
 
     - Copy iredapd to /opt:
 
-        # cp rc_scripts/iredapd.rhel /etc/init.d/iredapd
+        # cp -rf iredapd-x.y.z /opt/
+        # ln -s /opt/iredapd-x.y.z /opt/iredapd
+        # chmod +x /opt/iredapd/src/iredapd.py
+
+    - Copy necessary rc script:
+
+        # cp /opt/iredapd/rc_scripts/iredapd /etc/init.d/iredapd
+        # chmod +x /etc/init.d/iredapd
 
 - Run iredapd:
 
-    # bash bin/iredapd etc/iredapd.ini
+    # /etc/init.d/iredapd start
 
 - Postfix configuration:
 
