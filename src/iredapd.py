@@ -133,7 +133,7 @@ class LDAPModeler:
         # Search mail list object.
         searchBasedn = 'mail=%s,ou=Groups,domainName=%s,%s' % (listname, listname.split('@')[1], self.baseDN)
         searchScope = ldap.SCOPE_BASE
-        searchFilter = '(&(objectClass=mailList)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(mail=%s))' % listname
+        searchFilter = '(&(objectClass=mailList)(accountStatus=active)(mail=%s))' % listname
 
         logging.debug('__get_access_policy (searchBasedn): %s' % searchBasedn)
         logging.debug('__get_access_policy (searchScope): %s' % searchScope)
@@ -170,13 +170,13 @@ class LDAPModeler:
             baseDN = self.baseDN
             searchScope = ldap.SCOPE_SUBTREE
             # Filter used to get domain members.
-            searchFilter = '(&(objectClass=mailUser)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(memberOfGroup=%s)(mail=%(sender)s))' % (listname, sender)
+            searchFilter = '(&(objectClass=mailUser)(accountStatus=active)(memberOfGroup=%s)(mail=%s))' % (listname, sender)
             searchAttrs = ['mail']
         else:
             baseDN = listdn
             searchScope = ldap.SCOPE_BASE   # Use SCOPE_BASE to improve performance.
             # Filter used to get domain moderators.
-            searchFilter = '(&(objectclass=mailList)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(mail=%s)(listAllowedUser=%s))' % (listname, sender)
+            searchFilter = '(&(objectclass=mailList)(accountStatus=active)(mail=%s)(listAllowedUser=%s))' % (listname, sender)
             searchAttrs = ['listAllowedUser']
 
         logging.debug('__get_allowed_senders (baseDN): %s' % baseDN)
