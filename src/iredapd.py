@@ -78,7 +78,7 @@ class apdChannel(asynchat.async_chat):
             self.push(action)
             self.push('')
             asynchat.async_chat.handle_close(self)
-            #logging.info("Connection closed")
+            logging.debug("Connection closed")
         else:
             action = ACTION_DEFER
             logging.debug("replying: " + action)
