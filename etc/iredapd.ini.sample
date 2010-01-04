@@ -26,7 +26,8 @@ log_sql_dbuser  = iredadmin
 log_sql_dbpass  = your_passwd
 
 # Log level: info, warning, error, debug.
-# 'info' is recommended for product use.
+# 'info' is recommended for product use. sample log entry:
+#       INFO user@domain.ltd -> list@domain.ltd, OK
 log_level       = info
 
 [ldap]
@@ -36,27 +37,3 @@ uri         = ldap://127.0.0.1:389
 binddn      = cn=vmail,dc=iredmail,dc=org
 bindpw      = 5NC4VyRJdws3ounpcKJw9zXu0B8ou6
 basedn      = o=domains,dc=iredmail,dc=org
-
-# Attribute name which used to store mail list access policy
-attr_access_policy  = accessPolicy
-
-# LDAP filter used to search mail list
-# Note: placeholder '%(recipient)s' can be used here, will be
-# replaced by mail list address.
-filter_maillist = (&(mail=%(recipient)s)(objectclass=mailList)(accountStatus=active)(enabledService=mail)(enabledService=deliver))
-
-# LDAP filter used to search members of mail list
-# Note:
-# - placeholder '%(recipient)s' can be used here, will be replacd
-#   by mail list address.
-# - placeholder '%(sender)s' can be used here, will be replaced
-#   by sender address.
-filter_member   = (&(memberOfGroup=%(recipient)s)(objectclass=mailUser)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(mail=%(sender)s))
-
-# LDAP filter used to search allowed users.
-# Note:
-# - placeholder '%(recipient)s' can be used here, will be replacd
-#   by mail list address.
-# - placeholder '%(sender)s' can be used here, will be replaced
-#   by sender address.
-filter_allowed_senders = (&(mail=%(recipient)s)(objectclass=mailList)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(listAllowedUser=%(sender)s))
