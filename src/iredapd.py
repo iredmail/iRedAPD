@@ -17,6 +17,7 @@ __version__ = "1.0"
 ACTION_ACCEPT = "action=OK"
 ACTION_DEFER = "action=DEFER_IF_PERMIT Service temporarily unavailable"
 ACTION_REJECT = 'action=REJECT Not Authorized'
+ACTION_DEFAULT = ACTION_REJECT
 
 # Get config file.
 if len(sys.argv) != 2:
@@ -31,14 +32,6 @@ else:
 # Read configurations.
 cfg = ConfigParser.SafeConfigParser()
 cfg.read(config_file)
-
-ACTION_DEFAULT = cfg.get('general', 'default_action', 'bypass')
-if ACTION_DEFAULT == 'bypass':
-    ACTION_DEFAULT = ACTION_ACCEPT
-elif ACTION_DEFAULT == 'defer':
-    ACTION_DEFAULT = ACTION_DEFER
-elif ACTION_DEFAULT == 'reject':
-    ACTION_DEFAULT = ACTION_REJECT
 
 class apdChannel(asynchat.async_chat):
     def __init__(self, conn, remoteaddr):

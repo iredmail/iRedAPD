@@ -1,4 +1,5 @@
 [general]
+# Listen address and port.
 listen_addr     = 127.0.0.1
 listen_port     = 7777
 
@@ -10,7 +11,7 @@ run_as_daemon   = yes
 # Path to pid file.
 pid_file        = /var/run/iredapd.pid
 
-# Log type: file, mysql.
+# Log type: file.
 # Note:
 #   - Currently, only 'file' type is supported.
 #   - If log_type is 'file', log_file is required.
@@ -27,10 +28,6 @@ log_sql_dbpass  = your_passwd
 # Log level: info, warning, error, debug.
 # 'info' is recommended for product use.
 log_level       = info
-
-# Default action: bypass, reject.
-# If no access policy returned, use this default action.
-default_action  = bypass
 
 [ldap]
 # LDAP server setting.
