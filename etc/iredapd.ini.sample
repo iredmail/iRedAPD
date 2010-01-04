@@ -33,6 +33,9 @@ log_level       = info
 [ldap]
 # LDAP server setting.
 # Uri must starts with ldap:// or ldaps:// (TLS/SSL).
+#
+# Tip: You can get binddn, bindpw from /etc/postfix/ldap_*.cf.
+#
 uri         = ldap://127.0.0.1:389
 binddn      = cn=vmail,dc=iredmail,dc=org
 bindpw      = 5NC4VyRJdws3ounpcKJw9zXu0B8ou6
