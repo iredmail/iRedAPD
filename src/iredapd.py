@@ -17,7 +17,7 @@ __version__ = "1.0"
 ACTION_ACCEPT = "action=DUNNO"
 ACTION_DEFER = "action=DEFER_IF_PERMIT Service temporarily unavailable"
 ACTION_REJECT = 'action=REJECT Not Authorized'
-ACTION_DEFAULT = ACTION_ACCEPT
+ACTION_DEFAULT = ACTION_REJECT
 
 # Get config file.
 if len(sys.argv) != 2:
