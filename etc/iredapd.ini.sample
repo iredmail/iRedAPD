@@ -40,3 +40,35 @@ uri         = ldap://127.0.0.1:389
 binddn      = cn=vmail,dc=iredmail,dc=org
 bindpw      = 5NC4VyRJdws3ounpcKJw9zXu0B8ou6
 basedn      = o=domains,dc=iredmail,dc=org
+
+# Attribute name which used to store mail list access policy
+attr_access_policy  = accessPolicy
+
+# Attribute name which used to store mail address of mail list members.
+attr_member = mail
+
+# Attribute name used to store moderators.
+# Note: Do NOT forget to change 'filter_allowed_senders' below if you don't
+#       use default attribute name.
+attr_moderator = listAllowedUser
+
+# LDAP filter used to search mail list
+# Note: placeholder '%(recipient)s' can be used here, will be
+# replaced by mail list address.
+filter_maillist = (&(objectclass=mailList)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(mail=%(recipient)s))
+
+# LDAP filter used to search members of mail list
+# Note:
+# - placeholder '%(recipient)s' can be used here, will be replacd
+#   by mail list address.
+# - placeholder '%(sender)s' can be used here, will be replaced
+#   by sender address.
+filter_member   = (&(objectclass=mailUser)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(memberOfGroup=%(recipient)s)(mail=%(sender)s))
+
+# LDAP filter used to search allowed users.
+# Note:
+# - placeholder '%(recipient)s' can be used here, will be replacd
+#   by mail list address.
+# - placeholder '%(sender)s' can be used here, will be replaced
+#   by sender address.
+filter_allowed_senders = (&(objectclass=mailList)(accountStatus=active)(enabledService=mail)(enabledService=deliver)(mail=%(recipient)s)(listAllowedUser=%(sender)s))

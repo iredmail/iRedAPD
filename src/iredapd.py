@@ -130,17 +130,25 @@ class LDAPModeler:
 
         logging.debug('__get_access_policy (list): %s' % listname)
 
+        # Replace 'recipient' placehold in config file with mail list address.
+        try:
+            cfg.set('ldap', "recipient", listname)
+        except Exception, e:
+            logging.error("""Error while replacing 'recipient': %s""" % (str(e)) )
+
         # Search mail list object.
         searchBasedn = 'mail=%s,ou=Groups,domainName=%s,%s' % (listname, listname.split('@')[1], self.baseDN)
         searchScope = ldap.SCOPE_BASE
-        searchFilter = '(&(objectClass=mailList)(accountStatus=active)(mail=%s))' % listname
+        searchFilter = cfg.get('ldap', 'filter_maillist')
+        searchAttr = cfg.get('ldap', 'attr_access_policy', 'accessPolicy')
 
         logging.debug('__get_access_policy (searchBasedn): %s' % searchBasedn)
         logging.debug('__get_access_policy (searchScope): %s' % searchScope)
         logging.debug('__get_access_policy (searchFilter): %s' % searchFilter)
+        logging.debug('__get_access_policy (searchAttr): %s' % searchAttr)
 
         try:
-            result = self.conn.search_s(searchBasedn, searchScope, searchFilter, ['accessPolicy'])
+            result = self.conn.search_s(searchBasedn, searchScope, searchFilter, [searchAttr])
             logging.debug('__get_access_policy (search result): %s' % str(result))
         except ldap.NO_SUCH_OBJECT:
             logging.debug('__get_access_policy (not a mail list: %s) Returned (None)' % listname)
@@ -155,7 +163,7 @@ class LDAPModeler:
             # Example of result data:
             # [('dn', {'accessPolicy': ['value']})]
             listdn = result[0][0]
-            listpolicy = result[0][1]['accessPolicy'][0]
+            listpolicy = result[0][1][searchAttr][0]
             returnVal = (listdn, listpolicy)
 
             logging.debug('__get_access_policy (returned): %s' % str(returnVal))
@@ -165,26 +173,31 @@ class LDAPModeler:
         """return search_result_list_based_on_access_policy"""
         logging.debug('__get_allowed_senders (listpolicy): %s' % listpolicy)
 
+        # Replace 'recipient' and 'sender' with email addresses.
+        cfg.set("ldap", "recipient", listname)
+        cfg.set("ldap", "sender", sender)
+
         # Set search base dn, scope, filter and attribute list based on access policy.
         if listpolicy == 'membersOnly':
             baseDN = self.baseDN
             searchScope = ldap.SCOPE_SUBTREE
             # Filter used to get domain members.
-            searchFilter = '(&(objectClass=mailUser)(accountStatus=active)(memberOfGroup=%s)(mail=%s))' % (listname, sender)
-            searchAttrs = ['mail']
+            searchFilter = cfg.get("ldap", "filter_member")
+            searchAttr = cfg.get("ldap", "attr_member")
         else:
             baseDN = listdn
             searchScope = ldap.SCOPE_BASE   # Use SCOPE_BASE to improve performance.
             # Filter used to get domain moderators.
-            searchFilter = '(&(objectclass=mailList)(accountStatus=active)(mail=%s)(listAllowedUser=%s))' % (listname, sender)
-            searchAttrs = ['listAllowedUser']
+            searchFilter = cfg.get("ldap", "filter_allowed_senders")
+            searchAttr = cfg.get("ldap", "attr_moderator")
 
         logging.debug('__get_allowed_senders (baseDN): %s' % baseDN)
         logging.debug('__get_allowed_senders (searchScope): %s' % searchScope)
         logging.debug('__get_allowed_senders (searchFilter): %s' % searchFilter)
+        logging.debug('__get_allowed_senders (searchAttr): %s' % searchAttr)
 
         try:
-            result = self.conn.search_s(baseDN, searchScope, searchFilter, searchAttrs)
+            result = self.conn.search_s(baseDN, searchScope, searchFilter, [searchAttr])
             logging.debug('__get_allowed_senders (search result): %s' % str(result))
         except ldap.NO_SUCH_OBJECT:
             logging.debug('__get_allowed_senders (not a mail list: %s) Returned (None)' % listname)
@@ -198,7 +211,7 @@ class LDAPModeler:
         else:
             # Example of result data:
             # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-            return result[0][1]['listAllowedUser'][0]
+            return result[0][1][searchAttr][0]
 
     def __get_smtp_action(self, listname, sender):
         """return smtp_action"""
