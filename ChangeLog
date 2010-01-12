@@ -1,6 +1,7 @@
 iRedAPD-1.1:
-    * Remove accountStatus and enabledService in filter. mail list doesn't use
-      it.
+    * Fixed: return moderator list instead of the first one.
+    * Fixed: remove accountStatus and enabledService in filter.
+      mail list doesn't use it.
 
 iRedAPD-1.0:
     * Initialize version.
