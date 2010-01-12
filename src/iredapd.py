@@ -211,7 +211,7 @@ class LDAPModeler:
         else:
             # Example of result data:
             # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-            return result[0][1][searchAttr][0]
+            return result[0][1][searchAttr]
 
     def __get_smtp_action(self, listname, sender):
         """return smtp_action"""
