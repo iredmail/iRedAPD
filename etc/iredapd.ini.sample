@@ -55,7 +55,7 @@ attr_moderator = listAllowedUser
 # LDAP filter used to search mail list
 # Note: placeholder '%(recipient)s' can be used here, will be
 # replaced by mail list address.
-filter_maillist = (&(objectclass=mailList)(accountStatus=active)(mail=%(recipient)s))
+filter_maillist = (&(objectclass=mailList)(mail=%(recipient)s))
 
 # LDAP filter used to search members of mail list
 # Note:
@@ -63,7 +63,7 @@ filter_maillist = (&(objectclass=mailList)(accountStatus=active)(mail=%(recipien
 #   by mail list address.
 # - placeholder '%(sender)s' can be used here, will be replaced
 #   by sender address.
-filter_member   = (&(objectclass=mailUser)(accountStatus=active)(memberOfGroup=%(recipient)s)(mail=%(sender)s))
+filter_member   = (&(objectclass=mailUser)(memberOfGroup=%(recipient)s)(mail=%(sender)s))
 
 # LDAP filter used to search allowed users.
 # Note:
@@ -71,4 +71,4 @@ filter_member   = (&(objectclass=mailUser)(accountStatus=active)(memberOfGroup=%
 #   by mail list address.
 # - placeholder '%(sender)s' can be used here, will be replaced
 #   by sender address.
-filter_allowed_senders = (&(objectclass=mailList)(accountStatus=active)(mail=%(recipient)s)(listAllowedUser=%(sender)s))
+filter_allowed_senders = (&(objectclass=mailList)(mail=%(recipient)s)(listAllowedUser=%(sender)s))
