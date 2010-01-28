@@ -14,6 +14,8 @@ import daemon
 
 __version__ = "1.0"
 
+sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
+
 ACTION_ACCEPT = "action=DUNNO"
 ACTION_DEFER = "action=DEFER_IF_PERMIT Service temporarily unavailable"
 ACTION_REJECT = 'action=REJECT Not Authorized'
@@ -67,11 +69,12 @@ class apdChannel(asynchat.async_chat):
             except Exception, e:
                 action = ACTION_DEFAULT
                 logging.debug('Error: %s. Use default action instead: %s' % (str(e), str(action)) )
+
             logging.info('%s -> %s, %s' % (self.map['sender'], self.map['recipient'], str(action).split('=')[1] ))
             self.push(action)
             self.push('')
             asynchat.async_chat.handle_close(self)
-            #logging.debug("Connection closed")
+            logging.debug("Connection closed")
         else:
             action = ACTION_DEFER
             logging.debug("replying: " + action)
@@ -123,21 +126,35 @@ class LDAPModeler:
                 logging.error('LDAP bind failed: %s.' % str(e))
                 sys.exit()
 
-    def __get_access_policy(self, listname):
+    def __get_recipient_dn_ldif(self, recipient):
+        logging.debug('__get_recipient_dn_ldif (recipient): %s' % recipient)
+        try:
+            result = self.conn.search_s(
+                    self.baseDN,
+                    ldap.SCOPE_SUBTREE,
+                    '(&(|(mail=%s)(shadowAddress=%s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % (recipient, recipient),
+                    )
+            logging.debug('__get_recipient_dn_ldif (result): %s' % str(result))
+            return (result[0][0], result[0][1])
+        except Exception, e:
+            logging.debug('!!! ERROR !!! __get_recipient_dn_ldif (result): %s' % str(result))
+            return (None, None)
+
+    def __get_access_policy(self, recipient):
         """Get access policy of mail list.
 
         return (dn_of_mail_list, value_of_access_policy,)"""
 
-        logging.debug('__get_access_policy (list): %s' % listname)
+        logging.debug('__get_access_policy (list): %s' % recipient)
 
         # Replace 'recipient' placehold in config file with mail list address.
         try:
-            cfg.set('ldap', "recipient", listname)
+            cfg.set('ldap', "recipient", recipient)
         except Exception, e:
             logging.error("""Error while replacing 'recipient': %s""" % (str(e)) )
 
         # Search mail list object.
-        searchBasedn = 'mail=%s,ou=Groups,domainName=%s,%s' % (listname, listname.split('@')[1], self.baseDN)
+        searchBasedn = 'mail=%s,ou=Groups,domainName=%s,%s' % (recipient, recipient.split('@')[1], self.baseDN)
         searchScope = ldap.SCOPE_BASE
         searchFilter = cfg.get('ldap', 'filter_maillist')
         searchAttr = cfg.get('ldap', 'attr_access_policy', 'accessPolicy')
@@ -151,7 +168,7 @@ class LDAPModeler:
             result = self.conn.search_s(searchBasedn, searchScope, searchFilter, [searchAttr])
             logging.debug('__get_access_policy (search result): %s' % str(result))
         except ldap.NO_SUCH_OBJECT:
-            logging.debug('__get_access_policy (not a mail list: %s) Returned (None)' % listname)
+            logging.debug('__get_access_policy (not a mail list: %s) Returned (None)' % recipient)
             return (None, None)
         except Exception, e:
             logging.debug('__get_access_policy (ERROR while searching list): %s' % str(e))
@@ -169,12 +186,12 @@ class LDAPModeler:
             logging.debug('__get_access_policy (returned): %s' % str(returnVal))
             return returnVal
 
-    def __get_allowed_senders(self, listdn, listname, listpolicy, sender=''):
+    def __get_allowed_senders(self, listdn, recipient, listpolicy, sender=''):
         """return search_result_list_based_on_access_policy"""
         logging.debug('__get_allowed_senders (listpolicy): %s' % listpolicy)
 
         # Replace 'recipient' and 'sender' with email addresses.
-        cfg.set("ldap", "recipient", listname)
+        cfg.set("ldap", "recipient", recipient)
         cfg.set("ldap", "sender", sender)
 
         # Set search base dn, scope, filter and attribute list based on access policy.
@@ -200,7 +217,7 @@ class LDAPModeler:
             result = self.conn.search_s(baseDN, searchScope, searchFilter, [searchAttr])
             logging.debug('__get_allowed_senders (search result): %s' % str(result))
         except ldap.NO_SUCH_OBJECT:
-            logging.debug('__get_allowed_senders (not a mail list: %s) Returned (None)' % listname)
+            logging.debug('__get_allowed_senders (not a mail list: %s) Returned (None)' % recipient)
             return None
         except Exception, e:
             logging.debug('__get_allowed_senders (ERROR while searching list): %s' % str(e))
@@ -213,13 +230,9 @@ class LDAPModeler:
             # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
             return result[0][1][searchAttr]
 
-    def __get_smtp_action(self, listname, sender):
+    def __get_smtp_action(self, recipient, sender):
         """return smtp_action"""
-        listdn, listpolicy = self.__get_access_policy(listname)
-
-        logging.debug('__get_smtp_action (list_dn): %s' % listdn )
-        logging.debug('__get_smtp_action (listpolicy): %s' % listpolicy )
-        logging.debug('__get_smtp_action (sender): %s' % sender )
+        listdn, listpolicy = self.__get_access_policy(recipient)
 
         if listdn is None or listpolicy is None:
             return None
@@ -229,15 +242,13 @@ class LDAPModeler:
                 return ACTION_ACCEPT
             elif listpolicy == "domain":
                 # Allow all users under the same domain.
-                if sender.split('@')[1] == listname.split('@')[1]:
+                if sender.split('@')[1] == recipient.split('@')[1]:
                     return ACTION_ACCEPT
                 else:
                     return ACTION_REJECT
             elif listpolicy == "allowedOnly":
                 # Bypass allowed users only.
-                allowed_senders = self.__get_allowed_senders(listdn, listname, 'allowedOnly', sender)
-
-                logging.debug('__get_smtp_action (allowed_senders): %s (allowedOnly)' % allowed_senders )
+                allowed_senders = self.__get_allowed_senders(listdn, recipient, 'allowedOnly', sender)
 
                 if allowed_senders is not None:
                     addresses = set(allowed_senders)    # Remove duplicate addresses.
@@ -248,9 +259,7 @@ class LDAPModeler:
                 else:
                     return ACTION_REJECT
             elif listpolicy == "membersOnly":
-                allowed_senders = self.__get_allowed_senders(listdn, listname, 'membersOnly', sender)
-
-                logging.debug('__get_smtp_action (allowed_senders): %s (membersOnly)' % allowed_senders)
+                allowed_senders = self.__get_allowed_senders(listdn, recipient, 'membersOnly', sender)
 
                 if allowed_senders is not None:
                     addresses = set(allowed_senders)
@@ -264,10 +273,52 @@ class LDAPModeler:
 
     def handle_data(self, map):
         if map.has_key("sender") and map.has_key("recipient"):
-            sender = map["sender"]
-            recipient = map["recipient"]
-            action = self.__get_smtp_action(recipient, sender)
-            return action
+            recipientDn, recipientLdif = self.__get_recipient_dn_ldif(map['recipient'])
+
+            #
+            # Import plugin modules.
+            #
+            self.modules = []
+
+            # Get plugin module name and convert plugin list to python list type.
+            self.plugins = cfg.get('ldap', 'plugins', '')
+            self.plugins = [ v.strip() for v in self.plugins.split(',') ]
+
+            # Load plugin module.
+            for plugin in self.plugins:
+                try:
+                    self.modules.append(__import__(plugin))
+                except Exception, e:
+                    logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
+
+            #
+            # Apply plugins.
+            #
+            self.action = ''
+            for module in self.modules:
+                try:
+                    logging.debug('Apply plugin (%s).' % (module.__name__, ))
+                    pluginAction = module.restriction(
+                            ldapConn=self.conn,
+                            ldapBaseDn=self.baseDN,
+                            ldapRecipientDn=recipientDn,
+                            ldapRecipientLdif=recipientLdif,
+                            smtpSessionData=map,
+                            )
+
+                    logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                    if not pluginAction.startswith('DUNNO'):
+                        logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                        return 'action=' + pluginAction
+                except Exception, e:
+                    logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
+
+            return 'action=DUNNO'
+
+            #sender = map["sender"]
+            #recipient = map["recipient"]
+            #action = self.__get_smtp_action(recipient, sender)
+            #return action
         else:
             return ACTION_DEFER
 
