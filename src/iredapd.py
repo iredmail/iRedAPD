@@ -273,52 +273,53 @@ class LDAPModeler:
 
     def handle_data(self, map):
         if map.has_key("sender") and map.has_key("recipient"):
-            recipientDn, recipientLdif = self.__get_recipient_dn_ldif(map['recipient'])
-
-            #
-            # Import plugin modules.
-            #
-            self.modules = []
 
             # Get plugin module name and convert plugin list to python list type.
             self.plugins = cfg.get('ldap', 'plugins', '')
             self.plugins = [ v.strip() for v in self.plugins.split(',') ]
 
-            # Load plugin module.
-            for plugin in self.plugins:
-                try:
-                    self.modules.append(__import__(plugin))
-                except Exception, e:
-                    logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
+            if len(self.plugins) > 0:
 
-            #
-            # Apply plugins.
-            #
-            self.action = ''
-            for module in self.modules:
-                try:
-                    logging.debug('Apply plugin (%s).' % (module.__name__, ))
-                    pluginAction = module.restriction(
-                            ldapConn=self.conn,
-                            ldapBaseDn=self.baseDN,
-                            ldapRecipientDn=recipientDn,
-                            ldapRecipientLdif=recipientLdif,
-                            smtpSessionData=map,
-                            )
+                # Get account dn and LDIF data.
+                recipientDn, recipientLdif = self.__get_recipient_dn_ldif(map['recipient'])
 
-                    logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
-                    if not pluginAction.startswith('DUNNO'):
-                        logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
-                        return 'action=' + pluginAction
-                except Exception, e:
-                    logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
+                #
+                # Import plugin modules.
+                #
+                self.modules = []
 
-            return 'action=DUNNO'
+                # Load plugin module.
+                for plugin in self.plugins:
+                    try:
+                        self.modules.append(__import__(plugin))
+                    except Exception, e:
+                        logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 
-            #sender = map["sender"]
-            #recipient = map["recipient"]
-            #action = self.__get_smtp_action(recipient, sender)
-            #return action
+                #
+                # Apply plugins.
+                #
+                self.action = ''
+                for module in self.modules:
+                    try:
+                        logging.debug('Apply plugin (%s).' % (module.__name__, ))
+                        pluginAction = module.restriction(
+                                ldapConn=self.conn,
+                                ldapBaseDn=self.baseDN,
+                                ldapRecipientDn=recipientDn,
+                                ldapRecipientLdif=recipientLdif,
+                                smtpSessionData=map,
+                                )
+
+                        logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                        if not pluginAction.startswith('DUNNO'):
+                            logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                            return 'action=' + pluginAction
+                    except Exception, e:
+                        logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
+
+            else:
+                # No plugins available.
+                return 'action=DUNNO'
         else:
             return ACTION_DEFER
 
