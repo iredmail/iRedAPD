@@ -12,20 +12,20 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
 
     # Set search base dn, scope, filter and attribute list based on access policy.
     if policy == 'membersonly':
-        basedn = basedn
+        basedn = ldapBaseDn
         searchScope = 2     # ldap.SCOPE_SUBTREE
         # Filter used to get domain members.
         searchFilter = "(&(objectclass=mailUser)(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
         searchAttr = 'mail'
     else:
-        basedn = recipient
+        basedn = listDn
         searchScope = 0     # Use SCOPE_BASE to improve performance.
         # Filter used to get domain moderators.
         searchFilter = "(&(objectclass=mailList)(mail=%s))" % (recipient, )
         searchAttr = 'listAllowedUser'
 
     try:
-        result = ldapConn.search_s(baseDN, searchScope, searchFilter, [searchAttr])
+        result = ldapConn.search_s(basedn, searchScope, searchFilter, [searchAttr])
         if result[0][1].has_key(searchAttr):
             # Example of result data:
             # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
@@ -62,7 +62,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
                 policy=policy,
                 )
 
-        if sender in allowedSenders:
+        if sender.lower() in [ v.lower for v in allowedSenders ]:
             return 'DUNNO'
         else:
             return ACTION_REJECT
