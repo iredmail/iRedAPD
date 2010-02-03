@@ -19,15 +19,9 @@ pid_file        = /var/run/iredapd.pid
 log_type        = file
 log_file        = /var/log/iredapd.log
 
-log_sql_server  = 127.0.0.1
-log_sql_port    = 3306
-log_sql_dbname  = iredadmin
-log_sql_dbuser  = iredadmin
-log_sql_dbpass  = your_passwd
-
 # Log level: info, warning, error, debug.
 # 'info' is recommended for product use. sample log entry:
-#       INFO user@domain.ltd -> list@domain.ltd, OK
+#       INFO user@domain.ltd -> list@domain.ltd, DUNNO
 log_level       = info
 
 [ldap]
