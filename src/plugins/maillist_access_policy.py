@@ -13,13 +13,13 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
     # Set search base dn, scope, filter and attribute list based on access policy.
     if policy == 'membersonly':
         basedn = basedn
-        searchScope = ldap.SCOPE_SUBTREE
+        searchScope = 2     # ldap.SCOPE_SUBTREE
         # Filter used to get domain members.
         searchFilter = "(&(objectclass=mailUser)(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
         searchAttr = 'mail'
     else:
-        basedn = listdn
-        searchScope = ldap.SCOPE_BASE   # Use SCOPE_BASE to improve performance.
+        basedn = recipient
+        searchScope = 0     # Use SCOPE_BASE to improve performance.
         # Filter used to get domain moderators.
         searchFilter = "(&(objectclass=mailList)(mail=%s))" % (recipient, )
         searchAttr = 'listAllowedUser'
@@ -39,12 +39,12 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
 
 def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSessionData, **kargs):
     # Return if recipient is not a mail list object.
-    if 'mailList' not in [ v.lower() for v in ldapRecipientLdif['objectClass']]:
+    if 'maillist' not in [ v.lower() for v in ldapRecipientLdif['objectClass']]:
         return 'DUNNO'
 
     sender = smtpSessionData['sender'].lower()
     recipient = smtpSessionData['recipient'].lower()
-    policy = ldapRecipientLdif.get('accessPolicy', 'public').lower()
+    policy = ldapRecipientLdif.get('accessPolicy', ['public'])[0].lower()
 
     if policy == "public": return 'DUNNO'   # No restriction.
     elif policy == "domain":
