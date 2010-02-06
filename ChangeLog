@@ -1,3 +1,6 @@
+iRedAPD-1.2.1:
+    * Fix incorrect ps parameter on FreeBSD.
+
 iRedAPD-1.2:
     * Support plugins.
 
