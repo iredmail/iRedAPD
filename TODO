@@ -1,6 +1,5 @@
 * Check log type and log into correct logger handler.
 * Per-maillist restrictions:
-    - Verify recipient address is mail list.
     - If access policy is 'membersOnly', how about a fake email address?
     - Handle multiple access policies.
 
