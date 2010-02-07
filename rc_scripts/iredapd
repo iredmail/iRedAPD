@@ -25,7 +25,7 @@ PIDFILE='/var/run/iredapd.pid'
 check_status() {
     # Usage: check_status pid_number
     PID="${1}"
-    l=$(ps -p ${PID} | wc -l)
+    l=$(ps -p ${PID} | wc -l | awk '{print $1}')
     if [ X"$l" == X"2" ]; then
         echo "running"
     else
