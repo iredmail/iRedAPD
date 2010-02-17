@@ -65,7 +65,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
                 policy=policy,
                 )
 
-        if sender.lower() in [ v.lower for v in allowedSenders ]:
+        if sender.lower() in [ v.lower() for v in allowedSenders ]:
             return 'DUNNO'
         else:
             return ACTION_REJECT
