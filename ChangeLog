@@ -1,3 +1,7 @@
+iRedAPD-1.2.2:
+    * Fix incorrect member list, return all instead of one the first one.
+    * Don't ignore external mail list members.
+
 iRedAPD-1.2.1:
     * Fix incorrect ps parameter on FreeBSD.
 

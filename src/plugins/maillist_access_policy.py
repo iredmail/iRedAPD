@@ -15,7 +15,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
         basedn = ldapBaseDn
         searchScope = 2     # ldap.SCOPE_SUBTREE
         # Filter used to get domain members.
-        searchFilter = "(&(objectclass=mailUser)(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
+        searchFilter = "(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
         searchAttr = 'mail'
     else:
         basedn = listDn
@@ -26,13 +26,16 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
 
     try:
         result = ldapConn.search_s(basedn, searchScope, searchFilter, [searchAttr])
-        if result[0][1].has_key(searchAttr):
-            # Example of result data:
-            # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-            # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-            return result[0][1][searchAttr]
-        else:
-            return []
+        userList = []
+        for obj in result:
+            if obj[1].has_key(searchAttr):
+                # Example of result data:
+                # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
+                # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
+                userList += obj[1][searchAttr]
+            else:
+                pass
+        return userList
 
     except Exception, e:
         return []
