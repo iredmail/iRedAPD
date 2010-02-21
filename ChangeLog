@@ -1,3 +1,10 @@
+iRedAPD-1.2.3:
+    * Change default action to 'DUNNO', so that we won't miss any email while
+      incorrect config.
+    * Add handle of LDAP quering of non exist recipient. Thanks Bill Holt for
+      his report.
+    * Prepend 'action=' only one time.
+
 iRedAPD-1.2.2:
     * Fix incorrect member list, return all instead of one the first one.
     * Don't ignore external mail list members.

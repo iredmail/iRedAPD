@@ -16,10 +16,10 @@ __version__ = "1.2.2"
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
 
-ACTION_ACCEPT = "action=DUNNO"
-ACTION_DEFER = "action=DEFER_IF_PERMIT Service temporarily unavailable"
-ACTION_REJECT = 'action=REJECT Not Authorized'
-ACTION_DEFAULT = ACTION_REJECT
+ACTION_ACCEPT = 'DUNNO'
+ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
+ACTION_REJECT = 'REJECT Not Authorized'
+ACTION_DEFAULT = 'DUNNO'
 
 # Get config file.
 if len(sys.argv) != 2:
@@ -71,7 +71,7 @@ class apdChannel(asynchat.async_chat):
                 logging.debug('Error: %s. Use default action instead: %s' % (str(e), str(action)) )
 
             logging.info('%s -> %s, %s' % (self.map['sender'], self.map['recipient'], str(action).split('=')[1] ))
-            self.push(action)
+            self.push('action=' + action)
             self.push('')
             asynchat.async_chat.handle_close(self)
             logging.debug("Connection closed")
@@ -283,6 +283,11 @@ class LDAPModeler:
                 # Get account dn and LDIF data.
                 recipientDn, recipientLdif = self.__get_recipient_dn_ldif(map['recipient'])
 
+                # Return if recipient account doesn't exist.
+                if recipientDn is None or recipientLdif is None:
+                    logging.debug(str(e))
+                    return ACTION_DEFAULT
+
                 #
                 # Import plugin modules.
                 #
@@ -313,13 +318,13 @@ class LDAPModeler:
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                         if not pluginAction.startswith('DUNNO'):
                             logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
-                            return 'action=' + pluginAction
+                            return pluginAction
                     except Exception, e:
                         logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
 
             else:
                 # No plugins available.
-                return 'action=DUNNO'
+                return 'DUNNO'
         else:
             return ACTION_DEFER
 
