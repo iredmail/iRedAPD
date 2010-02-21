@@ -70,7 +70,7 @@ class apdChannel(asynchat.async_chat):
                 action = ACTION_DEFAULT
                 logging.debug('Error: %s. Use default action instead: %s' % (str(e), str(action)) )
 
-            logging.info('%s -> %s, %s' % (self.map['sender'], self.map['recipient'], str(action).split('=')[1] ))
+            logging.info('%s -> %s, %s' % (self.map['sender'], self.map['recipient'], action))
             self.push('action=' + action)
             self.push('')
             asynchat.async_chat.handle_close(self)
