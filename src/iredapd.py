@@ -3,11 +3,13 @@
 
 # Author: Zhang Huangbin <michaelbibby (at) gmail.com>
 
-import os, os.path
+import os
+import os.path
 import sys
 import ConfigParser
 import socket
-import asyncore, asynchat
+import asyncore
+import asynchat
 import logging
 import ldap
 import daemon
@@ -34,6 +36,7 @@ else:
 # Read configurations.
 cfg = ConfigParser.SafeConfigParser()
 cfg.read(config_file)
+
 
 class apdChannel(asynchat.async_chat):
     def __init__(self, conn, remoteaddr):
@@ -68,9 +71,11 @@ class apdChannel(asynchat.async_chat):
                     action = ACTION_ACCEPT
             except Exception, e:
                 action = ACTION_DEFAULT
-                logging.debug('Error: %s. Use default action instead: %s' % (str(e), str(action)) )
+                logging.debug('Error: %s. Use default action instead: %s' %
+                        (str(e), str(action)))
 
-            logging.info('%s -> %s, %s' % (self.map['sender'], self.map['recipient'], action))
+            logging.info('%s -> %s, %s' %
+                    (self.map['sender'], self.map['recipient'], action))
             self.push('action=' + action)
             self.push('')
             asynchat.async_chat.handle_close(self)
@@ -83,6 +88,7 @@ class apdChannel(asynchat.async_chat):
             asynchat.async_chat.handle_close(self)
             logging.debug("Connection closed")
 
+
 class apdSocket(asyncore.dispatcher):
     def __init__(self, localaddr):
         asyncore.dispatcher.__init__(self)
@@ -91,12 +97,13 @@ class apdSocket(asyncore.dispatcher):
         self.bind(localaddr)
         self.listen(5)
         ip, port = localaddr
-        logging.info("Starting iredapd (v%s, pid: %d), listening on %s:%s." % (__version__, os.getpid(), ip, str(port)))
-
+        logging.info("Starting iredapd (v%s, pid: %d), listening on %s:%s." %
+                (__version__, os.getpid(), ip, str(port)))
 
     def handle_accept(self):
         conn, remoteaddr = self.accept()
         channel = apdChannel(conn, remoteaddr)
+
 
 class LDAPModeler:
     def __init__(self):
@@ -120,7 +127,7 @@ class LDAPModeler:
                 self.conn.bind_s(self.binddn, self.bindpw)
                 logging.debug('LDAP bind success.')
             except ldap.INVALID_CREDENTIALS:
-                logging.error('LDAP bind failed, incorrect bind dn or password.')
+                logging.error('LDAP bind failed: incorrect bind dn or password.')
                 sys.exit()
             except Exception, e:
                 logging.error('LDAP bind failed: %s.' % str(e))
@@ -151,7 +158,7 @@ class LDAPModeler:
         try:
             cfg.set('ldap', "recipient", recipient)
         except Exception, e:
-            logging.error("""Error while replacing 'recipient': %s""" % (str(e)) )
+            logging.error("""Error while replacing 'recipient': %s""" % (str(e)))
 
         # Search mail list object.
         searchBasedn = 'mail=%s,ou=Groups,domainName=%s,%s' % (recipient, recipient.split('@')[1], self.baseDN)
@@ -272,11 +279,11 @@ class LDAPModeler:
                     return ACTION_REJECT
 
     def handle_data(self, map):
-        if map.has_key("sender") and map.has_key("recipient"):
+        if 'sender' in map.keys() and 'recipient' in map.keys():
 
             # Get plugin module name and convert plugin list to python list type.
             self.plugins = cfg.get('ldap', 'plugins', '')
-            self.plugins = [ v.strip() for v in self.plugins.split(',') ]
+            self.plugins = [v.strip() for v in self.plugins.split(',')]
 
             if len(self.plugins) > 0:
 
@@ -327,6 +334,7 @@ class LDAPModeler:
                 return 'DUNNO'
         else:
             return ACTION_DEFER
+
 
 def main():
     # Chroot in current directory.

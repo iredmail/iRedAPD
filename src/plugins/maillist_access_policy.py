@@ -3,6 +3,10 @@
 
 # Author: Zhang Huangbin <michaelbibby (at) gmail.com>
 
+# ----------------------------------------------------------------------------
+# This plugin is used for mail deliver restriction.
+# ----------------------------------------------------------------------------
+
 import sys
 
 ACTION_REJECT = 'REJECT Not Authorized'
@@ -10,31 +14,37 @@ ACTION_REJECT = 'REJECT Not Authorized'
 def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, policy,):
     """return search_result_list_based_on_access_policy"""
 
+    basedn = ldapBaseDn
+    searchScope = 2     # Use SCOPE_BASE to improve performance.
+
     # Set search base dn, scope, filter and attribute list based on access policy.
     if policy == 'membersonly':
-        basedn = ldapBaseDn
-        searchScope = 2     # ldap.SCOPE_SUBTREE
         # Filter used to get domain members.
         searchFilter = "(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
-        searchAttr = 'mail'
-    else:
+        searchAttr = ['mail']
+    elif policy == 'allowedonly':
         basedn = listDn
         searchScope = 0     # Use SCOPE_BASE to improve performance.
         # Filter used to get domain moderators.
         searchFilter = "(&(objectclass=mailList)(mail=%s))" % (recipient, )
-        searchAttr = 'listAllowedUser'
+        searchAttr = ['listAllowedUser']
+    else:
+        # Policy: membersAndAllowedOnly.
+        # Filter used to get both members and moderators.
+        searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient, )
+        searchAttr = ['mail', 'listAllowedUser']
 
     try:
-        result = ldapConn.search_s(basedn, searchScope, searchFilter, [searchAttr])
+        result = ldapConn.search_s(basedn, searchScope, searchFilter, searchAttr)
         userList = []
         for obj in result:
-            if obj[1].has_key(searchAttr):
-                # Example of result data:
-                # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-                # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-                userList += obj[1][searchAttr]
-            else:
-                pass
+            for k in searchAttr:
+                if k in obj[1].keys():
+                    # Example of result data:
+                    # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
+                    userList += obj[1][k]
+                else:
+                    pass
         return userList
 
     except Exception, e:
@@ -55,7 +65,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         if sender.split('@')[1] == recipient.split('@')[1]: return 'DUNNO'
         else: return ACTION_REJECT
     else:
-        # Handle other access policies: membersOnly, allowedOnly.
+        # Handle other access policies: membersOnly, allowedOnly, membersAndAllowedOnly.
         allowedSenders = __get_allowed_senders(
                 ldapConn=ldapConn,
                 ldapBaseDn=ldapBaseDn,

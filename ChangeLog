@@ -1,3 +1,6 @@
+iRedAPD-1.2.4:
+    * Ability to handle policy 'membersAndAllowedOnly'.
+
 iRedAPD-1.2.3:
     * Change default action to 'DUNNO', so that we won't miss any email while
       incorrect config.
