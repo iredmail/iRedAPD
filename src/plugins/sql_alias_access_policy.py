@@ -19,6 +19,7 @@
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
 import sys
+import logging
 
 ACTION_REJECT = 'REJECT Not Authorized'
 
@@ -51,7 +52,7 @@ def restriction(dbConn, sqlRecord, smtpSessionData, **kargs):
             return 'DUNNO'
         else:
             return ACTION_REJECT
-    elif policy == POLICY_MEMBERSONLY:
+    elif policy == POLICY_MODERATORSONLY:
         # Bypass all moderators.
         if sender in moderators:
             return 'DUNNO'
