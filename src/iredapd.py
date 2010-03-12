@@ -11,7 +11,6 @@ import socket
 import asyncore
 import asynchat
 import logging
-import ldap
 import daemon
 
 __version__ = "1.2.3"
@@ -62,7 +61,11 @@ class apdChannel(asynchat.async_chat):
                 self.map[key] = value
         elif len(self.map) != 0:
             try:
-                modeler = LDAPModeler()
+                if cfg.get('general', 'backend', 'ldap') == 'ldap':
+                    modeler = LDAPModeler()
+                else:
+                    modeler = MySQLModeler()
+
                 result = modeler.handle_data(self.map)
                 logging.debug("result replying: %s." % str(result))
                 if result != None:
@@ -105,8 +108,89 @@ class apdSocket(asyncore.dispatcher):
         channel = apdChannel(conn, remoteaddr)
 
 
+class MySQLModeler:
+    def __init__(self):
+        import web
+        web.config.debug = False
+
+        self.db = web.database(
+            dbn='mysql',
+            host=cfg.get('mysql', 'server', 'localhost'),
+            db=cfg.get('mysql', 'db', 'vmail'),
+            user=cfg.get('mysql', 'user', 'vmail'),
+            pw=cfg.get('mysql', 'password'),
+        )
+
+    def handle_data(self, map):
+        if 'sender' in map.keys() and 'recipient' in map.keys():
+            # Get plugin module name and convert plugin list to python list type.
+            self.plugins = cfg.get('mysql', 'plugins', '')
+            self.plugins = [v.strip() for v in self.plugins.split(',')]
+
+            # Get sender, recipient.
+            sender = map['sender']
+            sender_domain = sender.split('@', 1)[1]
+
+            recipient = map['recipient']
+            recipient_domain = recipient.split('@', 1)[1]
+
+            if len(self.plugins) > 0:
+                # Get alias account from alias table.
+                vars = dict(recipient=recipient, recipient_domain=recipient_domain, )
+                result = self.db.select(
+                    cfg.get('mysql', 'alias_table', 'alias'),
+                    vars, where='address = $recipient AND domain = $recipient_domain',
+                )
+
+                # Return if recipient account doesn't exist.
+                if len(result) != 1:
+                    logging.debug('No alias found: %s' % recipient)
+                    return ACTION_DEFAULT
+
+                #
+                # Import plugin modules.
+                #
+                self.modules = []
+
+                # Load plugin module.
+                for plugin in self.plugins:
+                    try:
+                        self.modules.append(__import__(plugin))
+                    except Exception, e:
+                        logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
+
+                #
+                # Apply plugins.
+                #
+                self.action = ''
+                for module in self.modules:
+                    try:
+                        logging.debug('Apply plugin (%s).' % (module.__name__, ))
+                        pluginAction = module.restriction(
+                            dbConn=self.db,
+                            sqlRecord=result[0],
+                            smtpSessionData=map,
+                        )
+
+                        logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                        if not pluginAction.startswith('DUNNO'):
+                            logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                            return pluginAction
+                    except Exception, e:
+                        logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
+
+            else:
+                # No plugins available.
+                return 'DUNNO'
+        else:
+            return ACTION_DEFER
+
+
+
 class LDAPModeler:
     def __init__(self):
+        import ldap
+
         # Read LDAP server settings.
         self.uri = cfg.get('ldap', 'uri', 'ldap://127.0.0.1:389')
         self.binddn = cfg.get('ldap', 'binddn')
@@ -292,7 +376,7 @@ class LDAPModeler:
 
                 # Return if recipient account doesn't exist.
                 if recipientDn is None or recipientLdif is None:
-                    logging.debug(str(e))
+                    logging.debug('Recipient DN or LDIF is none.')
                     return ACTION_DEFAULT
 
                 #
@@ -339,7 +423,7 @@ class LDAPModeler:
 def main():
     # Chroot in current directory.
     try:
-        os.chdir(os.path.dirname(__file__))
+        os.chdir(os.path.abspath(os.path.dirname(__file__)))
     except:
         pass
 

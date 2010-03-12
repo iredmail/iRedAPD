@@ -24,7 +24,11 @@ log_file        = /var/log/iredapd.log
 #       INFO user@domain.ltd -> list@domain.ltd, DUNNO
 log_level       = info
 
+# Backend: ldap, mysql.
+backend = ldap
+
 [ldap]
+# For ldap backend only.
 # LDAP server setting.
 # Uri must starts with ldap:// or ldaps:// (TLS/SSL).
 #
@@ -38,4 +42,17 @@ basedn      = o=domains,dc=iredmail,dc=org
 # Enabled plugins.
 #   - Plugin name is file name which placed under 'src/plugins/' directory.
 #   - Plugin names MUST be seperated by comma.
-plugins = maillist_access_policy
+plugins = ldap_maillist_access_policy
+
+[mysql]
+# For MySQL backend only.
+server      = 127.0.0.1
+db          = vmail
+user        = vmail
+password    = Psaf68wsuVctYSbj4PJzRqmFsE0rlQ
+alias_table = alias
+
+# Enabled plugins.
+#   - Plugin name is file name which placed under 'src/plugins/' directory.
+#   - Plugin names MUST be seperated by comma.
+plugins = sql_alias_access_policy

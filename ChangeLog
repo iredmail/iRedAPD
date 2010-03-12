@@ -1,4 +1,5 @@
 iRedAPD-1.2.4:
+    * Support MySQL backend.
     * Add rc script for FreeBSD.
     * Ability to handle policy 'membersAndAllowedOnly'.
 
