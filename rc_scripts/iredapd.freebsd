@@ -1,0 +1,106 @@
+#!/usr/local/bin/bash
+
+# Author: Zhang Huangbin (michaelbibby@gmail.com)
+
+# PROVIDE: iredapd
+# REQUIRE: DAEMON
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+name='iredapd'
+rcvar=`set_rcvar`
+
+BINPATH='/opt/iredapd/src/iredapd.py'
+CONFIG='/opt/iredapd/etc/iredapd.ini'
+pidfile='/var/run/iredapd.pid'
+
+check_status() {
+    # Usage: check_status pid_number
+    PID="${1}"
+    l=$(ps -p ${PID} | wc -l | awk '{print $1}')
+    if [ X"$l" == X"2" ]; then
+        echo "running"
+    else
+        echo "stopped"
+    fi
+}
+
+start() {
+    if [ -f ${pidfile} ]; then
+        PID="$(cat ${pidfile})"
+        s="$(check_status ${PID})"
+
+        if [ X"$s" == X"running" ]; then
+            echo "${name} is already running."
+        else
+            rm -f ${pidfile} >/dev/null 2>&1
+            echo "Starting ${name} ..."
+            /usr/local/bin/python ${BINPATH} ${CONFIG}
+        fi
+    else
+        echo "Starting ${name} ..."
+        /usr/local/bin/python ${BINPATH} ${CONFIG}
+    fi
+    unset s
+}
+
+stop() {
+    if [ -f ${pidfile} ]; then
+        PID="$(cat ${pidfile})"
+        s="$(check_status ${PID})"
+
+        if [ X"$s" == X"running" ]; then
+            echo "Stopping ${name} ..."
+            kill -9 ${PID}
+            if [ X"$?" == X"0" ]; then
+                rm -f ${pidfile} >/dev/null 2>&1
+            else
+                echo -e "\t\t[ FAILED ]"
+            fi
+        else
+            echo "${name} is already stopped."
+            rm -f ${pidfile} >/dev/null 2>&1
+        fi
+    else
+        echo "${name} is already stopped."
+    fi
+    unset s
+}
+
+status() {
+    if [ -f ${pidfile} ]; then
+        PID="$(cat ${pidfile})"
+        s="$(check_status ${PID})"
+
+        if [ X"$s" == X"running" ]; then
+            echo "${name} is running."
+        else
+            echo "${name} is stopped."
+        fi
+    else
+        echo "${name} is stopped."
+    fi
+    unset s
+}
+
+empty(){
+case "$1" in
+    start) start ;;
+    stop) stop ;;
+    status) status ;;
+    restart) stop && start ;;
+    *)
+        echo $"Usage: $0 {start|stop|restart|status}"
+        RETVAL=1
+        ;;
+esac
+}
+
+start_cmd="start"
+stop_cmd="stop"
+status_cmd="status"
+restart_cmd="stop && start"
+
+command="start"
+load_rc_config ${name}
+run_rc_command "$1"
