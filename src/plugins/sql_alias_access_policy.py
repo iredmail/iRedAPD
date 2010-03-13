@@ -28,6 +28,7 @@ POLICY_PUBLIC = 'public'
 POLICY_DOMAIN = 'domain'
 POLICY_MEMBERSONLY = 'membersonly'
 POLICY_MODERATORSONLY = 'moderatorsonly'
+POLICY_ALLOWEDONLY = 'allowedOnly'      # Same as @POLICY_MODERATORSONLY
 POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
 def restriction(dbConn, sqlRecord, smtpSessionData, **kargs):
@@ -52,7 +53,7 @@ def restriction(dbConn, sqlRecord, smtpSessionData, **kargs):
             return 'DUNNO'
         else:
             return ACTION_REJECT
-    elif policy == POLICY_MODERATORSONLY:
+    elif policy == POLICY_MODERATORSONLY or policy == POLICY_ALLOWEDONLY:
         # Bypass all moderators.
         if sender in moderators:
             return 'DUNNO'
