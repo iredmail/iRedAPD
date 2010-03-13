@@ -22,7 +22,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
         # Filter used to get domain members.
         searchFilter = "(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
         searchAttr = ['mail']
-    elif policy == 'allowedonly':
+    elif policy == 'allowedonly' or policy == 'moderatorsonly':
         basedn = listDn
         searchScope = 0     # Use SCOPE_BASE to improve performance.
         # Filter used to get domain moderators.
@@ -52,14 +52,16 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
 
 def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSessionData, **kargs):
     # Return if recipient is not a mail list object.
-    if 'maillist' not in [ v.lower() for v in ldapRecipientLdif['objectClass']]:
+    if 'maillist' not in [v.lower() for v in ldapRecipientLdif['objectClass']]:
         return 'DUNNO'
 
     sender = smtpSessionData['sender'].lower()
     recipient = smtpSessionData['recipient'].lower()
     policy = ldapRecipientLdif.get('accessPolicy', ['public'])[0].lower()
 
-    if policy == "public": return 'DUNNO'   # No restriction.
+    if policy == "public":
+        # No restriction.
+        return 'DUNNO'
     elif policy == "domain":
         # Bypass all users under the same domain.
         if sender.split('@')[1] == recipient.split('@')[1]: return 'DUNNO'
@@ -75,7 +77,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
                 policy=policy,
                 )
 
-        if sender.lower() in [ v.lower() for v in allowedSenders ]:
+        if sender.lower() in [v.lower() for v in allowedSenders]:
             return 'DUNNO'
         else:
             return ACTION_REJECT
