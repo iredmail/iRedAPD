@@ -5,6 +5,15 @@
 
 # ----------------------------------------------------------------------------
 # This plugin is used for mail deliver restriction.
+#
+# Handled policies:
+#   - public:   Unrestricted
+#   - domain:   Only users under same domain are allowed.
+#   - subdomain:    Only users under same domain and sub domains are allowed.
+#   - membersOnly:  Only members are allowed.
+#   - moderatorsOnly:   Only moderators are allowed.
+#   - membersAndModeratorsOnly: Only members and moderators are allowed.
+
 # ----------------------------------------------------------------------------
 
 import sys
@@ -56,7 +65,11 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         return 'DUNNO'
 
     sender = smtpSessionData['sender'].lower()
+    sender_domain = sender.split('@')[1]
+
     recipient = smtpSessionData['recipient'].lower()
+    recipient_domain = recipient.split('@')[1]
+
     policy = ldapRecipientLdif.get('accessPolicy', ['public'])[0].lower()
 
     if policy == "public":
@@ -64,8 +77,16 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         return 'DUNNO'
     elif policy == "domain":
         # Bypass all users under the same domain.
-        if sender.split('@')[1] == recipient.split('@')[1]: return 'DUNNO'
-        else: return ACTION_REJECT
+        if sender_domain == recipient_domain:
+            return 'DUNNO'
+        else:
+            return ACTION_REJECT
+    elif policy == "subdomain":
+        # Bypass all users under the same domain and sub domains.
+        if sender.endswith('.' + recipient_domain):
+            return 'DUNNO'
+        else:
+            return ACTION_REJECT
     else:
         # Handle other access policies: membersOnly, allowedOnly, membersAndAllowedOnly.
         allowedSenders = __get_allowed_senders(

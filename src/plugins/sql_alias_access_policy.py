@@ -14,6 +14,7 @@
 # Handled policies:
 #   - public:   Unrestricted
 #   - domain:   Only users under same domain are allowed.
+#   - subdomain:    Only users under same domain and sub domains are allowed.
 #   - membersOnly:  Only members are allowed.
 #   - moderatorsOnly:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
@@ -26,6 +27,7 @@ ACTION_REJECT = 'REJECT Not Authorized'
 # Policies. MUST be defined in lower case.
 POLICY_PUBLIC = 'public'
 POLICY_DOMAIN = 'domain'
+POLICY_SUBDOMAIN = 'subdomain'
 POLICY_MEMBERSONLY = 'membersonly'
 POLICY_MODERATORSONLY = 'moderatorsonly'
 POLICY_ALLOWEDONLY = 'allowedOnly'      # Same as @POLICY_MODERATORSONLY
@@ -33,8 +35,13 @@ POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
 def restriction(dbConn, sqlRecord, smtpSessionData, **kargs):
     policy = sqlRecord.get('accesspolicy', 'public').lower()
+
     sender = smtpSessionData['sender'].lower()
+    sender_domain = sender.split('@')[1]
+
     recipient = smtpSessionData['recipient'].lower()
+    recipient_domain = recipient.split('@')[1]
+
     members = [str(v.lower()) for v in sqlRecord.get('goto', '').split(',')]
     moderators = [str(v.lower()) for v in sqlRecord.get('moderators', '').split(',')]
 
@@ -43,7 +50,13 @@ def restriction(dbConn, sqlRecord, smtpSessionData, **kargs):
         return 'DUNNO'
     elif policy == POLICY_DOMAIN:
         # Bypass all users under the same domain.
-        if sender.split('@')[1] == recipient.split('@')[1]:
+        if sender_domain == recipient_domain:
+            return 'DUNNO'
+        else:
+            return ACTION_REJECT
+    elif policy == POLICY_SUBDOMAIN:
+        # Bypass all users under the same domain or sub domains.
+        if sender.endswith('.' + recipient_domain):
             return 'DUNNO'
         else:
             return ACTION_REJECT

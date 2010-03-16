@@ -1,7 +1,9 @@
 iRedAPD-1.2.4-RC1:
+    * Ability to handle policy 'subdomain'. Bypass if sender is under same
+      domain or sub domains.
+    * Ability to handle policy 'membersAndAllowedOnly'.
     * Support MySQL backend.
     * Add rc script for FreeBSD.
-    * Ability to handle policy 'membersAndAllowedOnly'.
 
 iRedAPD-1.2.3:
     * Change default action to 'DUNNO', so that we won't miss any email while
