@@ -111,6 +111,8 @@ class apdSocket(asyncore.dispatcher):
 class MySQLModeler:
     def __init__(self):
         import web
+
+        # Turn off debug mode.
         web.config.debug = False
 
         self.db = web.database(
@@ -128,25 +130,16 @@ class MySQLModeler:
             self.plugins = [v.strip() for v in self.plugins.split(',')]
 
             # Get sender, recipient.
-            sender = map['sender']
-            sender_domain = sender.split('@', 1)[1]
-
-            recipient = map['recipient']
-            recipient_domain = recipient.split('@', 1)[1]
+            # Sender/recipient are used almost in all plugins, so store them
+            # a dict and pass to plugins.
+            senderReceiver = {
+                'sender': map['sender'],
+                'recipient': map['recipient'],
+                'sender_domain': map['sender'].split('@')[-1]
+                'recipient_domain': map['recipient'].split('@')[-1]
+            }
 
             if len(self.plugins) > 0:
-                # Get alias account from alias table.
-                vars = dict(recipient=recipient, recipient_domain=recipient_domain, )
-                result = self.db.select(
-                    cfg.get('mysql', 'alias_table', 'alias'),
-                    vars, where='address = $recipient AND domain = $recipient_domain',
-                )
-
-                # Return if recipient account doesn't exist.
-                if len(result) != 1:
-                    logging.debug('No alias found: %s' % recipient)
-                    return ACTION_DEFAULT
-
                 #
                 # Import plugin modules.
                 #
@@ -168,7 +161,7 @@ class MySQLModeler:
                         logging.debug('Apply plugin (%s).' % (module.__name__, ))
                         pluginAction = module.restriction(
                             dbConn=self.db,
-                            sqlRecord=result[0],
+                            senderReceiver=senderReceiver,
                             smtpSessionData=map,
                         )
 

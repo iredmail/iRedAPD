@@ -50,7 +50,6 @@ server      = 127.0.0.1
 db          = vmail
 user        = vmail
 password    = Psaf68wsuVctYSbj4PJzRqmFsE0rlQ
-alias_table = alias
 
 # Enabled plugins.
 #   - Plugin name is file name which placed under 'src/plugins/' directory.

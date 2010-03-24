@@ -20,7 +20,6 @@
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
 import sys
-import logging
 
 ACTION_REJECT = 'REJECT Not Authorized'
 
@@ -33,14 +32,20 @@ POLICY_MODERATORSONLY = 'moderatorsonly'
 POLICY_ALLOWEDONLY = 'allowedOnly'      # Same as @POLICY_MODERATORSONLY
 POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
-def restriction(dbConn, sqlRecord, smtpSessionData, **kargs):
+def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
+    # Get alias account from alias table.
+    result = dbConn.select('alias',
+        senderReceiver, where='address = $recipient AND domain = $recipient_domain',
+    )
+
+    # Return if recipient account doesn't exist.
+    if len(result) != 1:
+        return 'DUNNO'
+
+    # Use the first SQL record.
+    sqlRecord = result[0]
+
     policy = sqlRecord.get('accesspolicy', 'public').lower()
-
-    sender = smtpSessionData['sender'].lower()
-    sender_domain = sender.split('@')[1]
-
-    recipient = smtpSessionData['recipient'].lower()
-    recipient_domain = recipient.split('@')[1]
 
     members = [str(v.lower()) for v in sqlRecord.get('goto', '').split(',')]
     moderators = [str(v.lower()) for v in sqlRecord.get('moderators', '').split(',')]
@@ -50,31 +55,31 @@ def restriction(dbConn, sqlRecord, smtpSessionData, **kargs):
         return 'DUNNO'
     elif policy == POLICY_DOMAIN:
         # Bypass all users under the same domain.
-        if sender_domain == recipient_domain:
+        if senderReceiver['sender_domain'] == senderReceiver['recipient_domain']:
             return 'DUNNO'
         else:
             return ACTION_REJECT
     elif policy == POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
-        if sender.endswith('.' + recipient_domain):
+        if senderReceiver['sender'].endswith('.' + senderReceiver['recipient_domain']):
             return 'DUNNO'
         else:
             return ACTION_REJECT
     elif policy == POLICY_MEMBERSONLY:
         # Bypass all members.
-        if sender in members:
+        if senderReceiver['sender'] in members:
             return 'DUNNO'
         else:
             return ACTION_REJECT
     elif policy == POLICY_MODERATORSONLY or policy == POLICY_ALLOWEDONLY:
         # Bypass all moderators.
-        if sender in moderators:
+        if senderReceiver['sender'] in moderators:
             return 'DUNNO'
         else:
             return ACTION_REJECT
     elif policy == POLICY_MEMBERSANDMODERATORSONLY:
         # Bypass both members and moderators.
-        if sender in members or sender in moderators:
+        if senderReceiver['sender'] in members or senderReceiver['sender'] in moderators:
             return 'DUNNO'
         else:
             return ACTION_REJECT
