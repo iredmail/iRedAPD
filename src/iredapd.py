@@ -135,8 +135,8 @@ class MySQLModeler:
             senderReceiver = {
                 'sender': map['sender'],
                 'recipient': map['recipient'],
-                'sender_domain': map['sender'].split('@')[-1]
-                'recipient_domain': map['recipient'].split('@')[-1]
+                'sender_domain': map['sender'].split('@')[-1],
+                'recipient_domain': map['recipient'].split('@')[-1],
             }
 
             if len(self.plugins) > 0:
