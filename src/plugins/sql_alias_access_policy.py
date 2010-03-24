@@ -34,6 +34,11 @@ POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
 def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
     # Get alias account from alias table.
+    # If you need to run RAW SQL command, use dbConn.query() instead.
+    # Reference: http://webpy.org/cookbook/query
+    # Sample:
+    #   result = dbConn.query('''SELECT * FROM alias WHERE address=$recipient''', vars=senderReceiver,)
+
     result = dbConn.select('alias',
         senderReceiver, where='address = $recipient AND domain = $recipient_domain',
     )
