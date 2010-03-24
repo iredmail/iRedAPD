@@ -38,7 +38,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
         searchFilter = "(&(objectclass=mailList)(mail=%s))" % (recipient, )
         searchAttr = ['listAllowedUser']
     else:
-        # Policy: membersAndAllowedOnly.
+        # Policy: membersAndModeratorsOnly.
         # Filter used to get both members and moderators.
         searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient, )
         searchAttr = ['mail', 'listAllowedUser']
@@ -88,7 +88,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         else:
             return ACTION_REJECT
     else:
-        # Handle other access policies: membersOnly, allowedOnly, membersAndAllowedOnly.
+        # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
         allowedSenders = __get_allowed_senders(
                 ldapConn=ldapConn,
                 ldapBaseDn=ldapBaseDn,
