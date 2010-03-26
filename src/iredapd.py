@@ -184,6 +184,8 @@ class LDAPModeler:
     def __init__(self):
         import ldap
 
+        self.ldap = ldap
+
         # Read LDAP server settings.
         self.uri = cfg.get('ldap', 'uri', 'ldap://127.0.0.1:389')
         self.binddn = cfg.get('ldap', 'binddn')
@@ -192,7 +194,7 @@ class LDAPModeler:
 
         # Initialize ldap connection.
         try:
-            self.conn = ldap.initialize(self.uri)
+            self.conn = self.ldap.initialize(self.uri)
             logging.debug('LDAP connection initialied success.')
         except Exception, e:
             logging.error('LDAP initialized failed: %s.' % str(e))
@@ -203,7 +205,7 @@ class LDAPModeler:
             try:
                 self.conn.bind_s(self.binddn, self.bindpw)
                 logging.debug('LDAP bind success.')
-            except ldap.INVALID_CREDENTIALS:
+            except self.ldap.INVALID_CREDENTIALS:
                 logging.error('LDAP bind failed: incorrect bind dn or password.')
                 sys.exit()
             except Exception, e:
@@ -215,13 +217,13 @@ class LDAPModeler:
         try:
             result = self.conn.search_s(
                     self.baseDN,
-                    ldap.SCOPE_SUBTREE,
+                    self.ldap.SCOPE_SUBTREE,
                     '(&(|(mail=%s)(shadowAddress=%s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % (recipient, recipient),
                     )
             logging.debug('__get_recipient_dn_ldif (result): %s' % str(result))
             return (result[0][0], result[0][1])
         except Exception, e:
-            logging.debug('!!! ERROR !!! __get_recipient_dn_ldif (result): %s' % str(result))
+            logging.debug('!!! ERROR !!! __get_recipient_dn_ldif (result): %s' % str(e))
             return (None, None)
 
     def __get_access_policy(self, recipient):
@@ -239,7 +241,7 @@ class LDAPModeler:
 
         # Search mail list object.
         searchBasedn = 'mail=%s,ou=Groups,domainName=%s,%s' % (recipient, recipient.split('@')[1], self.baseDN)
-        searchScope = ldap.SCOPE_BASE
+        searchScope = self.ldap.SCOPE_BASE
         searchFilter = cfg.get('ldap', 'filter_maillist')
         searchAttr = cfg.get('ldap', 'attr_access_policy', 'accessPolicy')
 
@@ -251,7 +253,7 @@ class LDAPModeler:
         try:
             result = self.conn.search_s(searchBasedn, searchScope, searchFilter, [searchAttr])
             logging.debug('__get_access_policy (search result): %s' % str(result))
-        except ldap.NO_SUCH_OBJECT:
+        except self.ldap.NO_SUCH_OBJECT:
             logging.debug('__get_access_policy (not a mail list: %s) Returned (None)' % recipient)
             return (None, None)
         except Exception, e:
@@ -281,13 +283,13 @@ class LDAPModeler:
         # Set search base dn, scope, filter and attribute list based on access policy.
         if listpolicy == 'membersOnly':
             baseDN = self.baseDN
-            searchScope = ldap.SCOPE_SUBTREE
+            searchScope = self.ldap.SCOPE_SUBTREE
             # Filter used to get domain members.
             searchFilter = cfg.get("ldap", "filter_member")
             searchAttr = cfg.get("ldap", "attr_member")
         else:
             baseDN = listdn
-            searchScope = ldap.SCOPE_BASE   # Use SCOPE_BASE to improve performance.
+            searchScope = self.ldap.SCOPE_BASE   # Use SCOPE_BASE to improve performance.
             # Filter used to get domain moderators.
             searchFilter = cfg.get("ldap", "filter_allowed_senders")
             searchAttr = cfg.get("ldap", "attr_moderator")
@@ -300,7 +302,7 @@ class LDAPModeler:
         try:
             result = self.conn.search_s(baseDN, searchScope, searchFilter, [searchAttr])
             logging.debug('__get_allowed_senders (search result): %s' % str(result))
-        except ldap.NO_SUCH_OBJECT:
+        except self.ldap.NO_SUCH_OBJECT:
             logging.debug('__get_allowed_senders (not a mail list: %s) Returned (None)' % recipient)
             return None
         except Exception, e:
@@ -357,7 +359,6 @@ class LDAPModeler:
 
     def handle_data(self, map):
         if 'sender' in map.keys() and 'recipient' in map.keys():
-
             # Get plugin module name and convert plugin list to python list type.
             self.plugins = cfg.get('ldap', 'plugins', '')
             self.plugins = [v.strip() for v in self.plugins.split(',')]
@@ -392,12 +393,12 @@ class LDAPModeler:
                     try:
                         logging.debug('Apply plugin (%s).' % (module.__name__, ))
                         pluginAction = module.restriction(
-                                ldapConn=self.conn,
-                                ldapBaseDn=self.baseDN,
-                                ldapRecipientDn=recipientDn,
-                                ldapRecipientLdif=recipientLdif,
-                                smtpSessionData=map,
-                                )
+                            ldapConn=self.conn,
+                            ldapBaseDn=self.baseDN,
+                            ldapRecipientDn=recipientDn,
+                            ldapRecipientLdif=recipientLdif,
+                            smtpSessionData=map,
+                        )
 
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                         if not pluginAction.startswith('DUNNO'):
