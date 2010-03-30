@@ -359,6 +359,10 @@ class LDAPModeler:
 
     def handle_data(self, map):
         if 'sender' in map.keys() and 'recipient' in map.keys():
+            if len(map['sender']) < 6:
+                # Not a valid email address.
+                return 'DUNNO'
+
             # Get plugin module name and convert plugin list to python list type.
             self.plugins = cfg.get('ldap', 'plugins', '')
             self.plugins = [v.strip() for v in self.plugins.split(',')]
