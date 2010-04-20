@@ -4,18 +4,14 @@ listen_addr     = 127.0.0.1
 listen_port     = 7777
 
 # Background/daemon mode: yes, no.
-# Detach iredapd from terminal. Enable when you're happy
-# that things are working as expected.
+# Detach iredapd from terminal. It's recommended to always running as daemon.
 run_as_daemon   = yes
 
 # Path to pid file.
 pid_file        = /var/run/iredapd.pid
 
 # Log type: file.
-# Note:
-#   - Currently, only 'file' type is supported.
-#   - If log_type is 'file', log_file is required.
-#   - If log_type is 'mysql', sql related info are required.
+# Set 'log_file = /dev/null' if you don't want to keep the log.
 log_type        = file
 log_file        = /var/log/iredapd.log
 
