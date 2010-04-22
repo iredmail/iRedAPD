@@ -13,7 +13,7 @@ import asynchat
 import logging
 import daemon
 
-__version__ = "1.2.4-rc2"
+__version__ = "1.3"
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
 
