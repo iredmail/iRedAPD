@@ -1,0 +1,45 @@
+[general]
+# Listen address and port.
+listen_addr     = 127.0.0.1
+listen_port     = 7778
+
+# Background/daemon mode: yes, no.
+# Detach iredapd from terminal. Enable when you're happy
+# that things are working as expected.
+run_as_daemon   = yes
+
+# Path to pid file.
+pid_file        = /var/run/iredapd-rr.pid
+
+# Log type: file.
+# Note:
+#   - Currently, only 'file' type is supported.
+#   - If log_type is 'file', log_file is required.
+#   - If log_type is 'mysql', sql related info are required.
+log_type        = file
+log_file        = /var/log/iredapd-rr.log
+
+# Log level: info, warning, error, debug.
+# 'info' is recommended for product use. sample log entry:
+#       INFO user@domain.ltd -> list@domain.ltd, DUNNO
+log_level       = info
+
+# Backend: ldap, mysql.
+backend = ldap
+
+[ldap]
+# For ldap backend only.
+# LDAP server setting.
+# Uri must starts with ldap:// or ldaps:// (TLS/SSL).
+#
+# Tip: You can get binddn, bindpw from /etc/postfix/ldap_*.cf.
+#
+uri         = ldap://127.0.0.1:389
+binddn      = cn=vmail,dc=iredmail,dc=org
+bindpw      = mRAEWpGRtlCs1O0QuWpXoaJ36EjRql
+basedn      = o=domains,dc=iredmail,dc=org
+
+# Enabled plugins.
+#   - Plugin name is file name which placed under 'src/plugins/' directory.
+#   - Plugin names MUST be seperated by comma.
+plugins = ldap_recipient_restrictions
