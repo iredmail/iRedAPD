@@ -40,8 +40,10 @@ def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
     #   result = dbConn.query('''SELECT * FROM alias WHERE address=$recipient''', vars=senderReceiver,)
 
     result = dbConn.select('alias',
-        senderReceiver, where='address = $recipient AND domain = $recipient_domain',
-    )
+                           senderReceiver,
+                           where='address = $recipient AND domain = $recipient_domain',
+                           limit=1,
+                          )
 
     # Return if recipient account doesn't exist.
     if len(result) != 1:
