@@ -6,26 +6,19 @@ Zhang Huangbin (michaelbibby@gmail.com): Core developer and maintainer
 About
 -----
 
-iRedAPD is a Mailing List Access Policyd Daemon which works as a
-Postfix Policy Access Delegation deamon and uses LDAP to store access 
-policy.
+iRedAPD is a postfix policy daemon.
 
 License
 -------
 
-iRedAPD is based on mlapd (http://code.google.com/p/mlapd) which is a
-GPLv2 licensed open source software, so iRedAPD is released under
-the same license - GPLv2.
+iRedAPD is based on mlapd (http://code.google.com/p/mlapd) which released
+under GPL v2, so iRedAPD is GPL v2 too.
 
 Note: file src/daemon.py is released under its own license, shipped
-here for easy deploying.
+for easy deploying.
 
 Requirments:
 ------------
 
 * Python ( >= 2.4 )
 * python-ldap ( >= 2.2.0 )
-
-Postfix and LDAP are not needed on the same server machine where you
-are going to install iRedAPD, but they have to be reached by iRedAPD to
-make it working!
