@@ -10,8 +10,8 @@
 name='iredapd'
 rcvar=`set_rcvar`
 
-BINPATH='/opt/iredapd-rr/src/iredapd-rr.py'
-CONFIG='/opt/iredapd-rr/etc/iredapd-rr.ini'
+BINPATH='/opt/iredapd/src/iredapd-rr.py'
+CONFIG='/opt/iredapd/etc/iredapd-rr.ini'
 pidfile='/var/run/iredapd-rr.pid'
 
 check_status() {
