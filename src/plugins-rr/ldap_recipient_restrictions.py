@@ -3,7 +3,7 @@
 
 # Author:   Zhang Huangbin <zhb (at) iredmail.org>
 # Date:     2010-04-20
-# Purpose:  Per-user whitelist/blacklist for sender restrictions.
+# Purpose:  Per-user whitelist/blacklist for recipient restrictions.
 #           Bypass all whitelisted recipients, reject all blacklisted recipients.
 
 # ------------- Addition configure required ------------
@@ -21,16 +21,16 @@
 #   - Single address:   user@domain.ltd
 #   - Whole domain:     @domain.ltd
 #   - Whole Domain and its sub-domains: @.domain.ltd
-#   - All sender:       @.
+#   - All recipient:       @.
 
 # Debug.
 #import logging
 #logging.basicConfig(level=logging.DEBUG)
 
 def restriction(smtpSessionData, ldapSenderLdif, **kargs):
-    # Get sender address.
-    sender = smtpSessionData.get('sender').lower()
-    splited_sender_domain = str(sender.split('@')[-1]).split('.')
+    # Get recipient address.
+    recipient = smtpSessionData.get('recipient').lower()
+    splited_recipient_domain = str(recipient.split('@')[-1]).split('.')
 
     # Get correct domain name and sub-domain name.
     # Sample recipient domain: sub2.sub1.com.cn
@@ -39,13 +39,11 @@ def restriction(smtpSessionData, ldapSenderLdif, **kargs):
     #   -> .sub1.com.cn
     #   -> .com.cn
     #   -> .cn
-    list_senders = [sender, '@'+sender.split('@')[-1],]
-    for counter in range(len(splited_sender_domain)):
+    list_recipients = [recipient, '@' + recipient.split('@')[-1],]
+    for counter in range(len(splited_recipient_domain)):
         # Append domain and sub-domain.
-        list_senders += ['@.' + '.'.join(splited_sender_domain)]
-        splited_sender_domain.pop(0)
-
-    #logging.debug(str(list_senders))
+        list_recipients += ['@.' + '.'.join(splited_recipient_domain)]
+        splited_recipient_domain.pop(0)
 
     # Get value of amavisBlacklistedSender.
     blRecipients = [v.lower()
@@ -55,12 +53,12 @@ def restriction(smtpSessionData, ldapSenderLdif, **kargs):
             for v in ldapSenderLdif.get('mailWhitelistRecipient', [])
             ]
 
-    # Bypass whitelisted senders if has intersection set.
-    if len(set(list_senders) & set(wlRecipients)) > 0:
+    # Bypass whitelisted recipients if has intersection set.
+    if len(set(list_recipients) & set(wlRecipients)) > 0:
         return 'DUNNO'
 
-    # Reject blacklisted senders if has intersection set.
-    if len(set(list_senders) & set(blRecipients)) > 0:
+    # Reject blacklisted recipients if has intersection set.
+    if len(set(list_recipients) & set(blRecipients)) > 0:
         return 'REJECT Not authorized'
 
     # If not matched bl/wl list:

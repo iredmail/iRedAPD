@@ -1,3 +1,8 @@
+iRedAPD-1.3.1:
+    * Fix defective sender address list in plugin:
+      block_amavisd_blacklisted_senders.
+    * Fix incorrect recipient address in plugin: ldap_recipient_restrictions.
+
 iRedAPD-1.3.0:
     * Ability to bypass or block centain domains or users in OpenLDAP backend.
       WARNING: This feature requires at least iRedMail-0.6.0.
