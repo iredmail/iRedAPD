@@ -23,11 +23,23 @@ def restriction(smtpSessionData, ldapRecipientLdif, **kargs):
         list_senders += ['@.' + '.'.join(splited_sender_domain)]
         splited_sender_domain.pop(0)
 
-    # Get value of amavisBlacklistedSender.
+    # Get list of amavisBlacklistedSender.
     blSenders = [v.lower() for v in ldapRecipientLdif.get('amavisBlacklistSender', [])]
 
-    if len(set(list_senders) & set(blSenders)) > 0:
-        # Reject blacklisted senders.
-        return 'REJECT Not Authorized'
-    else:
+    # Get list of amavisWhitelistSender.
+    wlSenders = [v.lower() for v in ldapRecipientLdif.get('amavisWhitelistSender', [])]
+
+    #
+    # Process whitelisted senders first.
+    #
+
+    # Bypass whitelisted senders.
+    if len(set(list_senders) & set(wlSenders)) > 0:
         return 'DUNNO'
+
+    # Reject blacklisted senders.
+    if len(set(list_senders) & set(blSenders)) > 0:
+        return 'REJECT Not Authorized'
+
+    # Neither blacklisted nor whitelisted.
+    return 'DUNNO'
