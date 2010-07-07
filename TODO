@@ -1,8 +1,0 @@
-* Check log type and log into correct logger handler.
-* Per-maillist restrictions:
-    - If access policy is 'membersOnly', how about a fake email address?
-    - Handle multiple access policies.
-
-* Per-user restrictions:
-    - http://www.iredmail.org/forum/topic211-block-sender-or-recipient.html
-    - http://www.iredmail.org/forum/topic235-restrict-sending-to-certain-domains.html
