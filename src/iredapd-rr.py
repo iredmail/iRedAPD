@@ -13,7 +13,7 @@ import asynchat
 import logging
 import daemon
 
-__version__ = "1.3.2"
+__version__ = "1.4.0"
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr')
 
@@ -292,6 +292,9 @@ class LDAPModeler:
 
 
 def main():
+    # Set umask.
+    os.umask(0077)
+
     # Chroot in current directory.
     try:
         os.chdir(os.path.abspath(os.path.dirname(__file__)))
