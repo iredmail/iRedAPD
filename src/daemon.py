@@ -51,7 +51,7 @@ import sys
 
 # Default daemon parameters.
 # File mode creation mask of the daemon.
-UMASK = 0
+UMASK = 0077
 
 # Default working directory for the daemon.
 WORKDIR = "/"
