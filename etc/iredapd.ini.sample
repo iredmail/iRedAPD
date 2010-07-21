@@ -3,6 +3,10 @@
 listen_addr     = 127.0.0.1
 listen_port     = 7777
 
+# Run as a low privileged user.
+# If you don't want to create one, you can try 'nobody'.
+run_as_user     = iredapd
+
 # Background/daemon mode: yes, no.
 # Detach iredapd from terminal. It's recommended to always running as daemon.
 run_as_daemon   = yes

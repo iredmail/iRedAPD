@@ -1,7 +1,7 @@
 Please read installation guide here:
 
 - For OpenLDAP backend:
-  http://www.iredmail.org/iredapd_installation.html
+  http://www.iredmail.org/wiki/index.php?title=Install/iRedAPD/OpenLDAP
 
 - For MySQL backend:
   http://www.iredmail.org/wiki/index.php?title=Install/iRedAPD/MySQL

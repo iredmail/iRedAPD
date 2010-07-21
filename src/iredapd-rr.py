@@ -6,6 +6,7 @@
 import os
 import os.path
 import sys
+import pwd
 import ConfigParser
 import socket
 import asyncore
@@ -295,12 +296,6 @@ def main():
     # Set umask.
     os.umask(0077)
 
-    # Chroot in current directory.
-    try:
-        os.chdir(os.path.abspath(os.path.dirname(__file__)))
-    except:
-        pass
-
     # Get listen address/port.
     listen_addr = cfg.get('general', 'listen_addr', '127.0.0.1')
     listen_port = int(cfg.get('general', 'listen_port', '7777'))
@@ -333,11 +328,18 @@ def main():
     if run_as_daemon == 'yes':
         daemon.daemonize()
 
+    # Run as a low privileged user.
+    run_as_user = cfg.get('general', 'run_as_user', 'nobody')
+    uid = pwd.getpwnam(run_as_user)[2]
+
     try:
         # Write pid number into pid file.
         f = open(cfg.get('general', 'pid_file', '/var/run/iredapd.pid'), 'w')
         f.write(str(os.getpid()))
         f.close()
+
+        # Set uid.
+        os.setuid(uid)
 
         # Starting loop.
         asyncore.loop()
