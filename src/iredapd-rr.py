@@ -68,7 +68,7 @@ class apdChannel(asynchat.async_chat):
                     modeler = MySQLModeler()
 
                 result = modeler.handle_data(self.map)
-                logging.debug("result replying: %s." % str(result))
+                logging.debug("Final action: %s." % str(result))
                 if result != None:
                     action = result
                 else:
@@ -156,7 +156,6 @@ class MySQLModeler:
                 #
                 # Apply plugins.
                 #
-                self.action = ''
                 for module in self.modules:
                     try:
                         logging.debug('Apply plugin (%s).' % (module.__name__, ))
@@ -170,6 +169,8 @@ class MySQLModeler:
                         if not pluginAction.startswith('DUNNO'):
                             logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                             return pluginAction
+
+                        return 'DUNNO'
                     except Exception, e:
                         logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
 
@@ -217,6 +218,7 @@ class LDAPModeler:
         logging.debug('__get_sender_dn_ldif (sender): %s' % sender)
 
         if len(sender) < 6 or sender is None:
+            logging.debug('__get_sender_dn_ldif: Sender is not a valid email address.')
             return (None, None)
 
         try:
@@ -266,7 +268,6 @@ class LDAPModeler:
                 #
                 # Apply plugins.
                 #
-                self.action = ''
                 for module in self.modules:
                     try:
                         logging.debug('Apply plugin (%s).' % (module.__name__, ))
@@ -282,6 +283,8 @@ class LDAPModeler:
                         if not pluginAction.startswith('DUNNO'):
                             logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                             return pluginAction
+
+                        return 'DUNNO'
                     except Exception, e:
                         logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
 

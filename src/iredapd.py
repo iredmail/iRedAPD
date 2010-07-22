@@ -68,7 +68,7 @@ class apdChannel(asynchat.async_chat):
                     modeler = MySQLModeler()
 
                 result = modeler.handle_data(self.map)
-                logging.debug("result replying: %s." % str(result))
+                logging.debug("Final action: %s." % str(result))
                 if result != None:
                     action = result
                 else:

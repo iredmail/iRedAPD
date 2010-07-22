@@ -23,14 +23,10 @@
 #   - Whole Domain and its sub-domains: @.domain.ltd
 #   - All recipient:       @.
 
-# Debug.
-#import logging
-#logging.basicConfig(level=logging.DEBUG)
-
 def restriction(smtpSessionData, ldapSenderLdif, **kargs):
     # Get recipient address.
-    recipient = smtpSessionData.get('recipient').lower()
-    splited_recipient_domain = str(recipient.split('@')[-1]).split('.')
+    smtpRecipient = smtpSessionData.get('recipient').lower()
+    splited_recipient_domain = str(smtpRecipient.split('@')[-1]).split('.')
 
     # Get correct domain name and sub-domain name.
     # Sample recipient domain: sub2.sub1.com.cn
@@ -39,26 +35,27 @@ def restriction(smtpSessionData, ldapSenderLdif, **kargs):
     #   -> .sub1.com.cn
     #   -> .com.cn
     #   -> .cn
-    list_recipients = [recipient, '@' + recipient.split('@')[-1],]
+    recipients = [smtpRecipient, '@' + smtpRecipient.split('@')[-1],]
     for counter in range(len(splited_recipient_domain)):
         # Append domain and sub-domain.
-        list_recipients += ['@.' + '.'.join(splited_recipient_domain)]
+        recipients += ['@.' + '.'.join(splited_recipient_domain)]
         splited_recipient_domain.pop(0)
 
-    # Get value of amavisBlacklistedSender.
+    # Get value of mailBlacklistedRecipient, mailWhitelistRecipient.
     blRecipients = [v.lower()
             for v in ldapSenderLdif.get('mailBlacklistRecipient', [])
             ]
+
     wlRecipients = [v.lower()
             for v in ldapSenderLdif.get('mailWhitelistRecipient', [])
             ]
 
     # Bypass whitelisted recipients if has intersection set.
-    if len(set(list_recipients) & set(wlRecipients)) > 0:
+    if len(set(recipients) & set(wlRecipients)) > 0:
         return 'DUNNO'
 
     # Reject blacklisted recipients if has intersection set.
-    if len(set(list_recipients) & set(blRecipients)) > 0:
+    if len(set(recipients) & set(blRecipients)) > 0 or '@.' in blRecipients:
         return 'REJECT Not authorized'
 
     # If not matched bl/wl list:
