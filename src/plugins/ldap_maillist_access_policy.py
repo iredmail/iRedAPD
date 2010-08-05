@@ -65,10 +65,10 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         return 'DUNNO'
 
     sender = smtpSessionData['sender'].lower()
-    sender_domain = sender.split('@')[1]
+    sender_domain = sender.split('@')[-1]
 
     recipient = smtpSessionData['recipient'].lower()
-    recipient_domain = recipient.split('@')[1]
+    recipient_domain = recipient.split('@')[-1]
 
     policy = ldapRecipientLdif.get('accessPolicy', ['public'])[0].lower()
 

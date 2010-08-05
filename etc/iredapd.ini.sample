@@ -42,6 +42,13 @@ basedn      = o=domains,dc=iredmail,dc=org
 # Enabled plugins.
 #   - Plugin name is file name which placed under 'src/plugins/' directory.
 #   - Plugin names MUST be seperated by comma.
+#
+# Available plugins:
+#   * ldap_domain_wblist: per-domain white/blacklist support.
+#       Note: If you want to enable this plugin, it's better to make it the
+#             first one in enabled plugin list.
+#   * ldap_maillist_access_policy: mail list deliver restrictions.
+#   * block_amavisd_blacklisted_senders: per-user white/blacklist support.
 plugins = ldap_maillist_access_policy
 
 [mysql]
