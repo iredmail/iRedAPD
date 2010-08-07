@@ -60,11 +60,17 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
     # Get list of restricted ip addresses.
     senderIP = smtpSessionData['client_address']
     (ipf1, ipf2, ipf3, ipf4) = senderIP.split('.')
-    listOfRestrictedIPAddresses = [senderIP,
-                '.'.join([ipf1, '%', ipf3, ipf4]),
-                '.'.join([ipf1, ipf2, '%', ipf4]),
-                '.'.join([ipf1, ipf2, ipf3, '%']),
-               ]
+    listOfRestrictedIPAddresses = [
+        senderIP,                           # xx.xx.xx.xx
+        '.'.join([ipf1, '%.%', ipf4]),      # xx.%.%.xx
+        '.'.join([ipf1, '%', ipf3, ipf4]),  # xx.%.xx.xx
+        '.'.join([ipf1, '%', ipf3, '%']),   # xx.%.xx.%
+        '.'.join([ipf1, '%.%.%']),          # xx.%.%.%
+        '.'.join([ipf1, ipf2, '%', ipf4]),  # xx.xx.%.xx
+        '.'.join([ipf1, ipf2, '%.%']),      # xx.xx.%.%
+        '.'.join([ipf1, ipf2, ipf3, '%']),  # xx.xx.xx.%
+        '%.%.%.%',                          # %.%.%.% Matches all IP addresses.
+    ]
 
     filterOfIPAddr = ''
     for i in listOfRestrictedIPAddresses:
