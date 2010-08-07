@@ -1,7 +1,8 @@
 iRedAPD-1.3.4:
     * New plugin: ldap_domain_wblist, used for per-domain white/blacklist
-      support. NOTE: This plugin requires latest iRedMail LDAP schema file for
-      proper attributes. It's shipped in iRedMail >= 0.6.1.
+      support (including domain alias). NOTE: This plugin requires latest
+      iRedMail LDAP schema file for proper attributes. It's shipped in
+      iRedMail >= 0.6.1.
 
 iRedAPD-1.3.3:
     * Fix bug in src/plugins-rr/ldap_recipient_restriction.py. Thanks

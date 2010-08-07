@@ -14,7 +14,7 @@ import asynchat
 import logging
 import daemon
 
-__version__ = "1.4.0"
+__version__ = "1.3.4"
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr')
 

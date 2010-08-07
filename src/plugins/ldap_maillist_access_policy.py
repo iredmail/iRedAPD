@@ -18,7 +18,7 @@
 
 import sys
 
-ACTION_REJECT = 'REJECT Not Authorized'
+ACTION_REJECT = 'REJECT Not Authorized.'
 
 def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, policy,):
     """return search_result_list_based_on_access_policy"""
@@ -62,7 +62,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
 def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSessionData, **kargs):
     # Return if recipient is not a mail list object.
     if 'maillist' not in [v.lower() for v in ldapRecipientLdif['objectClass']]:
-        return 'DUNNO'
+        return 'DUNNO Not a mail list account.'
 
     sender = smtpSessionData['sender'].lower()
     sender_domain = sender.split('@')[-1]
@@ -74,19 +74,19 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
 
     if policy == "public":
         # No restriction.
-        return 'DUNNO'
+        return 'DUNNO Access policy: public.'
     elif policy == "domain":
         # Bypass all users under the same domain.
         if sender_domain == recipient_domain:
-            return 'DUNNO'
+            return 'DUNNO Access policy: domain'
         else:
-            return ACTION_REJECT
+            return ACTION_REJECT + ' Access policy: domain.'
     elif policy == "subdomain":
         # Bypass all users under the same domain and sub domains.
         if sender.endswith('.' + recipient_domain):
-            return 'DUNNO'
+            return 'DUNNO Access policy: sub domains.'
         else:
-            return ACTION_REJECT
+            return ACTION_REJECT + ' Access policy: sub domains.'
     else:
         # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
         allowedSenders = __get_allowed_senders(
@@ -99,6 +99,6 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
                 )
 
         if sender.lower() in [v.lower() for v in allowedSenders]:
-            return 'DUNNO'
+            return 'DUNNO Allowed sender.'
         else:
             return ACTION_REJECT

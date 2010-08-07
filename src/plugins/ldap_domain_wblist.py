@@ -44,7 +44,18 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
 
     recipient = smtpSessionData['recipient'].lower()
     recipientDomain = recipient.split('@')[-1]
-    dnOfRecipientDomain = escape_filter_chars('domainName=' + recipientDomain + ',' + ldapBaseDn)
+
+    # Query ldap to get domain dn, with domain alias support.
+    try:
+        resultDnOfDomain = ldapConn.search_s(
+            ldapBaseDn,
+            1,                  # 1 = ldap.SCOPE_ONELEVEL
+            '(|(domainName=%s)(domainAliasName=%s))' % (recipientDomain, recipientDomain),
+            ['dn'],
+        )
+        dnOfRecipientDomain = resultDnOfDomain[0][0]
+    except Exception, e:
+        return 'DUNNO Error while fetching domain dn: %s' % (str(e))
 
     # Get list of restricted ip addresses.
     senderIP = smtpSessionData['client_address']
@@ -60,7 +71,8 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
         filterOfIPAddr += '(domainWhitelistIP=%s)(domainBlacklistIP=%s)' % (i, i,)
 
     # Generate final search filter.
-    filter = '(&(objectClass=mailDomain)(domainName=%s)(|%s))' % (
+    filter = '(&(objectClass=mailDomain)(|(domainName=%s)(domainAliasName=%s))(|%s))' % (
+        recipientDomain,
         recipientDomain,
         filterOfSenders + filterOfIPAddr,
     )
@@ -75,7 +87,7 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
 
         if len(resultWblists) == 0:
             # No white/blacklist available.
-            return 'DUNNO'
+            return 'DUNNO No white-/blacklist found.'
 
         # Whitelist first.
         whitelistedSenders = resultWblists[0][1].get('domainWhitelistSender', [])
@@ -83,7 +95,7 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
 
         if len(set(listOfRestrictedSenders) & set(whitelistedSenders)) > 0 or \
            len(set(listOfRestrictedIPAddresses) & set(whitelistedIPAddresses)) > 0:
-            return 'DUNNO Whitelisted'
+            return 'DUNNO Whitelisted.'
 
         # Blacklist.
         blacklistedSenders = resultWblists[0][1].get('domainBlacklistSender', [])
@@ -93,7 +105,7 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
            len(set(listOfRestrictedIPAddresses) & set(blacklistedIPAddresses)) > 0:
             return 'REJECT Blacklisted'
 
-        return 'DUNNO'
+        return 'DUNNO Not listed in white-/blacklist records.'
     except Exception, e:
         # Error while quering LDAP server, return 'DUNNO' instead of rejecting emails.
-        return 'DUNNO'
+        return 'DUNNO Error while fetching white-/blacklist records: %s' % (str(e))

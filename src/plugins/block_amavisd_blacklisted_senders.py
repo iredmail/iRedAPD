@@ -35,11 +35,11 @@ def restriction(smtpSessionData, ldapRecipientLdif, **kargs):
 
     # Bypass whitelisted senders.
     if len(set(list_senders) & set(wlSenders)) > 0:
-        return 'DUNNO'
+        return 'DUNNO Whitelisted'
 
     # Reject blacklisted senders.
     if len(set(list_senders) & set(blSenders)) > 0:
-        return 'REJECT Not Authorized'
+        return 'REJECT Blacklisted'
 
     # Neither blacklisted nor whitelisted.
-    return 'DUNNO'
+    return 'DUNNO No white-/blacklist records found.'
