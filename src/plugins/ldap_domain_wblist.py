@@ -1,30 +1,16 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Author: Zhang Huangbin <michaelbibby (at) gmail.com>
+# Author: Zhang Huangbin <zhb@ iredmail.org>
 
 # ----------------------------------------------------------------------------
-# This plugin is used for mail deliver restriction.
-#
-# Handled policies:
-#   - public:   Unrestricted
-#   - domain:   Only users under same domain are allowed.
-#   - subdomain:    Only users under same domain and sub domains are allowed.
-#   - membersOnly:  Only members are allowed.
-#   - moderatorsOnly:   Only moderators are allowed.
-#   - membersAndModeratorsOnly: Only members and moderators are allowed.
-
+# This plugin is used for per-domain white-/blacklist.
 # ----------------------------------------------------------------------------
 
 import sys
 from ldap.filter import escape_filter_chars
 
 ACTION_REJECT = 'REJECT Not Authorized'
-
-# smtp session data
-#   * sasl username
-#   * recipient address
-# LDIF of domain
 
 def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
     sender = smtpSessionData['sender'].lower()
