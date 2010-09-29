@@ -16,12 +16,13 @@ import daemon
 
 __version__ = "1.3.4"
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr')
-
 ACTION_ACCEPT = 'DUNNO'
 ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
 ACTION_REJECT = 'REJECT Not Authorized'
 ACTION_DEFAULT = 'DUNNO'
+
+PLUGIN_DIR = os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr'
+sys.path.append(PLUGIN_DIR)
 
 # Get config file.
 if len(sys.argv) != 2:
@@ -68,11 +69,11 @@ class apdChannel(asynchat.async_chat):
                     modeler = MySQLModeler()
 
                 result = modeler.handle_data(self.map)
-                logging.debug("Final action: %s." % str(result))
                 if result != None:
                     action = result
                 else:
                     action = ACTION_ACCEPT
+                logging.debug("Final action: %s." % str(result))
             except Exception, e:
                 action = ACTION_DEFAULT
                 logging.debug('Error: %s. Use default action instead: %s' %
@@ -150,6 +151,10 @@ class MySQLModeler:
                 for plugin in self.plugins:
                     try:
                         self.modules.append(__import__(plugin))
+                    except ImportError:
+                        # Print error message if plugin module doesn't exist.
+                        # Use logging.info to let admin know this critical error.
+                        logging.info('Error: plugin %s/%s.py not exist.' % (PLUGIN_DIR, plugin))
                     except Exception, e:
                         logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 
@@ -262,6 +267,10 @@ class LDAPModeler:
                 for plugin in self.plugins:
                     try:
                         self.modules.append(__import__(plugin))
+                    except ImportError:
+                        # Print error message if plugin module doesn't exist.
+                        # Use logging.info to let admin know this critical error.
+                        logging.info('Error: plugin %s/%s.py not exist.' % (PLUGIN_DIR, plugin))
                     except Exception, e:
                         logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 
