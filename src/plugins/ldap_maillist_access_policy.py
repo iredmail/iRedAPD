@@ -30,7 +30,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
     if policy == 'membersonly':
         # Filter used to get domain members.
         searchFilter = "(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
-        searchAttr = ['mail']
+        searchAttr = ['mail', 'shadowAddress',]
     elif policy == 'allowedonly' or policy == 'moderatorsonly':
         basedn = listDn
         searchScope = 0     # Use SCOPE_BASE to improve performance.
@@ -41,7 +41,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
         # Policy: membersAndModeratorsOnly.
         # Filter used to get both members and moderators.
         searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient, )
-        searchAttr = ['mail', 'listAllowedUser']
+        searchAttr = ['mail', 'shadowAddress', 'listAllowedUser',]
 
     try:
         result = ldapConn.search_s(basedn, searchScope, searchFilter, searchAttr)
