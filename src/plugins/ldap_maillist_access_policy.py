@@ -17,11 +17,15 @@
 # ----------------------------------------------------------------------------
 
 import sys
+import os
 
 ACTION_REJECT = 'REJECT Not Authorized.'
+PLUGIN_NAME = os.path.basename(__file__)
 
-def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, policy,):
+def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, policy, logger, *kw, **kargs):
     """return search_result_list_based_on_access_policy"""
+
+    logger.debug('(%s) Get allowed senders...' % (PLUGIN_NAME))
 
     basedn = ldapBaseDn
     searchScope = 2     # Use SCOPE_BASE to improve performance.
@@ -43,6 +47,11 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
         searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient, )
         searchAttr = ['mail', 'shadowAddress', 'listAllowedUser',]
 
+    logger.debug('(%s) base dn: %s' % (PLUGIN_NAME, basedn))
+    logger.debug('(%s) search scope: %s' % (PLUGIN_NAME, searchScope))
+    logger.debug('(%s) search filter: %s' % (PLUGIN_NAME, searchFilter))
+    logger.debug('(%s) search attributes: %s' % (PLUGIN_NAME, ', '.join(searchAttr)))
+
     try:
         result = ldapConn.search_s(basedn, searchScope, searchFilter, searchAttr)
         userList = []
@@ -54,12 +63,13 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
                     userList += obj[1][k]
                 else:
                     pass
+        logger.debug('(%s) search result: %s' % (PLUGIN_NAME, str(userList)))
         return userList
-
     except Exception, e:
+        logger.debug('(%s) Error: %s' % (PLUGIN_NAME, str(e)))
         return []
 
-def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSessionData, **kargs):
+def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSessionData, logger, **kargs):
     # Return if recipient is not a mail list object.
     if 'maillist' not in [v.lower() for v in ldapRecipientLdif['objectClass']]:
         return 'DUNNO Not a mail list account.'
@@ -71,6 +81,10 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
     recipient_domain = recipient.split('@')[-1]
 
     policy = ldapRecipientLdif.get('accessPolicy', ['public'])[0].lower()
+
+    logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
+    logger.debug('(%s) Recipient: %s' % (PLUGIN_NAME, recipient))
+    logger.debug('(%s) Policy: %s' % (PLUGIN_NAME, policy))
 
     if policy == "public":
         # No restriction.
@@ -90,13 +104,14 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
     else:
         # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
         allowedSenders = __get_allowed_senders(
-                ldapConn=ldapConn,
-                ldapBaseDn=ldapBaseDn,
-                listDn=ldapRecipientDn,
-                sender=sender,
-                recipient=recipient,
-                policy=policy,
-                )
+            ldapConn=ldapConn,
+            ldapBaseDn=ldapBaseDn,
+            listDn=ldapRecipientDn,
+            sender=sender,
+            recipient=recipient,
+            policy=policy,
+            logger=logger,
+        )
 
         if sender.lower() in [v.lower() for v in allowedSenders]:
             return 'DUNNO Allowed sender.'

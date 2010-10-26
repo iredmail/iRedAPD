@@ -1,18 +1,18 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
-# Author: Zhang Huangbin <zhb@ iredmail.org>
+# Author: Zhang Huangbin <zhb@iredmail.org>
 
 # ----------------------------------------------------------------------------
 # This plugin is used for per-domain white-/blacklist.
 # ----------------------------------------------------------------------------
 
 import sys
+import os
 from ldap.filter import escape_filter_chars
+
+PLUGIN_NAME = os.path.basename(__file__)
 
 ACTION_REJECT = 'REJECT Not Authorized'
 
-def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
+def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
     sender = smtpSessionData['sender'].lower()
     senderDomain = sender.split('@')[-1]
     splitedSenderDomain = str(sender.split('@')[-1]).split('.')
@@ -31,6 +31,9 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
     recipient = smtpSessionData['recipient'].lower()
     recipientDomain = recipient.split('@')[-1]
 
+    logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
+    logger.debug('(%s) Recipient: %s' % (PLUGIN_NAME, recipient))
+
     # Query ldap to get domain dn, with domain alias support.
     try:
         resultDnOfDomain = ldapConn.search_s(
@@ -40,6 +43,7 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
             ['dn'],
         )
         dnOfRecipientDomain = resultDnOfDomain[0][0]
+        logger.debug('(%s) DN of recipient domain: %s' % (PLUGIN_NAME, dnOfRecipientDomain))
     except Exception, e:
         return 'DUNNO Error while fetching domain dn: %s' % (str(e))
 
@@ -81,17 +85,27 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, **kargs):
             # No white/blacklist available.
             return 'DUNNO No white-/blacklist found.'
 
+        ###################
         # Whitelist first.
+        #
         whitelistedSenders = resultWblists[0][1].get('domainWhitelistSender', [])
         whitelistedIPAddresses = resultWblists[0][1].get('domainWhitelistIP', [])
+
+        logger.debug('(%s) Whitelisted senders: %s' % (PLUGIN_NAME, ', '.join(whitelistedSenders)))
+        logger.debug('(%s) Whitelisted IP addresses: %s' % (PLUGIN_NAME, ', '.join(whitelistedIPAddresses)))
 
         if len(set(listOfRestrictedSenders) & set(whitelistedSenders)) > 0 or \
            len(set(listOfRestrictedIPAddresses) & set(whitelistedIPAddresses)) > 0:
             return 'DUNNO Whitelisted.'
 
+        ###################
         # Blacklist.
+        #
         blacklistedSenders = resultWblists[0][1].get('domainBlacklistSender', [])
         blacklistedIPAddresses = resultWblists[0][1].get('domainBlacklistIP', [])
+
+        logger.debug('(%s) Blacklisted senders: %s' % (PLUGIN_NAME, ', '.join(blacklistedSenders)))
+        logger.debug('(%s) Blacklisted IP addresses: %s' % (PLUGIN_NAME, ', '.join(blacklistedIPAddresses)))
 
         if len(set(listOfRestrictedSenders) & set(blacklistedSenders)) > 0 or \
            len(set(listOfRestrictedIPAddresses) & set(blacklistedIPAddresses)) > 0:

@@ -173,6 +173,7 @@ class MySQLModeler:
                             dbConn=self.db,
                             senderReceiver=senderReceiver,
                             smtpSessionData=map,
+                            logger=logging,
                         )
 
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
@@ -416,6 +417,7 @@ class LDAPModeler:
                             ldapRecipientDn=recipientDn,
                             ldapRecipientLdif=recipientLdif,
                             smtpSessionData=map,
+                            logger=logging,
                         )
 
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))

@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-# encoding: utf-8
+# Author: Zhang Huangbin <zhb@iredmail.org>
 
-# Author: Zhang Huangbin <michaelbibby (at) gmail.com>
 # Date: 2010-03-12
 # Purpose: Apply access policy on sender while recipient is an alias.
 
@@ -20,8 +18,10 @@
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
 import sys
+import os
 
 ACTION_REJECT = 'REJECT Not Authorized'
+PLUGIN_NAME = os.path.basename(__file__)
 
 # Policies. MUST be defined in lower case.
 POLICY_PUBLIC = 'public'
@@ -32,22 +32,23 @@ POLICY_MODERATORSONLY = 'moderatorsonly'
 POLICY_ALLOWEDONLY = 'allowedOnly'      # Same as @POLICY_MODERATORSONLY
 POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
-def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
+def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
     # Get alias account from alias table.
     # If you need to run RAW SQL command, use dbConn.query() instead.
     # Reference: http://webpy.org/cookbook/query
     # Sample:
     #   result = dbConn.query('''SELECT * FROM alias WHERE address=$recipient''', vars=senderReceiver,)
 
-    result = dbConn.select('alias',
-                           senderReceiver,
-                           where='address = $recipient AND domain = $recipient_domain',
-                           limit=1,
-                          )
+    result = dbConn.select(
+        'alias',
+        senderReceiver,
+        where='address = $recipient AND domain = $recipient_domain',
+        limit=1,
+    )
 
-    # Return if recipient account doesn't exist.
+    # Recipient account doesn't exist.
     if len(result) != 1:
-        return 'DUNNO'
+        return 'DUNNO Account does not exist.'
 
     # Use the first SQL record.
     sqlRecord = result[0]
@@ -56,6 +57,10 @@ def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
 
     members = [str(v.lower()) for v in sqlRecord.get('goto', '').split(',')]
     moderators = [str(v.lower()) for v in sqlRecord.get('moderators', '').split(',')]
+
+    logger.debug('(%s) policy: %s' % (PLUGIN_NAME, policy))
+    logger.debug('(%s) members: %s' % (PLUGIN_NAME, ', '.join(members)))
+    logger.debug('(%s) moderators: %s' % (PLUGIN_NAME, ', '.join(moderators)))
 
     if policy == POLICY_PUBLIC:
         # Return if no access policy available or policy is @POLICY_PUBLIC.
@@ -92,4 +97,4 @@ def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
             return ACTION_REJECT
     else:
         # Bypass all if policy is not defined in this plugin.
-        return 'DUNNO'
+        return 'DUNNO Policy is not defined in plugin (%s): %s.' % (PLUGIN_NAME, policy)

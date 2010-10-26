@@ -1,11 +1,11 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
-# Author: Zhang Huangbin (zhb@iredmail.org)
+# Author: Zhang Huangbin <zhb@iredmail.org>
 
 import sys
+import os
 
-def restriction(smtpSessionData, ldapRecipientLdif, **kargs):
+PLUGIN_NAME = os.path.basename(__file__)
+
+def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
     # Get sender address.
     sender = smtpSessionData.get('sender').lower()
     splited_sender_domain = str(sender.split('@')[-1]).split('.')
@@ -28,6 +28,10 @@ def restriction(smtpSessionData, ldapRecipientLdif, **kargs):
 
     # Get list of amavisWhitelistSender.
     wlSenders = [v.lower() for v in ldapRecipientLdif.get('amavisWhitelistSender', [])]
+
+    logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
+    logger.debug('(%s) Blacklisted senders: %s' % (PLUGIN_NAME, ', '.join(blSenders)))
+    logger.debug('(%s) Whitelisted senders: %s' % (PLUGIN_NAME, ', '.join(wlSenders)))
 
     #
     # Process whitelisted senders first.

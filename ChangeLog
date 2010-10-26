@@ -1,4 +1,6 @@
 iRedAPD-1.3.4:
+    * Allow to use same logging hander in plugins, print plugin debug message.
+    * Queary user aliases as allowed sender.
     * Print error message if plugin module doesn't exist.
     * New plugin: ldap_domain_wblist, used for per-domain white/blacklist
       support (including domain alias). NOTE: This plugin requires latest
