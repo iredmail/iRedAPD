@@ -1,4 +1,6 @@
 iRedAPD-1.3.4:
+    * Bypass user alias addresses (shadowAddress) if user is allowed to send
+      to mail list. Thanks Henri Veldsink for his feedback and testing.
     * Allow to use same logging hander in plugins, print plugin debug message.
     * Queary user aliases as allowed sender.
     * Print error message if plugin module doesn't exist.
