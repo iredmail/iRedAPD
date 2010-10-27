@@ -87,7 +87,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
             logger.debug('(%s) Addition query to get user aliases...' % (PLUGIN_NAME))
 
             basedn = 'ou=Users,' + domaindn
-            searchFilter = '(&(objectClass=mailUser)(|'
+            searchFilter = '(&(objectClass=mailUser)(enabledService=shadowaddress)(|'
             for i in userList:
                 searchFilter += '(mail=%s)' % i
             searchFilter += '))'
