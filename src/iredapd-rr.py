@@ -59,7 +59,7 @@ class apdChannel(asynchat.async_chat):
             logging.debug("smtp session: " + line)
             if line.find('=') != -1:
                 key = line.split('=')[0]
-                value = line.split('=')[1]
+                value = line.split('=', 1)[1]
                 self.map[key] = value
         elif len(self.map) != 0:
             try:

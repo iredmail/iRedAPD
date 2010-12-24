@@ -8,7 +8,7 @@ listen_port     = 7777
 run_as_user     = iredapd
 
 # Background/daemon mode: yes, no.
-# Detach iredapd from terminal. It's recommended to always running as daemon.
+# Run iRedAPD as daemon, detach iredapd from terminal.
 run_as_daemon   = yes
 
 # Path to pid file.
