@@ -3,7 +3,7 @@
 # Author: Zhang Huangbin (michaelbibby@gmail.com)
 
 ### BEGIN RHEL/CentOS INIT INFO
-# chkconfig: - 27 73
+# chkconfig: - 99 99
 # description: iredapd is a mail list access policy daemon.
 # processname: iredapd
 ### END RHEL/CentOS INIT INFO
