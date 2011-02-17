@@ -226,13 +226,18 @@ class LDAPModeler:
     def __get_recipient_dn_ldif(self, recipient):
         logging.debug('__get_recipient_dn_ldif (recipient): %s' % recipient)
         try:
-            result = self.conn.search_s(
-                    self.baseDN,
-                    self.ldap.SCOPE_SUBTREE,
-                    '(&(|(mail=%s)(shadowAddress=%s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % (recipient, recipient),
-                    )
-            logging.debug('__get_recipient_dn_ldif (result): %s' % str(result))
-            return (result[0][0], result[0][1])
+            filter = '(&(|(mail=%s)(shadowAddress=%s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % (recipient, recipient)
+            logging.debug('__get_recipient_dn_ldif (ldap query filter): %s' % filter)
+
+            result = self.conn.search_s(self.baseDN, self.ldap.SCOPE_SUBTREE, filter)
+
+            if len(result) == 1:
+                logging.debug('__get_recipient_dn_ldif (ldap query result): %s' % str(result))
+                dn, entry = result[0]
+                return (dn, entry)
+            else:
+                logging.debug('Can not find recipient in LDAP server.')
+                return (None, None)
         except Exception, e:
             logging.debug('!!! ERROR !!! __get_recipient_dn_ldif (result): %s' % str(e))
             return (None, None)
@@ -385,7 +390,7 @@ class LDAPModeler:
 
                 # Return if recipient account doesn't exist.
                 if recipientDn is None or recipientLdif is None:
-                    logging.debug('Recipient DN or LDIF is none.')
+                    logging.debug('Recipient DN or LDIF is None.')
                     return ACTION_DEFAULT
 
                 #
