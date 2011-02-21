@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Author: Zhang Huangbin <michaelbibby (at) gmail.com>
+# Author: Zhang Huangbin <zhb (at) iredmail.org>
 
 import os
 import os.path
@@ -26,7 +26,7 @@ sys.path.append(PLUGIN_DIR)
 
 # Get config file.
 if len(sys.argv) != 2:
-    sys.exit('Usage: %s /path/to/iredapd.ini')
+    sys.exit('Usage: %s /path/to/iredapd-rr.ini')
 else:
     config_file = sys.argv[1]
 

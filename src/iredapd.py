@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Author: Zhang Huangbin <michaelbibby (at) gmail.com>
+# Author: Zhang Huangbin <zhb (at) iredmail.org>
 
 import os
 import os.path
@@ -236,7 +236,7 @@ class LDAPModeler:
                 dn, entry = result[0]
                 return (dn, entry)
             else:
-                logging.debug('Can not find recipient in LDAP server.')
+                logging.debug('__get_recipient_dn_ldif: Can not find recipient in LDAP server.')
                 return (None, None)
         except Exception, e:
             logging.debug('!!! ERROR !!! __get_recipient_dn_ldif (result): %s' % str(e))
