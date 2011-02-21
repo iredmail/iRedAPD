@@ -30,6 +30,9 @@ log_level       = info
 # Backend: ldap, mysql.
 backend = ldap
 
+# Bypass clients listed in postfix 'mynetworks': yes, no.
+bypass_mynetworks = no
+
 [ldap]
 # For ldap backend only.
 # LDAP server setting.

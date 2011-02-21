@@ -251,7 +251,13 @@ class LDAPModeler:
             if len(self.plugins) > 0:
 
                 # Get account dn and LDIF data.
-                senderDN, senderLdif = self.__get_sender_dn_ldif(map['sasl_username'])
+                bypass_mynetworks = cfg.get('general', 'bypass_mynetworks', 'no')
+                if bypass_mynetworks == 'yes':
+                    sender = map['sasl_username']
+                else:
+                    sender = map['sender']
+
+                senderDN, senderLdif = self.__get_sender_dn_ldif(sender)
 
                 # Return if recipient account doesn't exist.
                 if senderDN is None or senderLdif is None:
