@@ -136,8 +136,24 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
 
     recipient = smtpSessionData['recipient'].lower()
     recipient_domain = recipient.split('@')[-1]
+    recipient_alias_domains = []
 
     policy = ldapRecipientLdif.get('accessPolicy', ['public'])[0].lower()
+
+    if policy in ['domain', 'subdomain',]:
+        try:
+            qr = ldapConn.search_s(
+                ldapBaseDn,
+                ldap.SCOPE_ONELEVEL,
+                "(&(objectClass=mailDomain)(|(domainName=%s)(domainAliasName=%s)))" % (recipient_domain, recipient_domain),
+                ['domainName', 'domainAliasName',]
+            )
+            if len(qr) == 0:
+                recipient_alias_domains = qr[0][1].get('domainName', []) + qr[0][1].get('domainAliasName', [])
+        except Exception, e:
+            logger.debug('(%s) Error while fetch domainAliasName: %s' % (PLUGIN_NAME, str(e),))
+
+        logger.debug('(%s) Recipient domain and alias domainss: %s' % (PLUGIN_NAME, ','.join(recipient_alias_domains)))
 
     logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
     logger.debug('(%s) Recipient: %s' % (PLUGIN_NAME, recipient))
@@ -148,16 +164,19 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         return 'DUNNO Access policy: public.'
     elif policy == "domain":
         # Bypass all users under the same domain.
-        if sender_domain == recipient_domain:
+        if sender_domain in recipient_alias_domains:
             return 'DUNNO Access policy: domain'
         else:
             return ACTION_REJECT + ' Access policy: domain.'
     elif policy == "subdomain":
         # Bypass all users under the same domain and sub domains.
-        if sender.endswith('.' + recipient_domain):
-            return 'DUNNO Access policy: sub domains.'
-        else:
-            return ACTION_REJECT + ' Access policy: sub domains.'
+        returned = False
+        for d in recipient_alias_domains:
+            if sender.endswith('.' + d):
+                return 'DUNNO Access policy: subdomain (%s)' % (d)
+
+        if returned is False:
+            return ACTION_REJECT + ' Access policy: subdomain.'
     else:
         # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
         allowedSenders = __get_allowed_senders(

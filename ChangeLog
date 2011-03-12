@@ -1,4 +1,6 @@
 iRedAPD-1.3.4:
+    * Bypass sender if it's under domainAliasName when access policy is
+      'domain' or 'subdomain'. Thanks Alvin Chen <zhhchen@>.
     * New option for iredapd-rr: bypass_mynetworks. Used to bypass mails sent
       from postfix mynetworks.
     * Bypass user alias addresses (shadowAddress) if user is allowed to send
