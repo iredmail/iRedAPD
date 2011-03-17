@@ -17,7 +17,6 @@
 #   - moderatorsOnly:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
-import sys
 import os
 
 ACTION_REJECT = 'REJECT Not Authorized'
