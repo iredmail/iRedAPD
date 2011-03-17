@@ -18,6 +18,19 @@
 # Description: Control iredapd daemon.
 ### BEGIN Debian/Ubuntu INIT INFO
 
+# For openSUSE
+### BEGIN INIT INFO
+# Provides:             iredapd
+# Required-Start:       network
+# Should-Start:         mysql ldap
+# Required-Stop:        mysql ldap
+# Should-Stop:          isdn openibd SuSEfirewall2_init
+# Default-Start:        2 3 5
+# Default-Stop:
+# Short-Description:    Postfix policy daemon.
+# Description:          iRedAPD is a small postfix policy daemon.
+### END INIT INFO
+
 PROG='iredapd'
 BINPATH='/opt/iredapd/src/iredapd-rr.py'
 CONFIG='/opt/iredapd/etc/iredapd-rr.ini'
