@@ -2,33 +2,10 @@
 
 # Author: Zhang Huangbin (zhb@iredmail.org)
 
-### BEGIN RHEL/CentOS INIT INFO
+### BEGIN INIT INFO
 # chkconfig: - 99 99
 # description: iredapd is a mail list access policy daemon.
 # processname: iredapd
-### END RHEL/CentOS INIT INFO
-
-### BEGIN Debian/Ubuntu INIT INFO
-# Provides:          iredapd 
-# Required-Start:    $network $syslog
-# Required-Stop:     $network $syslog
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Control iredapd daemon.
-# Description: Control iredapd daemon.
-### END Debian/Ubuntu INIT INFO
-
-# For openSUSE
-### BEGIN INIT INFO
-# Provides:             iredapd
-# Required-Start:       network
-# Should-Start:         mysql ldap
-# Required-Stop:        mysql ldap
-# Should-Stop:          isdn openibd SuSEfirewall2_init
-# Default-Start:        2 3 5
-# Default-Stop:
-# Short-Description:    Postfix policy daemon.
-# Description:          iRedAPD is a small postfix policy daemon.
 ### END INIT INFO
 
 PROG='iredapd'

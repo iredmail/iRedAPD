@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+# Author: Zhang Huangbin (zhb@iredmail.org)
+
+### BEGIN INIT INFO
+# Provides:             iredapd
+# Required-Start:       network
+# Should-Start:         mysql ldap
+# Required-Stop:        mysql ldap
+# Should-Stop:          isdn openibd SuSEfirewall2_init
+# Default-Start:        2 3 5
+# Default-Stop:
+# Short-Description:    Postfix policy daemon.
+# Description:          iRedAPD is a small postfix policy daemon.
+### END INIT INFO
+
+PROG='iredapd'
+BINPATH='/opt/iredapd/src/iredapd-rr.py'
+CONFIG='/opt/iredapd/etc/iredapd-rr.ini'
+PIDFILE='/var/run/iredapd-rr.pid'
+
+check_status() {
+    # Usage: check_status pid_number
+    PID="${1}"
+    l=$(ps -p ${PID} | wc -l | awk '{print $1}')
+    if [ X"$l" == X"2" ]; then
+        echo "running"
+    else
+        echo "stopped"
+    fi
+}
+
+start() {
+    if [ -f ${PIDFILE} ]; then
+        PID="$(cat ${PIDFILE})"
+        s="$(check_status ${PID})"
+
+        if [ X"$s" == X"running" ]; then
+            echo "${PROG} is already running."
+        else
+            rm -f ${PIDFILE} >/dev/null 2>&1
+            echo "Starting ${PROG} ..."
+            python ${BINPATH} ${CONFIG}
+        fi
+    else
+        echo "Starting ${PROG} ..."
+        python ${BINPATH} ${CONFIG}
+    fi
+    unset s
+}
+
+stop() {
+    if [ -f ${PIDFILE} ]; then
+        PID="$(cat ${PIDFILE})"
+        s="$(check_status ${PID})"
+
+        if [ X"$s" == X"running" ]; then
+            echo "Stopping ${PROG} ..."
+            kill -9 ${PID}
+            if [ X"$?" == X"0" ]; then
+                rm -f ${PIDFILE} >/dev/null 2>&1
+            else
+                echo -e "\t\t[ FAILED ]"
+            fi
+        else
+            echo "${PROG} is already stopped."
+            rm -f ${PIDFILE} >/dev/null 2>&1
+        fi
+    else
+        echo "${PROG} is already stopped."
+    fi
+    unset s
+}
+
+status() {
+    if [ -f ${PIDFILE} ]; then
+        PID="$(cat ${PIDFILE})"
+        s="$(check_status ${PID})"
+
+        if [ X"$s" == X"running" ]; then
+            echo "${PROG} is running."
+        else
+            echo "${PROG} is stopped."
+        fi
+    else
+        echo "${PROG} is stopped."
+    fi
+    unset s
+}
+
+case "$1" in
+    start) start ;;
+    stop) stop ;;
+    status) status ;;
+    restart) stop && start ;;
+    *)
+        echo $"Usage: $0 {start|stop|restart|status}"
+        RETVAL=1
+        ;;
+esac
