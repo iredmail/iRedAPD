@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Author: Zhang Huangbin <michaelbibby (at) gmail.com>
+# Author: Zhang Huangbin <zhb@iredmail.org>
 
 # ----------------------------------------------------------------------------
 # This plugin is used for mail deliver restriction.

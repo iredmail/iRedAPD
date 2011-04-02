@@ -1,6 +1,6 @@
 #!/usr/local/bin/bash
 
-# Author: Zhang Huangbin (michaelbibby@gmail.com)
+# Author: Zhang Huangbin (zhb@iredmail.org)
 
 # PROVIDE: iredapd
 # REQUIRE: DAEMON

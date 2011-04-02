@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Author: Zhang Huangbin (michaelbibby@gmail.com)
+# Author: Zhang Huangbin (zhb@iredmail.org)
 
 ### BEGIN RHEL/CentOS INIT INFO
 # chkconfig: - 99 99
@@ -16,7 +16,7 @@
 # Default-Stop:      0 1 6
 # Short-Description: Control iredapd daemon.
 # Description: Control iredapd daemon.
-### BEGIN Debian/Ubuntu INIT INFO
+### END Debian/Ubuntu INIT INFO
 
 # For openSUSE
 ### BEGIN INIT INFO
