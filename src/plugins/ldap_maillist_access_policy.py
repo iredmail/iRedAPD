@@ -16,7 +16,6 @@
 
 # ----------------------------------------------------------------------------
 
-import sys
 import os
 
 ACTION_REJECT = 'REJECT Not Authorized.'
@@ -144,7 +143,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         try:
             qr = ldapConn.search_s(
                 ldapBaseDn,
-                ldap.SCOPE_ONELEVEL,
+                1, # 1 == ldap.SCOPE_ONELEVEL
                 "(&(objectClass=mailDomain)(|(domainName=%s)(domainAliasName=%s)))" % (recipient_domain, recipient_domain),
                 ['domainName', 'domainAliasName',]
             )
