@@ -147,12 +147,12 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
                 "(&(objectClass=mailDomain)(|(domainName=%s)(domainAliasName=%s)))" % (recipient_domain, recipient_domain),
                 ['domainName', 'domainAliasName',]
             )
-            if len(qr) == 0:
+            if len(qr) > 0:
                 recipient_alias_domains = qr[0][1].get('domainName', []) + qr[0][1].get('domainAliasName', [])
         except Exception, e:
             logger.debug('(%s) Error while fetch domainAliasName: %s' % (PLUGIN_NAME, str(e),))
 
-        logger.debug('(%s) Recipient domain and alias domainss: %s' % (PLUGIN_NAME, ','.join(recipient_alias_domains)))
+        logger.debug('(%s) Recipient domain and alias domains: %s' % (PLUGIN_NAME, ','.join(recipient_alias_domains)))
 
     logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
     logger.debug('(%s) Recipient: %s' % (PLUGIN_NAME, recipient))
