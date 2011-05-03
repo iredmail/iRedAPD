@@ -22,10 +22,8 @@ pid_file        = /var/run/iredapd-rr.pid
 log_type        = file
 log_file        = /var/log/iredapd-rr.log
 
-# Log level: info, warning, error, debug.
-# 'info' is recommended for product use. sample log entry:
-#       INFO user@domain.ltd -> list@domain.ltd, DUNNO
-log_level       = info
+# Log level: info, error, debug.
+log_level       = error
 
 # Backend: ldap, mysql.
 backend = ldap

@@ -117,13 +117,16 @@ class MySQLModeler:
         # Turn off debug mode.
         web.config.debug = False
 
-        self.db = web.database(
-            dbn='mysql',
-            host=cfg.get('mysql', 'server', 'localhost'),
-            db=cfg.get('mysql', 'db', 'vmail'),
-            user=cfg.get('mysql', 'user', 'vmail'),
-            pw=cfg.get('mysql', 'password'),
-        )
+        try:
+            self.db = web.database(
+                dbn='mysql',
+                host=cfg.get('mysql', 'server', 'localhost'),
+                db=cfg.get('mysql', 'db', 'vmail'),
+                user=cfg.get('mysql', 'user', 'vmail'),
+                pw=cfg.get('mysql', 'password'),
+            )
+        except Exception, e:
+            logging.error("Error while creating database connection: %s" % str(e))
 
     def handle_data(self, map):
         if 'sender' in map.keys() and 'recipient' in map.keys():
