@@ -18,6 +18,7 @@
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
 import os
+from web import sqlquote
 
 ACTION_REJECT = 'REJECT Not Authorized'
 PLUGIN_NAME = os.path.basename(__file__)
@@ -28,34 +29,30 @@ POLICY_DOMAIN = 'domain'
 POLICY_SUBDOMAIN = 'subdomain'
 POLICY_MEMBERSONLY = 'membersonly'
 POLICY_MODERATORSONLY = 'moderatorsonly'
-POLICY_ALLOWEDONLY = 'allowedOnly'      # Same as @POLICY_MODERATORSONLY
+POLICY_ALLOWEDONLY = 'allowedonly'      # Same as @POLICY_MODERATORSONLY
 POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
 def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
-    # Get alias account from alias table.
-    # If you need to run RAW SQL command, use dbConn.query() instead.
-    # Reference: http://webpy.org/cookbook/query
-    # Sample:
-    #   result = dbConn.query('''SELECT * FROM alias WHERE address=$recipient''', vars=senderReceiver,)
 
-    result = dbConn.select(
-        'alias',
-        senderReceiver,
-        where='address = $recipient AND domain = $recipient_domain',
-        limit=1,
-    )
+    sql = '''SELECT accesspolicy, goto, moderators \
+            FROM alias \
+            WHERE address=%s AND domain=%s AND active=1 \
+            LIMIT 1 \
+    ''' % (sqlquote(senderReceiver.get('recipient')), sqlquote(senderReceiver.get('recipient_domain')),)
+    logger.debug('SQL: %s' % sql)
+
+    dbConn.execute(sql)
+    sqlRecord = dbConn.fetchone()
+    logger.debug('SQL Record: %s' % str(sqlRecord))
 
     # Recipient account doesn't exist.
-    if len(result) != 1:
-        return 'DUNNO Account does not exist.'
+    if sqlRecord is None:
+        return 'DUNNO Alias account does not exist.'
 
-    # Use the first SQL record.
-    sqlRecord = result[0]
+    policy = str(sqlRecord[0]).lower()
 
-    policy = sqlRecord.get('accesspolicy', 'public').lower()
-
-    members = [str(v.lower()) for v in sqlRecord.get('goto', '').split(',')]
-    moderators = [str(v.lower()) for v in sqlRecord.get('moderators', '').split(',')]
+    members = [str(v.lower()) for v in str(sqlRecord[1]).split(',')]
+    moderators = [str(v.lower()) for v in str(sqlRecord[2]).split(',')]
 
     logger.debug('(%s) policy: %s' % (PLUGIN_NAME, policy))
     logger.debug('(%s) members: %s' % (PLUGIN_NAME, ', '.join(members)))

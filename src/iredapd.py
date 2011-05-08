@@ -14,7 +14,7 @@ import asynchat
 import logging
 import daemon
 
-__version__ = "1.3.5"
+__version__ = '1.3.6'
 
 ACTION_ACCEPT = 'DUNNO'
 ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
@@ -56,7 +56,7 @@ class apdChannel(asynchat.async_chat):
     def found_terminator(self):
         if len(self.buffer) is not 0:
             line = self.buffer.pop()
-            logging.debug("smtp session: " + line)
+            #logging.debug("smtp session: " + line)
             if line.find('=') != -1:
                 key = line.split('=')[0]
                 value = line.split('=', 1)[1]
@@ -111,23 +111,6 @@ class apdSocket(asyncore.dispatcher):
 
 
 class MySQLModeler:
-    def __init__(self):
-        import web
-
-        # Turn off debug mode.
-        web.config.debug = False
-
-        try:
-            self.db = web.database(
-                dbn='mysql',
-                host=cfg.get('mysql', 'server', 'localhost'),
-                db=cfg.get('mysql', 'db', 'vmail'),
-                user=cfg.get('mysql', 'user', 'vmail'),
-                pw=cfg.get('mysql', 'password'),
-            )
-        except Exception, e:
-            logging.error("Error while creating database connection: %s" % str(e))
-
     def handle_data(self, map):
         if 'sender' in map.keys() and 'recipient' in map.keys():
             if len(map['sender']) < 6:
@@ -172,12 +155,30 @@ class MySQLModeler:
                 for module in self.modules:
                     try:
                         logging.debug('Apply plugin (%s).' % (module.__name__, ))
+                        import MySQLdb
+                        try:
+                            db = MySQLdb.connect(
+                                host=cfg.get('mysql', 'server', 'localhost'),
+                                db=cfg.get('mysql', 'db', 'vmail'),
+                                user=cfg.get('mysql', 'user', 'vmail'),
+                                passwd=cfg.get('mysql', 'password'),
+                            )
+                            cursor= db.cursor()
+                        except Exception, e:
+                            logging.error("Error while creating database connection: %s" % str(e))
+
                         pluginAction = module.restriction(
-                            dbConn=self.db,
+                            dbConn=cursor,
                             senderReceiver=senderReceiver,
                             smtpSessionData=map,
                             logger=logging,
                         )
+
+                        try:
+                            cursor.close()
+                            logging.debug('Closed SQL connection.')
+                        except Exception, e:
+                            logging.debug('%s' % str(e))
 
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                         if not pluginAction.startswith('DUNNO'):

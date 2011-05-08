@@ -14,7 +14,7 @@ import asynchat
 import logging
 import daemon
 
-__version__ = "1.3.5"
+__version__ = '1.3.6'
 
 ACTION_ACCEPT = 'DUNNO'
 ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
