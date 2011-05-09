@@ -56,7 +56,7 @@ def restriction(smtpSessionData, ldapSenderLdif, **kargs):
 
     # Reject blacklisted recipients if has intersection set.
     if len(set(recipients) & set(blRecipients)) > 0 or '@.' in blRecipients:
-        return 'REJECT Not authorized'
+        return 'REJECT Permission denied'
 
     # If not matched bl/wl list:
     return 'DUNNO'

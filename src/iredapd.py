@@ -18,7 +18,7 @@ __version__ = '1.3.6'
 
 ACTION_ACCEPT = 'DUNNO'
 ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
-ACTION_REJECT = 'REJECT Not Authorized'
+ACTION_REJECT = 'REJECT Permission denied'
 ACTION_DEFAULT = 'DUNNO'
 
 PLUGIN_DIR = os.path.abspath(os.path.dirname(__file__)) + '/plugins'

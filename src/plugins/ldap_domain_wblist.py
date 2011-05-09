@@ -4,17 +4,14 @@
 # This plugin is used for per-domain white-/blacklist.
 # ----------------------------------------------------------------------------
 
-import sys
 import os
-from ldap.filter import escape_filter_chars
 
 PLUGIN_NAME = os.path.basename(__file__)
 
-ACTION_REJECT = 'REJECT Not Authorized'
+ACTION_REJECT = 'REJECT Permission denied'
 
 def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
     sender = smtpSessionData['sender'].lower()
-    senderDomain = sender.split('@')[-1]
     splitedSenderDomain = str(sender.split('@')[-1]).split('.')
 
     #filterOfSender = '(domainWhitelistSender=%s)' % (sender,)

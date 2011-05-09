@@ -18,7 +18,7 @@
 
 import os
 
-ACTION_REJECT = 'REJECT Not Authorized.'
+ACTION_REJECT = 'REJECT Permission denied'
 PLUGIN_NAME = os.path.basename(__file__)
 
 def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, policy, logger, *kw, **kargs):
