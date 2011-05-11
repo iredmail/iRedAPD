@@ -56,7 +56,7 @@ class apdChannel(asynchat.async_chat):
     def found_terminator(self):
         if len(self.buffer) is not 0:
             line = self.buffer.pop()
-            #logging.debug("smtp session: " + line)
+            logging.debug("smtp session: " + line)
             if line.find('=') != -1:
                 key = line.split('=')[0]
                 value = line.split('=', 1)[1]
