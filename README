@@ -1,20 +1,25 @@
-* About
+iRedAPD is a sub-project of iRedMail project. http://www.iredmail.org/
 
-    iRedAPD is a postfix policy daemon.
+= About =
 
-* Authors & Contributors
+iRedAPD is a simple Postfix policy daemon.
 
-    + Zhang Huangbin (zhb@iredmail.org): Core developer and maintainer.
+= Authors & Contributors =
 
-* License
+* Zhang Huangbin <zhb _at_ iredmail.org>: Core developer and maintainer.
 
-    iRedAPD is based on mlapd (http://code.google.com/p/mlapd) which released
-    under GPL v2, so iRedAPD is GPL v2 too.
+= License =
 
-    Note: file src/daemon.py is released under its own license, shipped
-    for easy deploying.
+iRedAPD is based on mlapd (http://code.google.com/p/mlapd) which released
+under GPL v2, so iRedAPD is GPL v2 too.
 
-* Requirments
+Note: file src/daemon.py is released under its own license, shipped
+for easy deploying.
 
-    + python ( >= 2.4 ): http://www.python.org/
-    + python-ldap ( >= 2.2.0 ): http://python-ldap.org/
+= Requirments =
+
+* python ( >= 2.4 ): http://www.python.org/
+* python-ldap ( >= 2.2.0 ): http://python-ldap.org/
+
+= Document =
+http://www.iredmail.org/doc.html
