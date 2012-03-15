@@ -14,7 +14,7 @@ import asynchat
 import logging
 import daemon
 
-__version__ = '1.3.6'
+__version__ = '1.3.7'
 
 ACTION_ACCEPT = 'DUNNO'
 ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
@@ -62,11 +62,12 @@ class apdChannel(asynchat.async_chat):
                 value = line.split('=', 1)[1]
                 self.map[key] = value
         elif len(self.map) != 0:
+            self.backend = cfg.get('general', 'backend', 'ldap')
             try:
-                if cfg.get('general', 'backend', 'ldap') == 'ldap':
+                if self.backend == 'ldap':
                     modeler = LDAPModeler()
                 else:
-                    modeler = MySQLModeler()
+                    modeler = SQLModeler()
 
                 result = modeler.handle_data(self.map)
                 if result != None:
@@ -110,7 +111,7 @@ class apdSocket(asyncore.dispatcher):
         channel = apdChannel(conn, remoteaddr)
 
 
-class MySQLModeler:
+class SQLModeler:
     def handle_data(self, map):
         if 'sender' in map.keys() and 'recipient' in map.keys():
             if len(map['sender']) < 6:
@@ -118,7 +119,7 @@ class MySQLModeler:
                 return 'DUNNO'
 
             # Get plugin module name and convert plugin list to python list type.
-            self.plugins = cfg.get('mysql', 'plugins', '')
+            self.plugins = cfg.get('sql', 'plugins', '')
             self.plugins = [v.strip() for v in self.plugins.split(',')]
 
             # Get sender, recipient.
@@ -155,17 +156,33 @@ class MySQLModeler:
                 for module in self.modules:
                     try:
                         logging.debug('Apply plugin (%s).' % (module.__name__, ))
-                        import MySQLdb
-                        try:
-                            db = MySQLdb.connect(
-                                host=cfg.get('mysql', 'server', 'localhost'),
-                                db=cfg.get('mysql', 'db', 'vmail'),
-                                user=cfg.get('mysql', 'user', 'vmail'),
-                                passwd=cfg.get('mysql', 'password'),
-                            )
-                            cursor= db.cursor()
-                        except Exception, e:
-                            logging.error("Error while creating database connection: %s" % str(e))
+                        if cfg.get('general', 'backend', 'ldap') == 'mysql':
+                            import MySQLdb
+                            try:
+                                db = MySQLdb.connect(
+                                    host=cfg.get('sql', 'server', 'localhost'),
+                                    db=cfg.get('sql', 'db', 'vmail'),
+                                    user=cfg.get('sql', 'user', 'vmail'),
+                                    passwd=cfg.get('sql', 'password'),
+                                )
+                                cursor = db.cursor()
+                            except Exception, e:
+                                logging.error("Error while creating database connection: %s" % str(e))
+                        elif cfg.get('general', 'backend', 'ldap') == 'pgsql':
+                            import psycopg2
+                            try:
+                                db = psycopg2.connect(
+                                    host=cfg.get('pgsql', 'server', 'localhost'),
+                                    port=cfg.get('pgsql', 'port', '5432'),
+                                    database=cfg.get('pgsql', 'db', 'vmail'),
+                                    user=cfg.get('pgsql', 'user', 'vmail'),
+                                    password=cfg.get('pgsql', 'password'),
+                                )
+                                cursor = db.cursor()
+                            except Exception, e:
+                                logging.error("Error while creating database connection: %s" % str(e))
+                        else:
+                            return ACTION_DEFAULT
 
                         pluginAction = module.restriction(
                             dbConn=cursor,
@@ -178,7 +195,7 @@ class MySQLModeler:
                             cursor.close()
                             logging.debug('Closed SQL connection.')
                         except Exception, e:
-                            logging.debug('%s' % str(e))
+                            logging.debug('Error while closing connection: %s' % str(e))
 
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                         if not pluginAction.startswith('DUNNO'):
@@ -192,7 +209,6 @@ class MySQLModeler:
                 return 'DUNNO'
         else:
             return ACTION_DEFER
-
 
 
 class LDAPModeler:

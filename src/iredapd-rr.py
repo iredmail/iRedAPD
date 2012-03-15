@@ -14,7 +14,7 @@ import asynchat
 import logging
 import daemon
 
-__version__ = '1.3.6'
+__version__ = '1.3.7'
 
 ACTION_ACCEPT = 'DUNNO'
 ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
@@ -66,7 +66,7 @@ class apdChannel(asynchat.async_chat):
                 if cfg.get('general', 'backend', 'ldap') == 'ldap':
                     modeler = LDAPModeler()
                 else:
-                    modeler = MySQLModeler()
+                    modeler = SQLModeler()
 
                 result = modeler.handle_data(self.map)
                 if result != None:
@@ -110,7 +110,7 @@ class apdSocket(asyncore.dispatcher):
         channel = apdChannel(conn, remoteaddr)
 
 
-class MySQLModeler:
+class SQLModeler:
     def __init__(self):
         import web
 
@@ -119,16 +119,16 @@ class MySQLModeler:
 
         self.db = web.database(
             dbn='mysql',
-            host=cfg.get('mysql', 'server', 'localhost'),
-            db=cfg.get('mysql', 'db', 'vmail'),
-            user=cfg.get('mysql', 'user', 'vmail'),
-            pw=cfg.get('mysql', 'password'),
+            host=cfg.get('sql', 'server', 'localhost'),
+            db=cfg.get('sql', 'db', 'vmail'),
+            user=cfg.get('sql', 'user', 'vmail'),
+            pw=cfg.get('sql', 'password'),
         )
 
     def handle_data(self, map):
         if 'sender' in map.keys() and 'recipient' in map.keys():
             # Get plugin module name and convert plugin list to python list type.
-            self.plugins = cfg.get('mysql', 'plugins', '')
+            self.plugins = cfg.get('sql', 'plugins', '')
             self.plugins = [v.strip() for v in self.plugins.split(',')]
 
             # Get sender, recipient.

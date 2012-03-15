@@ -47,11 +47,12 @@ basedn      = o=domains,dc=iredmail,dc=org
 #             first one in enabled plugin list.
 #   * ldap_maillist_access_policy: mail list deliver restrictions.
 #   * block_amavisd_blacklisted_senders: per-user white/blacklist support.
-plugins = ldap_maillist_access_policy
+plugins = ldap_maillist_access_policy, block_amavisd_blacklisted_senders
 
-[mysql]
-# For MySQL backend only.
+[sql]
+# For MySQL and PostgreSQL backends
 server      = 127.0.0.1
+port        = 3306
 db          = vmail
 user        = vmail
 password    = Psaf68wsuVctYSbj4PJzRqmFsE0rlQ

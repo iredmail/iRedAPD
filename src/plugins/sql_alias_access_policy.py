@@ -34,11 +34,17 @@ POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
 def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
 
-    sql = '''SELECT accesspolicy, goto, moderators \
-            FROM alias \
-            WHERE address=%s AND domain=%s AND active=1 \
-            LIMIT 1 \
-    ''' % (sqlquote(senderReceiver.get('recipient')), sqlquote(senderReceiver.get('recipient_domain')),)
+    sql = '''SELECT accesspolicy, goto, moderators
+            FROM alias
+            WHERE
+                address=%s
+                AND address <> goto
+                AND domain=%s
+                AND active=1
+            LIMIT 1
+    ''' % (sqlquote(senderReceiver.get('recipient')),
+           sqlquote(senderReceiver.get('recipient_domain')),
+          )
     logger.debug('SQL: %s' % sql)
 
     dbConn.execute(sql)
