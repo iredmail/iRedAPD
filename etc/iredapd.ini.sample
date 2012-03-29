@@ -58,6 +58,7 @@ user        = vmail
 password    = Psaf68wsuVctYSbj4PJzRqmFsE0rlQ
 
 # Enabled plugins.
-#   - Plugin name is file name which placed under 'src/plugins/' directory.
+#   - Plugin name is file name which placed under 'src/plugins/' directory,
+#     starts with 'sql_'.
 #   - Plugin names MUST be seperated by comma.
 plugins = sql_alias_access_policy

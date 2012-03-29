@@ -172,11 +172,11 @@ class SQLModeler:
                             import psycopg2
                             try:
                                 db = psycopg2.connect(
-                                    host=cfg.get('pgsql', 'server', 'localhost'),
-                                    port=cfg.get('pgsql', 'port', '5432'),
-                                    database=cfg.get('pgsql', 'db', 'vmail'),
-                                    user=cfg.get('pgsql', 'user', 'vmail'),
-                                    password=cfg.get('pgsql', 'password'),
+                                    host=cfg.get('sql', 'server', 'localhost'),
+                                    port=cfg.get('sql', 'port', '5432'),
+                                    database=cfg.get('sql', 'db', 'vmail'),
+                                    user=cfg.get('sql', 'user', 'vmail'),
+                                    password=cfg.get('sql', 'password'),
                                 )
                                 cursor = db.cursor()
                             except Exception, e:
