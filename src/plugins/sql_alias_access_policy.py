@@ -64,6 +64,9 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
     logger.debug('(%s) members: %s' % (PLUGIN_NAME, ', '.join(members)))
     logger.debug('(%s) moderators: %s' % (PLUGIN_NAME, ', '.join(moderators)))
 
+    if not len(policy) > 0:
+        return 'DUNNO No access policy defined.'
+
     if policy == POLICY_PUBLIC:
         # Return if no access policy available or policy is @POLICY_PUBLIC.
         return 'DUNNO'
