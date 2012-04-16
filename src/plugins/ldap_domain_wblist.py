@@ -4,9 +4,7 @@
 # This plugin is used for per-domain white-/blacklist.
 # ----------------------------------------------------------------------------
 
-import os
-
-PLUGIN_NAME = os.path.basename(__file__)
+PLUGIN_NAME = 'ldap_domain_wblist'
 
 def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
     sender = smtpSessionData['sender'].lower()

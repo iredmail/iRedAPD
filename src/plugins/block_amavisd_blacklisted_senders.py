@@ -1,47 +1,49 @@
 # Author: Zhang Huangbin <zhb@iredmail.org>
 
-import os
+# Priority: whitelist first, then blacklist.
 
-PLUGIN_NAME = os.path.basename(__file__)
+PLUGIN_NAME = 'block_amavisd_blacklisted_senders'
 
 def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
     # Get sender address.
     sender = smtpSessionData.get('sender').lower()
-    splited_sender_domain = str(sender.split('@')[-1]).split('.')
 
-    # Get correct domain name and sub-domain name.
-    # Sample sender domain: sub2.sub1.com.cn
-    #   -> sub2.sub1.com.cn
-    #   -> .sub2.sub1.com.cn
-    #   -> .sub1.com.cn
-    #   -> .com.cn
-    #   -> .cn
-    list_senders = [sender, '@'+sender.split('@')[-1],]
+    # Get valid Amavisd sender, sender domain and sub-domain(s).
+    # - Sample user: user@sub2.sub1.com.cn
+    # - Valid Amavisd senders:
+    #   -> user@sub2.sub1.com.cn
+    #   -> @sub2.sub1.com.cn
+    #   -> @.sub2.sub1.com.cn
+    #   -> @.sub1.com.cn
+    #   -> @.com.cn
+    #   -> @.cn
+    splited_sender_domain = str(sender.split('@', 1)[-1]).split('.')
+
+    # Default senders (user@domain.ltd): ['user@domain.ltd', @domain.ltd']
+    valid_amavisd_senders = [sender, '@'+sender.split('@', 1)[-1],]
     for counter in range(len(splited_sender_domain)):
         # Append domain and sub-domain.
-        list_senders += ['@.' + '.'.join(splited_sender_domain)]
+        valid_amavisd_senders += ['@.' + '.'.join(splited_sender_domain)]
         splited_sender_domain.pop(0)
 
+    valid_amavisd_senders = set(valid_amavisd_senders)
+
     # Get list of amavisBlacklistedSender.
-    blSenders = [v.lower() for v in ldapRecipientLdif.get('amavisBlacklistSender', [])]
+    blSenders = set([v.lower() for v in ldapRecipientLdif.get('amavisBlacklistSender', [])])
 
     # Get list of amavisWhitelistSender.
-    wlSenders = [v.lower() for v in ldapRecipientLdif.get('amavisWhitelistSender', [])]
+    wlSenders = set([v.lower() for v in ldapRecipientLdif.get('amavisWhitelistSender', [])])
 
     logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
-    logger.debug('(%s) Blacklisted senders: %s' % (PLUGIN_NAME, ', '.join(blSenders)))
-    logger.debug('(%s) Whitelisted senders: %s' % (PLUGIN_NAME, ', '.join(wlSenders)))
-
-    #
-    # Process whitelisted senders first.
-    #
+    logger.debug('(%s) Whitelisted senders: %s' % (PLUGIN_NAME, str(wlSenders)))
+    logger.debug('(%s) Blacklisted senders: %s' % (PLUGIN_NAME, str(blSenders)))
 
     # Bypass whitelisted senders.
-    if len(set(list_senders) & set(wlSenders)) > 0:
+    if len(valid_amavisd_senders & wlSenders) > 0:
         return 'DUNNO Whitelisted'
 
     # Reject blacklisted senders.
-    if len(set(list_senders) & set(blSenders)) > 0:
+    if len(valid_amavisd_senders & blSenders) > 0:
         return 'REJECT Blacklisted'
 
     # Neither blacklisted nor whitelisted.

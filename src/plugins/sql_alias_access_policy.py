@@ -1,26 +1,19 @@
 # Author: Zhang Huangbin <zhb@iredmail.org>
 
 # Date: 2010-03-12
-# Purpose: Apply access policy on sender while recipient is an alias.
+# Purpose: Apply access policy on sender while recipient is an mail alias.
 
-# -------- ALTER MYSQL TABLE BEFORE ENABLE THIS PLUGIN -----------
-#   mysql> USE vmail;
-#   mysql> ALTER TABLE alias ADD COLUMN accesspolicy VARCHAR(30) NOT NULL DEFAULT '';
-#   mysql> ALTER TABLE alias ADD COLUMN moderators TEXT NOT NULL DEFAULT '';
-# --------
-
-# Handled policies:
+# Available access policies:
 #   - public:   Unrestricted
 #   - domain:   Only users under same domain are allowed.
 #   - subdomain:    Only users under same domain and sub domains are allowed.
 #   - membersOnly:  Only members are allowed.
 #   - moderatorsOnly:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
-import os
 from web import sqlquote
 from libs import SMTP_ACTIONS
 
-PLUGIN_NAME = os.path.basename(__file__)
+PLUGIN_NAME = 'sql_alias_access_policy'
 
 # Policies. MUST be defined in lower case.
 POLICY_PUBLIC = 'public'
@@ -52,7 +45,7 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
 
     # Recipient account doesn't exist.
     if sqlRecord is None:
-        return 'DUNNO Alias account does not exist.'
+        return 'DUNNO Not an alias account.'
 
     policy = str(sqlRecord[0]).lower()
 

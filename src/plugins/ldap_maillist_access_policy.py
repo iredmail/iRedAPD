@@ -13,10 +13,9 @@
 
 # ----------------------------------------------------------------------------
 
-import os
 from libs import SMTP_ACTIONS
 
-PLUGIN_NAME = os.path.basename(__file__)
+PLUGIN_NAME = 'ldap_maillist_access_policy'
 
 def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, policy, logger, *kw, **kargs):
     """return search_result_list_based_on_access_policy"""
