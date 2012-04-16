@@ -16,11 +16,10 @@
 #   - membersOnly:  Only members are allowed.
 #   - moderatorsOnly:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
-
 import os
 from web import sqlquote
+from libs import SMTP_ACTIONS
 
-ACTION_REJECT = 'REJECT Permission denied'
 PLUGIN_NAME = os.path.basename(__file__)
 
 # Policies. MUST be defined in lower case.
@@ -75,31 +74,31 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
         if senderReceiver['sender_domain'] == senderReceiver['recipient_domain']:
             return 'DUNNO'
         else:
-            return ACTION_REJECT
+            return SMTP_ACTIONS['reject']
     elif policy == POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
         if senderReceiver['sender'].endswith('.' + senderReceiver['recipient_domain']):
             return 'DUNNO'
         else:
-            return ACTION_REJECT
+            return SMTP_ACTIONS['reject']
     elif policy == POLICY_MEMBERSONLY:
         # Bypass all members.
         if senderReceiver['sender'] in members:
             return 'DUNNO'
         else:
-            return ACTION_REJECT
+            return SMTP_ACTIONS['reject']
     elif policy == POLICY_MODERATORSONLY or policy == POLICY_ALLOWEDONLY:
         # Bypass all moderators.
         if senderReceiver['sender'] in moderators:
             return 'DUNNO'
         else:
-            return ACTION_REJECT
+            return SMTP_ACTIONS['reject']
     elif policy == POLICY_MEMBERSANDMODERATORSONLY:
         # Bypass both members and moderators.
         if senderReceiver['sender'] in members or senderReceiver['sender'] in moderators:
             return 'DUNNO'
         else:
-            return ACTION_REJECT
+            return SMTP_ACTIONS['reject']
     else:
         # Bypass all if policy is not defined in this plugin.
         return 'DUNNO Policy is not defined in plugin (%s): %s.' % (PLUGIN_NAME, policy)

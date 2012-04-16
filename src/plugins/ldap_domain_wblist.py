@@ -8,8 +8,6 @@ import os
 
 PLUGIN_NAME = os.path.basename(__file__)
 
-ACTION_REJECT = 'REJECT Permission denied'
-
 def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
     sender = smtpSessionData['sender'].lower()
     splitedSenderDomain = str(sender.split('@')[-1]).split('.')

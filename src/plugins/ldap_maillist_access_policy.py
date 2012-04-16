@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
 # Author: Zhang Huangbin <zhb@iredmail.org>
 
 # ----------------------------------------------------------------------------
 # This plugin is used for mail deliver restriction.
 #
-# Handled policies:
+# Available access policies:
 #   - public:   Unrestricted
 #   - domain:   Only users under same domain are allowed.
 #   - subdomain:    Only users under same domain and sub domains are allowed.
@@ -17,8 +14,8 @@
 # ----------------------------------------------------------------------------
 
 import os
+from libs import SMTP_ACTIONS
 
-ACTION_REJECT = 'REJECT Permission denied'
 PLUGIN_NAME = os.path.basename(__file__)
 
 def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, policy, logger, *kw, **kargs):
@@ -166,7 +163,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         if sender_domain in recipient_alias_domains:
             return 'DUNNO Access policy: domain'
         else:
-            return ACTION_REJECT + ' Access policy: domain.'
+            return SMTP_ACTIONS['reject']
     elif policy == "subdomain":
         # Bypass all users under the same domain and sub domains.
         returned = False
@@ -175,7 +172,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
                 return 'DUNNO Access policy: subdomain (%s)' % (d)
 
         if returned is False:
-            return ACTION_REJECT + ' Access policy: subdomain.'
+            return SMTP_ACTIONS['reject']
     else:
         # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
         allowedSenders = __get_allowed_senders(
@@ -191,4 +188,4 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         if sender.lower() in [v.lower() for v in allowedSenders]:
             return 'DUNNO Allowed sender.'
         else:
-            return ACTION_REJECT
+            return SMTP_ACTIONS['reject']

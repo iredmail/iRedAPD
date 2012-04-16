@@ -16,10 +16,7 @@ import daemon
 
 __version__ = '1.3.7'
 
-ACTION_ACCEPT = 'DUNNO'
-ACTION_DEFER = 'DEFER_IF_PERMIT Service temporarily unavailable'
-ACTION_REJECT = 'REJECT Permission denied'
-ACTION_DEFAULT = 'DUNNO'
+SMTP_ACTIONS['defer'] = 'DEFER_IF_PERMIT Service temporarily unavailable'
 
 PLUGIN_DIR = os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr'
 sys.path.append(PLUGIN_DIR)
@@ -38,6 +35,7 @@ else:
 cfg = ConfigParser.SafeConfigParser()
 cfg.read(config_file)
 
+from libs import __version__, SMTP_ACTIONS
 
 class apdChannel(asynchat.async_chat):
     def __init__(self, conn, remoteaddr):
@@ -72,10 +70,10 @@ class apdChannel(asynchat.async_chat):
                 if result != None:
                     action = result
                 else:
-                    action = ACTION_ACCEPT
+                    action = SMTP_ACTIONS['accept']
                 logging.debug("Final action: %s." % str(result))
             except Exception, e:
-                action = ACTION_DEFAULT
+                action = SMTP_ACTIONS['default']
                 logging.debug('Error: %s. Use default action instead: %s' %
                         (str(e), str(action)))
 
@@ -86,7 +84,7 @@ class apdChannel(asynchat.async_chat):
             asynchat.async_chat.handle_close(self)
             logging.debug("Connection closed")
         else:
-            action = ACTION_DEFER
+            action = SMTP_ACTIONS['defer']
             logging.debug("replying: " + action)
             self.push(action)
             self.push('')
@@ -183,7 +181,7 @@ class SQLModeler:
                 # No plugins available.
                 return 'DUNNO'
         else:
-            return ACTION_DEFER
+            return SMTP_ACTIONS['defer']
 
 
 
@@ -262,7 +260,7 @@ class LDAPModeler:
                 # Return if recipient account doesn't exist.
                 if senderDN is None or senderLdif is None:
                     logging.debug('Sender DN or LDIF is none.')
-                    return ACTION_DEFAULT
+                    return SMTP_ACTIONS['default']
 
                 #
                 # Import plugin modules.
@@ -307,7 +305,7 @@ class LDAPModeler:
                 # No plugins available.
                 return 'DUNNO'
         else:
-            return ACTION_DEFER
+            return SMTP_ACTIONS['defer']
 
 
 def main():

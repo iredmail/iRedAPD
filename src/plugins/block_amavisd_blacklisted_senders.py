@@ -1,6 +1,5 @@
 # Author: Zhang Huangbin <zhb@iredmail.org>
 
-import sys
 import os
 
 PLUGIN_NAME = os.path.basename(__file__)
