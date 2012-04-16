@@ -47,7 +47,7 @@ class apd_channel(asynchat.async_chat):
         asynchat.async_chat.__init__(self, conn)
         self.remote_addr = remote_addr
         self.buffer = []
-        self.map = {}
+        self.smtp_attrs = {}
         self.set_terminator('\n')
         logging.debug("Connect from %s, port %s." % self.remote_addr)
 
@@ -64,16 +64,16 @@ class apd_channel(asynchat.async_chat):
             if line.find('=') != -1:
                 key = line.split('=')[0]
                 value = line.split('=', 1)[1]
-                self.map[key] = value
-        elif len(self.map) != 0:
+                self.smtp_attrs[key] = value
+        elif len(self.smtp_attrs) != 0:
             try:
                 modeler = Modeler(cfg=cfg, logger=logging)
 
-                result = modeler.handle_data(self.map)
-                if result != None:
+                result = modeler.handle_data(self.smtp_attrs)
+                if result:
                     action = result
                 else:
-                    action = SMTP_ACTIONS['accept']
+                    action = SMTP_ACTIONS['default']
                 logging.debug("Final action: %s." % str(result))
             except Exception, e:
                 action = SMTP_ACTIONS['default']
@@ -81,9 +81,9 @@ class apd_channel(asynchat.async_chat):
                         (str(e), str(action)))
 
             # Log final action.
-            logging.info('[%s] %s -> %s, %s' % (self.map['client_address'],
-                                                self.map['sender'],
-                                                self.map['recipient'],
+            logging.info('[%s] %s -> %s, %s' % (self.smtp_attrs['client_address'],
+                                                self.smtp_attrs['sender'],
+                                                self.smtp_attrs['recipient'],
                                                 action,
                                                ))
 
