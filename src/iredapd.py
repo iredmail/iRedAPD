@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
-# Author: Zhang Huangbin <zhb (at) iredmail.org>
+# Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
 import os
 import os.path
@@ -34,10 +31,12 @@ backend = cfg.get('general', 'backend', 'ldap')
 
 if backend == 'ldap':
     from libs.ldaplib import LDAPModeler as Modeler
+    plugins = cfg.get('ldap', 'plugins', '')
 elif backend in ['mysql', 'pgsql']:
     from libs.sqllib import SQLModeler as Modeler
+    plugins = cfg.get('sql', 'plugins', '')
 else:
-    sys.exit('Invalid backend. It should be ldap or sql.')
+    sys.exit('Invalid backend. It should be ldap, mysql or pgsql.')
 
 from libs import __version__, SMTP_ACTIONS
 
@@ -106,8 +105,8 @@ class apd_socket(asyncore.dispatcher):
         self.bind(localaddr)
         self.listen(5)
         ip, port = localaddr
-        logging.info("Starting iredapd (v%s, pid: %d), listening on %s:%s." %
-                (__version__, os.getpid(), ip, str(port)))
+        logging.info("Starting iredapd (v%s). Backend: %s. Enabled plugins: %s. Listening on %s:%s." %
+                (__version__, backend, plugins, ip, str(port)))
 
     def handle_accept(self):
         conn, remote_addr = self.accept()

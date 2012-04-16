@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
-# Author: Zhang Huangbin <zhb (at) iredmail.org>
+# Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
 import os
 import os.path
