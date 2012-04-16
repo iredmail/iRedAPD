@@ -241,9 +241,9 @@ class LDAPModeler:
                             logger=self.logger,
                         )
 
-                        self.logger.debug('Response (%s): %s' % (module.__name__, pluginAction))
+                        self.logger.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                         if not pluginAction.startswith('DUNNO'):
-                            self.logger.info('Response (%s): %s' % (module.__name__, pluginAction))
+                            self.logger.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                             return pluginAction
                     except Exception, e:
                         self.logger.debug('Error while apply plugin (%s): %s' % (module, str(e)))
