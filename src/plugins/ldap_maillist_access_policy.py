@@ -1,4 +1,4 @@
-# Author: Zhang Huangbin <zhb@iredmail.org>
+# Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
 # ----------------------------------------------------------------------------
 # This plugin is used for mail deliver restriction.

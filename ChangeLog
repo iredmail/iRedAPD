@@ -1,4 +1,5 @@
 iRedAPD-1.3.7:
+    * Log client IP address.
     * Supports PostgreSQL.
     * Excluding mail user in SQL query (plugin: sql_alias_access_policy).
 

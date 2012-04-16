@@ -1,3 +1,5 @@
+# Author: Zhang Huangbin <zhb _at_ iredmail.org>
+
 from libs import SMTP_ACTIONS
 
 

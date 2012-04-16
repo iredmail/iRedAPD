@@ -1,6 +1,5 @@
-# Author: Zhang Huangbin <zhb@iredmail.org>
+# Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
-# Date: 2010-03-12
 # Purpose: Apply access policy on sender while recipient is an mail alias.
 
 # Available access policies:
