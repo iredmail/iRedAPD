@@ -77,7 +77,7 @@ class SQLModeler:
                     except ImportError:
                         # Print error message if plugin module doesn't exist.
                         # Use self.logger.info to let admin know this critical error.
-                        self.logger.info('Error: plugin %s/%s.py not exist.' % (PLUGIN_DIR, plugin))
+                        self.logger.info('Error: plugin %s.py not exist.' % plugin)
                     except Exception, e:
                         self.logger.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 

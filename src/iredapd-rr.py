@@ -14,12 +14,8 @@ import asynchat
 import logging
 import daemon
 
-__version__ = '1.3.7'
-
-SMTP_ACTIONS['defer'] = 'DEFER_IF_PERMIT Service temporarily unavailable'
-
-PLUGIN_DIR = os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr'
-sys.path.append(PLUGIN_DIR)
+# Append plugin directory.
+sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr')
 
 # Get config file.
 if len(sys.argv) != 2:
@@ -37,7 +33,7 @@ cfg.read(config_file)
 
 from libs import __version__, SMTP_ACTIONS
 
-class apdChannel(asynchat.async_chat):
+class apd_channel(asynchat.async_chat):
     def __init__(self, conn, remoteaddr):
         asynchat.async_chat.__init__(self, conn)
         self.buffer = []
@@ -92,7 +88,7 @@ class apdChannel(asynchat.async_chat):
             logging.debug("Connection closed")
 
 
-class apdSocket(asyncore.dispatcher):
+class apd_socket(asyncore.dispatcher):
     def __init__(self, localaddr):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -105,7 +101,7 @@ class apdSocket(asyncore.dispatcher):
 
     def handle_accept(self):
         conn, remoteaddr = self.accept()
-        channel = apdChannel(conn, remoteaddr)
+        channel = apd_channel(conn, remoteaddr)
 
 
 class SQLModeler:
@@ -152,7 +148,7 @@ class SQLModeler:
                     except ImportError:
                         # Print error message if plugin module doesn't exist.
                         # Use logging.info to let admin know this critical error.
-                        logging.info('Error: plugin %s/%s.py not exist.' % (PLUGIN_DIR, plugin))
+                        logging.info('Error: plugin %s.py not exist.' % plugin)
                     except Exception, e:
                         logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 
@@ -274,7 +270,7 @@ class LDAPModeler:
                     except ImportError:
                         # Print error message if plugin module doesn't exist.
                         # Use logging.info to let admin know this critical error.
-                        logging.info('Error: plugin %s/%s.py not exist.' % (PLUGIN_DIR, plugin))
+                        logging.info('Error: plugin %s.py not exist.' % plugin)
                     except Exception, e:
                         logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 
@@ -338,7 +334,7 @@ def main():
                     )
 
     # Initialize policy daemon.
-    socketDaemon = apdSocket((listen_addr, listen_port))
+    socket_daemon = apd_socket((listen_addr, listen_port))
 
     # Run this program as daemon.
     if run_as_daemon == 'yes':

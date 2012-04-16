@@ -199,7 +199,7 @@ class LDAPModeler:
             self.plugins = self.cfg.get('ldap', 'plugins', '')
             self.plugins = [v.strip() for v in self.plugins.split(',')]
 
-            if len(self.plugins) > 0:
+            if self.plugins:
 
                 # Get account dn and LDIF data.
                 recipientDn, recipientLdif = self.__get_recipient_dn_ldif(map['recipient'])
@@ -221,7 +221,7 @@ class LDAPModeler:
                     except ImportError:
                         # Print error message if plugin module doesn't exist.
                         # Use self.logger.info to let admin know this critical error.
-                        self.logger.info('Error: plugin %s/%s.py not exist.' % (PLUGIN_DIR, plugin))
+                        self.logger.info('Error: plugin %s.py not exist.' % plugin)
                     except Exception, e:
                         self.logger.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 

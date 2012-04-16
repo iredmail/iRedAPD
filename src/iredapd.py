@@ -14,8 +14,8 @@ import asynchat
 import logging
 import daemon
 
-PLUGIN_DIR = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
-sys.path.append(PLUGIN_DIR)
+# Append plugin directory.
+sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
 
 # Get config file.
 if len(sys.argv) != 2:
@@ -42,7 +42,7 @@ else:
 from libs import __version__, SMTP_ACTIONS
 
 
-class apdChannel(asynchat.async_chat):
+class apd_channel(asynchat.async_chat):
     def __init__(self, conn, remoteaddr):
         asynchat.async_chat.__init__(self, conn)
         self.buffer = []
@@ -57,7 +57,7 @@ class apdChannel(asynchat.async_chat):
         self.buffer.append(data)
 
     def found_terminator(self):
-        if len(self.buffer) is not 0:
+        if self.buffer:
             line = self.buffer.pop()
             logging.debug("smtp session: " + line)
             if line.find('=') != -1:
@@ -94,7 +94,7 @@ class apdChannel(asynchat.async_chat):
             logging.debug("Connection closed")
 
 
-class apdSocket(asyncore.dispatcher):
+class apd_socket(asyncore.dispatcher):
     def __init__(self, localaddr):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -107,7 +107,7 @@ class apdSocket(asyncore.dispatcher):
 
     def handle_accept(self):
         conn, remoteaddr = self.accept()
-        channel = apdChannel(conn, remoteaddr)
+        channel = apd_channel(conn, remoteaddr)
 
 
 def main():
@@ -140,7 +140,7 @@ def main():
                     )
 
     # Initialize policy daemon.
-    socketDaemon = apdSocket((listen_addr, listen_port))
+    socket_daemon = apd_socket((listen_addr, listen_port))
 
     # Run this program as daemon.
     if run_as_daemon == 'yes':
