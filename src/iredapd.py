@@ -105,8 +105,8 @@ class apd_socket(asyncore.dispatcher):
         self.bind(localaddr)
         self.listen(5)
         ip, port = localaddr
-        logging.info("Starting iredapd (v%s). Backend: %s. Enabled plugins: %s. Listening on %s:%s." %
-                (__version__, backend, plugins, ip, str(port)))
+        logging.info("Starting iredapd (v%s, %s). Enabled plugin(s): %s. Listening on %s:%d." %
+                (__version__, backend, plugins, ip, port))
 
     def handle_accept(self):
         conn, remote_addr = self.accept()
