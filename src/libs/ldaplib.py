@@ -6,13 +6,13 @@ from libs import SMTP_ACTIONS
 class LDAPModeler:
     def __init__(self, cfg, logger):
         self.cfg = cfg
+        self.logger = logger
 
         # Read LDAP server related settings.
         self.uri = self.cfg.get('ldap', 'uri', 'ldap://127.0.0.1:389')
         self.binddn = self.cfg.get('ldap', 'binddn')
         self.bindpw = self.cfg.get('ldap', 'bindpw')
         self.baseDN = self.cfg.get('ldap', 'basedn')
-        self.logger = logger
 
         # Initialize ldap connection.
         try:
@@ -241,9 +241,9 @@ class LDAPModeler:
                             logger=self.logger,
                         )
 
-                        self.logger.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                        self.logger.debug('Response (%s): %s' % (module.__name__, pluginAction))
                         if not pluginAction.startswith('DUNNO'):
-                            self.logger.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                            self.logger.info('Response (%s): %s' % (module.__name__, pluginAction))
                             return pluginAction
                     except Exception, e:
                         self.logger.debug('Error while apply plugin (%s): %s' % (module, str(e)))

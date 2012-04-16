@@ -43,12 +43,13 @@ from libs import __version__, SMTP_ACTIONS
 
 
 class apd_channel(asynchat.async_chat):
-    def __init__(self, conn, remoteaddr):
+    def __init__(self, conn, remote_addr):
         asynchat.async_chat.__init__(self, conn)
+        self.remote_addr = remote_addr
         self.buffer = []
         self.map = {}
         self.set_terminator('\n')
-        logging.debug("Connect from " + remoteaddr[0])
+        logging.debug("Connect from %s, port %s." % self.remote_addr)
 
     def push(self, msg):
         asynchat.async_chat.push(self, msg + '\n')
@@ -79,17 +80,20 @@ class apd_channel(asynchat.async_chat):
                 logging.debug('Error: %s. Use default action instead: %s' %
                         (str(e), str(action)))
 
-            logging.info('%s -> %s, %s' %
-                    (self.map['sender'], self.map['recipient'], action))
-            self.push('action=' + action)
-            self.push('')
+            # Log final action.
+            logging.info('[%s] %s -> %s, %s' % (self.map['client_address'],
+                                                self.map['sender'],
+                                                self.map['recipient'],
+                                                action,
+                                               ))
+
+            self.push('action=' + action + '\n')
             asynchat.async_chat.handle_close(self)
             logging.debug("Connection closed")
         else:
             action = SMTP_ACTIONS['defer']
             logging.debug("replying: " + action)
-            self.push(action)
-            self.push('')
+            self.push(action + '\n')
             asynchat.async_chat.handle_close(self)
             logging.debug("Connection closed")
 
@@ -106,8 +110,8 @@ class apd_socket(asyncore.dispatcher):
                 (__version__, os.getpid(), ip, str(port)))
 
     def handle_accept(self):
-        conn, remoteaddr = self.accept()
-        channel = apd_channel(conn, remoteaddr)
+        conn, remote_addr = self.accept()
+        channel = apd_channel(conn, remote_addr)
 
 
 def main():

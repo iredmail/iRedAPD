@@ -22,4 +22,8 @@ for easy deploying.
 * python-ldap ( >= 2.2.0 ): http://python-ldap.org/
 
 # Document
-http://www.iredmail.org/doc.html
+* iRedMail documentations:
+  http://www.iredmail.org/doc.html
+
+* Postfix SMTP Access Policy Delegation:
+  http://www.postfix.org/SMTPD_POLICY_README.html
