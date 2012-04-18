@@ -20,13 +20,11 @@ def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
     splited_sender_domain = str(sender.split('@', 1)[-1]).split('.')
 
     # Default senders (user@domain.ltd): ['user@domain.ltd', @domain.ltd']
-    valid_amavisd_senders = [sender, '@'+sender.split('@', 1)[-1],]
+    valid_amavisd_senders = set([sender, '@'+sender.split('@', 1)[-1],])
     for counter in range(len(splited_sender_domain)):
         # Append domain and sub-domain.
-        valid_amavisd_senders += ['@.' + '.'.join(splited_sender_domain)]
+        valid_amavisd_senders.update(['@.' + '.'.join(splited_sender_domain)])
         splited_sender_domain.pop(0)
-
-    valid_amavisd_senders = set(valid_amavisd_senders)
 
     # Get list of amavisBlacklistedSender.
     blSenders = set([v.lower() for v in ldapRecipientLdif.get('amavisBlacklistSender', [])])
