@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
-# Author:   Zhang Huangbin <zhb (at) iredmail.org>
+# Author:   Zhang Huangbin <zhb _at_ iredmail.org>
 # Date:     2010-04-20
 # Purpose:  Per-user whitelist/blacklist for recipient restrictions.
 #           Bypass all whitelisted recipients, reject all blacklisted recipients.
