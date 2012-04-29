@@ -4,6 +4,8 @@
 
 PLUGIN_NAME = 'block_amavisd_blacklisted_senders'
 
+from libs import SMTP_ACTIONS
+
 def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
     # Get sender address.
     sender = smtpSessionData.get('sender').lower()
@@ -38,7 +40,7 @@ def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
 
     # Bypass whitelisted senders.
     if len(valid_amavisd_senders & wlSenders) > 0:
-        return 'DUNNO Whitelisted'
+        return SMTP_ACTIONS['accept']
 
     # Reject blacklisted senders.
     if len(valid_amavisd_senders & blSenders) > 0:
