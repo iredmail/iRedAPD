@@ -22,7 +22,7 @@ log_file        = /var/log/iredapd.log
 # Log level: info, error, debug.
 log_level       = error
 
-# Backend: ldap, mysql.
+# Backend: ldap, mysql, pgsql.
 backend = ldap
 
 [ldap]

@@ -25,7 +25,7 @@ log_file        = /var/log/iredapd-rr.log
 # Log level: info, error, debug.
 log_level       = error
 
-# Backend: ldap, mysql.
+# Backend: ldap, mysql, pgsql.
 backend = ldap
 
 # Bypass clients listed in postfix 'mynetworks': yes, no.
