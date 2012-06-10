@@ -1,0 +1,8 @@
+#!/bin/sh
+
+daemon='python /opt/iredapd/src/iredapd-rr.py /opt/iredapd/etc/iredapd-rr.ini'
+
+. /etc/rc.d/rc.subr
+
+rc_reload=NO
+rc_cmd $1
