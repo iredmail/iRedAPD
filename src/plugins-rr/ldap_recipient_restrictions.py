@@ -32,7 +32,7 @@ def restriction(smtpSessionData, ldapSenderLdif, **kargs):
     #   -> .sub1.com.cn
     #   -> .com.cn
     #   -> .cn
-    recipients = [smtpRecipient, '@' + smtpRecipient.split('@')[-1],]
+    recipients = ['@.', smtpRecipient, '@' + smtpRecipient.split('@')[-1],]
     for counter in range(len(splited_recipient_domain)):
         # Append domain and sub-domain.
         recipients += ['@.' + '.'.join(splited_recipient_domain)]

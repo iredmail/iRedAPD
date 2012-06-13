@@ -21,8 +21,8 @@ def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
     #   -> @.cn
     splited_sender_domain = str(sender.split('@', 1)[-1]).split('.')
 
-    # Default senders (user@domain.ltd): ['user@domain.ltd', @domain.ltd']
-    valid_amavisd_senders = set([sender, '@'+sender.split('@', 1)[-1],])
+    # Default senders (user@domain.ltd): ['@.', 'user@domain.ltd', @domain.ltd']
+    valid_amavisd_senders = set(['@.', sender, '@'+sender.split('@', 1)[-1],])
     for counter in range(len(splited_sender_domain)):
         # Append domain and sub-domain.
         valid_amavisd_senders.update(['@.' + '.'.join(splited_sender_domain)])

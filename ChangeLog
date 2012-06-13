@@ -1,5 +1,7 @@
 iRedAPD-1.3.8:
     * Add rc scripts for OpenBSD.
+    * Fixed:
+        + Cannot handle '@.' (without quotes) to match all destinations.
 
 iRedAPD-1.3.7:
     * New plugin for LDAP backend: ldap_expired_password. Used to force mail
