@@ -4,7 +4,7 @@
 # This plugin is used for mail deliver restriction.
 #
 # Available access policies:
-#   - public or open:   Unrestricted
+#   - public:   Unrestricted
 #   - domain:   Only users under same domain are allowed.
 #   - subdomain:    Only users under same domain and sub domains are allowed.
 #   - membersOnly or members:  Only members are allowed.
@@ -152,7 +152,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
 
     logger.debug('(%s) %s -> %s, policy: %s' % (PLUGIN_NAME, sender, recipient, policy))
 
-    if policy in ['public', 'open']:
+    if policy == 'public':
         # No restriction.
         return 'DUNNO Access policy: public.'
     elif policy == "domain":
