@@ -86,7 +86,7 @@ case "$1" in
     start) start ;;
     stop) stop ;;
     status) status ;;
-    restart) stop && start ;;
+    restart) stop && sleep 1 && start ;;
     *)
         echo $"Usage: $0 {start|stop|restart|status}"
         RETVAL=1

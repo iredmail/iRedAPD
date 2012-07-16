@@ -4,11 +4,11 @@
 # This plugin is used for mail deliver restriction.
 #
 # Available access policies:
-#   - public:   Unrestricted
+#   - public or open:   Unrestricted
 #   - domain:   Only users under same domain are allowed.
 #   - subdomain:    Only users under same domain and sub domains are allowed.
-#   - membersOnly:  Only members are allowed.
-#   - moderatorsOnly:   Only moderators are allowed.
+#   - membersOnly or members:  Only members are allowed.
+#   - moderatorsOnly or moderators:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
 # ----------------------------------------------------------------------------
@@ -32,7 +32,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
 
     # Set search filter, attributes based on policy.
     # Override base dn, scope if necessary.
-    if policy == 'membersonly':
+    if policy in ['membersonly', 'members']:
         basedn = domaindn
         # Filter: get mail list members.
         searchFilter = "(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
@@ -40,7 +40,7 @@ def __get_allowed_senders(ldapConn, ldapBaseDn, listDn, sender, recipient, polic
         # Get both mail and shadowAddress.
         searchAttrs = ['mail', 'shadowAddress',]
 
-    elif policy == 'allowedonly' or policy == 'moderatorsonly':
+    elif policy in ['allowedonly', 'moderatorsonly', 'moderators']:
         # Get mail list moderators.
         basedn = listDn
         searchScope = 0     # Use ldap.SCOPE_BASE to improve performance.
@@ -150,11 +150,9 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
 
         logger.debug('(%s) Recipient domain and alias domains: %s' % (PLUGIN_NAME, ','.join(recipient_alias_domains)))
 
-    logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
-    logger.debug('(%s) Recipient: %s' % (PLUGIN_NAME, recipient))
-    logger.debug('(%s) Policy: %s' % (PLUGIN_NAME, policy))
+    logger.debug('(%s) %s -> %s, policy: %s' % (PLUGIN_NAME, sender, recipient, policy))
 
-    if policy == "public":
+    if policy in ['public', 'open']:
         # No restriction.
         return 'DUNNO Access policy: public.'
     elif policy == "domain":
