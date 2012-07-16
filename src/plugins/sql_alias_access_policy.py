@@ -69,7 +69,8 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
             return SMTP_ACTIONS['reject']
     elif policy == POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
-        if senderReceiver['sender'].endswith('.' + senderReceiver['recipient_domain']):
+        if senderReceiver['sender'].endswith(senderReceiver['recipient_domain']) or \
+           senderReceiver['sender'].endswith('.' + senderReceiver['recipient_domain']):
             return 'DUNNO'
         else:
             return SMTP_ACTIONS['reject']

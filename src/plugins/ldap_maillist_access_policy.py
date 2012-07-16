@@ -165,7 +165,7 @@ def restriction(ldapConn, ldapBaseDn, ldapRecipientDn, ldapRecipientLdif, smtpSe
         # Bypass all users under the same domain and sub domains.
         returned = False
         for d in recipient_alias_domains:
-            if sender.endswith('.' + d):
+            if sender.endswith(d) or sender.endswith('.' + d):
                 return 'DUNNO Access policy: subdomain (%s)' % (d)
 
         if returned is False:
