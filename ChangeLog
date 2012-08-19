@@ -1,6 +1,9 @@
 iRedAPD-1.3.8:
     * Add rc scripts for OpenBSD.
     * Fixed:
+        + Ignore signal SIGHUP, so that it will continue running after log
+          rotation with newsyslog on FreeBSD.
+          Thanks viq@bitbucket for the report.
         + Cannot correctly hander mail list access policy 'subdomain'.
         + Cannot handle '@.' (without quotes) to match all destinations.
 

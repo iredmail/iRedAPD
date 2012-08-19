@@ -44,6 +44,7 @@ __all__ = ['daemonize', 'DaemonError']
 import logging
 import os
 import sys
+import signal
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -141,6 +142,9 @@ def daemonize(noClose=False):
         log.debug('Creating new session')
         os.setsid()
     
+        # Ignore SIGHUP
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
         # Fork a second child to ensure that the daemon never reacquires
         # a control terminal.
         log.debug('Forking second child.')
