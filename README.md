@@ -1,8 +1,8 @@
-iRedAPD is a sub-project of iRedMail project. http://www.iredmail.org/
 
 # About
 
-iRedAPD is a simple Postfix policy daemon.
+* iRedAPD is a simple Postfix policy server.
+* iRedAPD is a part of iRedMail project. http://www.iredmail.org/
 
 # Authors & Contributors
 
