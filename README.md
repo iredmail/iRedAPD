@@ -24,6 +24,9 @@ for easy deploying.
 * [python-psycopg2](http://initd.org/) >= 2.1.0. Required for PostgreSQL backend.
 
 # Document
-* iRedMail documentations: [http://www.iredmail.org/doc.html]
 
-* Postfix SMTP Access Policy Delegation: [http://www.postfix.org/SMTPD_POLICY_README.html]
+* [Install iRedAPD for OpenLDAP backend](http://www.iredmail.org/wiki/index.php?title=Install/iRedAPD/OpenLDAP)
+* [Install iRedAPD for MySQL backend](http://www.iredmail.org/wiki/index.php?title=Install/iRedAPD/MySQL)
+
+* [iRedMail documentations](http://www.iredmail.org/doc.html)
+* [Postfix SMTP Access Policy Delegation](http://www.postfix.org/SMTPD_POLICY_README.html)
