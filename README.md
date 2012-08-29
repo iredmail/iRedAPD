@@ -6,11 +6,11 @@
 
 # Authors & Contributors
 
-* Zhang Huangbin <zhb _at_ iredmail.org>: Core developer and maintainer.
+* Zhang Huangbin <zhb @ iredmail.org>: Core developer and maintainer.
 
 # License
 
-iRedAPD is based on mlapd (http://code.google.com/p/mlapd) which released
+iRedAPD is based on [mlapd](http://code.google.com/p/mlapd) which released
 under GPL v2, so iRedAPD is GPL v2 too.
 
 Note: file src/daemon.py is released under its own license, shipped
@@ -18,14 +18,12 @@ for easy deploying.
 
 # Requirments
 
-* python (>= 2.4): http://www.python.org/
-* python-ldap (>= 2.2.0) for OpenLDAP backend: http://python-ldap.org/
-* python-mysql (>=1.2.0) for MySQL backend: http://mysql-python.sourceforge.net/
-* python-psycopg2 (>= 2.1.0) for PostgreSQL backend: http://initd.org/
+* [Python](http://www.python.org/) >= 2.4
+* [python-ldap](http://python-ldap.org/) >= 2.2.0. Required for OpenLDAP backend
+* [python-mysql](http://mysql-python.sourceforge.net/) >= 1.2.0. Required for MySQL backend.
+* [python-psycopg2](http://initd.org/) >= 2.1.0. Required for PostgreSQL backend.
 
 # Document
-* iRedMail documentations:
-  http://www.iredmail.org/doc.html
+* iRedMail documentations: [http://www.iredmail.org/doc.html]
 
-* Postfix SMTP Access Policy Delegation:
-  http://www.postfix.org/SMTPD_POLICY_README.html
+* Postfix SMTP Access Policy Delegation: [http://www.postfix.org/SMTPD_POLICY_README.html]
