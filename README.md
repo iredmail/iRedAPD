@@ -4,6 +4,12 @@
 * iRedAPD is a simple Postfix policy server.
 * iRedAPD is a part of iRedMail project. http://www.iredmail.org/
 
+Available plugins:
+
+* `ldap_maillist_access_policy`: Check user's rights to post messages to mail list which builtin in iRedMail OpenLDAP solution.
+* `block_amavisd_blacklisted_senders`: Used for per-user sender whitelist and blacklist.
+* `ldap_recipient_restrictions`: Used for per-user recipient whitelist and blacklist.
+
 # Authors & Contributors
 
 * Zhang Huangbin <zhb @ iredmail.org>: Core developer and maintainer.
