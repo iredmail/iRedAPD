@@ -119,13 +119,14 @@ class LDAPModeler:
         if listpolicy == 'membersOnly':
             baseDN = self.baseDN
             searchScope = ldap.SCOPE_SUBTREE
-            # Filter used to get domain members.
+            # Filter used to get mail list members.
             searchFilter = self.cfg.get("ldap", "filter_member")
             searchAttr = self.cfg.get("ldap", "attr_member")
         else:
             baseDN = listdn
-            searchScope = ldap.SCOPE_BASE   # Use SCOPE_BASE to improve performance.
-            # Filter used to get domain moderators.
+            # Use SCOPE_BASE to improve performance.
+            searchScope = ldap.SCOPE_BASE
+            # Filter used to get mail list moderators.
             searchFilter = self.cfg.get("ldap", "filter_allowed_senders")
             searchAttr = self.cfg.get("ldap", "attr_moderator")
 
