@@ -1,3 +1,8 @@
+iRedAPD-1.3.9:
+    * New plugin for SQL backends: sql_user_restrictions.
+      Note, it requires 4 new columns on table `vmail.mailbox`, please refer
+      to iRedMail upgrade tutorials.
+
 iRedAPD-1.3.8:
     * Add rc scripts for OpenBSD.
     * Fixed:
