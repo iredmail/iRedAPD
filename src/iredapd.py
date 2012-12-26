@@ -36,7 +36,7 @@ elif backend in ['mysql', 'pgsql']:
     from libs.sqllib import SQLModeler as Modeler
     plugins = cfg.get('sql', 'plugins', '')
 else:
-    sys.exit('Invalid backend. It should be ldap, mysql or pgsql.')
+    sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
 from libs import __version__, SMTP_ACTIONS
 
@@ -105,8 +105,9 @@ class apd_socket(asyncore.dispatcher):
         self.bind(localaddr)
         self.listen(5)
         ip, port = localaddr
-        logging.info("Starting iredapd (v%s, %s). Enabled plugin(s): %s. Listening on %s:%d." %
-                (__version__, backend, plugins, ip, port))
+        logging.info("Starting iRedAPD (v%s, %s)." % (__version__, backend))
+        logging.info("Enabled plugin(s): %s." % (plugins))
+        logging.info("Listening on %s:%d." % (ip, port))
 
     def handle_accept(self):
         conn, remote_addr = self.accept()

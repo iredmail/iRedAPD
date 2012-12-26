@@ -1,0 +1,7 @@
+* Use python file as config file instead of .ini
+* Merge iredapd.py and iredapd-rr.py
+* Query required LDAP attributes instead of all
+* Query required SQL columns instead of all
+* Plugins:
+    + Greylisting (server-wide and per-user, per-domain)
+    + White/Blacklisting (server-wide and per-domain)
