@@ -3,7 +3,7 @@
 # Note: Access policy is defined in libs/__init__.py.
 
 import logging
-from libs import SMTP_ACTIONS, ACCESS_POLICIES_OF_MAIL_LIST, ldap_conn_utils
+from libs import SMTP_ACTIONS, LDAP_ACCESS_POLICIES_OF_MAIL_LIST, ldap_conn_utils
 
 REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = True
@@ -47,7 +47,7 @@ def restriction(**kwargs):
 
     logging.debug('%s -> %s, access policy: %s (%s)' % (
         sender, recipient, policy,
-        ACCESS_POLICIES_OF_MAIL_LIST.get(policy, 'no description'))
+        LDAP_ACCESS_POLICIES_OF_MAIL_LIST.get(policy, 'no description'))
     )
 
     if policy == 'public':

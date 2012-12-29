@@ -7,7 +7,7 @@ SMTP_ACTIONS = {'accept': 'OK',
                 'default': 'DUNNO',
                }
 
-ACCESS_POLICIES_OF_MAIL_LIST = {
+LDAP_ACCESS_POLICIES_OF_MAIL_LIST = {
     'public': 'Unrestricted',
     'domain': 'Only users under same domain are allowed',
     'subdomain': 'Only users under same domain and sub domains are allowed',

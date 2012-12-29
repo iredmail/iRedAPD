@@ -98,7 +98,7 @@ class PolicyChannel(asynchat.async_chat):
 
 
 class DaemonSocket(asyncore.dispatcher):
-    def __init__(self, localaddr, plugins=[]):
+    def __init__(self, localaddr):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
