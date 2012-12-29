@@ -1,12 +1,12 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
+import logging
 from libs import SMTP_ACTIONS
 
 
 class SQLModeler:
-    def __init__(self, cfg, logger):
+    def __init__(self, cfg):
         self.cfg = cfg
-        self.logger = logger
 
         # Backend
         self.backend = self.cfg.get('general', 'backend', 'mysql')
@@ -22,7 +22,7 @@ class SQLModeler:
                 )
                 self.cursor = db.cursor()
             except Exception, e:
-                self.logger.error("Error while creating database connection: %s" % str(e))
+                logging.error("Error while creating database connection: %s" % str(e))
         elif self.backend == 'pgsql':
             import psycopg2
             try:
@@ -35,16 +35,16 @@ class SQLModeler:
                 )
                 self.cursor = db.cursor()
             except Exception, e:
-                self.logger.error("Error while creating database connection: %s" % str(e))
+                logging.error("Error while creating database connection: %s" % str(e))
         else:
             return SMTP_ACTIONS['default']
 
     def __del__(self):
         try:
             self.cursor.close()
-            self.logger.debug('Closed SQL connection.')
+            logging.debug('Closed SQL connection.')
         except Exception, e:
-            self.logger.debug('Error while closing connection: %s' % str(e))
+            logging.debug('Error while closing connection: %s' % str(e))
 
     def handle_data(self, map):
         if 'sender' in map.keys() and 'recipient' in map.keys():
@@ -78,10 +78,10 @@ class SQLModeler:
                         self.modules.append(__import__(plugin))
                     except ImportError:
                         # Print error message if plugin module doesn't exist.
-                        # Use self.logger.info to let admin know this critical error.
-                        self.logger.info('Error: plugin %s.py not exist.' % plugin)
+                        # Use logging.info to let admin know this critical error.
+                        logging.info('Error: plugin %s.py not exist.' % plugin)
                     except Exception, e:
-                        self.logger.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
+                        logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
 
                 #
                 # Apply plugins.
@@ -89,20 +89,20 @@ class SQLModeler:
                 self.action = ''
                 for module in self.modules:
                     try:
-                        self.logger.debug('Apply plugin (%s).' % (module.__name__, ))
+                        logging.debug('Apply plugin: %s.' % (module.__name__, ))
                         pluginAction = module.restriction(
                             dbConn=self.cursor,
                             senderReceiver=senderReceiver,
                             smtpSessionData=map,
-                            logger=self.logger,
+                            logger=logging,
                         )
 
-                        self.logger.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                        logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                         if not pluginAction.startswith('DUNNO'):
-                            self.logger.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
+                            logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
                             return pluginAction
                     except Exception, e:
-                        self.logger.debug('Error while apply plugin (%s): %s' % (module, str(e)))
+                        logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
 
             else:
                 # No plugins available.

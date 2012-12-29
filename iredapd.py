@@ -4,43 +4,27 @@ import os
 import os.path
 import sys
 import pwd
-import ConfigParser
 import socket
 import asyncore
 import asynchat
 import logging
 
+import settings
+
 # Append plugin directory.
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
 
-# Get config file.
-if len(sys.argv) != 2:
-    sys.exit('Usage: %s /path/to/iredapd.ini')
-else:
-    config_file = sys.argv[1]
-
-    # Check file exists.
-    if not os.path.exists(config_file):
-        sys.exit('File not exist: %s.' % config_file)
-
-# Read configurations.
-cfg = ConfigParser.SafeConfigParser()
-cfg.read(config_file)
-backend = cfg.get('general', 'backend', 'ldap')
-
-if backend == 'ldap':
+if settings.backend == 'ldap':
     from libs.ldaplib import LDAPModeler as Modeler
-    plugins = cfg.get('ldap', 'plugins', '')
-elif backend in ['mysql', 'pgsql']:
+elif settings.backend in ['mysql', 'pgsql']:
     from libs.sqllib import SQLModeler as Modeler
-    plugins = cfg.get('sql', 'plugins', '')
 else:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
 from libs import __version__, SMTP_ACTIONS, daemon
 
 
-class apd_channel(asynchat.async_chat):
+class PolicyChannel(asynchat.async_chat):
     def __init__(self, conn, remote_addr):
         asynchat.async_chat.__init__(self, conn)
         self.remote_addr = remote_addr
@@ -65,7 +49,7 @@ class apd_channel(asynchat.async_chat):
                 self.smtp_attrs[key] = value
         elif len(self.smtp_attrs) != 0:
             try:
-                modeler = Modeler(cfg=cfg, logger=logging)
+                modeler = Modeler()
 
                 result = modeler.handle_data(self.smtp_attrs)
                 if result:
@@ -96,7 +80,7 @@ class apd_channel(asynchat.async_chat):
             logging.debug("Connection closed")
 
 
-class apd_socket(asyncore.dispatcher):
+class DaemonSocket(asyncore.dispatcher):
     def __init__(self, localaddr):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -104,57 +88,50 @@ class apd_socket(asyncore.dispatcher):
         self.bind(localaddr)
         self.listen(5)
         ip, port = localaddr
-        logging.info("Starting iRedAPD (version %s, %s backend), listening on %s:%d." % (__version__, backend, ip, port))
-        logging.info("Enabled plugin(s): %s." % (plugins))
+        logging.info("Starting iRedAPD (version %s, %s backend), listening on %s:%d." % (__version__, settings.backend, ip, port))
+        logging.info("Enabled plugin(s): %s." % (', '.join(settings.plugins)))
 
     def handle_accept(self):
         conn, remote_addr = self.accept()
-        channel = apd_channel(conn, remote_addr)
+        channel = PolicyChannel(conn, remote_addr)
 
 
 def main():
     # Set umask.
     os.umask(0077)
 
-    # Get listen address/port.
-    listen_addr = cfg.get('general', 'listen_addr', '127.0.0.1')
-    listen_port = int(cfg.get('general', 'listen_port', '7777'))
-
-    run_as_daemon = cfg.get('general', 'run_as_daemon', 'yes')
-
     # Get log level.
-    log_level = getattr(logging, cfg.get('general', 'log_level', 'info').upper())
+    log_level = getattr(logging, str(settings.log_level).upper())
 
     # Initialize file based logger.
-    if cfg.get('general', 'log_type', 'file') == 'file':
-        if run_as_daemon == 'yes':
+    if settings.log_type == 'file':
+        if settings.run_as_daemon:
             logging.basicConfig(
-                    level=log_level,
-                    format='%(asctime)s %(levelname)s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    filename=cfg.get('general', 'log_file', '/var/log/iredapd.log'),
-                    )
+                level=log_level,
+                format='%(asctime)s %(levelname)s %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S',
+                filename=settings.log_file,
+            )
         else:
             logging.basicConfig(
-                    level=log_level,
-                    format='%(asctime)s %(levelname)s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    )
+                level=log_level,
+                format='%(asctime)s %(levelname)s %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S',
+            )
 
     # Initialize policy daemon.
-    socket_daemon = apd_socket((listen_addr, listen_port))
+    socket_daemon = DaemonSocket((settings.listen_address, settings.listen_port))
 
     # Run this program as daemon.
-    if run_as_daemon == 'yes':
+    if settings.run_as_daemon:
         daemon.daemonize()
 
     # Run as a low privileged user.
-    run_as_user = cfg.get('general', 'run_as_user', 'nobody')
-    uid = pwd.getpwnam(run_as_user)[2]
+    uid = pwd.getpwnam(settings.run_as_user)[2]
 
     try:
         # Write pid number into pid file.
-        f = open(cfg.get('general', 'pid_file', '/var/run/iredapd.pid'), 'w')
+        f = open(settings.pid_file, 'w')
         f.write(str(os.getpid()))
         f.close()
 

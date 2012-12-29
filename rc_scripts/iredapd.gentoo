@@ -3,7 +3,7 @@
 prog='/opt/iredapd/iredapd.py'
 progname="iRedAPD"
 
-CONFIG='/opt/iredapd/etc/iredapd.ini'
+CONFIG='/opt/iredapd/etc/settings.ini'
 PIDFILE='/var/run/iredapd.pid'
 
 depend() {
