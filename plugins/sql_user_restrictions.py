@@ -15,12 +15,14 @@
 #   - .domain.com:  single domain and its all sub-domains
 #   - user@domain.com:  single email address
 
+import logging
 from web import sqlquote
 from libs import SMTP_ACTIONS
 
-PLUGIN_NAME = 'sql_user_restrictions'
+REQUIRE_LOCAL_SENDER_= False
+REQUIRE_LOCAL_RECIPIENT = False
 
-def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
+def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
     # Get restriction rules for sender
     sql = '''
         SELECT
@@ -30,11 +32,11 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
         WHERE username=%s
         LIMIT 1
     ''' % sqlquote(senderReceiver['sender'])
-    logger.debug('SQL to get restriction rules of sender (%s): %s' % (senderReceiver['sender'], sql))
+    logging.debug('SQL to get restriction rules of sender (%s): %s' % (senderReceiver['sender'], sql))
 
     dbConn.execute(sql)
     sql_record = dbConn.fetchone()
-    logger.debug('Returned SQL Record: %s' % str(sql_record))
+    logging.debug('Returned SQL Record: %s' % str(sql_record))
 
     # Sender account exists, perform recipient restrictions
     if sql_record:
@@ -42,12 +44,12 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
 
         # If it does have restrictions
         if not allowed_recipients and not rejected_recipients:
-            logger.debug('No restrictions of sender.')
+            logging.debug('No restrictions of sender.')
         else:
             # Allowed first
             # single recipient, domain, sub-domain, catch-all
             all_allowed_recipients = [s.lower().strip() for s in allowed_recipients.split(',')]
-            logger.debug('All allowed recipient: %s' % str(all_allowed_recipients))
+            logging.debug('All allowed recipient: %s' % str(all_allowed_recipients))
 
             if all_allowed_recipients:
                 if senderReceiver['recipient'] in all_allowed_recipients \
@@ -57,7 +59,7 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
                     return SMTP_ACTIONS['accept']
 
             all_rejected_recipients = [s.lower().strip() for s in rejected_recipients.split(',')]
-            logger.debug('All rejected recipient: %s' % str(all_rejected_recipients))
+            logging.debug('All rejected recipient: %s' % str(all_rejected_recipients))
 
             if all_rejected_recipients:
                 if senderReceiver['recipient'] in all_rejected_recipients \
@@ -77,11 +79,11 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
             WHERE username=%s
             LIMIT 1
         ''' % sqlquote(senderReceiver['recipient'])
-        logger.debug('SQL to get restriction rules of recipient (%s): %s' % (senderReceiver['recipient'], sql))
+        logging.debug('SQL to get restriction rules of recipient (%s): %s' % (senderReceiver['recipient'], sql))
 
         dbConn.execute(sql)
         sql_record = dbConn.fetchone()
-        logger.debug('Returned SQL Record: %s' % str(sql_record))
+        logging.debug('Returned SQL Record: %s' % str(sql_record))
 
     # Recipient account exists, perform sender restrictions
     if sql_record:
@@ -89,12 +91,12 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
 
         # If it does have restrictions
         if not allowed_senders and not rejected_senders:
-            logger.debug('No restrictions of recipient.')
+            logging.debug('No restrictions of recipient.')
         else:
             # Allowed first
             # single recipient, domain, sub-domain, catch-all
             all_allowed_senders = [s.lower().strip() for s in allowed_senders.split(',')]
-            logger.debug('All allowed senders: %s' % str(all_allowed_senders))
+            logging.debug('All allowed senders: %s' % str(all_allowed_senders))
 
             if all_allowed_senders:
                 if senderReceiver['sender'] in all_allowed_senders \
@@ -104,7 +106,7 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
                     return SMTP_ACTIONS['accept']
 
             all_rejected_senders = [s.lower().strip() for s in rejected_senders.split(',')]
-            logger.debug('All rejected senders: %s' % str(all_rejected_senders))
+            logging.debug('All rejected senders: %s' % str(all_rejected_senders))
 
             if all_rejected_senders:
                 if senderReceiver['sender'] in all_rejected_senders \

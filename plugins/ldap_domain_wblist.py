@@ -4,9 +4,18 @@
 # This plugin is used for per-domain white-/blacklist.
 # ----------------------------------------------------------------------------
 
-PLUGIN_NAME = 'ldap_domain_wblist'
+import logging
 
-def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
+REQUIRE_LOCAL_SENDER_= False
+REQUIRE_LOCAL_RECIPIENT = False
+SENDER_SEARCH_ATTRLIST = []
+RECIPIENT_SEARCH_ATTRLIST = []
+
+def restriction(**kwargs):
+    ldapConn = kwargs['conn']
+    ldapBaseDn = kwargs['baseDn']
+    smtpSessionData = kwargs['smtpSessionData']
+
     sender = smtpSessionData['sender'].lower()
     splitedSenderDomain = str(sender.split('@')[-1]).split('.')
 
@@ -24,8 +33,8 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
     recipient = smtpSessionData['recipient'].lower()
     recipientDomain = recipient.split('@')[-1]
 
-    logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
-    logger.debug('(%s) Recipient: %s' % (PLUGIN_NAME, recipient))
+    logging.debug('Sender: %s' % sender)
+    logging.debug('Recipient: %s' % recipient)
 
     # Query ldap to get domain dn, with domain alias support.
     try:
@@ -36,9 +45,9 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
             ['dn'],
         )
         dnOfRecipientDomain = resultDnOfDomain[0][0]
-        logger.debug('(%s) DN of recipient domain: %s' % (PLUGIN_NAME, dnOfRecipientDomain))
+        logging.debug('DN of recipient domain: %s' % dnOfRecipientDomain)
     except Exception, e:
-        return 'DUNNO Error while fetching domain dn: %s' % (str(e))
+        return 'DUNNO (Error while fetching domain dn: %s)' % (str(e))
 
     # Get list of restricted ip addresses.
     senderIP = smtpSessionData['client_address']
@@ -76,7 +85,7 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
 
         if len(resultWblists) == 0:
             # No white/blacklist available.
-            return 'DUNNO No white-/blacklist found.'
+            return 'DUNNO (No white/blacklist found)'
 
         ###################
         # Whitelist first.
@@ -84,12 +93,12 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
         whitelistedSenders = resultWblists[0][1].get('domainWhitelistSender', [])
         whitelistedIPAddresses = resultWblists[0][1].get('domainWhitelistIP', [])
 
-        logger.debug('(%s) Whitelisted senders: %s' % (PLUGIN_NAME, ', '.join(whitelistedSenders)))
-        logger.debug('(%s) Whitelisted IP addresses: %s' % (PLUGIN_NAME, ', '.join(whitelistedIPAddresses)))
+        logging.debug('Whitelisted senders: %s' % ', '.join(whitelistedSenders))
+        logging.debug('Whitelisted IP addresses: %s' % ', '.join(whitelistedIPAddresses))
 
         if len(set(listOfRestrictedSenders) & set(whitelistedSenders)) > 0 or \
            len(set(listOfRestrictedIPAddresses) & set(whitelistedIPAddresses)) > 0:
-            return 'DUNNO Whitelisted.'
+            return 'DUNNO (Whitelisted)'
 
         ###################
         # Blacklist.
@@ -97,14 +106,14 @@ def restriction(ldapConn, ldapBaseDn, smtpSessionData, logger, **kargs):
         blacklistedSenders = resultWblists[0][1].get('domainBlacklistSender', [])
         blacklistedIPAddresses = resultWblists[0][1].get('domainBlacklistIP', [])
 
-        logger.debug('(%s) Blacklisted senders: %s' % (PLUGIN_NAME, ', '.join(blacklistedSenders)))
-        logger.debug('(%s) Blacklisted IP addresses: %s' % (PLUGIN_NAME, ', '.join(blacklistedIPAddresses)))
+        logging.debug('Blacklisted senders: %s' % ', '.join(blacklistedSenders))
+        logging.debug('Blacklisted IP addresses: %s' % ', '.join(blacklistedIPAddresses))
 
         if len(set(listOfRestrictedSenders) & set(blacklistedSenders)) > 0 or \
            len(set(listOfRestrictedIPAddresses) & set(blacklistedIPAddresses)) > 0:
             return 'REJECT Blacklisted'
 
-        return 'DUNNO Not listed in white-/blacklist records.'
+        return 'DUNNO (Not listed in white/blacklist records)'
     except Exception, e:
         # Error while quering LDAP server, return 'DUNNO' instead of rejecting emails.
-        return 'DUNNO Error while fetching white-/blacklist records: %s' % (str(e))
+        return 'DUNNO (Error while fetching white/blacklist records: %s)' % (str(e))

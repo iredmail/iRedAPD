@@ -4,6 +4,11 @@
 import datetime
 from libs import SMTP_ACTIONS
 
+REQUIRE_LOCAL_SENDER_= True
+REQUIRE_LOCAL_RECIPIENT = False
+SENDER_SEARCH_ATTRLIST = ['shadowLastChange']
+RECIPIENT_SEARCH_ATTRLIST = []
+
 # Force mail user to change password in how many days. Default is 90.
 EXPIRED_DAYS = 90
 

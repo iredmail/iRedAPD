@@ -1,4 +1,6 @@
 iRedAPD-1.3.9:
+    * Plugin renamed:
+      block_amavisd_blacklisted_senders -> amavisd_block_blacklisted_senders
     * New plugin for SQL backends: sql_user_restrictions.
       Note, it requires 4 new columns on table `vmail.mailbox`, please refer
       to iRedMail upgrade tutorials.

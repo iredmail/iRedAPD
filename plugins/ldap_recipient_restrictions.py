@@ -1,18 +1,6 @@
 # Author:   Zhang Huangbin <zhb _at_ iredmail.org>
-# Date:     2010-04-20
-# Purpose:  Per-user whitelist/blacklist for recipient restrictions.
-#           Bypass all whitelisted recipients, reject all blacklisted recipients.
-
-# ------------- Addition configure required ------------
-# * In postfix main.cf:
-#
-#   smtpd_sender_restrictions =
-#           check_policy_service inet:127.0.0.1:7778,
-#           [YOUR OTHER RESTRICTIONS HERE]
-#
-#   Here, ip address '127.0.0.1' and port number '7778' are set in iRedAPD-RR
-#   config file: iredapd-rr.ini.
-# ------------------------------------------------------
+# Updated:  2012-12-30
+# Purpose:  Check whether local user (sender) is allowed to mail to recipient
 
 # Value of mailWhitelistRecipient and mailBlacklistRecipient:
 #   - Single address:   user@domain.ltd
@@ -20,7 +8,17 @@
 #   - Whole Domain and its sub-domains: @.domain.ltd
 #   - All recipient:       @.
 
-def restriction(smtpSessionData, ldapSenderLdif, **kargs):
+import logging
+
+REQUIRE_LOCAL_SENDER = True
+REQUIRE_LOCAL_RECIPIENT = False
+SENDER_SEARCH_ATTRLIST = ['mailBlacklistedRecipient', 'mailWhitelistRecipient']
+RECIPIENT_SEARCH_ATTRLIST = []
+
+def restriction(**kwargs):
+    ldapSenderLdif = kwargs['senderLdif']
+    smtpSessionData = kwargs['smtpSessionData']
+
     # Get recipient address.
     smtpRecipient = smtpSessionData.get('recipient').lower()
     splited_recipient_domain = str(smtpRecipient.split('@')[-1]).split('.')
@@ -39,21 +37,17 @@ def restriction(smtpSessionData, ldapSenderLdif, **kargs):
         splited_recipient_domain.pop(0)
 
     # Get value of mailBlacklistedRecipient, mailWhitelistRecipient.
-    blRecipients = [v.lower()
-            for v in ldapSenderLdif.get('mailBlacklistRecipient', [])
-            ]
-
-    wlRecipients = [v.lower()
-            for v in ldapSenderLdif.get('mailWhitelistRecipient', [])
-            ]
+    blacklisted_rcpts = [v.lower() for v in ldapSenderLdif.get('mailBlacklistRecipient', [])]
+    whitelisted_rcpts = [v.lower() for v in ldapSenderLdif.get('mailWhitelistRecipient', [])]
 
     # Bypass whitelisted recipients if has intersection set.
-    if len(set(recipients) & set(wlRecipients)) > 0:
-        return 'DUNNO'
+    if len(set(recipients) & set(whitelisted_rcpts)) > 0:
+        return 'DUNNO (Whitelisted)'
 
     # Reject blacklisted recipients if has intersection set.
-    if len(set(recipients) & set(blRecipients)) > 0 or '@.' in blRecipients:
+    if len(set(recipients) & set(blacklisted_rcpts)) > 0 \
+       or '@.' in blacklisted_rcpts:
         return 'REJECT Permission denied'
 
     # If not matched bl/wl list:
-    return 'DUNNO'
+    return 'DUNNO (Not listed in either white/blacklists)'

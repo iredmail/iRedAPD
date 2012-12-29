@@ -46,9 +46,9 @@ class SQLModeler:
         except Exception, e:
             logging.debug('Error while closing connection: %s' % str(e))
 
-    def handle_data(self, map):
-        if 'sender' in map.keys() and 'recipient' in map.keys():
-            if len(map['sender']) < 6:
+    def handle_data(self, smtp_session_map, plugins=[]):
+        if 'sender' in smtp_session_map.keys() and 'recipient' in smtp_session_map.keys():
+            if len(smtp_session_map['sender']) < 6:
                 # Not a valid email address.
                 return 'DUNNO'
 
@@ -60,10 +60,10 @@ class SQLModeler:
             # Sender/recipient are used almost in all plugins, so store them
             # a dict and pass to plugins.
             senderReceiver = {
-                'sender': map['sender'],
-                'recipient': map['recipient'],
-                'sender_domain': map['sender'].split('@')[-1],
-                'recipient_domain': map['recipient'].split('@')[-1],
+                'sender': smtp_session_map['sender'],
+                'recipient': smtp_session_map['recipient'],
+                'sender_domain': smtp_session_map['sender'].split('@')[-1],
+                'recipient_domain': smtp_session_map['recipient'].split('@')[-1],
             }
 
             if len(self.plugins) > 0:
@@ -93,8 +93,7 @@ class SQLModeler:
                         pluginAction = module.restriction(
                             dbConn=self.cursor,
                             senderReceiver=senderReceiver,
-                            smtpSessionData=map,
-                            logger=logging,
+                            smtpSessionData=smtp_session_map,
                         )
 
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))

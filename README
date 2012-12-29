@@ -7,7 +7,7 @@
 Available plugins:
 
 * `ldap_maillist_access_policy`: Check user's rights to post messages to mail list which builtin in iRedMail OpenLDAP solution.
-* `block_amavisd_blacklisted_senders`: Used for per-user sender whitelist and blacklist.
+* `amavisd_block_blacklisted_senders`: Used for per-user sender whitelist and blacklist.
 * `ldap_recipient_restrictions`: Used for per-user recipient whitelist and blacklist.
 
 # Authors & Contributors

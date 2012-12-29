@@ -2,11 +2,17 @@
 
 # Priority: whitelist first, then blacklist.
 
-PLUGIN_NAME = 'block_amavisd_blacklisted_senders'
-
+import logging
 from libs import SMTP_ACTIONS
 
-def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
+REQUIRE_LOCAL_SENDER = False
+REQUIRE_LOCAL_RECIPIENT = False
+SENDER_SEARCH_ATTRLIST = []
+RECIPIENT_SEARCH_ATTRLIST = ['amavisBlacklistSender', 'amavisWhitelistSender']
+
+def restriction(**kwargs):
+    smtpSessionData = kwargs['smtpSessionData']
+    ldapRecipientLdif = kwargs['recipientLdif']
     # Get sender address.
     sender = smtpSessionData.get('sender').lower()
 
@@ -34,9 +40,9 @@ def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
     # Get list of amavisWhitelistSender.
     wlSenders = set([v.lower() for v in ldapRecipientLdif.get('amavisWhitelistSender', [])])
 
-    logger.debug('(%s) Sender: %s' % (PLUGIN_NAME, sender))
-    logger.debug('(%s) Whitelisted senders: %s' % (PLUGIN_NAME, str(wlSenders)))
-    logger.debug('(%s) Blacklisted senders: %s' % (PLUGIN_NAME, str(blSenders)))
+    logging.debug('Sender: %s' % sender)
+    logging.debug('Whitelisted senders: %s' % str(wlSenders))
+    logging.debug('Blacklisted senders: %s' % str(blSenders))
 
     # Bypass whitelisted senders.
     if len(valid_amavisd_senders & wlSenders) > 0:
@@ -47,4 +53,4 @@ def restriction(smtpSessionData, ldapRecipientLdif, logger, **kargs):
         return 'REJECT Blacklisted'
 
     # Neither blacklisted nor whitelisted.
-    return 'DUNNO No white-/blacklist records found.'
+    return 'DUNNO (No white/blacklist records found)'

@@ -25,13 +25,26 @@ from libs import __version__, SMTP_ACTIONS, daemon
 
 
 class PolicyChannel(asynchat.async_chat):
-    def __init__(self, conn, remote_addr):
+    def __init__(self,
+                 conn,
+                 plugins=[],
+                 plugins_for_sender=[],
+                 plugins_for_recipient=[],
+                 plugins_for_misc=[],
+                 sender_search_attrlist=None,
+                 recipient_search_attrlist=None,
+                ):
         asynchat.async_chat.__init__(self, conn)
-        self.remote_addr = remote_addr
         self.buffer = []
-        self.smtp_attrs = {}
+        self.smtp_session_map = {}
         self.set_terminator('\n')
-        logging.debug("Connect from %s, port %s." % self.remote_addr)
+
+        self.plugins = plugins
+        self.plugins_for_sender = plugins_for_sender
+        self.plugins_for_recipient = plugins_for_recipient
+        self.plugins_for_misc = plugins_for_misc
+        self.sender_search_attrlist = sender_search_attrlist
+        self.recipient_search_attrlist = recipient_search_attrlist
 
     def push(self, msg):
         asynchat.async_chat.push(self, msg + '\n')
@@ -46,26 +59,30 @@ class PolicyChannel(asynchat.async_chat):
             if line.find('=') != -1:
                 key = line.split('=')[0]
                 value = line.split('=', 1)[1]
-                self.smtp_attrs[key] = value
-        elif len(self.smtp_attrs) != 0:
+                self.smtp_session_map[key] = value
+        elif len(self.smtp_session_map) != 0:
             try:
                 modeler = Modeler()
-
-                result = modeler.handle_data(self.smtp_attrs)
+                result = modeler.handle_data(smtp_session_map=self.smtp_session_map,
+                                             plugins=self.plugins,
+                                             plugins_for_sender=self.plugins_for_sender,
+                                             plugins_for_recipient=self.plugins_for_recipient,
+                                             plugins_for_misc=self.plugins_for_misc,
+                                             sender_search_attrlist=self.sender_search_attrlist,
+                                             recipient_search_attrlist=self.recipient_search_attrlist,
+                                            )
                 if result:
                     action = result
                 else:
                     action = SMTP_ACTIONS['default']
-                logging.debug("Final action: %s." % str(result))
             except Exception, e:
                 action = SMTP_ACTIONS['default']
-                logging.debug('Error: %s. Use default action instead: %s' %
-                        (str(e), str(action)))
+                logging.debug('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
             # Log final action.
-            logging.info('[%s] %s -> %s, %s' % (self.smtp_attrs['client_address'],
-                                                self.smtp_attrs['sender'],
-                                                self.smtp_attrs['recipient'],
+            logging.info('[%s] %s -> %s, %s' % (self.smtp_session_map['client_address'],
+                                                self.smtp_session_map['sender'],
+                                                self.smtp_session_map['recipient'],
                                                 action,
                                                ))
 
@@ -75,13 +92,13 @@ class PolicyChannel(asynchat.async_chat):
         else:
             action = SMTP_ACTIONS['defer']
             logging.debug("replying: " + action)
-            self.push(action + '\n')
+            self.push('action=' + action + '\n')
             asynchat.async_chat.handle_close(self)
             logging.debug("Connection closed")
 
 
 class DaemonSocket(asyncore.dispatcher):
-    def __init__(self, localaddr):
+    def __init__(self, localaddr, plugins=[]):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
@@ -89,11 +106,47 @@ class DaemonSocket(asyncore.dispatcher):
         self.listen(5)
         ip, port = localaddr
         logging.info("Starting iRedAPD (version %s, %s backend), listening on %s:%d." % (__version__, settings.backend, ip, port))
-        logging.info("Enabled plugin(s): %s." % (', '.join(settings.plugins)))
+
+        # Load plugins.
+        self.loaded_plugins = []
+        for plugin in settings.plugins:
+            try:
+                self.loaded_plugins.append(__import__(plugin))
+                logging.info('Loading plugin: %s' % (plugin))
+            except Exception, e:
+                logging.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
+
+        self.plugins_for_sender = [plugin
+                                   for plugin in self.loaded_plugins
+                                   if plugin.REQUIRE_LOCAL_SENDER]
+
+        self.plugins_for_recipient = [plugin
+                                   for plugin in self.loaded_plugins
+                                   if plugin.REQUIRE_LOCAL_RECIPIENT]
+
+        self.plugins_for_misc = [plugin for plugin in self.loaded_plugins
+                                 if plugin not in self.plugins_for_sender
+                                 and plugin not in self.plugins_for_recipient]
+
+        self.sender_search_attrlist = ['objectClass']
+        for plugin in self.plugins_for_sender:
+            self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
+
+        self.recipient_search_attrlist = ['objectClass']
+        for plugin in self.plugins_for_recipient:
+            self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
 
     def handle_accept(self):
         conn, remote_addr = self.accept()
-        channel = PolicyChannel(conn, remote_addr)
+        logging.debug("Connect from %s, port %s." % remote_addr)
+        channel = PolicyChannel(conn,
+                                plugins=self.loaded_plugins,
+                                plugins_for_sender=self.plugins_for_sender,
+                                plugins_for_recipient=self.plugins_for_recipient,
+                                plugins_for_misc=self.plugins_for_misc,
+                                sender_search_attrlist=self.sender_search_attrlist,
+                                recipient_search_attrlist=self.recipient_search_attrlist,
+                               )
 
 
 def main():

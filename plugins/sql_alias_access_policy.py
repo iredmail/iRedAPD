@@ -9,10 +9,13 @@
 #   - membersOnly:  Only members are allowed.
 #   - moderatorsOnly:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
+
+import logging
 from web import sqlquote
 from libs import SMTP_ACTIONS
 
-PLUGIN_NAME = 'sql_alias_access_policy'
+REQUIRE_LOCAL_SENDER_= False
+REQUIRE_LOCAL_RECIPIENT = True
 
 # Policies. MUST be defined in lower case.
 POLICY_PUBLIC = 'public'
@@ -23,7 +26,7 @@ POLICY_MODERATORSONLY = 'moderatorsonly'
 POLICY_ALLOWEDONLY = 'allowedonly'      # Same as @POLICY_MODERATORSONLY
 POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
-def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
+def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
 
     sql = '''SELECT accesspolicy, goto, moderators
             FROM alias
@@ -36,27 +39,27 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
     ''' % (sqlquote(senderReceiver.get('recipient')),
            sqlquote(senderReceiver.get('recipient_domain')),
           )
-    logger.debug('SQL: %s' % sql)
+    logging.debug('SQL: %s' % sql)
 
     dbConn.execute(sql)
     sqlRecord = dbConn.fetchone()
-    logger.debug('SQL Record: %s' % str(sqlRecord))
+    logging.debug('SQL Record: %s' % str(sqlRecord))
 
     # Recipient account doesn't exist.
     if sqlRecord is None:
-        return 'DUNNO Not an alias account.'
+        return 'DUNNO (Not mail alias)'
 
     policy = str(sqlRecord[0]).lower()
 
     members = [str(v.lower()) for v in str(sqlRecord[1]).split(',')]
     moderators = [str(v.lower()) for v in str(sqlRecord[2]).split(',')]
 
-    logger.debug('(%s) policy: %s' % (PLUGIN_NAME, policy))
-    logger.debug('(%s) members: %s' % (PLUGIN_NAME, ', '.join(members)))
-    logger.debug('(%s) moderators: %s' % (PLUGIN_NAME, ', '.join(moderators)))
+    logging.debug('policy: %s' % policy)
+    logging.debug('members: %s' % ', '.join(members))
+    logging.debug('moderators: %s' % ', '.join(moderators))
 
     if not len(policy) > 0:
-        return 'DUNNO No access policy defined.'
+        return 'DUNNO (No access policy)'
 
     if policy == POLICY_PUBLIC:
         # Return if no access policy available or policy is @POLICY_PUBLIC.
@@ -94,4 +97,4 @@ def restriction(dbConn, senderReceiver, smtpSessionData, logger, **kargs):
             return SMTP_ACTIONS['reject']
     else:
         # Bypass all if policy is not defined in this plugin.
-        return 'DUNNO Policy is not defined in plugin (%s): %s.' % (PLUGIN_NAME, policy)
+        return 'DUNNO (Policy is not defined: %s)' % policy

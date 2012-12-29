@@ -4,7 +4,7 @@ import sys
 import ldap
 import logging
 import settings
-from libs import SMTP_ACTIONS
+from libs import SMTP_ACTIONS, ldap_conn_utils
 
 
 class LDAPModeler:
@@ -35,213 +35,77 @@ class LDAPModeler:
         except Exception, e:
             logging.debug('Error while closing connection: %s' % str(e))
 
-    def __get_recipient_dn_ldif(self, recipient):
-        logging.debug('__get_recipient_dn_ldif (recipient): %s' % recipient)
-        try:
-            filter = '(&(|(mail=%s)(shadowAddress=%s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % (recipient, recipient)
-            logging.debug('__get_recipient_dn_ldif (ldap query filter): %s' % filter)
-
-            result = self.conn.search_s(settings.ldap_basedn, ldap.SCOPE_SUBTREE, filter)
-
-            if len(result) == 1:
-                logging.debug('__get_recipient_dn_ldif (ldap query result): %s' % str(result))
-                dn, entry = result[0]
-                return (dn, entry)
-            else:
-                logging.debug('__get_recipient_dn_ldif: Can not find recipient in LDAP server.')
-                return (None, None)
-        except Exception, e:
-            logging.debug('!!! ERROR !!! __get_recipient_dn_ldif (result): %s' % str(e))
-            return (None, None)
-
-    def __get_access_policy(self, recipient):
-        """Get access policy of mail list.
-
-        return (dn_of_mail_list, value_of_access_policy,)"""
-
-        logging.debug('__get_access_policy (list): %s' % recipient)
-
-        # Replace 'recipient' placehold in config file with mail list address.
-        try:
-            self.cfg.set('ldap', "recipient", recipient)
-        except Exception, e:
-            logging.error("""Error while replacing 'recipient': %s""" % (str(e)))
-
-        # Search mail list object.
-        searchBasedn = 'mail=%s,ou=Groups,domainName=%s,%s' % (recipient, recipient.split('@')[1], settings.ldap_basedn)
-        searchScope = ldap.SCOPE_BASE
-        searchFilter = self.cfg.get('ldap', 'filter_maillist')
-        searchAttr = self.cfg.get('ldap', 'attr_access_policy', 'accessPolicy')
-
-        logging.debug('__get_access_policy (searchBasedn): %s' % searchBasedn)
-        logging.debug('__get_access_policy (searchScope): %s' % searchScope)
-        logging.debug('__get_access_policy (searchFilter): %s' % searchFilter)
-        logging.debug('__get_access_policy (searchAttr): %s' % searchAttr)
-
-        try:
-            result = self.conn.search_s(searchBasedn, searchScope, searchFilter, [searchAttr])
-            logging.debug('__get_access_policy (search result): %s' % str(result))
-        except ldap.NO_SUCH_OBJECT:
-            logging.debug('__get_access_policy (not a mail list: %s) Returned (None)' % recipient)
-            return (None, None)
-        except Exception, e:
-            logging.debug('__get_access_policy (ERROR while searching list): %s' % str(e))
-            return (None, None)
-
-        if len(result) != 1:
-            return (None, None)
-        else:
-            # Example of result data:
-            # [('dn', {'accessPolicy': ['value']})]
-            listdn = result[0][0]
-            listpolicy = result[0][1][searchAttr][0]
-            returnVal = (listdn, listpolicy)
-
-            logging.debug('__get_access_policy (returned): %s' % str(returnVal))
-            return returnVal
-
-    def __get_allowed_senders(self, listdn, recipient, listpolicy, sender=''):
-        """return search_result_list_based_on_access_policy"""
-        logging.debug('__get_allowed_senders (listpolicy): %s' % listpolicy)
-
-        # Replace 'recipient' and 'sender' with email addresses.
-        #self.cfg.set("ldap", "recipient", recipient)
-        #self.cfg.set("ldap", "sender", sender)
-
-        # Set search base dn, scope, filter and attribute list based on access policy.
-        if listpolicy == 'membersOnly':
-            baseDN = settings.ldap_basedn
-            searchScope = ldap.SCOPE_SUBTREE
-            # Filter used to get mail list members.
-            #searchFilter = self.cfg.get("ldap", "filter_member")
-            #searchAttr = self.cfg.get("ldap", "attr_member")
-        else:
-            baseDN = listdn
-            # Use SCOPE_BASE to improve performance.
-            searchScope = ldap.SCOPE_BASE
-            # Filter used to get mail list moderators.
-            #searchFilter = self.cfg.get("ldap", "filter_allowed_senders")
-            #searchAttr = self.cfg.get("ldap", "attr_moderator")
-
-        logging.debug('__get_allowed_senders (baseDN): %s' % baseDN)
-        logging.debug('__get_allowed_senders (searchScope): %s' % searchScope)
-        logging.debug('__get_allowed_senders (searchFilter): %s' % searchFilter)
-        logging.debug('__get_allowed_senders (searchAttr): %s' % searchAttr)
-
-        try:
-            result = self.conn.search_s(baseDN, searchScope, searchFilter, [searchAttr])
-            logging.debug('__get_allowed_senders (search result): %s' % str(result))
-        except ldap.NO_SUCH_OBJECT:
-            logging.debug('__get_allowed_senders (not a mail list: %s) Returned (None)' % recipient)
-            return None
-        except Exception, e:
-            logging.debug('__get_allowed_senders (ERROR while searching list): %s' % str(e))
-            return None
-
-        if len(result) != 1:
-            return None
-        else:
-            # Example of result data:
-            # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-            return result[0][1][searchAttr]
-
-    def __get_smtp_action(self, recipient, sender):
-        """return smtp_action"""
-        listdn, listpolicy = self.__get_access_policy(recipient)
-
-        if listdn is None or listpolicy is None:
-            return None
-        else:
-            if listpolicy == "public":
-                # No restriction.
-                return SMTP_ACTIONS['accept']
-            elif listpolicy == "domain":
-                # Allow all users under the same domain.
-                if sender.split('@')[1] == recipient.split('@')[1]:
-                    return SMTP_ACTIONS['accept']
-                else:
-                    return SMTP_ACTIONS['reject']
-            elif listpolicy == "allowedOnly":
-                # Bypass allowed users only.
-                allowed_senders = self.__get_allowed_senders(listdn, recipient, 'allowedOnly', sender)
-
-                if allowed_senders is not None:
-                    addresses = set(allowed_senders)    # Remove duplicate addresses.
-                    if sender in addresses:
-                        return SMTP_ACTIONS['accept']
-                    else:
-                        return SMTP_ACTIONS['reject']
-                else:
-                    return SMTP_ACTIONS['reject']
-            elif listpolicy == "membersOnly":
-                allowed_senders = self.__get_allowed_senders(listdn, recipient, 'membersOnly', sender)
-
-                if allowed_senders is not None:
-                    addresses = set(allowed_senders)
-                    if sender in addresses:
-                        return SMTP_ACTIONS['accept']
-                    else:
-                        return SMTP_ACTIONS['reject']
-                else:
-                    return SMTP_ACTIONS['reject']
-
-    def handle_data(self, map):
-        if 'sender' in map.keys() and 'recipient' in map.keys():
-            if len(map['sender']) < 6:
-                # Not a valid email address.
-                return 'DUNNO'
-
-            if settings.plugins:
-                # Get account dn and LDIF data.
-                recipientDn, recipientLdif = self.__get_recipient_dn_ldif(map['recipient'])
-
-                # Return if recipient account doesn't exist.
-                if recipientDn is None or recipientLdif is None:
-                    logging.debug('Recipient DN or LDIF is None.')
-                    return SMTP_ACTIONS['default']
-
-                #
-                # Import plugin modules.
-                #
-                self.modules = []
-
-                # Load plugin module.
-                for plugin in settings.plugins:
-                    try:
-                        self.modules.append(__import__(plugin))
-                    except ImportError:
-                        # Print error message if plugin module doesn't exist.
-                        # Use logging.info to let admin know this critical error.
-                        logging.info('Error: plugin %s.py not exist.' % plugin)
-                    except Exception, e:
-                        logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
-
-                #
-                # Apply plugins.
-                #
-                self.action = ''
-                for module in self.modules:
-                    try:
-                        logging.debug('Apply plugin: %s.' % (module.__name__, ))
-                        pluginAction = module.restriction(
-                            ldapConn=self.conn,
-                            ldapBaseDn=settings.ldap_basedn,
-                            ldapRecipientDn=recipientDn,
-                            ldapRecipientLdif=recipientLdif,
-                            smtpSessionData=map,
-                            logger=logging,
-                        )
-
-                        logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
-                        if not pluginAction.startswith('DUNNO'):
-                            logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
-                            return pluginAction
-                    except Exception, e:
-                        logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
-
-            else:
-                # No plugins available.
-                return 'DUNNO'
-        else:
+    def handle_data(self, smtp_session_map,
+                    plugins=[],
+                    plugins_for_sender=[],
+                    plugins_for_recipient=[],
+                    plugins_for_misc=[],
+                    sender_search_attrlist=None,
+                    recipient_search_attrlist=None,
+                   ):
+        # No sender or recipient in smtp session.
+        if not 'sender' in smtp_session_map or not 'recipient' in smtp_session_map:
             return SMTP_ACTIONS['defer']
+
+        # Not a valid email address.
+        if len(smtp_session_map['sender']) < 6:
+            return 'DUNNO'
+
+        # No plugins available.
+        if not plugins:
+            return 'DUNNO'
+
+        # Check whether we should get sender/recipient LDIF data first
+        get_sender_ldif = False
+        get_recipient_ldif = False
+        if plugins_for_sender:
+            get_sender_ldif = True
+
+        if plugins_for_recipient:
+            get_recipient_ldif = True
+
+        # Get account dn and LDIF data.
+        plugin_kwargs = {'smtpSessionData': smtp_session_map,
+                         'conn': self.conn,
+                         'baseDn': settings.ldap_basedn,
+                         'senderDn': None,
+                         'senderLdif': None,
+                         'recipientDn': None,
+                         'recipientLdif': None,
+                        }
+
+        if get_sender_ldif:
+            senderDn, senderLdif = ldap_conn_utils.get_account_ldif(
+                conn=self.conn,
+                account=smtp_session_map['sender'],
+                attrlist=sender_search_attrlist,
+            )
+            plugin_kwargs['senderDn'] = senderDn
+            plugin_kwargs['senderLdif'] = senderLdif
+
+            for plugin in plugins_for_sender:
+                action = ldap_conn_utils.apply_plugin(plugin, **plugin_kwargs)
+                if not action.startswith('DUNNO'):
+                    return action
+
+        if get_recipient_ldif:
+            recipientDn, recipientLdif = ldap_conn_utils.get_account_ldif(
+                conn=self.conn,
+                account=smtp_session_map['recipient'],
+                attrlist=recipient_search_attrlist,
+            )
+            plugin_kwargs['recipientDn'] = recipientDn
+            plugin_kwargs['recipientLdif'] = recipientLdif
+
+            for plugin in plugins_for_recipient:
+                action = ldap_conn_utils.apply_plugin(plugin, **plugin_kwargs)
+                if not action.startswith('DUNNO'):
+                    return action
+
+        for plugin in plugins_for_misc:
+            action = ldap_conn_utils.apply_plugin(plugin, **plugin_kwargs)
+            if not action.startswith('DUNNO'):
+                return action
+
+        return SMTP_ACTIONS['default']
 
