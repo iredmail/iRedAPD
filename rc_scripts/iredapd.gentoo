@@ -1,6 +1,6 @@
 #!/sbin/runscript
 
-prog='/opt/iredapd/src/iredapd.py'
+prog='/opt/iredapd/iredapd.py'
 progname="iRedAPD"
 
 CONFIG='/opt/iredapd/etc/iredapd.ini'

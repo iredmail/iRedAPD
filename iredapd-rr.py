@@ -9,7 +9,6 @@ import socket
 import asyncore
 import asynchat
 import logging
-import daemon
 
 # Append plugin directory.
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins-rr')
@@ -28,7 +27,7 @@ else:
 cfg = ConfigParser.SafeConfigParser()
 cfg.read(config_file)
 
-from libs import __version__, SMTP_ACTIONS
+from libs import __version__, SMTP_ACTIONS, daemon
 
 class apd_channel(asynchat.async_chat):
     def __init__(self, conn, remote_addr):

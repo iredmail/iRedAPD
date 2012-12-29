@@ -13,7 +13,7 @@
 ### END INIT INFO
 
 PROG='iredapd'
-BINPATH='/opt/iredapd/src/iredapd-rr.py'
+BINPATH='/opt/iredapd/iredapd-rr.py'
 CONFIG='/opt/iredapd/etc/iredapd-rr.ini'
 PIDFILE='/var/run/iredapd-rr.pid'
 

@@ -10,7 +10,7 @@
 name='iredapd'
 rcvar=`set_rcvar`
 
-BINPATH='/opt/iredapd/src/iredapd.py'
+BINPATH='/opt/iredapd/iredapd.py'
 CONFIG='/opt/iredapd/etc/iredapd.ini'
 pidfile='/var/run/iredapd.pid'
 

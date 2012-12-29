@@ -9,7 +9,6 @@ import socket
 import asyncore
 import asynchat
 import logging
-import daemon
 
 # Append plugin directory.
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
@@ -38,7 +37,7 @@ elif backend in ['mysql', 'pgsql']:
 else:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
-from libs import __version__, SMTP_ACTIONS
+from libs import __version__, SMTP_ACTIONS, daemon
 
 
 class apd_channel(asynchat.async_chat):
@@ -105,9 +104,8 @@ class apd_socket(asyncore.dispatcher):
         self.bind(localaddr)
         self.listen(5)
         ip, port = localaddr
-        logging.info("Starting iRedAPD (v%s, %s)." % (__version__, backend))
+        logging.info("Starting iRedAPD (version %s, %s backend), listening on %s:%d." % (__version__, backend, ip, port))
         logging.info("Enabled plugin(s): %s." % (plugins))
-        logging.info("Listening on %s:%d." % (ip, port))
 
     def handle_accept(self):
         conn, remote_addr = self.accept()

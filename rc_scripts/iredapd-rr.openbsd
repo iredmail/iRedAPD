@@ -1,6 +1,6 @@
 #!/bin/sh
 
-daemon='python /opt/iredapd/src/iredapd-rr.py /opt/iredapd/etc/iredapd-rr.ini'
+daemon='python /opt/iredapd/iredapd-rr.py /opt/iredapd/etc/iredapd-rr.ini'
 
 . /etc/rc.d/rc.subr
 
