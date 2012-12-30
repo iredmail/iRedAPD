@@ -6,10 +6,11 @@
 
 import logging
 
-REQUIRE_LOCAL_SENDER_= False
+REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = []
 RECIPIENT_SEARCH_ATTRLIST = []
+
 
 def restriction(**kwargs):
     ldapConn = kwargs['conn']
@@ -19,7 +20,6 @@ def restriction(**kwargs):
     sender = smtpSessionData['sender'].lower()
     splitedSenderDomain = str(sender.split('@')[-1]).split('.')
 
-    #filterOfSender = '(domainWhitelistSender=%s)' % (sender,)
     filterOfSenders = ''
     listOfRestrictedSenders = [sender, '@'+sender.split('@')[-1],]
     for counter in range(len(splitedSenderDomain)):

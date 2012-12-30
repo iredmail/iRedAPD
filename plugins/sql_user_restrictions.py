@@ -19,7 +19,7 @@ import logging
 from web import sqlquote
 from libs import SMTP_ACTIONS
 
-REQUIRE_LOCAL_SENDER_= False
+REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = False
 
 def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):

@@ -42,7 +42,7 @@ class LDAPModeler:
                     plugins_for_misc=[],
                     sender_search_attrlist=None,
                     recipient_search_attrlist=None,
-                   ):
+                    ):
         # No sender or recipient in smtp session.
         if not 'sender' in smtp_session_map or not 'recipient' in smtp_session_map:
             return SMTP_ACTIONS['defer']
@@ -72,7 +72,7 @@ class LDAPModeler:
                          'senderLdif': None,
                          'recipientDn': None,
                          'recipientLdif': None,
-                        }
+                         }
 
         if get_sender_ldif:
             senderDn, senderLdif = ldap_conn_utils.get_account_ldif(
@@ -108,4 +108,3 @@ class LDAPModeler:
                 return action
 
         return SMTP_ACTIONS['default']
-

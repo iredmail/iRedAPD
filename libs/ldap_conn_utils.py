@@ -5,6 +5,7 @@ import ldap
 import settings
 from libs import SMTP_ACTIONS
 
+
 def get_account_ldif(conn, account, attrlist=None):
     logging.debug('[+] Getting LDIF data of account: %s' % account)
 
@@ -12,11 +13,9 @@ def get_account_ldif(conn, account, attrlist=None):
 
     logging.debug('search filter: %s' % ldap_filter)
     logging.debug('search attributes: %s' % str(attrlist))
-    #if attrlist:
-    #    logging.debug('search attributes: %s' % str(attrlist))
-    #else:
-    #    # Attribute list must be None if it's a empty list.
-    #    attrlist = None
+    if not isinstance(attrlist, list):
+        # Attribute list must be None or non-empty list
+        attrlist = None
 
     try:
         result = conn.search_s(settings.ldap_basedn,
@@ -34,6 +33,7 @@ def get_account_ldif(conn, account, attrlist=None):
     except Exception, e:
         logging.debug('!!! ERROR !!! result: %s' % str(e))
         return (None, None)
+
 
 def get_allowed_senders_of_mail_list(conn,
                                      base_dn,
@@ -60,7 +60,7 @@ def get_allowed_senders_of_mail_list(conn,
         searchFilter = "(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
 
         # Get both mail and shadowAddress.
-        searchAttrs = ['mail', 'shadowAddress',]
+        searchAttrs = ['mail', 'shadowAddress', ]
 
     elif policy in ['allowedonly', 'moderatorsonly', 'moderators']:
         # Get mail list moderators.
@@ -74,7 +74,7 @@ def get_allowed_senders_of_mail_list(conn,
         # Policy: policy==membersAndModeratorsOnly or not set.
         # Filter used to get both members and moderators.
         searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient, )
-        searchAttrs = ['mail', 'shadowAddress', 'listAllowedUser',]
+        searchAttrs = ['mail', 'shadowAddress', 'listAllowedUser', ]
 
     logging.debug('base dn: %s' % basedn)
     logging.debug('search scope: %s' % searchScope)
@@ -109,7 +109,7 @@ def get_allowed_senders_of_mail_list(conn,
                 searchFilter += '(mail=%s)' % i
             searchFilter += '))'
 
-            searchAttrs = ['shadowAddress',]
+            searchAttrs = ['shadowAddress', ]
 
             logging.debug('base dn: %s' % basedn)
             logging.debug('search scope: 2 (ldap.SCOPE_SUBTREE)')
@@ -118,10 +118,10 @@ def get_allowed_senders_of_mail_list(conn,
 
             try:
                 resultOfShadowAddresses = conn.search_s(
-                    'ou=Users,'+domaindn,
+                    'ou=Users,' + domaindn,
                     2,  # ldap.SCOPE_SUBTREE
                     searchFilter,
-                    ['mail', 'shadowAddress',],
+                    ['mail', 'shadowAddress', ],
                 )
 
                 for obj in resultOfShadowAddresses:
@@ -143,6 +143,7 @@ def get_allowed_senders_of_mail_list(conn,
         logging.debug('Error: %s' % str(e))
         return []
 
+
 def apply_plugin(plugin, **kwargs):
     action = SMTP_ACTIONS['default']
 
@@ -154,4 +155,3 @@ def apply_plugin(plugin, **kwargs):
         logging.debug('<!> Error: %s' % str(e))
 
     return action
-

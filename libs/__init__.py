@@ -5,7 +5,7 @@ SMTP_ACTIONS = {'accept': 'OK',
                 'defer': 'DEFER_IF_PERMIT Service temporarily unavailable',
                 'reject': 'REJECT Not authorized',
                 'default': 'DUNNO',
-               }
+                }
 
 LDAP_ACCESS_POLICIES_OF_MAIL_LIST = {
     'public': 'Unrestricted',

@@ -1,8 +1,9 @@
+* rename variables: ldapSenderLdif -> sender_ldif or ldif_of_sender
 * plugin/ldap_expired_passwd.py: set password last update date to today if
   shadowLastChange is not present or 0?
-* plugins/{ldap, sql}
 * Query required SQL columns instead of all
 * Plugins:
+    + HELO
     + Greylisting (server-wide and per-user, per-domain)
     + White/Blacklisting (server-wide and per-domain)
 * Detect protocol_state=RCPT in smtp session

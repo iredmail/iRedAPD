@@ -10,6 +10,7 @@ REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = []
 RECIPIENT_SEARCH_ATTRLIST = ['amavisBlacklistSender', 'amavisWhitelistSender']
 
+
 def restriction(**kwargs):
     smtpSessionData = kwargs['smtpSessionData']
     ldapRecipientLdif = kwargs['recipientLdif']
@@ -27,8 +28,9 @@ def restriction(**kwargs):
     #   -> @.cn
     splited_sender_domain = str(sender.split('@', 1)[-1]).split('.')
 
-    # Default senders (user@domain.ltd): ['@.', 'user@domain.ltd', @domain.ltd']
-    valid_amavisd_senders = set(['@.', sender, '@'+sender.split('@', 1)[-1],])
+    # Default senders (user@domain.ltd):
+    # ['@.', 'user@domain.ltd', @domain.ltd']
+    valid_amavisd_senders = set(['@.', sender, '@' + sender.split('@', 1)[-1], ])
     for counter in range(len(splited_sender_domain)):
         # Append domain and sub-domain.
         valid_amavisd_senders.update(['@.' + '.'.join(splited_sender_domain)])
