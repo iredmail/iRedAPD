@@ -15,9 +15,9 @@ import settings
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
 
 if settings.backend == 'ldap':
-    from libs.ldaplib import LDAPModeler as Modeler
+    from libs.ldaplib.modeler import Modeler
 elif settings.backend in ['mysql', 'pgsql']:
-    from libs.sqllib import SQLModeler as Modeler
+    from libs.sql.modeler import Modeler
 else:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 

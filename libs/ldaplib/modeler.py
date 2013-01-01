@@ -4,10 +4,11 @@ import sys
 import ldap
 import logging
 import settings
-from libs import SMTP_ACTIONS, ldap_conn_utils
+from libs import SMTP_ACTIONS
+from libs.ldaplib import conn_utils
 
 
-class LDAPModeler:
+class Modeler:
     def __init__(self):
         # Initialize ldap connection.
         try:
@@ -75,7 +76,7 @@ class LDAPModeler:
                          }
 
         if get_sender_ldif:
-            senderDn, senderLdif = ldap_conn_utils.get_account_ldif(
+            senderDn, senderLdif = conn_utils.get_account_ldif(
                 conn=self.conn,
                 account=smtp_session_map['sender'],
                 attrlist=sender_search_attrlist,
@@ -84,12 +85,12 @@ class LDAPModeler:
             plugin_kwargs['senderLdif'] = senderLdif
 
             for plugin in plugins_for_sender:
-                action = ldap_conn_utils.apply_plugin(plugin, **plugin_kwargs)
+                action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
                 if not action.startswith('DUNNO'):
                     return action
 
         if get_recipient_ldif:
-            recipientDn, recipientLdif = ldap_conn_utils.get_account_ldif(
+            recipientDn, recipientLdif = conn_utils.get_account_ldif(
                 conn=self.conn,
                 account=smtp_session_map['recipient'],
                 attrlist=recipient_search_attrlist,
@@ -98,12 +99,12 @@ class LDAPModeler:
             plugin_kwargs['recipientLdif'] = recipientLdif
 
             for plugin in plugins_for_recipient:
-                action = ldap_conn_utils.apply_plugin(plugin, **plugin_kwargs)
+                action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
                 if not action.startswith('DUNNO'):
                     return action
 
         for plugin in plugins_for_misc:
-            action = ldap_conn_utils.apply_plugin(plugin, **plugin_kwargs)
+            action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
                 return action
 

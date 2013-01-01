@@ -3,7 +3,8 @@
 # Note: Access policy is defined in libs/__init__.py.
 
 import logging
-from libs import SMTP_ACTIONS, LDAP_ACCESS_POLICIES_OF_MAIL_LIST, ldap_conn_utils
+from libs import SMTP_ACTIONS, LDAP_ACCESS_POLICIES_OF_MAIL_LIST
+from libs.ldaplib import conn_utils
 
 REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = True
@@ -70,7 +71,7 @@ def restriction(**kwargs):
             return SMTP_ACTIONS['reject']
     else:
         # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
-        allowedSenders = ldap_conn_utils.get_allowed_senders_of_mail_list(
+        allowedSenders = conn_utils.get_allowed_senders_of_mail_list(
             conn=ldapConn,
             base_dn=ldapBaseDn,
             dn_of_mail_list=ldapRecipientDn,

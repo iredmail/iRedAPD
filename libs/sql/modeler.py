@@ -4,7 +4,7 @@ import logging
 from libs import SMTP_ACTIONS
 
 
-class SQLModeler:
+class Modeler:
     def __init__(self, cfg):
         self.cfg = cfg
 
