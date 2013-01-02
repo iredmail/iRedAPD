@@ -46,9 +46,9 @@ class Modeler:
         except Exception, e:
             logging.debug('Error while closing connection: %s' % str(e))
 
-    def handle_data(self, smtp_session_map, plugins=[]):
-        if 'sender' in smtp_session_map.keys() and 'recipient' in smtp_session_map.keys():
-            if len(smtp_session_map['sender']) < 6:
+    def handle_data(self, smtp_session_data, plugins=[]):
+        if 'sender' in smtp_session_data.keys() and 'recipient' in smtp_session_data.keys():
+            if len(smtp_session_data['sender']) < 6:
                 # Not a valid email address.
                 return 'DUNNO'
 
@@ -60,10 +60,10 @@ class Modeler:
             # Sender/recipient are used almost in all plugins, so store them
             # a dict and pass to plugins.
             senderReceiver = {
-                'sender': smtp_session_map['sender'],
-                'recipient': smtp_session_map['recipient'],
-                'sender_domain': smtp_session_map['sender'].split('@')[-1],
-                'recipient_domain': smtp_session_map['recipient'].split('@')[-1],
+                'sender': smtp_session_data['sender'],
+                'recipient': smtp_session_data['recipient'],
+                'sender_domain': smtp_session_data['sender'].split('@')[-1],
+                'recipient_domain': smtp_session_data['recipient'].split('@')[-1],
             }
 
             if len(self.plugins) > 0:
@@ -93,7 +93,7 @@ class Modeler:
                         pluginAction = module.restriction(
                             dbConn=self.cursor,
                             senderReceiver=senderReceiver,
-                            smtpSessionData=smtp_session_map,
+                            smtp_session_data=smtp_session_data,
                         )
 
                         logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))

@@ -19,8 +19,8 @@ Available plugins:
 iRedAPD is based on [mlapd](http://code.google.com/p/mlapd) which released
 under GPL v2, so iRedAPD is GPL v2 too.
 
-Note: file src/daemon.py is released under its own license, shipped
-for easy deploying.
+Note: file libs/daemon.py is released under its own license (BSD-style
+license), shipped for easy deployment.
 
 # Requirments
 

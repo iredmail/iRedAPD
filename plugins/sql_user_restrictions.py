@@ -22,7 +22,7 @@ from libs import SMTP_ACTIONS
 REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = False
 
-def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
+def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
     # Get restriction rules for sender
     sql = '''
         SELECT

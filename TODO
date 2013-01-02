@@ -3,7 +3,8 @@
   shadowLastChange is not present or 0?
 * Query required SQL columns instead of all
 * Plugins:
-    + HELO
+    + HELO restrictions
     + Greylisting (server-wide and per-user, per-domain)
     + White/Blacklisting (server-wide and per-domain)
+    + Require STARTTLS (encryption_protocol=TLSv1)
 * Detect protocol_state=RCPT in smtp session

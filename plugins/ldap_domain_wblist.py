@@ -13,11 +13,11 @@ RECIPIENT_SEARCH_ATTRLIST = []
 
 
 def restriction(**kwargs):
-    ldapConn = kwargs['conn']
-    ldapBaseDn = kwargs['baseDn']
-    smtpSessionData = kwargs['smtpSessionData']
+    conn = kwargs['conn']
+    base_dn = kwargs['baseDn']
+    smtp_session_data = kwargs['smtp_session_data']
 
-    sender = smtpSessionData['sender'].lower()
+    sender = smtp_session_data['sender'].lower()
     splitedSenderDomain = str(sender.split('@')[-1]).split('.')
 
     filterOfSenders = ''
@@ -30,7 +30,7 @@ def restriction(**kwargs):
     for i in listOfRestrictedSenders:
         filterOfSenders += '(domainWhitelistSender=%s)(domainBlacklistSender=%s)' % (i, i,)
 
-    recipient = smtpSessionData['recipient'].lower()
+    recipient = smtp_session_data['recipient'].lower()
     recipientDomain = recipient.split('@')[-1]
 
     logging.debug('Sender: %s' % sender)
@@ -38,8 +38,8 @@ def restriction(**kwargs):
 
     # Query ldap to get domain dn, with domain alias support.
     try:
-        resultDnOfDomain = ldapConn.search_s(
-            ldapBaseDn,
+        resultDnOfDomain = conn.search_s(
+            base_dn,
             1,                  # 1 = ldap.SCOPE_ONELEVEL
             '(|(domainName=%s)(domainAliasName=%s))' % (recipientDomain, recipientDomain),
             ['dn'],
@@ -50,7 +50,7 @@ def restriction(**kwargs):
         return 'DUNNO (Error while fetching domain dn: %s)' % (str(e))
 
     # Get list of restricted ip addresses.
-    senderIP = smtpSessionData['client_address']
+    senderIP = smtp_session_data['client_address']
     (ipf1, ipf2, ipf3, ipf4) = senderIP.split('.')
     listOfRestrictedIPAddresses = [
         senderIP,                           # xx.xx.xx.xx
@@ -76,7 +76,7 @@ def restriction(**kwargs):
     )
 
     try:
-        resultWblists = ldapConn.search_s(
+        resultWblists = conn.search_s(
             dnOfRecipientDomain,    # Base dn.
             0,                      # Search scope. 0 = ldap.SCOPE_BASE
             filter,                 # Search filter.

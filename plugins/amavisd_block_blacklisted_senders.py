@@ -12,10 +12,13 @@ RECIPIENT_SEARCH_ATTRLIST = ['amavisBlacklistSender', 'amavisWhitelistSender']
 
 
 def restriction(**kwargs):
-    smtpSessionData = kwargs['smtpSessionData']
-    ldapRecipientLdif = kwargs['recipientLdif']
-    # Get sender address.
-    sender = smtpSessionData.get('sender').lower()
+    smtp_session_data = kwargs['smtp_session_data']
+    recipient_ldif = kwargs['recipient_ldif']
+
+    if not 'amavisAccount' in recipient_ldif['objectClass']:
+        return 'DUNNO (Not a amavisdAccount object)'
+
+    sender = smtp_session_data.get('sender').lower()
 
     # Get valid Amavisd sender, sender domain and sub-domain(s).
     # - Sample user: user@sub2.sub1.com.cn
@@ -37,10 +40,10 @@ def restriction(**kwargs):
         splited_sender_domain.pop(0)
 
     # Get list of amavisBlacklistedSender.
-    blSenders = set([v.lower() for v in ldapRecipientLdif.get('amavisBlacklistSender', [])])
+    blSenders = set([v.lower() for v in recipient_ldif.get('amavisBlacklistSender', [])])
 
     # Get list of amavisWhitelistSender.
-    wlSenders = set([v.lower() for v in ldapRecipientLdif.get('amavisWhitelistSender', [])])
+    wlSenders = set([v.lower() for v in recipient_ldif.get('amavisWhitelistSender', [])])
 
     logging.debug('Sender: %s' % sender)
     logging.debug('Whitelisted senders: %s' % str(wlSenders))

@@ -17,10 +17,10 @@ RECIPIENT_SEARCH_ATTRLIST = []
 
 def restriction(**kwargs):
     ldapSenderLdif = kwargs['senderLdif']
-    smtpSessionData = kwargs['smtpSessionData']
+    smtp_session_data = kwargs['smtp_session_data']
 
     # Get recipient address.
-    smtpRecipient = smtpSessionData.get('recipient').lower()
+    smtpRecipient = smtp_session_data.get('recipient').lower()
     splited_recipient_domain = str(smtpRecipient.split('@')[-1]).split('.')
 
     # Get correct domain name and sub-domain name.

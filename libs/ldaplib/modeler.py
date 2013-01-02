@@ -36,20 +36,20 @@ class Modeler:
         except Exception, e:
             logging.debug('Error while closing connection: %s' % str(e))
 
-    def handle_data(self, smtp_session_map,
+    def handle_data(self, smtp_session_data,
                     plugins=[],
                     plugins_for_sender=[],
                     plugins_for_recipient=[],
                     plugins_for_misc=[],
-                    sender_search_attrlist=None,
-                    recipient_search_attrlist=None,
-                    ):
+                    sender_search_attrlist=[],
+                    recipient_search_attrlist=[],
+                   ):
         # No sender or recipient in smtp session.
-        if not 'sender' in smtp_session_map or not 'recipient' in smtp_session_map:
+        if not 'sender' in smtp_session_data or not 'recipient' in smtp_session_data:
             return SMTP_ACTIONS['defer']
 
         # Not a valid email address.
-        if len(smtp_session_map['sender']) < 6:
+        if len(smtp_session_data['sender']) < 6:
             return 'DUNNO'
 
         # No plugins available.
@@ -66,23 +66,23 @@ class Modeler:
             get_recipient_ldif = True
 
         # Get account dn and LDIF data.
-        plugin_kwargs = {'smtpSessionData': smtp_session_map,
+        plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.conn,
-                         'baseDn': settings.ldap_basedn,
-                         'senderDn': None,
-                         'senderLdif': None,
-                         'recipientDn': None,
-                         'recipientLdif': None,
+                         'base_dn': settings.ldap_basedn,
+                         'sender_dn': None,
+                         'sender_ldif': None,
+                         'recipient_dn': None,
+                         'recipient_ldif': None,
                          }
 
         if get_sender_ldif:
             senderDn, senderLdif = conn_utils.get_account_ldif(
                 conn=self.conn,
-                account=smtp_session_map['sender'],
+                account=smtp_session_data['sender'],
                 attrlist=sender_search_attrlist,
             )
-            plugin_kwargs['senderDn'] = senderDn
-            plugin_kwargs['senderLdif'] = senderLdif
+            plugin_kwargs['sender_dn'] = senderDn
+            plugin_kwargs['sender_ldif'] = senderLdif
 
             for plugin in plugins_for_sender:
                 action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
@@ -92,11 +92,11 @@ class Modeler:
         if get_recipient_ldif:
             recipientDn, recipientLdif = conn_utils.get_account_ldif(
                 conn=self.conn,
-                account=smtp_session_map['recipient'],
+                account=smtp_session_data['recipient'],
                 attrlist=recipient_search_attrlist,
             )
-            plugin_kwargs['recipientDn'] = recipientDn
-            plugin_kwargs['recipientLdif'] = recipientLdif
+            plugin_kwargs['recipient_dn'] = recipientDn
+            plugin_kwargs['recipient_ldif'] = recipientLdif
 
             for plugin in plugins_for_recipient:
                 action = conn_utils.apply_plugin(plugin, **plugin_kwargs)

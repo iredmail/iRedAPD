@@ -36,7 +36,7 @@ class PolicyChannel(asynchat.async_chat):
                 ):
         asynchat.async_chat.__init__(self, conn)
         self.buffer = []
-        self.smtp_session_map = {}
+        self.smtp_session_data = {}
         self.set_terminator('\n')
 
         self.plugins = plugins
@@ -59,11 +59,11 @@ class PolicyChannel(asynchat.async_chat):
             if line.find('=') != -1:
                 key = line.split('=')[0]
                 value = line.split('=', 1)[1]
-                self.smtp_session_map[key] = value
-        elif len(self.smtp_session_map) != 0:
+                self.smtp_session_data[key] = value
+        elif len(self.smtp_session_data) != 0:
             try:
                 modeler = Modeler()
-                result = modeler.handle_data(smtp_session_map=self.smtp_session_map,
+                result = modeler.handle_data(smtp_session_data=self.smtp_session_data,
                                              plugins=self.plugins,
                                              plugins_for_sender=self.plugins_for_sender,
                                              plugins_for_recipient=self.plugins_for_recipient,
@@ -80,9 +80,9 @@ class PolicyChannel(asynchat.async_chat):
                 logging.debug('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
             # Log final action.
-            logging.info('[%s] %s -> %s, %s' % (self.smtp_session_map['client_address'],
-                                                self.smtp_session_map['sender'],
-                                                self.smtp_session_map['recipient'],
+            logging.info('[%s] %s -> %s, %s' % (self.smtp_session_data['client_address'],
+                                                self.smtp_session_data['sender'],
+                                                self.smtp_session_data['recipient'],
                                                 action,
                                                ))
 

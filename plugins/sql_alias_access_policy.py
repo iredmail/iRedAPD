@@ -26,7 +26,7 @@ POLICY_MODERATORSONLY = 'moderatorsonly'
 POLICY_ALLOWEDONLY = 'allowedonly'      # Same as @POLICY_MODERATORSONLY
 POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
-def restriction(dbConn, senderReceiver, smtpSessionData, **kargs):
+def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
 
     sql = '''SELECT accesspolicy, goto, moderators
             FROM alias

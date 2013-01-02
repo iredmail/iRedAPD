@@ -41,7 +41,7 @@ def get_allowed_senders_of_mail_list(conn,
                                      sender,
                                      recipient,
                                      policy):
-    """return search_result_list_based_on_access_policy"""
+    """return list of allowed senders"""
 
     logging.debug('[+] Getting allowed senders of mail list: %s' % recipient)
     recipient_domain = recipient.split('@', 1)[-1]
@@ -90,8 +90,6 @@ def get_allowed_senders_of_mail_list(conn,
                     # Example of result data:
                     # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
                     userList += obj[1][k]
-                else:
-                    pass
 
         # Exclude mail list itself.
         if recipient in userList:
@@ -100,7 +98,9 @@ def get_allowed_senders_of_mail_list(conn,
         logging.debug('result: %s' % str(userList))
 
         # Query once more to get 'shadowAddress'.
-        if len(userList) > 0 and (policy == 'allowedonly' or policy == 'moderatorsonly'):
+        if len(userList) > 0 and policy in ['allowedonly',
+                                            'moderatorsonly',
+                                            'moderators']:
             logging.debug('Addition query to get user aliases...')
 
             basedn = 'ou=Users,' + domaindn
@@ -138,7 +138,7 @@ def get_allowed_senders_of_mail_list(conn,
             except Exception, e:
                 logging.debug('Error: %s' % str(e))
 
-        return userList
+        return [u.lower() for u in userList]
     except Exception, e:
         logging.debug('Error: %s' % str(e))
         return []

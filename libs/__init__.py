@@ -1,11 +1,12 @@
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
 __version__ = '1.3.9'
 
-SMTP_ACTIONS = {'accept': 'OK',
-                'defer': 'DEFER_IF_PERMIT Service temporarily unavailable',
-                'reject': 'REJECT Not authorized',
-                'default': 'DUNNO',
-                }
+SMTP_ACTIONS = {
+    'default': 'DUNNO',
+    'accept': 'OK',
+    'reject': 'REJECT Not authorized',
+    'defer': 'DEFER_IF_PERMIT Service temporarily unavailable',
+}
 
 LDAP_ACCESS_POLICIES_OF_MAIL_LIST = {
     'public': 'Unrestricted',
