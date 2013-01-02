@@ -42,7 +42,7 @@ def restriction(**kwargs):
                 base_dn,
                 1, # 1 == ldap.SCOPE_ONELEVEL
                 "(&(objectClass=mailDomain)(|(domainName=%s)(domainAliasName=%s)))" % (recipient_domain, recipient_domain),
-                ['domainName', 'domainAliasName', ]
+                ['domainName', 'domainAliasName', ],
             )
             if qr:
                 dn, entries = qr[0]
@@ -69,7 +69,7 @@ def restriction(**kwargs):
         # Bypass all users under the same domain and sub domains.
         returned = False
         for d in recipient_alias_domains:
-            if sender.endswith(d) or sender.endswith('.' + d):
+            if sender.endswith('@' + d) or sender.endswith('.' + d):
                 return 'DUNNO (Access policy: subdomain (%s))' % (d)
 
         if returned is False:

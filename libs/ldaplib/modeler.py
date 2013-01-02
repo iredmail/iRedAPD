@@ -36,7 +36,8 @@ class Modeler:
         except Exception, e:
             logging.debug('Error while closing connection: %s' % str(e))
 
-    def handle_data(self, smtp_session_data,
+    def handle_data(self,
+                    smtp_session_data,
                     plugins=[],
                     plugins_for_sender=[],
                     plugins_for_recipient=[],
@@ -73,7 +74,7 @@ class Modeler:
                          'sender_ldif': None,
                          'recipient_dn': None,
                          'recipient_ldif': None,
-                         }
+                        }
 
         if get_sender_ldif:
             senderDn, senderLdif = conn_utils.get_account_ldif(
@@ -84,11 +85,6 @@ class Modeler:
             plugin_kwargs['sender_dn'] = senderDn
             plugin_kwargs['sender_ldif'] = senderLdif
 
-            for plugin in plugins_for_sender:
-                action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
-                if not action.startswith('DUNNO'):
-                    return action
-
         if get_recipient_ldif:
             recipientDn, recipientLdif = conn_utils.get_account_ldif(
                 conn=self.conn,
@@ -98,12 +94,7 @@ class Modeler:
             plugin_kwargs['recipient_dn'] = recipientDn
             plugin_kwargs['recipient_ldif'] = recipientLdif
 
-            for plugin in plugins_for_recipient:
-                action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
-                if not action.startswith('DUNNO'):
-                    return action
-
-        for plugin in plugins_for_misc:
+        for plugin in plugins:
             action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
                 return action

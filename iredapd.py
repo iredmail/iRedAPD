@@ -139,14 +139,15 @@ class DaemonSocket(asyncore.dispatcher):
     def handle_accept(self):
         conn, remote_addr = self.accept()
         logging.debug("Connect from %s, port %s." % remote_addr)
-        channel = PolicyChannel(conn,
-                                plugins=self.loaded_plugins,
-                                plugins_for_sender=self.plugins_for_sender,
-                                plugins_for_recipient=self.plugins_for_recipient,
-                                plugins_for_misc=self.plugins_for_misc,
-                                sender_search_attrlist=self.sender_search_attrlist,
-                                recipient_search_attrlist=self.recipient_search_attrlist,
-                               )
+        channel = PolicyChannel(
+            conn,
+            plugins=self.loaded_plugins,
+            plugins_for_sender=self.plugins_for_sender,
+            plugins_for_recipient=self.plugins_for_recipient,
+            plugins_for_misc=self.plugins_for_misc,
+            sender_search_attrlist=self.sender_search_attrlist,
+            recipient_search_attrlist=self.recipient_search_attrlist,
+        )
 
 
 def main():
