@@ -25,6 +25,7 @@ from libs import __version__, SMTP_ACTIONS, daemon
 
 
 class PolicyChannel(asynchat.async_chat):
+    """Process each smtp policy request"""
     def __init__(self,
                  conn,
                  plugins=[],
@@ -54,23 +55,24 @@ class PolicyChannel(asynchat.async_chat):
 
     def found_terminator(self):
         if self.buffer:
+            # Format received data
             line = self.buffer.pop()
             logging.debug("smtp session: " + line)
-            if line.find('=') != -1:
-                key = line.split('=')[0]
-                value = line.split('=', 1)[1]
+            if '=' in line:
+                (key, value) = line.split('=', 1)
                 self.smtp_session_data[key] = value
         elif len(self.smtp_session_data) != 0:
             try:
                 modeler = Modeler()
-                result = modeler.handle_data(smtp_session_data=self.smtp_session_data,
-                                             plugins=self.plugins,
-                                             plugins_for_sender=self.plugins_for_sender,
-                                             plugins_for_recipient=self.plugins_for_recipient,
-                                             plugins_for_misc=self.plugins_for_misc,
-                                             sender_search_attrlist=self.sender_search_attrlist,
-                                             recipient_search_attrlist=self.recipient_search_attrlist,
-                                            )
+                result = modeler.handle_data(
+                    smtp_session_data=self.smtp_session_data,
+                    plugins=self.plugins,
+                    plugins_for_sender=self.plugins_for_sender,
+                    plugins_for_recipient=self.plugins_for_recipient,
+                    plugins_for_misc=self.plugins_for_misc,
+                    sender_search_attrlist=self.sender_search_attrlist,
+                    recipient_search_attrlist=self.recipient_search_attrlist,
+                )
                 if result:
                     action = result
                 else:
@@ -98,6 +100,7 @@ class PolicyChannel(asynchat.async_chat):
 
 
 class DaemonSocket(asyncore.dispatcher):
+    """Create socket daemon"""
     def __init__(self, localaddr):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -112,7 +115,7 @@ class DaemonSocket(asyncore.dispatcher):
         for plugin in settings.plugins:
             try:
                 self.loaded_plugins.append(__import__(plugin))
-                logging.info('Loading plugin: %s' % (plugin))
+                logging.info('Loading plugin: %s' % plugin)
             except Exception, e:
                 logging.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
 
@@ -139,7 +142,7 @@ class DaemonSocket(asyncore.dispatcher):
     def handle_accept(self):
         conn, remote_addr = self.accept()
         logging.debug("Connect from %s, port %s." % remote_addr)
-        channel = PolicyChannel(
+        PolicyChannel(
             conn,
             plugins=self.loaded_plugins,
             plugins_for_sender=self.plugins_for_sender,
