@@ -10,9 +10,9 @@
 #
 # Valid sender/recipient addresses:
 #
-#   - .*:           all addresses (user, domain, sub-domain)
-#   - domain.com:   single domain
-#   - .domain.com:  single domain and its all sub-domains
+#   - @.:           all addresses (user, domain, sub-domain)
+#   - @domain.com:   single domain
+#   - @.domain.com:  single domain and its all sub-domains
 #   - user@domain.com:  single email address
 
 import logging
@@ -58,8 +58,8 @@ def restriction(**kwargs):
             if all_allowed_recipients:
                 if recipient in all_allowed_recipients \
                    or recipient_domain in all_allowed_recipients \
-                   or '.' + recipient_domain in all_allowed_recipients \
-                   or '*' in all_allowed_recipients:
+                   or '@.' + recipient_domain in all_allowed_recipients \
+                   or '@.' in all_allowed_recipients:
                     return SMTP_ACTIONS['accept']
 
             all_rejected_recipients = [s.lower().strip() for s in rejected_recipients.split(',')]
@@ -68,8 +68,8 @@ def restriction(**kwargs):
             if all_rejected_recipients:
                 if recipient in all_rejected_recipients \
                    or recipient_domain in all_rejected_recipients \
-                   or '.' + recipient_domain in all_rejected_recipients \
-                   or '*' in all_rejected_recipients:
+                   or '@.' + recipient_domain in all_rejected_recipients \
+                   or '@.' in all_rejected_recipients:
                     return SMTP_ACTIONS['reject']
 
     # Get restriction rules for recipient
@@ -105,8 +105,8 @@ def restriction(**kwargs):
             if all_allowed_senders:
                 if sender in all_allowed_senders \
                    or sender_domain in all_allowed_senders \
-                   or '.' + sender_domain in all_allowed_senders \
-                   or '.*' in all_allowed_senders:
+                   or '@.' + sender_domain in all_allowed_senders \
+                   or '@.' in all_allowed_senders:
                     return SMTP_ACTIONS['accept']
 
             all_rejected_senders = [s.lower().strip() for s in rejected_senders.split(',')]
@@ -115,8 +115,8 @@ def restriction(**kwargs):
             if all_rejected_senders:
                 if sender in all_rejected_senders \
                    or sender_domain in all_rejected_senders \
-                   or '.' + sender_domain in all_rejected_senders \
-                   or '*' in all_rejected_senders:
+                   or '@.' + sender_domain in all_rejected_senders \
+                   or '@.' in all_rejected_senders:
                     return SMTP_ACTIONS['reject']
 
     return SMTP_ACTIONS['default']
