@@ -4,7 +4,7 @@
 
 import logging
 from libs import SMTP_ACTIONS, LDAP_ACCESS_POLICIES_OF_MAIL_LIST
-from libs.ldaplib import conn_utils
+from libs.ldaplib import utils
 
 REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = True
@@ -78,7 +78,7 @@ def restriction(**kwargs):
                     'moderatorsonly', 'moderators',
                     'allowedonly', 'membersandmoderatorsonly']:
         # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
-        allowedSenders = conn_utils.get_allowed_senders_of_mail_list(
+        allowedSenders = utils.get_allowed_senders_of_mail_list(
             conn=conn,
             base_dn=base_dn,
             dn_of_mail_list=recipient_dn,

@@ -29,9 +29,6 @@ class PolicyChannel(asynchat.async_chat):
     def __init__(self,
                  conn,
                  plugins=[],
-                 plugins_for_sender=[],
-                 plugins_for_recipient=[],
-                 plugins_for_misc=[],
                  sender_search_attrlist=None,
                  recipient_search_attrlist=None,
                 ):
@@ -41,9 +38,6 @@ class PolicyChannel(asynchat.async_chat):
         self.set_terminator('\n')
 
         self.plugins = plugins
-        self.plugins_for_sender = plugins_for_sender
-        self.plugins_for_recipient = plugins_for_recipient
-        self.plugins_for_misc = plugins_for_misc
         self.sender_search_attrlist = sender_search_attrlist
         self.recipient_search_attrlist = recipient_search_attrlist
 
@@ -67,9 +61,6 @@ class PolicyChannel(asynchat.async_chat):
                 result = modeler.handle_data(
                     smtp_session_data=self.smtp_session_data,
                     plugins=self.plugins,
-                    plugins_for_sender=self.plugins_for_sender,
-                    plugins_for_recipient=self.plugins_for_recipient,
-                    plugins_for_misc=self.plugins_for_misc,
                     sender_search_attrlist=self.sender_search_attrlist,
                     recipient_search_attrlist=self.recipient_search_attrlist,
                 )
@@ -119,24 +110,10 @@ class DaemonSocket(asyncore.dispatcher):
             except Exception, e:
                 logging.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
 
-        self.plugins_for_sender = [plugin
-                                   for plugin in self.loaded_plugins
-                                   if plugin.REQUIRE_LOCAL_SENDER]
-
-        self.plugins_for_recipient = [plugin
-                                   for plugin in self.loaded_plugins
-                                   if plugin.REQUIRE_LOCAL_RECIPIENT]
-
-        self.plugins_for_misc = [plugin for plugin in self.loaded_plugins
-                                 if plugin not in self.plugins_for_sender
-                                 and plugin not in self.plugins_for_recipient]
-
         self.sender_search_attrlist = ['objectClass']
-        for plugin in self.plugins_for_sender:
-            self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
-
         self.recipient_search_attrlist = ['objectClass']
-        for plugin in self.plugins_for_recipient:
+        for plugin in self.loaded_plugins:
+            self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
             self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
 
     def handle_accept(self):
@@ -145,9 +122,6 @@ class DaemonSocket(asyncore.dispatcher):
         PolicyChannel(
             conn,
             plugins=self.loaded_plugins,
-            plugins_for_sender=self.plugins_for_sender,
-            plugins_for_recipient=self.plugins_for_recipient,
-            plugins_for_misc=self.plugins_for_misc,
             sender_search_attrlist=self.sender_search_attrlist,
             recipient_search_attrlist=self.recipient_search_attrlist,
         )
@@ -177,7 +151,7 @@ def main():
             )
 
     # Initialize policy daemon.
-    socket_daemon = DaemonSocket((settings.listen_address, settings.listen_port))
+    DaemonSocket((settings.listen_address, settings.listen_port))
 
     # Run this program as daemon.
     if settings.run_as_daemon:

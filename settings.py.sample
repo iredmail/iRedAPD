@@ -27,7 +27,7 @@ backend = 'ldap'
 # Enabled plugins.
 #   - Plugin name is file name which placed under 'plugins/' directory.
 #   - Plugin names MUST be seperated by comma.
-plugins = ['ldap_maillist_access_policy', 'amavisd_block_blacklisted_senders']
+plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders']
 
 #
 # For ldap backend.

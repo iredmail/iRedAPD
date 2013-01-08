@@ -14,7 +14,7 @@ RECIPIENT_SEARCH_ATTRLIST = []
 
 def restriction(**kwargs):
     conn = kwargs['conn']
-    base_dn = kwargs['baseDn']
+    base_dn = kwargs['base_dn']
     smtp_session_data = kwargs['smtp_session_data']
 
     sender = smtp_session_data['sender'].lower()

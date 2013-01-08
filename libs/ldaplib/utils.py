@@ -9,7 +9,7 @@ from libs import SMTP_ACTIONS
 def get_account_ldif(conn, account, attrlist=None):
     logging.debug('[+] Getting LDIF data of account: %s' % account)
 
-    ldap_filter = '(&(|(mail=%s)(shadowAddress=%s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % (account, account)
+    ldap_filter = '(&(|(mail=%(account)s)(shadowAddress=%(account)s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % {'account': account}
 
     logging.debug('search filter: %s' % ldap_filter)
     logging.debug('search attributes: %s' % str(attrlist))
@@ -31,7 +31,7 @@ def get_account_ldif(conn, account, attrlist=None):
             logging.debug('Not a local account.')
             return (None, None)
     except Exception, e:
-        logging.debug('!!! ERROR !!! result: %s' % str(e))
+        logging.debug('<!> ERROR, result: %s' % str(e))
         return (None, None)
 
 

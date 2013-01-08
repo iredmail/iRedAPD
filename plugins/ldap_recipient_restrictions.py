@@ -16,12 +16,12 @@ SENDER_SEARCH_ATTRLIST = ['mailBlacklistedRecipient', 'mailWhitelistRecipient']
 RECIPIENT_SEARCH_ATTRLIST = []
 
 def restriction(**kwargs):
-    ldapSenderLdif = kwargs['senderLdif']
+    sender_ldif = kwargs['sender_ldif']
     smtp_session_data = kwargs['smtp_session_data']
 
     # Get recipient address.
-    smtpRecipient = smtp_session_data.get('recipient').lower()
-    splited_recipient_domain = str(smtpRecipient.split('@')[-1]).split('.')
+    recipient = smtp_session_data.get('recipient').lower()
+    splited_recipient_domain = str(recipient.split('@')[-1]).split('.')
 
     # Get correct domain name and sub-domain name.
     # Sample recipient domain: sub2.sub1.com.cn
@@ -30,22 +30,22 @@ def restriction(**kwargs):
     #   -> .sub1.com.cn
     #   -> .com.cn
     #   -> .cn
-    recipients = ['@.', smtpRecipient, '@' + smtpRecipient.split('@')[-1],]
+    allowed_recipients = ['@.', recipient, '@' + recipient.split('@')[-1],]
     for counter in range(len(splited_recipient_domain)):
         # Append domain and sub-domain.
-        recipients += ['@.' + '.'.join(splited_recipient_domain)]
+        allowed_recipients += ['@.' + '.'.join(splited_recipient_domain)]
         splited_recipient_domain.pop(0)
 
     # Get value of mailBlacklistedRecipient, mailWhitelistRecipient.
-    blacklisted_rcpts = [v.lower() for v in ldapSenderLdif.get('mailBlacklistRecipient', [])]
-    whitelisted_rcpts = [v.lower() for v in ldapSenderLdif.get('mailWhitelistRecipient', [])]
+    blacklisted_rcpts = [v.lower() for v in sender_ldif.get('mailBlacklistRecipient', [])]
+    whitelisted_rcpts = [v.lower() for v in sender_ldif.get('mailWhitelistRecipient', [])]
 
     # Bypass whitelisted recipients if has intersection set.
-    if len(set(recipients) & set(whitelisted_rcpts)) > 0:
+    if len(set(allowed_recipients) & set(whitelisted_rcpts)) > 0:
         return 'DUNNO (Whitelisted)'
 
     # Reject blacklisted recipients if has intersection set.
-    if len(set(recipients) & set(blacklisted_rcpts)) > 0 \
+    if len(set(allowed_recipients) & set(blacklisted_rcpts)) > 0 \
        or '@.' in blacklisted_rcpts:
         return 'REJECT Permission denied'
 

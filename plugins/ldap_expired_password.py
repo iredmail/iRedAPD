@@ -13,17 +13,20 @@ RECIPIENT_SEARCH_ATTRLIST = []
 EXPIRED_DAYS = 90
 
 def restriction(**kwargs):
-    ldapSenderLdif = kwargs['senderLdif']
+    sender_ldif = kwargs['sender_ldif']
+
+    if not 'mailUser' in sender_ldif['objectClass']:
+        return 'DUNNO Not a mail user'
 
     # Check password last change days
-    last_changed_day = int(ldapSenderLdif.get('shadowLastChange', [0])[0])
+    last_changed_day = int(sender_ldif.get('shadowLastChange', [0])[0])
 
     # Convert today to shadowLastChange
     today = datetime.date.today()
     changed_days_of_today = (datetime.date(today.year, today.month, today.day) - datetime.date(1970, 1, 1)).days
 
     if (last_changed_day + EXPIRED_DAYS) < changed_days_of_today:
-        return 'REJECT Password expired, please change the password before sending email.'
+        return 'REJECT Password expired, please change your password before sending email.'
 
     return SMTP_ACTIONS['default']
 

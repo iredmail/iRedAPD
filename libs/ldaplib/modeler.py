@@ -5,7 +5,7 @@ import ldap
 import logging
 import settings
 from libs import SMTP_ACTIONS
-from libs.ldaplib import conn_utils
+from libs.ldaplib import utils
 
 
 class Modeler:
@@ -39,9 +39,6 @@ class Modeler:
     def handle_data(self,
                     smtp_session_data,
                     plugins=[],
-                    plugins_for_sender=[],
-                    plugins_for_recipient=[],
-                    plugins_for_misc=[],
                     sender_search_attrlist=[],
                     recipient_search_attrlist=[],
                    ):
@@ -57,15 +54,6 @@ class Modeler:
         if not plugins:
             return 'DUNNO'
 
-        # Check whether we should get sender/recipient LDIF data first
-        get_sender_ldif = False
-        get_recipient_ldif = False
-        if plugins_for_sender:
-            get_sender_ldif = True
-
-        if plugins_for_recipient:
-            get_recipient_ldif = True
-
         # Get account dn and LDIF data.
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.conn,
@@ -76,26 +64,31 @@ class Modeler:
                          'recipient_ldif': None,
                         }
 
-        if get_sender_ldif:
-            senderDn, senderLdif = conn_utils.get_account_ldif(
-                conn=self.conn,
-                account=smtp_session_data['sender'],
-                attrlist=sender_search_attrlist,
-            )
-            plugin_kwargs['sender_dn'] = senderDn
-            plugin_kwargs['sender_ldif'] = senderLdif
-
-        if get_recipient_ldif:
-            recipientDn, recipientLdif = conn_utils.get_account_ldif(
-                conn=self.conn,
-                account=smtp_session_data['recipient'],
-                attrlist=recipient_search_attrlist,
-            )
-            plugin_kwargs['recipient_dn'] = recipientDn
-            plugin_kwargs['recipient_ldif'] = recipientLdif
-
         for plugin in plugins:
-            action = conn_utils.apply_plugin(plugin, **plugin_kwargs)
+            # Get LDIF data of sender if required
+            if plugin.REQUIRE_LOCAL_SENDER \
+               and plugin_kwargs['sender_dn'] is None:
+                sender_dn, sender_ldif = utils.get_account_ldif(
+                    conn=self.conn,
+                    account=smtp_session_data['sender'],
+                    attrlist=sender_search_attrlist,
+                )
+                plugin_kwargs['sender_dn'] = sender_dn
+                plugin_kwargs['sender_ldif'] = sender_ldif
+
+            # Get LDIF data of recipient if required
+            if plugin.REQUIRE_LOCAL_RECIPIENT \
+               and plugin_kwargs['recipient_dn'] is None:
+                recipient_dn, recipient_ldif = utils.get_account_ldif(
+                    conn=self.conn,
+                    account=smtp_session_data['recipient'],
+                    attrlist=recipient_search_attrlist,
+                )
+                plugin_kwargs['recipient_dn'] = recipient_dn
+                plugin_kwargs['recipient_ldif'] = recipient_ldif
+
+            # Apply plugin
+            action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
                 return action
 
