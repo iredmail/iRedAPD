@@ -19,10 +19,14 @@ import logging
 from web import sqlquote
 from libs import SMTP_ACTIONS
 
-REQUIRE_LOCAL_SENDER = False
-REQUIRE_LOCAL_RECIPIENT = False
 
-def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
+def restriction(**kwargs):
+    conn = kwargs['conn']
+    sender = kwargs['sender']
+    sender_domain = kwargs['sender_domain']
+    recipient = kwargs['recipient']
+    recipient_domain = kwargs['recipient_domain']
+
     # Get restriction rules for sender
     sql = '''
         SELECT
@@ -31,11 +35,11 @@ def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
         FROM mailbox
         WHERE username=%s
         LIMIT 1
-    ''' % sqlquote(senderReceiver['sender'])
-    logging.debug('SQL to get restriction rules of sender (%s): %s' % (senderReceiver['sender'], sql))
+    ''' % sqlquote(sender)
+    logging.debug('SQL to get restriction rules of sender (%s): %s' % (sender, sql))
 
-    dbConn.execute(sql)
-    sql_record = dbConn.fetchone()
+    conn.execute(sql)
+    sql_record = conn.fetchone()
     logging.debug('Returned SQL Record: %s' % str(sql_record))
 
     # Sender account exists, perform recipient restrictions
@@ -52,9 +56,9 @@ def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
             logging.debug('All allowed recipient: %s' % str(all_allowed_recipients))
 
             if all_allowed_recipients:
-                if senderReceiver['recipient'] in all_allowed_recipients \
-                   or senderReceiver['recipient_domain'] in all_allowed_recipients \
-                   or '.' + senderReceiver['recipient_domain'] in all_allowed_recipients \
+                if recipient in all_allowed_recipients \
+                   or recipient_domain in all_allowed_recipients \
+                   or '.' + recipient_domain in all_allowed_recipients \
                    or '*' in all_allowed_recipients:
                     return SMTP_ACTIONS['accept']
 
@@ -62,15 +66,15 @@ def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
             logging.debug('All rejected recipient: %s' % str(all_rejected_recipients))
 
             if all_rejected_recipients:
-                if senderReceiver['recipient'] in all_rejected_recipients \
-                   or senderReceiver['recipient_domain'] in all_rejected_recipients \
-                   or '.' + senderReceiver['recipient_domain'] in all_rejected_recipients \
+                if recipient in all_rejected_recipients \
+                   or recipient_domain in all_rejected_recipients \
+                   or '.' + recipient_domain in all_rejected_recipients \
                    or '*' in all_rejected_recipients:
                     return SMTP_ACTIONS['reject']
 
     # Get restriction rules for recipient
     # Don't perform another SQL query if sender == recipient
-    if senderReceiver['sender'] != senderReceiver['recipient']:
+    if sender != recipient:
         sql = '''
             SELECT
                 allowedrecipients, rejectedrecipients,
@@ -78,11 +82,11 @@ def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
             FROM mailbox
             WHERE username=%s
             LIMIT 1
-        ''' % sqlquote(senderReceiver['recipient'])
-        logging.debug('SQL to get restriction rules of recipient (%s): %s' % (senderReceiver['recipient'], sql))
+        ''' % sqlquote(recipient)
+        logging.debug('SQL to get restriction rules of recipient (%s): %s' % (recipient, sql))
 
-        dbConn.execute(sql)
-        sql_record = dbConn.fetchone()
+        conn.execute(sql)
+        sql_record = conn.fetchone()
         logging.debug('Returned SQL Record: %s' % str(sql_record))
 
     # Recipient account exists, perform sender restrictions
@@ -99,9 +103,9 @@ def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
             logging.debug('All allowed senders: %s' % str(all_allowed_senders))
 
             if all_allowed_senders:
-                if senderReceiver['sender'] in all_allowed_senders \
-                   or senderReceiver['sender_domain'] in all_allowed_senders \
-                   or '.' + senderReceiver['sender_domain'] in all_allowed_senders \
+                if sender in all_allowed_senders \
+                   or sender_domain in all_allowed_senders \
+                   or '.' + sender_domain in all_allowed_senders \
                    or '.*' in all_allowed_senders:
                     return SMTP_ACTIONS['accept']
 
@@ -109,9 +113,9 @@ def restriction(dbConn, senderReceiver, smtp_session_data, **kargs):
             logging.debug('All rejected senders: %s' % str(all_rejected_senders))
 
             if all_rejected_senders:
-                if senderReceiver['sender'] in all_rejected_senders \
-                   or senderReceiver['sender_domain'] in all_rejected_senders \
-                   or '.' + senderReceiver['sender_domain'] in all_rejected_senders \
+                if sender in all_rejected_senders \
+                   or sender_domain in all_rejected_senders \
+                   or '.' + sender_domain in all_rejected_senders \
                    or '*' in all_rejected_senders:
                     return SMTP_ACTIONS['reject']
 

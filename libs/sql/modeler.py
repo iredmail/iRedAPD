@@ -1,37 +1,34 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
 import logging
-from libs import SMTP_ACTIONS
+import settings
+from libs import SMTP_ACTIONS, utils
 
 
 class Modeler:
-    def __init__(self, cfg):
-        self.cfg = cfg
-
-        # Backend
-        self.backend = self.cfg.get('general', 'backend', 'mysql')
-
-        if self.backend == 'mysql':
+    def __init__(self):
+        if settings.backend == 'mysql':
             import MySQLdb
             try:
                 db = MySQLdb.connect(
-                    host=self.cfg.get('sql', 'server', 'localhost'),
-                    db=self.cfg.get('sql', 'db', 'vmail'),
-                    user=self.cfg.get('sql', 'user', 'vmail'),
-                    passwd=self.cfg.get('sql', 'password'),
+                    host=settings.sql_server,
+                    port=int(settings.sql_port),
+                    db=settings.sql_db,
+                    user=settings.sql_user,
+                    passwd=settings.sql_password,
                 )
                 self.cursor = db.cursor()
             except Exception, e:
                 logging.error("Error while creating database connection: %s" % str(e))
-        elif self.backend == 'pgsql':
+        elif settings.backend == 'pgsql':
             import psycopg2
             try:
                 db = psycopg2.connect(
-                    host=self.cfg.get('sql', 'server', 'localhost'),
-                    port=self.cfg.get('sql', 'port', '5432'),
-                    database=self.cfg.get('sql', 'db', 'vmail'),
-                    user=self.cfg.get('sql', 'user', 'vmail'),
-                    password=self.cfg.get('sql', 'password'),
+                    host=settings.sql_server,
+                    port=int(settings.sql_port),
+                    database=settings.sql_db,
+                    user=settings.sql_user,
+                    password=settings.sql_password,
                 )
                 self.cursor = db.cursor()
             except Exception, e:
@@ -46,66 +43,39 @@ class Modeler:
         except Exception, e:
             logging.debug('Error while closing connection: %s' % str(e))
 
-    def handle_data(self, smtp_session_data, plugins=[]):
-        if 'sender' in smtp_session_data.keys() and 'recipient' in smtp_session_data.keys():
-            if len(smtp_session_data['sender']) < 6:
-                # Not a valid email address.
-                return 'DUNNO'
+    def handle_data(self,
+                    smtp_session_data,
+                    plugins=[],
+                    **kwargs
+                   ):
+        # No sender or recipient in smtp session.
+        if not 'sender' in smtp_session_data or \
+           not 'recipient' in smtp_session_data:
+            return SMTP_ACTIONS['default']
 
-            # Get plugin module name and convert plugin list to python list type.
-            self.plugins = self.cfg.get('sql', 'plugins', '')
-            self.plugins = [v.strip() for v in self.plugins.split(',')]
+        # Not a valid email address.
+        if len(smtp_session_data['sender']) < 6:
+            return 'DUNNO'
 
-            # Get sender, recipient.
-            # Sender/recipient are used almost in all plugins, so store them
-            # a dict and pass to plugins.
-            senderReceiver = {
-                'sender': smtp_session_data['sender'],
-                'recipient': smtp_session_data['recipient'],
-                'sender_domain': smtp_session_data['sender'].split('@')[-1],
-                'recipient_domain': smtp_session_data['recipient'].split('@')[-1],
-            }
+        # No plugins available.
+        if not plugins:
+            return 'DUNNO'
 
-            if len(self.plugins) > 0:
-                #
-                # Import plugin modules.
-                #
-                self.modules = []
+        plugin_kwargs = {'smtp_session_data': smtp_session_data,
+                         'conn': self.cursor,
+                         'sender': smtp_session_data['sender'],
+                         'recipient': smtp_session_data['recipient'],
+                         'sender_domain': smtp_session_data['sender'].split('@')[-1],
+                         'recipient_domain': smtp_session_data['recipient'].split('@')[-1],
+                        }
 
-                # Load plugin module.
-                for plugin in self.plugins:
-                    try:
-                        self.modules.append(__import__(plugin))
-                    except ImportError:
-                        # Print error message if plugin module doesn't exist.
-                        # Use logging.info to let admin know this critical error.
-                        logging.info('Error: plugin %s.py not exist.' % plugin)
-                    except Exception, e:
-                        logging.debug('Error while importing plugin module (%s): %s' % (plugin, str(e)))
+        # TODO Get SQL record of mail user or mail alias before applying plugins
+        # TODO Query required sql columns instead of all
 
-                #
-                # Apply plugins.
-                #
-                self.action = ''
-                for module in self.modules:
-                    try:
-                        logging.debug('Apply plugin: %s.' % (module.__name__, ))
-                        pluginAction = module.restriction(
-                            dbConn=self.cursor,
-                            senderReceiver=senderReceiver,
-                            smtp_session_data=smtp_session_data,
-                        )
+        for plugin in plugins:
+            action = utils.apply_plugin(plugin, **plugin_kwargs)
+            if not action.startswith('DUNNO'):
+                return action
 
-                        logging.debug('Response from plugin (%s): %s' % (module.__name__, pluginAction))
-                        if not pluginAction.startswith('DUNNO'):
-                            logging.info('Response from plugin (%s): %s' % (module.__name__, pluginAction))
-                            return pluginAction
-                    except Exception, e:
-                        logging.debug('Error while apply plugin (%s): %s' % (module, str(e)))
-
-            else:
-                # No plugins available.
-                return 'DUNNO'
-        else:
-            return SMTP_ACTIONS['defer']
+        return SMTP_ACTIONS['default']
 

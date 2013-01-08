@@ -4,8 +4,8 @@ import sys
 import ldap
 import logging
 import settings
-from libs import SMTP_ACTIONS
-from libs.ldaplib import utils
+from libs import SMTP_ACTIONS, utils
+from libs.ldaplib import conn_utils
 
 
 class Modeler:
@@ -43,8 +43,9 @@ class Modeler:
                     recipient_search_attrlist=[],
                    ):
         # No sender or recipient in smtp session.
-        if not 'sender' in smtp_session_data or not 'recipient' in smtp_session_data:
-            return SMTP_ACTIONS['defer']
+        if not 'sender' in smtp_session_data or \
+           not 'recipient' in smtp_session_data:
+            return SMTP_ACTIONS['default']
 
         # Not a valid email address.
         if len(smtp_session_data['sender']) < 6:
@@ -54,7 +55,6 @@ class Modeler:
         if not plugins:
             return 'DUNNO'
 
-        # Get account dn and LDIF data.
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.conn,
                          'base_dn': settings.ldap_basedn,
@@ -68,7 +68,7 @@ class Modeler:
             # Get LDIF data of sender if required
             if plugin.REQUIRE_LOCAL_SENDER \
                and plugin_kwargs['sender_dn'] is None:
-                sender_dn, sender_ldif = utils.get_account_ldif(
+                sender_dn, sender_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=smtp_session_data['sender'],
                     attrlist=sender_search_attrlist,
@@ -79,7 +79,7 @@ class Modeler:
             # Get LDIF data of recipient if required
             if plugin.REQUIRE_LOCAL_RECIPIENT \
                and plugin_kwargs['recipient_dn'] is None:
-                recipient_dn, recipient_ldif = utils.get_account_ldif(
+                recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=smtp_session_data['recipient'],
                     attrlist=recipient_search_attrlist,

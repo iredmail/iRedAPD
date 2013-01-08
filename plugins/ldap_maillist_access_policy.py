@@ -3,8 +3,8 @@
 # Note: Access policy is defined in libs/__init__.py.
 
 import logging
-from libs import SMTP_ACTIONS, LDAP_ACCESS_POLICIES_OF_MAIL_LIST
-from libs.ldaplib import utils
+from libs import SMTP_ACTIONS, MAILLIST_ACCESS_POLICIES
+from libs.ldaplib import conn_utils
 
 REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = True
@@ -32,7 +32,7 @@ def restriction(**kwargs):
     # Log access policy and description
     logging.debug('%s -> %s, access policy: %s (%s)' % (
         sender, recipient, policy,
-        LDAP_ACCESS_POLICIES_OF_MAIL_LIST.get(policy, 'no description'))
+        MAILLIST_ACCESS_POLICIES.get(policy, 'no description'))
     )
 
     if policy in ['domain', 'subdomain', ]:
@@ -78,7 +78,7 @@ def restriction(**kwargs):
                     'moderatorsonly', 'moderators',
                     'allowedonly', 'membersandmoderatorsonly']:
         # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
-        allowedSenders = utils.get_allowed_senders_of_mail_list(
+        allowedSenders = conn_utils.get_allowed_senders_of_mail_list(
             conn=conn,
             base_dn=base_dn,
             dn_of_mail_list=recipient_dn,

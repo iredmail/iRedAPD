@@ -5,17 +5,20 @@ SMTP_ACTIONS = {
     'default': 'DUNNO',
     'accept': 'OK',
     'reject': 'REJECT Not authorized',
-    'defer': 'DEFER_IF_PERMIT Service temporarily unavailable',
 }
 
-LDAP_ACCESS_POLICIES_OF_MAIL_LIST = {
-    'public': 'Unrestricted',
-    'domain': 'Only users under same domain are allowed',
-    'subdomain': 'Only users under same domain and sub domains are allowed',
-    'membersonly': 'Only members are allowed',
-    'members': 'Only members are allowed',
-    'moderatorsonly': 'Only moderators are allowed',
-    'moderators': 'Only moderators are allowed',
-    'allowedonly': 'Only moderators are allowed',
-    'membersandmoderatorsonly': 'Only members and moderators are allowed',
+MAILLIST_POLICY_PUBLIC = 'public'
+MAILLIST_POLICY_DOMAIN = 'domain'
+MAILLIST_POLICY_SUBDOMAIN = 'subdomain'
+MAILLIST_POLICY_MEMBERSONLY = 'membersonly'
+MAILLIST_POLICY_ALLOWEDONLY = 'allowedonly'      # Same as POLICY_MODERATORSONLY
+MAILLIST_POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
+
+MAILLIST_ACCESS_POLICIES = {
+    MAILLIST_POLICY_PUBLIC: 'Unrestricted',
+    MAILLIST_POLICY_DOMAIN: 'Only users under same domain are allowed',
+    MAILLIST_POLICY_SUBDOMAIN: 'Only users under same domain and sub domains are allowed',
+    MAILLIST_POLICY_MEMBERSONLY: 'Only members are allowed',
+    MAILLIST_POLICY_ALLOWEDONLY: 'Only moderators/allowed are allowed',
+    MAILLIST_POLICY_MEMBERSANDMODERATORSONLY: 'Only members and moderators are allowed',
 }

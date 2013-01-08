@@ -83,7 +83,7 @@ class PolicyChannel(asynchat.async_chat):
             asynchat.async_chat.handle_close(self)
             logging.debug("Connection closed")
         else:
-            action = SMTP_ACTIONS['defer']
+            action = SMTP_ACTIONS['default']
             logging.debug("replying: " + action)
             self.push('action=' + action + '\n')
             asynchat.async_chat.handle_close(self)
@@ -110,15 +110,19 @@ class DaemonSocket(asyncore.dispatcher):
             except Exception, e:
                 logging.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
 
-        self.sender_search_attrlist = ['objectClass']
-        self.recipient_search_attrlist = ['objectClass']
-        for plugin in self.loaded_plugins:
-            self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
-            self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
+        self.sender_search_attrlist = []
+        self.recipient_search_attrlist = []
+        if settings.backend == 'ldap':
+            self.sender_search_attrlist = ['objectClass']
+            self.recipient_search_attrlist = ['objectClass']
+            for plugin in self.loaded_plugins:
+                self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
+                self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
 
     def handle_accept(self):
         conn, remote_addr = self.accept()
         logging.debug("Connect from %s, port %s." % remote_addr)
+
         PolicyChannel(
             conn,
             plugins=self.loaded_plugins,
