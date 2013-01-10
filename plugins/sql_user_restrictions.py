@@ -10,9 +10,9 @@
 #
 # Valid sender/recipient addresses:
 #
-#   - @.:           all addresses (user, domain, sub-domain)
-#   - @domain.com:   single domain
-#   - @.domain.com:  single domain and its all sub-domains
+#   - @.:               all addresses (user, domain, sub-domain)
+#   - @domain.com:      single domain
+#   - @.domain.com:     single domain and its all sub-domains
 #   - user@domain.com:  single email address
 
 import logging

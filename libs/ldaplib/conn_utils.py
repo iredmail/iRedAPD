@@ -3,16 +3,21 @@
 import logging
 import ldap
 import settings
-from libs import SMTP_ACTIONS
 
 
 def get_account_ldif(conn, account, attrlist=None):
     logging.debug('[+] Getting LDIF data of account: %s' % account)
 
-    ldap_filter = '(&(|(mail=%(account)s)(shadowAddress=%(account)s))(|(objectClass=mailUser)(objectClass=mailList)(objectClass=mailAlias)))' % {'account': account}
+    query_filter = '(&' + \
+                   '(|(mail=%(account)s)(shadowAddress=%(account)s))' + \
+                   '(|' + \
+                   '(objectClass=mailUser)' + \
+                   '(objectClass=mailList)' + \
+                   '(objectClass=mailAlias)' + \
+                   '))' % {'account': account}
 
-    logging.debug('search filter: %s' % ldap_filter)
-    logging.debug('search attributes: %s' % str(attrlist))
+    logging.debug('query filter: %s' % query_filter)
+    logging.debug('query attributes: %s' % str(attrlist))
     if not isinstance(attrlist, list):
         # Attribute list must be None or non-empty list
         attrlist = None
@@ -20,7 +25,7 @@ def get_account_ldif(conn, account, attrlist=None):
     try:
         result = conn.search_s(settings.ldap_basedn,
                                ldap.SCOPE_SUBTREE,
-                               ldap_filter,
+                               query_filter,
                                attrlist)
 
         if len(result) == 1:
@@ -57,7 +62,7 @@ def get_allowed_senders_of_mail_list(conn,
     if policy in ['membersonly', 'members']:
         basedn = domaindn
         # Filter: get mail list members.
-        searchFilter = "(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))" % (recipient, )
+        searchFilter = '(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))' % (recipient)
 
         # Get both mail and shadowAddress.
         searchAttrs = ['mail', 'shadowAddress', ]
@@ -142,4 +147,3 @@ def get_allowed_senders_of_mail_list(conn,
     except Exception, e:
         logging.debug('Error: %s' % str(e))
         return []
-
