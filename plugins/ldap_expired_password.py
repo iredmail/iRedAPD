@@ -12,6 +12,7 @@ RECIPIENT_SEARCH_ATTRLIST = []
 # Force mail user to change password in how many days. Default is 90.
 EXPIRED_DAYS = 90
 
+
 def restriction(**kwargs):
     sender_ldif = kwargs['sender_ldif']
 
@@ -29,4 +30,3 @@ def restriction(**kwargs):
         return 'REJECT Password expired, please change your password before sending email.'
 
     return SMTP_ACTIONS['default']
-

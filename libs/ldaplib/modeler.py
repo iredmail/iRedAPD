@@ -40,11 +40,10 @@ class Modeler:
                     smtp_session_data,
                     plugins=[],
                     sender_search_attrlist=[],
-                    recipient_search_attrlist=[],
-                   ):
+                    recipient_search_attrlist=[]):
         # No sender or recipient in smtp session.
         if not 'sender' in smtp_session_data or \
-           not 'recipient' in smtp_session_data:
+                not 'recipient' in smtp_session_data:
             return SMTP_ACTIONS['default']
 
         # Not a valid email address.
@@ -61,18 +60,16 @@ class Modeler:
                          'sender_dn': None,
                          'sender_ldif': None,
                          'recipient_dn': None,
-                         'recipient_ldif': None,
-                        }
+                         'recipient_ldif': None}
 
         # TODO Perform addition plugins which don't require sender/recipient info
         # e.g.
-        #   - enforce TLS: encryption_protocol=TLSv1/SSLv3
-
+        #   - security enforce: encryption_protocol=TLSv1/SSLv3
 
         for plugin in plugins:
             # Get LDIF data of sender if required
             if plugin.REQUIRE_LOCAL_SENDER \
-               and plugin_kwargs['sender_dn'] is None:
+                    and plugin_kwargs['sender_dn'] is None:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=smtp_session_data['sender'],
@@ -83,7 +80,7 @@ class Modeler:
 
             # Get LDIF data of recipient if required
             if plugin.REQUIRE_LOCAL_RECIPIENT \
-               and plugin_kwargs['recipient_dn'] is None:
+                    and plugin_kwargs['recipient_dn'] is None:
                 recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=smtp_session_data['recipient'],

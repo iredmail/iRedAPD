@@ -40,15 +40,13 @@ def restriction(**kwargs):
         try:
             qr = conn.search_s(
                 base_dn,
-                1, # 1 == ldap.SCOPE_ONELEVEL
+                1,  # 1 == ldap.SCOPE_ONELEVEL
                 "(&(objectClass=mailDomain)(|(domainName=%s)(domainAliasName=%s)))" % (recipient_domain, recipient_domain),
                 ['domainName', 'domainAliasName', ],
             )
             if qr:
                 dn, entries = qr[0]
-                recipient_alias_domains = \
-                        entries.get('domainName', []) + \
-                        entries.get('domainAliasName', [])
+                recipient_alias_domains = entries.get('domainName', []) + entries.get('domainAliasName', [])
         except Exception, e:
             logging.debug('Error while fetching alias domains: %s' % str(e))
 

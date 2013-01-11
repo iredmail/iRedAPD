@@ -5,8 +5,8 @@
 # Value of mailWhitelistRecipient and mailBlacklistRecipient:
 #   - Single address:   user@domain.ltd
 #   - Whole domain:     @domain.ltd
-#   - Whole Domain and its sub-domains: @.domain.ltd
-#   - All recipient:       @.
+#   - Domain and its sub-domains: @.domain.ltd
+#   - All addresses:    @.
 
 import logging
 
@@ -14,6 +14,7 @@ REQUIRE_LOCAL_SENDER = True
 REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = ['mailBlacklistedRecipient', 'mailWhitelistRecipient']
 RECIPIENT_SEARCH_ATTRLIST = []
+
 
 def restriction(**kwargs):
     sender_ldif = kwargs['sender_ldif']
@@ -30,15 +31,18 @@ def restriction(**kwargs):
     #   -> .sub1.com.cn
     #   -> .com.cn
     #   -> .cn
-    allowed_recipients = ['@.', recipient, '@' + recipient.split('@')[-1],]
+    allowed_recipients = ['@.', recipient, '@' + recipient.split('@')[-1]]
     for counter in range(len(splited_recipient_domain)):
         # Append domain and sub-domain.
         allowed_recipients += ['@.' + '.'.join(splited_recipient_domain)]
         splited_recipient_domain.pop(0)
 
+    logging.debug('Allowed recipients: %s' % ', '.join(allowed_recipients))
     # Get value of mailBlacklistedRecipient, mailWhitelistRecipient.
-    blacklisted_rcpts = [v.lower() for v in sender_ldif.get('mailBlacklistRecipient', [])]
-    whitelisted_rcpts = [v.lower() for v in sender_ldif.get('mailWhitelistRecipient', [])]
+    blacklisted_rcpts = [v.lower()
+                         for v in sender_ldif.get('mailBlacklistRecipient', [])]
+    whitelisted_rcpts = [v.lower()
+                         for v in sender_ldif.get('mailWhitelistRecipient', [])]
 
     # Bypass whitelisted recipients if has intersection set.
     if len(set(allowed_recipients) & set(whitelisted_rcpts)) > 0:

@@ -21,7 +21,7 @@ def restriction(**kwargs):
     splitedSenderDomain = str(sender.split('@')[-1]).split('.')
 
     filterOfSenders = ''
-    listOfRestrictedSenders = [sender, '@'+sender.split('@')[-1],]
+    listOfRestrictedSenders = [sender, '@' + sender.split('@')[-1]]
     for counter in range(len(splitedSenderDomain)):
         # Append domain and sub-domain.
         listOfRestrictedSenders += ['@.' + '.'.join(splitedSenderDomain)]

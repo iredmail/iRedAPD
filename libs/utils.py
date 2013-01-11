@@ -13,4 +13,3 @@ def apply_plugin(plugin, **kwargs):
         logging.debug('<!> Error: %s' % str(e))
 
     return action
-

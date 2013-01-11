@@ -77,7 +77,7 @@ def restriction(**kwargs):
     elif policy == MAILLIST_POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
         if senderReceiver['sender'].endswith(senderReceiver['recipient_domain']) or \
-           senderReceiver['sender'].endswith('.' + senderReceiver['recipient_domain']):
+                senderReceiver['sender'].endswith('.' + senderReceiver['recipient_domain']):
             return 'DUNNO'
         else:
             return SMTP_ACTIONS['reject']

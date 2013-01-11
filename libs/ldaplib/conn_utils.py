@@ -78,7 +78,7 @@ def get_allowed_senders_of_mail_list(conn,
         basedn = domaindn
         # Policy: policy==membersAndModeratorsOnly or not set.
         # Filter used to get both members and moderators.
-        searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient, )
+        searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient)
         searchAttrs = ['mail', 'shadowAddress', 'listAllowedUser', ]
 
     logging.debug('base dn: %s' % basedn)
