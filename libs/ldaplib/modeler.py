@@ -64,6 +64,11 @@ class Modeler:
                          'recipient_ldif': None,
                         }
 
+        # TODO Perform addition plugins which don't require sender/recipient info
+        # e.g.
+        #   - enforce TLS: encryption_protocol=TLSv1/SSLv3
+
+
         for plugin in plugins:
             # Get LDIF data of sender if required
             if plugin.REQUIRE_LOCAL_SENDER \
