@@ -54,9 +54,16 @@ class Modeler:
         if not plugins:
             return 'DUNNO'
 
+        sender = smtp_session_data['sender'].lower()
+        recipient = smtp_session_data['recipient'].lower()
+
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.conn,
                          'base_dn': settings.ldap_basedn,
+                         'sender': sender,
+                         'sender_domain': sender.split('@', 1)[-1],
+                         'recipient': recipient,
+                         'recipient_domain': recipient.split('@', 1)[-1],
                          'sender_dn': None,
                          'sender_ldif': None,
                          'recipient_dn': None,
@@ -72,7 +79,7 @@ class Modeler:
                     and plugin_kwargs['sender_dn'] is None:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
-                    account=smtp_session_data['sender'],
+                    account=sender,
                     attrlist=sender_search_attrlist,
                 )
                 plugin_kwargs['sender_dn'] = sender_dn
@@ -83,13 +90,13 @@ class Modeler:
                     and plugin_kwargs['recipient_dn'] is None:
                 recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
-                    account=smtp_session_data['recipient'],
+                    account=recipient,
                     attrlist=recipient_search_attrlist,
                 )
                 plugin_kwargs['recipient_dn'] = recipient_dn
                 plugin_kwargs['recipient_ldif'] = recipient_ldif
 
-            # Apply plugin
+            # Apply plugins
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
                 return action

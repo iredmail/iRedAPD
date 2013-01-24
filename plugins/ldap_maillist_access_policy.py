@@ -13,9 +13,10 @@ RECIPIENT_SEARCH_ATTRLIST = ['accessPolicy']
 
 
 def restriction(**kwargs):
-    smtp_session_data = kwargs['smtp_session_data']
     conn = kwargs['conn']
     base_dn = kwargs['base_dn']
+    sender = kwargs['sender']
+    recipient = kwargs['recipient']
     recipient_dn = kwargs['recipient_dn']
     recipient_ldif = kwargs['recipient_ldif']
 
@@ -23,8 +24,6 @@ def restriction(**kwargs):
     if not 'mailList' in recipient_ldif['objectClass']:
         return 'DUNNO (Not mail list)'
 
-    sender = smtp_session_data['sender'].lower()
-    recipient = smtp_session_data['recipient'].lower()
     recipient_alias_domains = []
 
     policy = recipient_ldif.get('accessPolicy', ['public'])[0].lower()
@@ -84,6 +83,14 @@ def restriction(**kwargs):
             recipient=recipient,
             policy=policy,
         )
+
+        if policy in ['moderatorsonly', 'moderators',
+                      'allowedonly', 'membersandmoderatorsonly']:
+            # Check allowed sender domain or sub-domains
+            sender_domain = kwargs['sender_domain']
+            if sender_domain in allowedSenders \
+                    or '.' + sender_domain in allowedSenders:
+                return 'DUNNO (Sender domain is allowed)'
 
         if sender in allowedSenders:
             return 'DUNNO (Sender is allowed)'

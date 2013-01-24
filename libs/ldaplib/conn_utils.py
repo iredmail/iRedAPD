@@ -114,7 +114,7 @@ def get_allowed_senders_of_mail_list(conn,
                 searchFilter += '(mail=%s)' % i
             searchFilter += '))'
 
-            searchAttrs = ['shadowAddress', ]
+            searchAttrs = ['shadowAddress']
 
             logging.debug('base dn: %s' % basedn)
             logging.debug('search scope: 2 (ldap.SCOPE_SUBTREE)')
@@ -126,7 +126,7 @@ def get_allowed_senders_of_mail_list(conn,
                     'ou=Users,' + domaindn,
                     2,  # ldap.SCOPE_SUBTREE
                     searchFilter,
-                    ['mail', 'shadowAddress', ],
+                    ['mail', 'shadowAddress'],
                 )
 
                 for obj in resultOfShadowAddresses:
