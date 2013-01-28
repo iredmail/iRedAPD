@@ -9,7 +9,7 @@ from libs.ldaplib import conn_utils
 REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = True
 SENDER_SEARCH_ATTRLIST = []
-RECIPIENT_SEARCH_ATTRLIST = ['accessPolicy']
+RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy']
 
 
 def restriction(**kwargs):
@@ -71,26 +71,34 @@ def restriction(**kwargs):
 
         if returned is False:
             return SMTP_ACTIONS['reject']
-    elif policy in ['membersonly', 'members',
-                    'moderatorsonly', 'moderators',
-                    'allowedonly', 'membersandmoderatorsonly']:
-        # Handle other access policies: membersOnly, allowedOnly, membersAndModeratorsOnly.
+    elif policy in ['membersonly', 'allowedonly', 'membersandmoderatorsonly']:
+        allowed_senders = recipient_ldif.get('listAllowedUser', [])
+        if policy == 'allowedonly':
+            if sender in allowed_senders:
+                return 'DUNNO (Allowed explicitly)'
+            logging.debug('Sender is not explicitly allowed, query user aliases and alias domains.')
+
         allowedSenders = conn_utils.get_allowed_senders_of_mail_list(
             conn=conn,
-            base_dn=base_dn,
             dn_of_mail_list=recipient_dn,
             sender=sender,
             recipient=recipient,
             policy=policy,
+            allowed_senders=allowed_senders,
         )
 
-        if policy in ['moderatorsonly', 'moderators',
-                      'allowedonly', 'membersandmoderatorsonly']:
+        if policy == 'allowedonly':
             # Check allowed sender domain or sub-domains
             sender_domain = kwargs['sender_domain']
-            if sender_domain in allowedSenders \
-                    or '.' + sender_domain in allowedSenders:
-                return 'DUNNO (Sender domain is allowed)'
+            all_possible_sender_domains = [sender_domain]
+            domain_parts = sender_domain.split('.')
+            for i in range(len(domain_parts)):
+                all_possible_sender_domains += ['.' + '.'.join(domain_parts)]
+                domain_parts.pop(0)
+
+            logging.debug('All possible sender domains: %s' % ', '.join(all_possible_sender_domains))
+            if set(all_possible_sender_domains) & set(allowedSenders):
+                return 'DUNNO (Sender domain or its sub-domain is allowed)'
 
         if sender in allowedSenders:
             return 'DUNNO (Sender is allowed)'

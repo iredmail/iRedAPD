@@ -3,21 +3,24 @@
 import logging
 import ldap
 import settings
+from libs import MAILLIST_POLICY_MEMBERSONLY, \
+    MAILLIST_POLICY_ALLOWEDONLY, \
+    MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
 
 def get_account_ldif(conn, account, attrlist=None):
     logging.debug('[+] Getting LDIF data of account: %s' % account)
 
     query_filter = '(&' + \
-                   '(|(mail=%(account)s)(shadowAddress=%(account)s))' + \
+                   '(|(mail=%(account)s)(shadowAddress=%(account)s))' % {'account': account} + \
                    '(|' + \
                    '(objectClass=mailUser)' + \
                    '(objectClass=mailList)' + \
                    '(objectClass=mailAlias)' + \
-                   '))' % {'account': account}
+                   '))'
 
-    logging.debug('query filter: %s' % query_filter)
-    logging.debug('query attributes: %s' % str(attrlist))
+    logging.debug('search filter: %s' % query_filter)
+    logging.debug('search attributes: %s' % str(attrlist))
     if not isinstance(attrlist, list):
         # Attribute list must be None or non-empty list
         attrlist = None
@@ -41,109 +44,142 @@ def get_account_ldif(conn, account, attrlist=None):
 
 
 def get_allowed_senders_of_mail_list(conn,
-                                     base_dn,
                                      dn_of_mail_list,
                                      sender,
                                      recipient,
-                                     policy):
+                                     policy,
+                                     allowed_senders=[]):
     """return list of allowed senders"""
 
     logging.debug('[+] Getting allowed senders of mail list: %s' % recipient)
-    recipient_domain = recipient.split('@', 1)[-1]
 
-    # Set base dn as domain dn.
-    domaindn = 'domainName=' + recipient_domain + ',' + base_dn
+    # Get domain dn
+    domaindn = dn_of_mail_list.split('ou=Groups,')[-1]
 
-    # Default search scope. 2==ldap.SCOPE_SUBTREE
-    searchScope = 2
+    # Default base dn and search scope (2==ldap.SCOPE_SUBTREE)
+    basedn = domaindn
+    search_scope = 2
 
     # Set search filter, attributes based on policy.
     # Override base dn, scope if necessary.
-    if policy in ['membersonly', 'members']:
-        basedn = domaindn
+    if policy == MAILLIST_POLICY_MEMBERSONLY:
         # Filter: get mail list members.
-        searchFilter = '(&(|(objectclass=mailUser)(objectClass=mailExternalUser))(accountStatus=active)(memberOfGroup=%s))' % (recipient)
+        search_filter = '(&' + \
+                        '(accountStatus=active)(memberOfGroup=%s)' % (recipient) + \
+                        '(|(objectclass=mailUser)(objectClass=mailExternalUser))' + \
+                        ')'
 
         # Get both mail and shadowAddress.
-        searchAttrs = ['mail', 'shadowAddress', ]
-
-    elif policy in ['allowedonly', 'moderatorsonly', 'moderators']:
-        # Get mail list moderators.
-        basedn = dn_of_mail_list
-        searchScope = 0     # Use ldap.SCOPE_BASE to improve performance.
-        searchFilter = "(&(objectclass=mailList)(mail=%s))" % (recipient, )
-        searchAttrs = ['listAllowedUser']
-
-    else:
-        basedn = domaindn
-        # Policy: policy==membersAndModeratorsOnly or not set.
+        search_attrs = ['mail', 'shadowAddress', ]
+    elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
+        # Policy: policy==
         # Filter used to get both members and moderators.
-        searchFilter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient)
-        searchAttrs = ['mail', 'shadowAddress', 'listAllowedUser', ]
+        search_filter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient)
+        search_attrs = ['mail', 'shadowAddress', 'listAllowedUser', ]
 
-    logging.debug('base dn: %s' % basedn)
-    logging.debug('search scope: %s' % searchScope)
-    logging.debug('search filter: %s' % searchFilter)
-    logging.debug('search attributes: %s' % ', '.join(searchAttrs))
+    if policy == MAILLIST_POLICY_ALLOWEDONLY:
+        # Not necessary to query LDAP to get value of listAllowedUser.
+        allowed_senders = allowed_senders
+    else:
+        logging.debug('base dn: %s' % basedn)
+        logging.debug('search scope: %s' % search_scope)
+        logging.debug('search filter: %s' % search_filter)
+        logging.debug('search attributes: %s' % ', '.join(search_attrs))
 
-    try:
-        result = conn.search_s(basedn, searchScope, searchFilter, searchAttrs)
-        userList = []
-        for obj in result:
-            for k in searchAttrs:
-                if k in obj[1].keys():
-                    # Example of result data:
-                    # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-                    userList += obj[1][k]
+        allowed_senders = []
+        try:
+            qr = conn.search_s(basedn, search_scope, search_filter, search_attrs)
+            logging.debug('search result: %s' % str(qr))
 
-        # Exclude mail list itself.
-        if recipient in userList:
-            userList.remove(recipient)
+            # Collect all values
+            for obj in qr:
+                for k in search_attrs:
+                    allowed_senders += obj[1].get(k, [])
+        except Exception, e:
+            logging.debug('Error: %s' % str(e))
+            return []
 
-        logging.debug('result: %s' % str(userList))
+    logging.debug('result: %s' % str(allowed_senders))
 
-        # Query once more to get 'shadowAddress'.
-        if len(userList) > 0 and policy in ['allowedonly',
-                                            'moderatorsonly',
-                                            'moderators']:
-            logging.debug('Addition query to get user aliases...')
+    if policy == MAILLIST_POLICY_ALLOWEDONLY:
+        recipient_domain = recipient.split('@', 1)[-1]
+
+        # Seperate valid email addresses under same domain and domain names.
+        allowed_users = []
+        allowed_domains = []
+        allowed_subdomains = []
+
+        for sender in allowed_senders:
+            if '@' in sender:
+                if sender.endswith('@' + recipient_domain):
+                    allowed_users.append(sender)
+                    # We will add both `sender` and its shadowAddress back later.
+                    allowed_senders.remove(sender)
+            else:
+                if sender.startswith('.'):
+                    allowed_subdomains.append(sender.lstrip('.'))
+                else:
+                    allowed_domains.append(sender)
+                allowed_senders.remove(sender)
+
+        logging.debug('Allowed users: %s' % ', '.join(allowed_users))
+        logging.debug('Allowed domains: %s' % ', '.join(allowed_domains))
+        logging.debug('Allowed subdomains: %s' % ', '.join(allowed_subdomains))
+
+        if allowed_users:
+            logging.debug('Query to get user alises of allowed senders under same domain.')
 
             basedn = 'ou=Users,' + domaindn
-            searchFilter = '(&(objectClass=mailUser)(enabledService=shadowaddress)(|'
-            for i in userList:
-                searchFilter += '(mail=%s)' % i
-            searchFilter += '))'
+            search_filter = '(&(objectClass=mailUser)(enabledService=shadowaddress)(|'
+            for i in allowed_users:
+                search_filter += '(mail=%s)(shadowAddress=%s)' % (i, i)
+            search_filter += '))'
 
-            searchAttrs = ['shadowAddress']
+            search_attrs = ['mail', 'shadowAddress']
 
             logging.debug('base dn: %s' % basedn)
-            logging.debug('search scope: 2 (ldap.SCOPE_SUBTREE)')
-            logging.debug('search filter: %s' % searchFilter)
-            logging.debug('search attributes: %s' % ', '.join(searchAttrs))
+            logging.debug('search scope: 1 (ldap.SCOPE_ONELEVEL)')
+            logging.debug('search filter: %s' % search_filter)
+            logging.debug('search attributes: %s' % ', '.join(search_attrs))
 
-            try:
-                resultOfShadowAddresses = conn.search_s(
-                    'ou=Users,' + domaindn,
-                    2,  # ldap.SCOPE_SUBTREE
-                    searchFilter,
-                    ['mail', 'shadowAddress'],
-                )
+            qr = conn.search_s(basedn, 1, search_filter, search_attrs)
+            logging.debug('result: %s' % str(qr))
 
-                for obj in resultOfShadowAddresses:
-                    for k in searchAttrs:
-                        if k in obj[1].keys():
-                            # Example of result data:
-                            # [('dn', {'listAllowedUser': ['user@domain.ltd']})]
-                            userList += obj[1][k]
-                        else:
-                            pass
+            for obj in qr:
+                for k in search_attrs:
+                    allowed_senders += obj[1].get(k, [])
 
-                logging.debug('final result: %s' % str(userList))
+        if allowed_domains or allowed_subdomains:
+            logging.debug('Query to get domain aliases of allowed (sub-)domains.')
 
-            except Exception, e:
-                logging.debug('Error: %s' % str(e))
+            basedn = settings.ldap_basedn
+            search_filter = '(&(objectClass=mailDomain)(enabledService=domainalias)(|'
+            for i in allowed_domains + allowed_subdomains:
+                search_filter += '(domainName=%s)(domainAliasName=%s)' % (i, i)
+            search_filter += '))'
 
-        return [u.lower() for u in userList]
-    except Exception, e:
-        logging.debug('Error: %s' % str(e))
-        return []
+            search_attrs = ['domainName', 'domainAliasName']
+
+            logging.debug('base dn: %s' % basedn)
+            logging.debug('search scope: 1 (ldap.SCOPE_ONELEVEL)')
+            logging.debug('search filter: %s' % search_filter)
+            logging.debug('search attributes: %s' % ', '.join(search_attrs))
+
+            qr = conn.search_s(basedn, 1, search_filter, search_attrs)
+            logging.debug('result: %s' % str(qr))
+
+            for obj in qr:
+                domains = []
+                for k in search_attrs:
+                    domains += obj[1].get(k, [])
+
+                for domain in domains:
+                    if domain in allowed_domains:
+                        # Add original domain and alias domains
+                        allowed_senders += [d for d in domains]
+
+                    if domain in allowed_subdomains:
+                        # Add sub-domain and sub-domain of alias domains
+                        allowed_senders += ['.' + d for d in domains]
+
+    return [u.lower() for u in allowed_senders]
