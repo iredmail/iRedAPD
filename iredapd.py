@@ -1,7 +1,6 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
-import os
-import os.path
+from os import umask, getpid, setuid
 import sys
 import pwd
 import socket
@@ -9,10 +8,9 @@ import asyncore
 import asynchat
 import logging
 
+# iRedAPD setting file and modules
 import settings
-
-# Append plugin directory.
-sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
+from libs import __version__, SMTP_ACTIONS, daemon
 
 if settings.backend == 'ldap':
     from libs.ldaplib.modeler import Modeler
@@ -21,8 +19,6 @@ elif settings.backend in ['mysql', 'pgsql']:
 else:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
-from libs import __version__, SMTP_ACTIONS, daemon
-
 
 class PolicyChannel(asynchat.async_chat):
     """Process each smtp policy request"""
@@ -30,8 +26,7 @@ class PolicyChannel(asynchat.async_chat):
                  conn,
                  plugins=[],
                  sender_search_attrlist=None,
-                 recipient_search_attrlist=None,
-                ):
+                 recipient_search_attrlist=None):
         asynchat.async_chat.__init__(self, conn)
         self.buffer = []
         self.smtp_session_data = {}
@@ -76,8 +71,7 @@ class PolicyChannel(asynchat.async_chat):
             logging.info('[%s] %s -> %s, %s' % (self.smtp_session_data['client_address'],
                                                 self.smtp_session_data['sender'],
                                                 self.smtp_session_data['recipient'],
-                                                action,
-                                               ))
+                                                action))
 
             self.push('action=' + action + '\n')
             asynchat.async_chat.handle_close(self)
@@ -133,7 +127,7 @@ class DaemonSocket(asyncore.dispatcher):
 
 def main():
     # Set umask.
-    os.umask(0077)
+    umask(0077)
 
     # Get log level.
     log_level = getattr(logging, str(settings.log_level).upper())
@@ -167,11 +161,11 @@ def main():
     try:
         # Write pid number into pid file.
         f = open(settings.pid_file, 'w')
-        f.write(str(os.getpid()))
+        f.write(str(getpid()))
         f.close()
 
         # Set uid.
-        os.setuid(uid)
+        setuid(uid)
 
         # Starting loop.
         asyncore.loop()
