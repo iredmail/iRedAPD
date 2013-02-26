@@ -1,13 +1,13 @@
 
 # About
 
-* iRedAPD is a simple Postfix policy server.
+* iRedAPD is a simple Postfix policy server written in Python.
 * iRedAPD is a part of iRedMail project. http://www.iredmail.org/
 
 Available plugins:
 
 * `ldap_maillist_access_policy`: Check user's rights to post messages to mail list which builtin in iRedMail OpenLDAP solution.
-* `amavisd_block_blacklisted_senders`: Used for per-user sender whitelist and blacklist.
+* `ldap_amavisd_block_blacklisted_senders`: Used for per-user sender whitelist and blacklist.
 * `ldap_recipient_restrictions`: Used for per-user recipient whitelist and blacklist.
 
 # Authors & Contributors
@@ -32,7 +32,7 @@ license), shipped for easy deployment.
 # Document
 
 * [Install iRedAPD for OpenLDAP backend](http://www.iredmail.org/wiki/index.php?title=Install/iRedAPD/OpenLDAP)
-* [Install iRedAPD for MySQL backend](http://www.iredmail.org/wiki/index.php?title=Install/iRedAPD/MySQL)
+* [Install iRedAPD for MySQL and PostgreSQL backend](http://www.iredmail.org/wiki/index.php?title=Install/iRedAPD/MySQL)
 
 * [iRedMail documentations](http://www.iredmail.org/doc.html)
 * [Postfix SMTP Access Policy Delegation](http://www.postfix.org/SMTPD_POLICY_README.html)
