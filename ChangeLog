@@ -1,4 +1,5 @@
 iRedAPD-1.4.0:
+    * No iredapd-rr.py any more, we need only one instance of iRedAPD.
     * Better user alias and alias domain support in plugin
       ldap_maillist_access_policy.
     * Plugin renamed:

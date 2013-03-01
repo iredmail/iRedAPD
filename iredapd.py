@@ -94,7 +94,7 @@ class DaemonSocket(asyncore.dispatcher):
         self.bind(localaddr)
         self.listen(5)
         ip, port = localaddr
-        logging.info("Starting iRedAPD (version %s, %s backend), listening on %s:%d." % (__version__, settings.backend, ip, port))
+        logging.info("Starting iRedAPD (version: %s, backend: %s), listening on %s:%d." % (__version__, settings.backend, ip, port))
 
         # Load plugins.
         self.loaded_plugins = []
