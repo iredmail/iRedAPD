@@ -134,27 +134,16 @@ def main():
     log_level = getattr(logging, str(settings.log_level).upper())
 
     # Initialize file based logger.
-    if settings.log_type == 'file':
-        if settings.run_as_daemon:
-            logging.basicConfig(
-                level=log_level,
-                format='%(asctime)s %(levelname)s %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S',
-                filename=settings.log_file,
-            )
-        else:
-            logging.basicConfig(
-                level=log_level,
-                format='%(asctime)s %(levelname)s %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S',
-            )
+    logging.basicConfig(level=log_level,
+                        format='%(asctime)s %(levelname)s %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        filename=settings.log_file)
 
     # Initialize policy daemon.
-    DaemonSocket((settings.listen_address, settings.listen_port))
+    DaemonSocket((settings.listen_address, int(settings.listen_port)))
 
     # Run this program as daemon.
-    if settings.run_as_daemon:
-        daemon.daemonize()
+    daemon.daemonize()
 
     # Run as a low privileged user.
     uid = pwd.getpwnam(settings.run_as_user)[2]
