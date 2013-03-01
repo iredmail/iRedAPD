@@ -14,7 +14,6 @@
 
 PROG='iredapd'
 BINPATH='/opt/iredapd/iredapd.py'
-CONFIG='/opt/iredapd/etc/settings.ini'
 PIDFILE='/var/run/iredapd.pid'
 
 check_status() {
@@ -37,13 +36,11 @@ start() {
             echo "${PROG} is already running."
         else
             rm -f ${PIDFILE} >/dev/null 2>&1
-            echo "Starting ${PROG} ..."
-            python ${BINPATH} ${CONFIG}
         fi
-    else
-        echo "Starting ${PROG} ..."
-        python ${BINPATH} ${CONFIG}
     fi
+
+    echo "Starting ${PROG} ..."
+    python ${BINPATH}
     unset s
 }
 

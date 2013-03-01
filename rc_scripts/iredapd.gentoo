@@ -3,7 +3,6 @@
 prog='/opt/iredapd/iredapd.py'
 progname="iRedAPD"
 
-CONFIG='/opt/iredapd/etc/settings.ini'
 PIDFILE='/var/run/iredapd.pid'
 
 depend() {
@@ -15,7 +14,7 @@ start() {
     ebegin "Starting ${SVCNAME}"
     # Use start stop daemon to apply system limits #347301 
     start-stop-daemon --start \
-        --exec python ${prog} ${CONFIG}
+        --exec python ${prog}
 
     eend $?
 }
