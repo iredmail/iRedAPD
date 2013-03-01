@@ -1,6 +1,6 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
-from os import umask, getpid, setuid
+import os
 import sys
 import pwd
 import socket
@@ -19,6 +19,7 @@ elif settings.backend in ['mysql', 'pgsql']:
 else:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
+sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
 
 class PolicyChannel(asynchat.async_chat):
     """Process each smtp policy request"""
@@ -127,7 +128,7 @@ class DaemonSocket(asyncore.dispatcher):
 
 def main():
     # Set umask.
-    umask(0077)
+    os.umask(0077)
 
     # Get log level.
     log_level = getattr(logging, str(settings.log_level).upper())
@@ -161,11 +162,11 @@ def main():
     try:
         # Write pid number into pid file.
         f = open(settings.pid_file, 'w')
-        f.write(str(getpid()))
+        f.write(str(os.getpid()))
         f.close()
 
         # Set uid.
-        setuid(uid)
+        os.setuid(uid)
 
         # Starting loop.
         asyncore.loop()
