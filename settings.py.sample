@@ -31,7 +31,7 @@ plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_sender
 # LDAP server setting.
 # Uri must starts with ldap:// or ldaps:// (TLS/SSL).
 #
-# Tip: You can get binddn, bindpw from /etc/postfix/ldap_*.cf.
+# Tip: You can get binddn, bindpw from /etc/postfix/ldap/*.cf.
 #
 ldap_uri = 'ldap://127.0.0.1:389'
 ldap_basedn = 'o=domains,dc=iredmail,dc=org'
