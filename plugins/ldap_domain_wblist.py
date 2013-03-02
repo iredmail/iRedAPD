@@ -1,8 +1,5 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
-
-# ----------------------------------------------------------------------------
-# This plugin is used for per-domain white-/blacklist.
-# ----------------------------------------------------------------------------
+# Purpose: per-domain white-/blacklist.
 
 import logging
 

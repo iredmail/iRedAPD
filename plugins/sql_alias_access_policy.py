@@ -1,5 +1,4 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
-
 # Purpose: Apply access policy on sender while recipient is an mail alias.
 
 # Available access policies:
@@ -11,7 +10,6 @@
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
 import logging
-from web import sqlquote
 from libs import SMTP_ACTIONS
 from libs import MAILLIST_POLICY_PUBLIC
 from libs import MAILLIST_POLICY_DOMAIN
@@ -36,7 +34,7 @@ def restriction(**kwargs):
                 AND domain=%s
                 AND active=1
             LIMIT 1
-    ''' % (sqlquote(recipient), sqlquote(recipient_domain))
+    ''' % (recipient, recipient_domain)
     logging.debug('SQL: %s' % sql)
 
     conn.execute(sql)

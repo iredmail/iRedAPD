@@ -16,7 +16,6 @@
 #   - user@domain.com:  single email address
 
 import logging
-from web import sqlquote
 from libs import SMTP_ACTIONS
 
 
@@ -35,7 +34,7 @@ def restriction(**kwargs):
         FROM mailbox
         WHERE username=%s
         LIMIT 1
-    ''' % sqlquote(sender)
+    ''' % sender
     logging.debug('SQL to get restriction rules of sender (%s): %s' % (sender, sql))
 
     conn.execute(sql)
@@ -82,7 +81,7 @@ def restriction(**kwargs):
             FROM mailbox
             WHERE username=%s
             LIMIT 1
-        ''' % sqlquote(recipient)
+        ''' % recipient
         logging.debug('SQL to get restriction rules of recipient (%s): %s' % (recipient, sql))
 
         conn.execute(sql)
