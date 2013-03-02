@@ -276,15 +276,12 @@ If iRedAPD doesn't work as expected, you can simplily set log_level = debug in /
 
 Below access policies are recognized in iRedAPD-1.4.0 and later releases:
 
-<table>
-<tr><th>Restriction</th><th>Comment</th><th>Value of access policy</th></tr>
-<tr><td>Unrestricted</td><td>Everyone can mail to this address</td><td>public</td></tr>
-<tr><td>Domain Wide</td><td>Only users under same domain can send mail to this address</td><td>domain</td></tr>
-<tr><td>Domain and all sub-domains	</td><td>Only users under same domain and sub-domains can send mail to this address</td><td>subdomain</td></tr>
-<tr><td>Members Only</td><td>Only members can send mail to this address</td><td>membersOnly</td></tr>
-<tr><td>Moderators Only</td><td>Only moderators can send mail to this address</td><td>allowedOnly</td></tr>
-<tr><td>Moderators Only</td><td>Only members and moderators can send mail to this address</td><td>membersAndModeratorsOnly</td></tr>
-</table>
+* `public`:  Unrestricted. Everyone can mail to this address.
+* `domain`: Only users under same domain can send mail to this address.
+* `subdomain`: Only users under same domain and sub-domains can send mail to this address.
+* `membersOnly`: Only members can send mail to this address.
+* `allowedOnly’: Only moderators can send mail to this address.
+* `membersAndModeratorsOnly`: Only members and moderators can send mail to this address.
 
 **NOTE**:
 
