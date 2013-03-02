@@ -1,10 +1,10 @@
 # Introduction
 
 * iRedAPD is a simple Postfix policy server, written in Python, with plugin support.
+* iRedAPD listens on port `7777`, runs as a low-privileged user (`iredapd` by default).
+* The latest iRedAPD works with OpenLDAP, MySQL and PostgreSQL backends.
 * License: GPL v3.
 * Author: Zhang Huangbin <zhb _at_ iredmail.org>.
-
-iRedAPD listens on port `7777`, runs as a low-privileged user (`iredapd` by default). The latest iRedAPD works with OpenLDAP, MySQL and PostgreSQL backends.
 
 **NOTE**: 
 
