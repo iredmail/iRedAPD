@@ -54,7 +54,7 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 * On Red Hat, CentOS, Scientific Linux:
 
 		# ---- For OpenLDAP backend:
-		# yum install python-ldap MySQL-python
+		# yum install python-ldap
 		
 		# ---- For MySQL backend:
 		# yum install MySQL-python
@@ -65,7 +65,7 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 * on Debian, Ubuntu:
 
 		# —— For OpenLDAP backend:
-		$ sudo apt-get install python-ldap python-mysqldb
+		$ sudo apt-get install python-ldap
 		
 		# —— For MySQL backend:
 		$ sudo apt-get install python-mysqldb
@@ -76,7 +76,7 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 * on openSUSE:
 
 		# ---- For OpenLDAP backend:
-		# zypper install python-ldap python-mysql
+		# zypper install python-ldap
 		
 		# ---- For MySQL backend:
 		# yum install python-mysql
@@ -87,7 +87,7 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 * on Gentoo:
 
 		# ---- For OpenLDAP backend:
-		# emerge python-ldap mysql-python
+		# emerge python-ldap
 
 		# ---- For MySQL backend:
 		# emerge mysql-python
@@ -99,7 +99,6 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 
 		# ---- For OpenLDAP backend:
 		# cd /usr/ports/net/py-ldap2 && make install clean
-		# cd /usr/ports/databases/py-MySQLdb && make install clean
 
 		# ---- For MySQL backend:
 		# cd /usr/ports/databases/py-MySQLdb && make install clean
@@ -110,7 +109,7 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 * on OpenBSD:
 
 		# ---- For OpenLDAP backend:
-		# pkg_add -r py-ldap py-mysql
+		# pkg_add -r py-ldap
 
 		# ---- For MySQL backend:
 		# pkg_add -r py-mysql
