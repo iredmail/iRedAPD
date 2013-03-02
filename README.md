@@ -120,7 +120,7 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 
 ## Download and configure iRedAPD
 
-* Download the latest iRedAPD from project page: https://bitbucket.org/zhb/iredapd/downloads
+* Download the latest iRedAPD from project page: [https://bitbucket.org/zhb/iredapd/downloads](https://bitbucket.org/zhb/iredapd/downloads).
 * Extract iRedAPD to /opt/, set correct file permissions, and create symbol link.
 
 		# tar xjf iRedAPD-x.y.z.tar.bz2 -C /opt/
