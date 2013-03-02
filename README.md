@@ -14,6 +14,8 @@
 
 ## Available plugins:
 
+Plugins are files placed under `plugins/` directory, plugin name is file name without file extension `.py`.
+
 * For OpenLDAP backend:
 	* `ldap_maillist_access_policy`: restrict who can send email to mail list.
 	* `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist.
@@ -24,8 +26,6 @@
 * For MySQL and PostgreSQL backends:
 	* `sql_alias_access_policy`: restrict who can send email to mail alias.
 	* `sql_user_restrictions`: per-user sender and recipient restrictions.
-
-**NOTE**: Plugins are placed under `plugins/` directory, plugin name is file name without file extension `.py`.
 
 # Requirements
 
