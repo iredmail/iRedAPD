@@ -15,6 +15,10 @@ def restriction(**kwargs):
     smtp_session_data = kwargs['smtp_session_data']
     recipient_ldif = kwargs['recipient_ldif']
 
+    # Return if recipient doesn't have objectClass=amavisdAccount.
+    if not recipient_ldif:
+        return 'DUNNO (No recipient LDIF data)'
+
     if not 'amavisAccount' in recipient_ldif.get('objectClass', []):
         return 'DUNNO (Not a amavisdAccount object)'
 

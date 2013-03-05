@@ -16,8 +16,11 @@ def restriction(**kwargs):
     recipient_ldif = kwargs['recipient_ldif']
 
     # Return if recipient is not a mail list object.
+    if not recipient_ldif:
+        return 'DUNNO (No recipient LDIF data)'
+
     if not 'mailList' in recipient_ldif.get('objectClass', []):
-        return 'DUNNO (Not mail list)'
+        return 'DUNNO (Not a mail list account)'
 
     conn = kwargs['conn']
     base_dn = kwargs['base_dn']

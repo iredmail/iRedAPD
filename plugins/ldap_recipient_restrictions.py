@@ -18,7 +18,7 @@ RECIPIENT_SEARCH_ATTRLIST = []
 def restriction(**kwargs):
     sender_ldif = kwargs['sender_ldif']
     if not sender_ldif:
-        return 'DUNNO (Sender is Not a local mail user.)'
+        return 'DUNNO (No sender LDIF data)'
 
     # Get recipient address.
     smtp_session_data = kwargs['smtp_session_data']

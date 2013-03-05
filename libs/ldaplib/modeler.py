@@ -65,9 +65,9 @@ class Modeler:
                          'recipient': recipient,
                          'recipient_domain': recipient.split('@', 1)[-1],
                          'sender_dn': None,
-                         'sender_ldif': {},
+                         'sender_ldif': None,
                          'recipient_dn': None,
-                         'recipient_ldif': {}}
+                         'recipient_ldif': None}
 
         # TODO Perform addition plugins which don't require sender/recipient info
         # e.g.
