@@ -1,6 +1,5 @@
 # Author:   Zhang Huangbin <zhb _at_ iredmail.org>
-# Updated:  2012-12-30
-# Purpose:  Check whether local user (sender) is allowed to mail to recipient
+# Purpose:  Check whether local user (sender) is allowed to mail to recipient.
 
 # Value of mailWhitelistRecipient and mailBlacklistRecipient:
 #   - Single address:   user@domain.ltd
@@ -18,9 +17,11 @@ RECIPIENT_SEARCH_ATTRLIST = []
 
 def restriction(**kwargs):
     sender_ldif = kwargs['sender_ldif']
-    smtp_session_data = kwargs['smtp_session_data']
+    if not sender_ldif:
+        return 'DUNNO (Sender is Not a local mail user.)'
 
     # Get recipient address.
+    smtp_session_data = kwargs['smtp_session_data']
     recipient = smtp_session_data.get('recipient').lower()
     splited_recipient_domain = str(recipient.split('@')[-1]).split('.')
 

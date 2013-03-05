@@ -13,19 +13,19 @@ RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy']
 
 
 def restriction(**kwargs):
+    recipient_ldif = kwargs['recipient_ldif']
+
+    # Return if recipient is not a mail list object.
+    if not 'mailList' in recipient_ldif.get('objectClass', []):
+        return 'DUNNO (Not mail list)'
+
     conn = kwargs['conn']
     base_dn = kwargs['base_dn']
     sender = kwargs['sender']
     recipient = kwargs['recipient']
     recipient_dn = kwargs['recipient_dn']
-    recipient_ldif = kwargs['recipient_ldif']
-
-    # Return if recipient is not a mail list object.
-    if not 'mailList' in recipient_ldif['objectClass']:
-        return 'DUNNO (Not mail list)'
 
     recipient_alias_domains = []
-
     policy = recipient_ldif.get('accessPolicy', ['public'])[0].lower()
 
     # Log access policy and description
