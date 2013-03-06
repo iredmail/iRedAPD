@@ -1,4 +1,6 @@
 iRedAPD-1.4.0:
+    * New plugin for all backends: reject_sender_login_mismatch.
+      Reject sender login mismatch (sender in mail header and SASL username).
     * No iredapd-rr.py any more, we need only one instance of iRedAPD.
     * Remove dependence of web.py.
     * Better user alias and alias domain support in plugin
