@@ -3,8 +3,10 @@
 *) You should remove "sender_login_mismatch" in Postfix
    "smtpd_sender_restrictions" and let this plugin do it for you.
 
-*) Please list all allowed senders in in settings.py, parameter
-   ALLOWED_LOGIN_MISMATCH_SENDERS, either a list or tuple is ok.
+*) Please list all allowed senders in in iRedAPD config file (settings.py),
+   parameter ALLOWED_LOGIN_MISMATCH_SENDERS. For example:
+
+    ALLOWED_LOGIN_MISMATCH_SENDERS = ['some-email-address@here.com']
 """
 
 import logging
