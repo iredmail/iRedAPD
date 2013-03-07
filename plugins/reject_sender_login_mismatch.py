@@ -31,17 +31,15 @@ def restriction(**kwargs):
     # Username used to perform SMTP auth
     sasl_username = kwargs['smtp_session_data'].get('sasl_username', '').lower()
 
+    logging.debug('Allowed SASL username: %s' % ', '.join(ALLOWED_LOGIN_MISMATCH_SENDERS))
     logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
 
-    if sasl_username:    # Is a outgoing email
-        # Compare them
+    # Apply on outgoing emails
+    if sasl_username:
         if sender != sasl_username:
             if sasl_username in ALLOWED_LOGIN_MISMATCH_SENDERS:
                 return SMTP_ACTIONS['default']
             else:
-                # Reject without reason.
-                #return SMTP_ACTIONS['reject']
-
                 # Reject with reason.
                 # There must be a space between smtp action and reason text.
                 return SMTP_ACTIONS['reject'] + ' ' + 'Sender login mismatch.'
