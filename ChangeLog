@@ -1,3 +1,9 @@
+iRedAPD-1.4.1:
+    * Fixed:
+        + Incorrect LDAP attribute name in plugin ldap_recipient_restrictions:
+          mailBlacklistedRecipient -> mailBlacklistRecipient (no 'ed').
+          Thanks Ho ho <ho.iredmail _at_ gmail.com> for the report.
+
 iRedAPD-1.4.0:
     * New plugin for all backends: reject_sender_login_mismatch.
       Reject sender login mismatch (sender in mail header and SASL username).

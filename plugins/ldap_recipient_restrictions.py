@@ -11,7 +11,7 @@ import logging
 
 REQUIRE_LOCAL_SENDER = True
 REQUIRE_LOCAL_RECIPIENT = False
-SENDER_SEARCH_ATTRLIST = ['mailBlacklistedRecipient', 'mailWhitelistRecipient']
+SENDER_SEARCH_ATTRLIST = ['mailBlacklistRecipient', 'mailWhitelistRecipient']
 RECIPIENT_SEARCH_ATTRLIST = []
 
 
@@ -39,7 +39,7 @@ def restriction(**kwargs):
         splited_recipient_domain.pop(0)
 
     logging.debug('Allowed recipients: %s' % ', '.join(allowed_recipients))
-    # Get value of mailBlacklistedRecipient, mailWhitelistRecipient.
+    # Get value of mailBlacklistRecipient, mailWhitelistRecipient.
     blacklisted_rcpts = [v.lower()
                          for v in sender_ldif.get('mailBlacklistRecipient', [])]
     whitelisted_rcpts = [v.lower()
