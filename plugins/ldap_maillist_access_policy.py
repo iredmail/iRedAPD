@@ -25,6 +25,7 @@ def restriction(**kwargs):
     conn = kwargs['conn']
     base_dn = kwargs['base_dn']
     sender = kwargs['sender']
+    sender_domain = kwargs['sender_domain']
     recipient = kwargs['recipient']
     recipient_dn = kwargs['recipient_dn']
 
@@ -59,7 +60,6 @@ def restriction(**kwargs):
         # No restriction.
         return 'DUNNO (Access policy: public)'
     elif policy == "domain":
-        sender_domain = sender.split('@', 1)[-1]
         # Bypass all users under the same domain.
         if sender_domain in recipient_alias_domains:
             return 'DUNNO (Access policy: domain)'
@@ -77,7 +77,7 @@ def restriction(**kwargs):
     elif policy in ['membersonly', 'allowedonly', 'membersandmoderatorsonly']:
         allowed_senders = recipient_ldif.get('listAllowedUser', [])
         if policy == 'allowedonly':
-            if sender in allowed_senders:
+            if sender in allowed_senders or sender_domain in allowed_senders:
                 return 'DUNNO (Allowed explicitly)'
             logging.debug('Sender is not explicitly allowed, query user aliases and alias domains.')
 
