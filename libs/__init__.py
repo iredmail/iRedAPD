@@ -7,6 +7,7 @@ SMTP_ACTIONS = {
     'reject': 'REJECT Not authorized',
 }
 
+# Mail list access policies.
 MAILLIST_POLICY_PUBLIC = 'public'
 MAILLIST_POLICY_DOMAIN = 'domain'
 MAILLIST_POLICY_SUBDOMAIN = 'subdomain'
@@ -14,6 +15,7 @@ MAILLIST_POLICY_MEMBERSONLY = 'membersonly'
 MAILLIST_POLICY_ALLOWEDONLY = 'allowedonly'
 MAILLIST_POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
+# Comments of mail list access policies.
 MAILLIST_ACCESS_POLICIES = {
     MAILLIST_POLICY_PUBLIC: 'Unrestricted',
     MAILLIST_POLICY_DOMAIN: 'Only users under same domain are allowed',

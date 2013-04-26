@@ -75,7 +75,7 @@ def get_allowed_senders_of_mail_list(conn,
         # Policy: policy==
         # Filter used to get both members and moderators.
         search_filter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient)
-        search_attrs = ['mail', 'shadowAddress', 'listAllowedUser', ]
+        search_attrs = ['mail', 'shadowAddress', 'listAllowedUser']
 
     if policy == MAILLIST_POLICY_ALLOWEDONLY:
         # Not necessary to query LDAP to get value of listAllowedUser.
