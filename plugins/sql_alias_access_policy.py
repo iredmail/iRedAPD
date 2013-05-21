@@ -29,9 +29,9 @@ def restriction(**kwargs):
     sql = '''SELECT accesspolicy, goto, moderators
             FROM alias
             WHERE
-                address=%s
+                address='%s'
                 AND address <> goto
-                AND domain=%s
+                AND domain='%s'
                 AND active=1
             LIMIT 1
     ''' % (recipient, recipient_domain)

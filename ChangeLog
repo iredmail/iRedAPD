@@ -1,5 +1,8 @@
 iRedAPD-1.4.1:
     * Fixed:
+        + Not quote email address and domain name in SQL command in
+          plugins/sql_alias_access_policy.py.
+          Thanks Petr Pytelka <pytelka _at_ lightcomp.cz> for the report.
         + Check sender domain immediately instead of querying addition domain
           names: plugins/ldap_maillist_access_policy.py.
         + Incorrect LDAP attribute name in plugins/ldap_recipient_restrictions:
