@@ -32,7 +32,7 @@ def restriction(**kwargs):
             allowedrecipients, rejectedrecipients,
             allowedsenders, rejectedsenders
         FROM mailbox
-        WHERE username=%s
+        WHERE username='%s'
         LIMIT 1
     ''' % sender
     logging.debug('SQL to get restriction rules of sender (%s): %s' % (sender, sql))
@@ -79,7 +79,7 @@ def restriction(**kwargs):
                 allowedrecipients, rejectedrecipients,
                 allowedsenders, rejectedsenders
             FROM mailbox
-            WHERE username=%s
+            WHERE username='%s'
             LIMIT 1
         ''' % recipient
         logging.debug('SQL to get restriction rules of recipient (%s): %s' % (recipient, sql))
