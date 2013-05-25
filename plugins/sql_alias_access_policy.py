@@ -23,6 +23,7 @@ from libs import MAILLIST_ACCESS_POLICIES
 def restriction(**kwargs):
     conn = kwargs['conn']
     sender = kwargs['sender']
+    sender_domain = kwargs['sender_domain']
     recipient = kwargs['recipient']
     recipient_domain = kwargs['recipient_domain']
 
@@ -68,32 +69,31 @@ def restriction(**kwargs):
         return 'DUNNO'
     elif policy == MAILLIST_POLICY_DOMAIN:
         # Bypass all users under the same domain.
-        if senderReceiver['sender_domain'] == senderReceiver['recipient_domain']:
+        if sender_domain == recipient_domain:
             return 'DUNNO'
         else:
             return SMTP_ACTIONS['reject']
     elif policy == MAILLIST_POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
-        if senderReceiver['sender'].endswith(senderReceiver['recipient_domain']) or \
-                senderReceiver['sender'].endswith('.' + senderReceiver['recipient_domain']):
+        if sender.endswith(recipient_domain) or sender.endswith('.' + recipient_domain):
             return 'DUNNO'
         else:
             return SMTP_ACTIONS['reject']
     elif policy == MAILLIST_POLICY_MEMBERSONLY:
         # Bypass all members.
-        if senderReceiver['sender'] in members:
+        if sender in members:
             return 'DUNNO'
         else:
             return SMTP_ACTIONS['reject']
     elif policy == MAILLIST_POLICY_ALLOWEDONLY:
         # Bypass all moderators.
-        if senderReceiver['sender'] in moderators:
+        if sender in moderators:
             return 'DUNNO'
         else:
             return SMTP_ACTIONS['reject']
     elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
         # Bypass both members and moderators.
-        if senderReceiver['sender'] in members or senderReceiver['sender'] in moderators:
+        if sender in members or sender in moderators:
             return 'DUNNO'
         else:
             return SMTP_ACTIONS['reject']
