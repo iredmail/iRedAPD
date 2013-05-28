@@ -6,7 +6,7 @@
 *) Please list all allowed senders in in iRedAPD config file (settings.py),
    parameter ALLOWED_LOGIN_MISMATCH_SENDERS. For example:
 
-    ALLOWED_LOGIN_MISMATCH_SENDERS = ['some-email-address@here.com']
+    ALLOWED_LOGIN_MISMATCH_SENDERS = ['user1@here.com', 'user2@here.com']
 """
 
 import logging
