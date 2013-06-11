@@ -18,10 +18,10 @@ REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = []
 RECIPIENT_SEARCH_ATTRLIST = []
 
-# Allow sender login mismatch for below senders.
-if 'ALLOWED_LOGIN_MISMATCH_SENDERS' in dir(settings):
+# Allowed senders.
+try:
     ALLOWED_LOGIN_MISMATCH_SENDERS = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
-else:
+except AttributeError:
     ALLOWED_LOGIN_MISMATCH_SENDERS = []
 
 def restriction(**kwargs):
