@@ -53,10 +53,6 @@ class Modeler:
            not 'recipient' in smtp_session_data:
             return SMTP_ACTIONS['default']
 
-        # Not a valid email address.
-        if len(smtp_session_data['sender']) < 6:
-            return 'DUNNO'
-
         # No plugins available.
         if not plugins:
             return 'DUNNO'

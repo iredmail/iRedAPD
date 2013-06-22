@@ -1,5 +1,7 @@
 iRedAPD-1.4.1:
     * Fixed:
+        + Don't return DUNNO if sender address has less than 6 characters.
+          Thanks warriornew for the report in our bbs.
         + Incorrect variable name in plugins/sql_alias_access_policy.py.
         + Not quote email address and domain name in SQL command in plugins
           sql_alias_access_policy.py, sql_user_restrictions.py.
