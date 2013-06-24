@@ -70,13 +70,15 @@ status() {
 
         if [ X"$s" == X"running" ]; then
             echo "${PROG} is running."
+            exit 0
         else
             echo "${PROG} is stopped."
+            exit 1
         fi
     else
         echo "${PROG} is stopped."
+        exit 3
     fi
-    unset s
 }
 
 case "$1" in

@@ -71,13 +71,15 @@ status() {
 
         if [ X"$s" == X"running" ]; then
             echo "${name} is running."
+            exit 0
         else
             echo "${name} is stopped."
+            exit 1
         fi
     else
         echo "${name} is stopped."
+        exit 3
     fi
-    unset s
 }
 
 empty(){
