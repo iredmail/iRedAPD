@@ -57,12 +57,16 @@ class Modeler:
         if not plugins:
             return 'DUNNO'
 
+        sender = smtp_session_data['sender'].lower()
+        recipient = smtp_session_data['recipient'].lower()
+
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.cursor,
-                         'sender': smtp_session_data['sender'],
-                         'recipient': smtp_session_data['recipient'],
-                         'sender_domain': smtp_session_data['sender'].split('@')[-1],
-                         'recipient_domain': smtp_session_data['recipient'].split('@')[-1],
+                         'sender': sender,
+                         'recipient': recipient,
+                         'sender_domain': sender.split('@')[-1],
+                         'recipient_domain': recipient.split('@')[-1],
+                         'sasl_username': smtp_session_data.get('sasl_username', '').lower(),
                         }
 
         # TODO Get SQL record of mail user or mail alias before applying plugins

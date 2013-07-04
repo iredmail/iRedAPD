@@ -60,6 +60,7 @@ class Modeler:
                          'sender_domain': sender.split('@', 1)[-1],
                          'recipient': recipient,
                          'recipient_domain': recipient.split('@', 1)[-1],
+                         'sasl_username': smtp_session_data.get('sasl_username', '').lower(),
                          'sender_dn': None,
                          'sender_ldif': None,
                          'recipient_dn': None,

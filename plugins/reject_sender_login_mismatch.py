@@ -25,11 +25,8 @@ except AttributeError:
     ALLOWED_LOGIN_MISMATCH_SENDERS = []
 
 def restriction(**kwargs):
-    # The sender appears in 'From:' header.
     sender = kwargs['sender']
-
-    # Username used to perform SMTP auth
-    sasl_username = kwargs['smtp_session_data'].get('sasl_username', '').lower()
+    sasl_username = kwargs['sasl_username']
 
     logging.debug('Allowed SASL username: %s' % ', '.join(ALLOWED_LOGIN_MISMATCH_SENDERS))
     logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
