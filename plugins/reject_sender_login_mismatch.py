@@ -1,6 +1,6 @@
 """Reject sender login mismatch (sender in mail header and SASL username).
 
-*) You should remove "sender_login_mismatch" in Postfix
+*) You must remove "sender_login_mismatch" restriction in Postfix parameter
    "smtpd_sender_restrictions" and let this plugin do it for you.
 
 *) Please list all allowed senders in in iRedAPD config file (settings.py),
