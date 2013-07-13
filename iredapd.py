@@ -51,6 +51,14 @@ class PolicyChannel(asynchat.async_chat):
             if '=' in line:
                 (key, value) = line.split('=', 1)
                 self.smtp_session_data[key] = value
+            elif line.startswith('get '):
+                # Request from Postfix tcp_table(5).
+                #self.push('200 dovecot\n')
+                #asynchat.async_chat.handle_close(self)
+                #logging.info("Connection (TCP) closed")
+
+                # Error
+                self.push('400 Cannot handle this request yet\n')
         elif len(self.smtp_session_data) != 0:
             try:
                 modeler = Modeler()
