@@ -3,7 +3,7 @@
 # Note: Access policy is defined in libs/__init__.py.
 
 import logging
-from libs import SMTP_ACTIONS, MAILLIST_ACCESS_POLICIES
+from libs import SMTP_ACTIONS
 from libs.ldaplib import conn_utils
 
 REQUIRE_LOCAL_SENDER = False
@@ -33,10 +33,7 @@ def restriction(**kwargs):
     policy = recipient_ldif.get('accessPolicy', ['public'])[0].lower()
 
     # Log access policy and description
-    logging.debug('%s -> %s, access policy: %s (%s)' % (
-        sender, recipient, policy,
-        MAILLIST_ACCESS_POLICIES.get(policy, 'no description'))
-    )
+    logging.debug('%s -> %s, access policy: %s' % (sender, recipient, policy))
 
     if policy in ['domain', 'subdomain', ]:
         recipient_domain = recipient.split('@', 1)[-1]

@@ -17,7 +17,6 @@ from libs import MAILLIST_POLICY_SUBDOMAIN
 from libs import MAILLIST_POLICY_MEMBERSONLY
 from libs import MAILLIST_POLICY_ALLOWEDONLY
 from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
-from libs import MAILLIST_ACCESS_POLICIES
 
 
 def restriction(**kwargs):
@@ -49,10 +48,7 @@ def restriction(**kwargs):
     policy = str(sql_record[0]).lower()
 
     # Log access policy and description
-    logging.debug('%s -> %s, access policy: %s (%s)' % (
-        sender, recipient, policy,
-        MAILLIST_ACCESS_POLICIES.get(policy, 'no description'))
-    )
+    logging.debug('%s -> %s, access policy: %s' % (sender, recipient, policy))
 
     members = [str(v.lower()) for v in str(sql_record[1]).split(',')]
     moderators = [str(v.lower()) for v in str(sql_record[2]).split(',')]

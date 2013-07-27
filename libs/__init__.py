@@ -8,19 +8,15 @@ SMTP_ACTIONS = {
 }
 
 # Mail list access policies.
+# Unrestricted
 MAILLIST_POLICY_PUBLIC = 'public'
+# Only users under same domain are allowed
 MAILLIST_POLICY_DOMAIN = 'domain'
+# Only users under same domain and sub domains are allowed
 MAILLIST_POLICY_SUBDOMAIN = 'subdomain'
+# Only members are allowed
 MAILLIST_POLICY_MEMBERSONLY = 'membersonly'
+# Only moderators/allowed are allowed
 MAILLIST_POLICY_ALLOWEDONLY = 'allowedonly'
+# Only members and moderators are allowed
 MAILLIST_POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
-
-# Comments of mail list access policies.
-MAILLIST_ACCESS_POLICIES = {
-    MAILLIST_POLICY_PUBLIC: 'Unrestricted',
-    MAILLIST_POLICY_DOMAIN: 'Only users under same domain are allowed',
-    MAILLIST_POLICY_SUBDOMAIN: 'Only users under same domain and sub domains are allowed',
-    MAILLIST_POLICY_MEMBERSONLY: 'Only members are allowed',
-    MAILLIST_POLICY_ALLOWEDONLY: 'Only moderators/allowed are allowed',
-    MAILLIST_POLICY_MEMBERSANDMODERATORSONLY: 'Only members and moderators are allowed',
-}
