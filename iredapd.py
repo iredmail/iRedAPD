@@ -38,7 +38,7 @@ class PolicyChannel(asynchat.async_chat):
         self.recipient_search_attrlist = recipient_search_attrlist
 
     def push(self, msg):
-        asynchat.async_chat.push(self, msg + '\n')
+        asynchat.async_chat.push(self, msg)
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -54,8 +54,6 @@ class PolicyChannel(asynchat.async_chat):
             elif line.startswith('get '):
                 # Request from Postfix tcp_table(5).
                 #self.push('200 dovecot\n')
-                #asynchat.async_chat.handle_close(self)
-                #logging.info("Connection (TCP) closed")
 
                 # Error
                 self.push('400 Cannot handle this request yet\n')
