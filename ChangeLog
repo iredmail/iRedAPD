@@ -1,3 +1,9 @@
+iRedAPD-1.4.2:
+    * Fixed:
+        + Fix Python path on FreeBSD after the latest ports tree update.
+          Thanks hainan <hasanalpinan _at_ gmail> in our online support forum
+          for the report and fix.
+
 iRedAPD-1.4.1:
     * Fixed:
         + Incorrect return values of service status in rc scripts on Linux.
