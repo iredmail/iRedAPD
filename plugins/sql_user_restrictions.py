@@ -14,6 +14,21 @@
 #   - @domain.com:      single domain
 #   - @.domain.com:     single domain and its all sub-domains
 #   - user@domain.com:  single email address
+#
+# Multiple senders/recipients must be separated by comma (,).
+#
+# Sample: allow local mail user 'user@example.com' to send to and receive
+#         from the same domain and 'gmail.com', but not others.
+#
+#         sql> USE vmail;
+#         sql> UPDATE mailbox \
+#              SET \
+#                 rejectedsenders='@.', \
+#                 allowedsenders='@example.com,@gmail.com', \
+#                 rejectedrecipients='@.' \
+#                 allowedrecipients='@example.com,@gmail.com', \
+#             WHERE username='user@example.com';
+#
 
 import logging
 from libs import SMTP_ACTIONS
