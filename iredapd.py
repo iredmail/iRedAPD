@@ -38,7 +38,7 @@ class PolicyChannel(asynchat.async_chat):
         self.recipient_search_attrlist = recipient_search_attrlist
 
     def push(self, msg):
-        asynchat.async_chat.push(self, msg)
+        asynchat.async_chat.push(self, msg + '\n')
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
