@@ -59,6 +59,7 @@ class Modeler:
 
         sender = smtp_session_data['sender'].lower()
         recipient = smtp_session_data['recipient'].lower()
+        sasl_username = smtp_session_data['sasl_username'].lower()
 
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.cursor,
@@ -66,8 +67,7 @@ class Modeler:
                          'recipient': recipient,
                          'sender_domain': sender.split('@')[-1],
                          'recipient_domain': recipient.split('@')[-1],
-                         'sasl_username': smtp_session_data.get('sasl_username', '').lower(),
-                        }
+                         'sasl_username': sasl_username}
 
         # TODO Get SQL record of mail user or mail alias before applying plugins
         # TODO Query required sql columns instead of all

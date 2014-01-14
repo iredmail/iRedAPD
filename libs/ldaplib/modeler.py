@@ -52,6 +52,7 @@ class Modeler:
 
         sender = smtp_session_data['sender'].lower()
         recipient = smtp_session_data['recipient'].lower()
+        sasl_username = smtp_session_data['sasl_username'].lower()
 
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.conn,
@@ -60,7 +61,7 @@ class Modeler:
                          'sender_domain': sender.split('@', 1)[-1],
                          'recipient': recipient,
                          'recipient_domain': recipient.split('@', 1)[-1],
-                         'sasl_username': smtp_session_data.get('sasl_username', '').lower(),
+                         'sasl_username': sasl_username,
                          'sender_dn': None,
                          'sender_ldif': None,
                          'recipient_dn': None,
@@ -76,7 +77,7 @@ class Modeler:
                     and plugin_kwargs['sender_dn'] is None:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
-                    account=sender,
+                    account=sasl_username,
                     attrlist=sender_search_attrlist,
                 )
                 plugin_kwargs['sender_dn'] = sender_dn
