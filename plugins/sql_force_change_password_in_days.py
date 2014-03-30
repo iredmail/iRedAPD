@@ -19,7 +19,9 @@
 #     `mailbox.passwordlastchange`.
 #
 #   - This plugin checks date stored in `mailbox.passwordlastchange` and
-#     compare it with current date.
+#     compare it with current date. if password last change date is longer
+#     than specified days, this plugin rejects smtp session with specified
+#     message.
 
 import datetime
 import logging
