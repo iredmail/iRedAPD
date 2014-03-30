@@ -118,7 +118,7 @@ def restriction(**kwargs):
 
             if all_allowed_senders:
                 if sender in all_allowed_senders \
-                   or sender_domain in all_allowed_senders \
+                   or '@' + sender_domain in all_allowed_senders \
                    or '@.' + sender_domain in all_allowed_senders \
                    or '@.' in all_allowed_senders:
                     return SMTP_ACTIONS['accept']
@@ -128,7 +128,7 @@ def restriction(**kwargs):
 
             if all_rejected_senders:
                 if sender in all_rejected_senders \
-                   or sender_domain in all_rejected_senders \
+                   or '@' + sender_domain in all_rejected_senders \
                    or '@.' + sender_domain in all_rejected_senders \
                    or '@.' in all_rejected_senders:
                     return SMTP_ACTIONS['reject']

@@ -1,3 +1,15 @@
+iRedAPD-1.4.3:
+    * New plugin to force user to change password in certain days. Please
+      read comment in plugin file to understand how to configure it and how
+      it works.
+        + For LDAP backend: ldap_force_change_password_in_days
+        + For MySQL/PostgreSQL backend: sql_force_change_password_in_days
+
+    * Fixed:
+        + Incorrect detection of sender domain (missing '@') in plugin
+          sql_user_restrictions.py.
+          Thanks Tim Lau for the report.
+
 iRedAPD-1.4.2:
     * Fixed:
         + Incorrect detection of domain (missing '@') in plugin
