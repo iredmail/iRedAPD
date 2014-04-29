@@ -20,12 +20,12 @@ Plugins are files placed under `plugins/` directory, plugin name is file name wi
 	* `ldap_maillist_access_policy`: restrict who can send email to mail list.
 	* `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist.
 	* `ldap_recipient_restrictions`: per-user recipient whitelist and blacklist.
-	* `ldap_expired_password`: reject sender if his/her password was not changed in 90 days.
-	* `ldap_domain_wblist`: per-domain whitelists and blacklists.
+    * `ldap_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
 
 * For MySQL and PostgreSQL backends:
 	* `sql_alias_access_policy`: restrict who can send email to mail alias.
 	* `sql_user_restrictions`: per-user sender and recipient restrictions.
+    * `sql_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
 
 # Requirements
 
