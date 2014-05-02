@@ -66,7 +66,9 @@ def restriction(**kwargs):
         else:
             # Allowed first
             # single recipient, domain, sub-domain, catch-all
-            all_allowed_recipients = [s.lower().strip() for s in allowed_recipients.split(',')]
+            all_allowed_recipients = []
+            if allowed_recipients:
+                all_allowed_recipients = [s.lower().strip() for s in allowed_recipients.split(',')]
             logging.debug('All allowed recipient: %s' % str(all_allowed_recipients))
 
             if all_allowed_recipients:
@@ -76,7 +78,9 @@ def restriction(**kwargs):
                    or '@.' in all_allowed_recipients:
                     return SMTP_ACTIONS['accept']
 
-            all_rejected_recipients = [s.lower().strip() for s in rejected_recipients.split(',')]
+            all_rejected_recipients = []
+            if rejected_recipients:
+                all_rejected_recipients = [s.lower().strip() for s in rejected_recipients.split(',')]
             logging.debug('All rejected recipient: %s' % str(all_rejected_recipients))
 
             if all_rejected_recipients:
@@ -113,7 +117,9 @@ def restriction(**kwargs):
         else:
             # Allowed first
             # single recipient, domain, sub-domain, catch-all
-            all_allowed_senders = [s.lower().strip() for s in allowed_senders.split(',')]
+            all_allowed_senders = []
+            if allowed_senders:
+                all_allowed_senders = [s.lower().strip() for s in allowed_senders.split(',')]
             logging.debug('All allowed senders: %s' % str(all_allowed_senders))
 
             if all_allowed_senders:
@@ -123,7 +129,9 @@ def restriction(**kwargs):
                    or '@.' in all_allowed_senders:
                     return SMTP_ACTIONS['accept']
 
-            all_rejected_senders = [s.lower().strip() for s in rejected_senders.split(',')]
+            all_rejected_senders = []
+            if rejected_senders:
+                all_rejected_senders = [s.lower().strip() for s in rejected_senders.split(',')]
             logging.debug('All rejected senders: %s' % str(all_rejected_senders))
 
             if all_rejected_senders:

@@ -6,6 +6,9 @@ iRedAPD-1.4.3:
         + For MySQL/PostgreSQL backend: sql_force_change_password_in_days
 
     * Fixed:
+        + Not detect returned values before processing (split string) in
+          plugin sql_user_restrictions.py.
+          Thanks jford <jford _at_ cisp dot com> for the report.
         + Incorrect detection of sender domain (missing '@') in plugin
           sql_user_restrictions.py.
           Thanks Tim Lau for the report.
