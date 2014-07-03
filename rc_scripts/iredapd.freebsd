@@ -8,7 +8,7 @@
 
 . /etc/rc.subr
 name='iredapd'
-rcvar=`set_rcvar`
+rcvar=`set_rcvar_obsolete`
 
 BINPATH='/opt/iredapd/iredapd.py'
 pidfile='/var/run/iredapd.pid'

@@ -1,3 +1,6 @@
+iRedAPD-1.4.4:
+    * Fix improper rc script for FreeBSD: set_rcvar -> set_rcvar_obsolete.
+
 iRedAPD-1.4.3:
     * New plugin to force user to change password in certain days. Please
       read comment in plugin file to understand how to configure it and how
