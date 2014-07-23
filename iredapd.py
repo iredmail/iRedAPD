@@ -51,22 +51,6 @@ class PolicyChannel(asynchat.async_chat):
             if '=' in line:
                 (key, value) = line.split('=', 1)
                 self.smtp_session_data[key] = value
-            elif line.startswith('get '):
-                # Request from Postfix tcp_table(5).
-
-                # Sample: return hard-coded transport.
-                #self.push('200 dovecot\n')
-
-                # Sample: return random transport.
-                #import random
-                #mtas = ['mta1.abc.com', 'mta2.abc.com', 'mta3.abc.com']
-                # Get random mta.
-                #mta = random.randint(1, len(mtas))
-                # Reply Postfix.
-                #self.push('200 %s\n' % mta)
-
-                # Error
-                self.push('400 Cannot handle this request yet\n')
         elif len(self.smtp_session_data) != 0:
             try:
                 modeler = Modeler()
