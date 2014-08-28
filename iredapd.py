@@ -75,14 +75,12 @@ class PolicyChannel(asynchat.async_chat):
                                                 action))
 
             self.push('action=' + action + '\n')
-            asynchat.async_chat.handle_close(self)
-            logging.debug("Connection closed")
+            logging.debug("Session ended")
         else:
             action = SMTP_ACTIONS['default']
             logging.debug("replying: " + action)
             self.push('action=' + action + '\n')
-            asynchat.async_chat.handle_close(self)
-            logging.debug("Connection closed")
+            logging.debug("Session ended")
 
 
 class DaemonSocket(asyncore.dispatcher):
