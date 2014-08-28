@@ -1,6 +1,8 @@
 iRedAPD-1.4.4:
     * Fixed:
         - Close socket channel after each smtp session.
+          Thanks Václav Bílek <vaclav.bilek _at_ livesport dot eu> for the
+          report.
         - Improper rc script for FreeBSD: set_rcvar -> set_rcvar_obsolete.
 
 iRedAPD-1.4.3:
