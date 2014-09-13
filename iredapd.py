@@ -65,8 +65,8 @@ class PolicyChannel(asynchat.async_chat):
                 else:
                     action = SMTP_ACTIONS['default']
             except Exception, e:
-                action = SMTP_ACTIONS['default']
                 logging.debug('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
+                action = SMTP_ACTIONS['default']
 
             # Log final action.
             logging.info('[%s] %s -> %s, %s' % (self.smtp_session_data['client_address'],

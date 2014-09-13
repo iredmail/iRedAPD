@@ -18,6 +18,9 @@ from libs import MAILLIST_POLICY_MEMBERSONLY
 from libs import MAILLIST_POLICY_ALLOWEDONLY
 from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
+# Target smtp protocol state.
+SMTP_PROTOCOL_STATE = 'RCPT'
+
 
 def restriction(**kwargs):
     conn = kwargs['conn']
@@ -46,6 +49,8 @@ def restriction(**kwargs):
         return 'DUNNO (Not mail alias)'
 
     policy = str(sql_record[0]).lower()
+    if not policy:
+        policy = 'public'
 
     # Log access policy and description
     logging.debug('%s -> %s, access policy: %s' % (sender, recipient, policy))

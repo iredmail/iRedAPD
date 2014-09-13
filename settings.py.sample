@@ -25,8 +25,7 @@ backend = 'ldap'
 # - Plugin names MUST be seperated by comma.
 plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders', 'ldap_recipient_restrictions']
 
-####################
-# For ldap backend.
+# For LDAP backend.
 #
 # LDAP server setting.
 # Uri must starts with ldap:// or ldaps:// (TLS/SSL).
@@ -36,13 +35,11 @@ plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_sender
 ldap_uri = 'ldap://127.0.0.1:389'
 ldap_basedn = 'o=domains,dc=iredmail,dc=org'
 ldap_binddn = 'cn=vmail,dc=iredmail,dc=org'
-ldap_bindpw = 'mRAEWpGRtlCs1O0QuWpXoaJ36EjRql'
+ldap_bindpw = 'password'
 
-#
-# For MySQL and PostgreSQL backends.
-#
+# For SQL (MySQL/MariaDB/PostgreSQL) backends, used to query mail accounts.
 sql_server = '127.0.0.1'
 sql_port = '3306'
 sql_db = 'vmail'
 sql_user = 'vmail'
-sql_password = 'Psaf68wsuVctYSbj4PJzRqmFsE0rlQ'
+sql_password = 'password'

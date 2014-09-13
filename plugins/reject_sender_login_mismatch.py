@@ -1,13 +1,17 @@
-"""Reject sender login mismatch (sender in mail header and SASL username).
+# Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
-*) You must remove "sender_login_mismatch" restriction in Postfix parameter
-   "smtpd_sender_restrictions" and let this plugin do it for you.
+# Purpose: Reject sender login mismatch (addresses in 'From:' and SASL username).
 
-*) Please list all allowed senders in in iRedAPD config file (settings.py),
-   parameter ALLOWED_LOGIN_MISMATCH_SENDERS. For example:
-
-    ALLOWED_LOGIN_MISMATCH_SENDERS = ['user1@here.com', 'user2@here.com']
-"""
+# Usage:
+#
+# *) You must remove "sender_login_mismatch" restriction in Postfix parameter
+#    "smtpd_sender_restrictions" and let this plugin do it for you.
+#
+# *) Please list all allowed senders in in iRedAPD config file (settings.py),
+#    parameter ALLOWED_LOGIN_MISMATCH_SENDERS. For example:
+#
+#    ALLOWED_LOGIN_MISMATCH_SENDERS = ['user1@here.com', 'user2@here.com']
+#
 
 import logging
 from libs import SMTP_ACTIONS
@@ -17,6 +21,9 @@ REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = []
 RECIPIENT_SEARCH_ATTRLIST = []
+
+# Target smtp protocol state.
+SMTP_PROTOCOL_STATE = 'RCPT'
 
 # Allowed senders.
 try:

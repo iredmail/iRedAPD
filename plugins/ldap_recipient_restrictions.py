@@ -14,6 +14,9 @@ REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = ['mailBlacklistRecipient', 'mailWhitelistRecipient']
 RECIPIENT_SEARCH_ATTRLIST = []
 
+# Target smtp protocol state.
+SMTP_PROTOCOL_STATE = 'RCPT'
+
 
 def restriction(**kwargs):
     sender_ldif = kwargs['sender_ldif']

@@ -10,6 +10,8 @@ REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = []
 RECIPIENT_SEARCH_ATTRLIST = ['amavisBlacklistSender', 'amavisWhitelistSender']
 
+# Target smtp protocol state.
+SMTP_PROTOCOL_STATE = 'RCPT'
 
 def restriction(**kwargs):
     smtp_session_data = kwargs['smtp_session_data']

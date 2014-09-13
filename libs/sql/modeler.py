@@ -46,8 +46,7 @@ class Modeler:
     def handle_data(self,
                     smtp_session_data,
                     plugins=[],
-                    **kwargs
-                   ):
+                    **kwargs):
         # No sender or recipient in smtp session.
         if not 'sender' in smtp_session_data or \
            not 'recipient' in smtp_session_data:
@@ -60,6 +59,7 @@ class Modeler:
         sender = smtp_session_data['sender'].lower()
         recipient = smtp_session_data['recipient'].lower()
         sasl_username = smtp_session_data['sasl_username'].lower()
+        smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.cursor,
@@ -73,6 +73,16 @@ class Modeler:
         # TODO Query required sql columns instead of all
 
         for plugin in plugins:
+            # Get plugin target smtp protocol state
+            try:
+                plugin_target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
+            except:
+                plugin_target_smtp_protocol_state = 'RCPT'
+
+            if smtp_protocol_state != plugin_target_smtp_protocol_state:
+                logging.debug('Skip plugin: %s, target smtp protocol state mismatch (%s <-> %s).' % (plugin.__name__, smtp_protocol_state, plugin_target_smtp_protocol_state))
+                continue
+
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
                 return action

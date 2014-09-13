@@ -53,6 +53,7 @@ class Modeler:
         sender = smtp_session_data['sender'].lower()
         recipient = smtp_session_data['recipient'].lower()
         sasl_username = smtp_session_data['sasl_username'].lower()
+        smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn': self.conn,
@@ -72,6 +73,16 @@ class Modeler:
         #   - security enforce: encryption_protocol=TLSv1/SSLv3
 
         for plugin in plugins:
+            # Get plugin target smtp protocol state
+            try:
+                plugin_target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
+            except:
+                plugin_target_smtp_protocol_state = 'RCPT'
+
+            if smtp_protocol_state != plugin_target_smtp_protocol_state:
+                logging.debug('Skip plugin: %s, target smtp protocol state mismatch (%s <-> %s).' % (plugin.__name__, smtp_protocol_state, plugin_target_smtp_protocol_state))
+                continue
+
             # Get LDIF data of sender if required
             if plugin.REQUIRE_LOCAL_SENDER \
                     and plugin_kwargs['sender_dn'] is None:

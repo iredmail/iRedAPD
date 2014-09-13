@@ -33,6 +33,9 @@ REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = ['shadowLastChange']
 RECIPIENT_SEARCH_ATTRLIST = []
 
+# Target smtp protocol state.
+SMTP_PROTOCOL_STATE = 'RCPT'
+
 # You can override below two settings in iRedAPD config file 'settings.py'.
 # Force to change password in 90 days.
 try:

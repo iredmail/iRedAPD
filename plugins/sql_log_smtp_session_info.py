@@ -28,6 +28,9 @@ CREATE TABLE `clients` (
 import logging
 from libs import SMTP_ACTIONS
 
+# Target smtp protocol state.
+SMTP_PROTOCOL_STATE = 'RCPT'
+
 
 def restriction(**kwargs):
     conn = kwargs['conn']
