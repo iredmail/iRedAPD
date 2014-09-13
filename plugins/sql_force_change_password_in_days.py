@@ -61,6 +61,8 @@ def restriction(**kwargs):
     if sql_record:
         pwchdate = sql_record[0]
         logging.debug('Date of password last change: %s' % str(pwchdate))
+        if not pwchdate:
+            pwchdate = datetime.datetime(1970, 1, 1, 0, 0, 0)
     else:
         logging.debug('No SQL record of this user.')
         return SMTP_ACTIONS['default']
