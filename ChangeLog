@@ -1,7 +1,7 @@
 iRedAPD-1.4.4:
     * Fixed:
-        - Not correctly set password last change date if user didn't reset
-          password before.
+        - Plugin 'sql_force_change_password_in_days.py': not correctly set
+          password last change date if user didn't reset password before.
           Thanks Joel A.G.Oliveira <joel _at_ gabrieldeoliveira dot com.br>
           for the report.
         - Close socket channel after each smtp session.
