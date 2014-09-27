@@ -1,4 +1,16 @@
 iRedAPD-1.4.4:
+    * Improvements:
+        * Detect current smtp protocol state and pick up applicable plugins.
+          It's now ready for writting plugin for END-OF-MESSAGE state (enabled
+          in Postfix 'smtpd_end_of_data_restrictions').
+
+          Note to plugin developer: Please add parameter 'SMTP_PROTOCOL_STATE'
+          in plugin file to indicate which smtp protocol state the plugin
+          should be invoked. For example:
+
+          SMTP_PROTOCOL_STATE = 'RCPT'  # Used in smtpd_recipient_restrictions
+          SMTP_PROTOCOL_STATE = 'END-OF-MESSAGE'  # smtpd_end_of_data_restrictions
+
     * Fixed:
         - Plugin 'sql_force_change_password_in_days.py': not correctly set
           password last change date if user didn't reset password before.
@@ -9,7 +21,7 @@ iRedAPD-1.4.4:
           report.
         - Improper rc script for FreeBSD: set_rcvar -> set_rcvar_obsolete.
 
-iRedAPD-1.4.3:
+END-OF-MESSAGEiRedAPD-1.4.3:
     * New plugin to force user to change password in certain days. Please
       read comment in plugin file to understand how to configure it and how
       it works.
