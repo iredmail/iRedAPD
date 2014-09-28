@@ -12,32 +12,32 @@
 * iRedAPD is installed and enabled in iRedMail by default, so you don’t need this tutorial if you already have iRedMail running.
 * You can manage iRedAPD with iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
 
-## Available plugins:
+# Available plugins
 
 Plugins are files placed under `plugins/` directory, plugin name is file name
 without file extension `.py`. It's recommended to read comment lines in plugin
 source files to understand how it works and what it does.
 
-### Plugins for all backends
+## Plugins for all backends
 
 * `amavisd_reject_message_size_limit`: Check per-recipient message size limit
   stored in Amavisd database (column `policy.message_size_limit`), reject email
   if message size exceeded.
 
-### Plugins for OpenLDAP backend
+## Plugins for OpenLDAP backend
 
 * `ldap_maillist_access_policy`: restrict who can send email to mail list.
 * `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist.
 * `ldap_recipient_restrictions`: per-user recipient whitelist and blacklist.
 * `ldap_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
 
-### Plugins for MySQL/MariaDB and PostgreSQL backends
+## Plugins for MySQL/MariaDB and PostgreSQL backends
 
 * `sql_alias_access_policy`: restrict who can send email to mail alias.
 * `sql_user_restrictions`: per-user sender and recipient restrictions.
 * `sql_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
 
-# Requirements
+# Installation Requirements
 
 * `iRedMail`: All iRedMail versions should work as expected.
 * `Python` >= 2.4: core programming language.
@@ -250,7 +250,7 @@ Restart Postfix service to enable iRedAPD.
 
 Since iRedAPD-`1.4.4`, it works with Postfix parameter
 `smtpd_end_of_data_restrictions`. So if you need plugins which should be
-applied in smtp protocol state 'END-OF-MESSAGE', please enable iRedAPD like
+applied in smtp protocol state `END-OF-MESSAGE`, please enable iRedAPD like
 below:
 
 ```
