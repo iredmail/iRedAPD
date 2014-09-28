@@ -12,11 +12,10 @@
 
 * Plugins for replacing Policyd/Cluebringer
 
+    * Greylisting, server-wide, per-domain and per-user.
+    * Throttling
     * [?] HELO restrictions.
         * [?] PCRE compatible regular expression support?
         * [?] Widecard (*, %, ?) support?
-
-    * [?] Greylisting, server-wide, per-domain and per-user.
-    * [?] Throttling
 
 * Query required SQL columns instead of all
