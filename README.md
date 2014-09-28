@@ -2,11 +2,11 @@
 
 * iRedAPD is a simple [Postfix policy server](http://www.postfix.org/SMTPD_POLICY_README.html), written in Python, with plugin support.
 * iRedAPD listens on port `7777`, runs as a low-privileged user (`iredapd` by default).
-* The latest iRedAPD works with OpenLDAP, MySQL and PostgreSQL backends.
+* The latest iRedAPD works with OpenLDAP, MySQL/MariaDB and PostgreSQL backends.
 * License: GPL v3.
 * Author: Zhang Huangbin <zhb _at_ iredmail.org>.
 
-**NOTE**: 
+**NOTES**: 
 
 * iRedAPD is a sub-project of [iRedMail project](http://www.iredmail.org).
 * iRedAPD is installed and enabled in iRedMail by default, so you don’t need this tutorial if you already have iRedMail running.
@@ -14,18 +14,28 @@
 
 ## Available plugins:
 
-Plugins are files placed under `plugins/` directory, plugin name is file name without file extension `.py`.
+Plugins are files placed under `plugins/` directory, plugin name is file name
+without file extension `.py`. It's recommended to read comment lines in plugin
+source files to understand how it works and what it does.
 
-* For OpenLDAP backend:
-	* `ldap_maillist_access_policy`: restrict who can send email to mail list.
-	* `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist.
-	* `ldap_recipient_restrictions`: per-user recipient whitelist and blacklist.
-    * `ldap_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
+### Plugins for all backends
 
-* For MySQL and PostgreSQL backends:
-	* `sql_alias_access_policy`: restrict who can send email to mail alias.
-	* `sql_user_restrictions`: per-user sender and recipient restrictions.
-    * `sql_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
+* `amavisd_reject_message_size_limit`: Check per-recipient message size limit
+  stored in Amavisd database (column `policy.message_size_limit`), reject email
+  if message size exceeded.
+
+### Plugins for OpenLDAP backend
+
+* `ldap_maillist_access_policy`: restrict who can send email to mail list.
+* `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist.
+* `ldap_recipient_restrictions`: per-user recipient whitelist and blacklist.
+* `ldap_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
+
+### Plugins for MySQL/MariaDB and PostgreSQL backends
+
+* `sql_alias_access_policy`: restrict who can send email to mail alias.
+* `sql_user_restrictions`: per-user sender and recipient restrictions.
+* `sql_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
 
 # Requirements
 
@@ -43,231 +53,259 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 
 * Create user on Red Hat, CentOS, Scientific Linux, Debian, Ubuntu, Gentoo, openSUSE, OpenBSD:
 
-		# useradd -m -s /sbin/nologin -d /home/iredapd iredapd
+```shell
+# useradd -m -s /sbin/nologin -d /home/iredapd iredapd
+```
 
 * Create user on FreeBSD:
 
-		# pw useradd -s /sbin/nologin -d /home/iredapd -n iredapd
+```
+# pw useradd -s /sbin/nologin -d /home/iredapd -n iredapd
+```
 
 ## Install required packages
 
 * On Red Hat, CentOS, Scientific Linux:
 
-		# ---- For OpenLDAP backend:
-		# yum install python-ldap
-		
-		# ---- For MySQL backend:
-		# yum install MySQL-python
-		
-		# ---- For PostgreSQL backend:
-		# yum install python-pyscopg2
+```shell
+# ---- For OpenLDAP backend:
+# yum install python-ldap
+
+# ---- For MySQL backend:
+# yum install MySQL-python
+
+# ---- For PostgreSQL backend:
+# yum install python-pyscopg2
+```
 
 * on Debian, Ubuntu:
 
-		# —— For OpenLDAP backend:
-		$ sudo apt-get install python-ldap
-		
-		# —— For MySQL backend:
-		$ sudo apt-get install python-mysqldb
-		
-		# —— For PostgreSQL backend:
-		$ sudo apt-get install python-psycopg2
+```shell
+# —— For OpenLDAP backend:
+$ sudo apt-get install python-ldap
 
-* on openSUSE:
+# —— For MySQL backend:
+$ sudo apt-get install python-mysqldb
 
-		# ---- For OpenLDAP backend:
-		# zypper install python-ldap
-		
-		# ---- For MySQL backend:
-		# yum install python-mysql
-		
-		# ---- For PostgreSQL backend:
-		# yum install python-pyscopg2
-
-* on Gentoo:
-
-		# ---- For OpenLDAP backend:
-		# emerge python-ldap
-
-		# ---- For MySQL backend:
-		# emerge mysql-python
-
-		# ---- For PostgreSQL backend:
-		# emerge psycopg
+# —— For PostgreSQL backend:
+$ sudo apt-get install python-psycopg2
+```
 
 * on FreeBSD:
 
-		# ---- For OpenLDAP backend:
-		# cd /usr/ports/net/py-ldap2 && make install clean
+```shell
+# ---- For OpenLDAP backend:
+# cd /usr/ports/net/py-ldap2 && make install clean
 
-		# ---- For MySQL backend:
-		# cd /usr/ports/databases/py-MySQLdb && make install clean
+# ---- For MySQL backend:
+# cd /usr/ports/databases/py-MySQLdb && make install clean
 
-		# ---- For PostgreSQL backend:
-		# cd /usr/ports/databases/py-psycopg2 && make install clean
+# ---- For PostgreSQL backend:
+# cd /usr/ports/databases/py-psycopg2 && make install clean
+```
 
 * on OpenBSD:
 
-		# ---- For OpenLDAP backend:
-		# pkg_add -r py-ldap
+```
+# ---- For OpenLDAP backend:
+# pkg_add -r py-ldap
 
-		# ---- For MySQL backend:
-		# pkg_add -r py-mysql
+# ---- For MySQL backend:
+# pkg_add -r py-mysql
 
-		# ---- For PostgreSQL backend:
-		# pkg_add -r py-psycopg2
+# ---- For PostgreSQL backend:
+# pkg_add -r py-psycopg2
+```
 
 ## Download and configure iRedAPD
 
 * Download the latest iRedAPD from project page: [https://bitbucket.org/zhb/iredapd/downloads](https://bitbucket.org/zhb/iredapd/downloads).
 * Extract iRedAPD to /opt/, set correct file permissions, and create symbol link.
 
-		# tar xjf iRedAPD-x.y.z.tar.bz2 -C /opt/
-		# ln -s /opt/iRedAPD-x.y.z /opt/iredapd
-		# chown -R iredapd:iredapd /opt/iRedAPD-x.y.z/
-		# chmod -R 0700 /opt/iRedAPD-x.y.z/
+```shell
+# tar xjf iRedAPD-x.y.z.tar.bz2 -C /opt/
+# ln -s /opt/iRedAPD-x.y.z /opt/iredapd
+# chown -R iredapd:iredapd /opt/iRedAPD-x.y.z/
+# chmod -R 0700 /opt/iRedAPD-x.y.z/
+```
 
 * Copy RC script to /etc/init.d/ (Linux) , /usr/local/etc/rc.d/ (FreeBSD), /etc/rc.d/ (OpenBSD), and set correct permission. **NOTE**: We have RC scripts for different Linux/BSD distributions, please copy the one for your distribution. e.g. `iredapd.rhel` for Red Hat, CentOS, Scientific Linux, `iredapd.debian` for Debian, Ubuntu.
 
-		# cp /opt/iredapd/rc_scripts/iredapd.rhel /etc/init.d/iredapd
-		# chmod +x /etc/init.d/iredapd
+```shell
+# cp /opt/iredapd/rc_scripts/iredapd.rhel /etc/init.d/iredapd
+# chmod +x /etc/init.d/iredapd
+```
 
 * Create a new config file by copying sample config. **WARNING**: config file contains LDAP/SQL username and password, please don't make it world readable.
 
-		# cp /opt/iredapd/settings.py.sample /opt/iredapd/settings.py
-		# chmod 0600 /opt/iredapd/settings.py
+```shell
+# cp /opt/iredapd/settings.py.sample /opt/iredapd/settings.py
+# chmod 0600 /opt/iredapd/settings.py
+```
 
 * Open /opt/iredapd/settings.py and set correct values:
 
-		# Listen address and port.
-		listen_address = "127.0.0.1"
-		listen_port = "7777"
+```python
+# Listen address and port.
+listen_address = "127.0.0.1"
+listen_port = "7777"
 
-		# Daemon user.
-		run_as_user = "iredapd"
+# Daemon user.
+run_as_user = "iredapd"
 
-		# Path to pid file.
-		pid_file = "/var/run/iredapd.pid"
+# Path to pid file.
+pid_file = "/var/run/iredapd.pid"
 
-		# Log file.
-		log_file = "/var/log/iredapd.log"
+# Log file.
+log_file = "/var/log/iredapd.log"
 
-		# Log level: info, warning, error, debug.
-		# 'info' is recommended for product use.
-		log_level = "info"
+# Log level: info, warning, error, debug.
+# 'info' is recommended for product use.
+log_level = "info"
 
-		# Backend: ldap, mysql, pgsql.
-		backend = "ldap"
+# Backend: ldap, mysql, pgsql.
+backend = "ldap"
 
-		# Enabled plugins.
-		# - Plugin name is file name which placed under 'plugins/' directory,
-		#   without file extension '.py'.
-		# - Plugin names MUST be seperated by comma.
-		plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders']
+# Enabled plugins.
+plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders']
 
-		# For OpenLDAP backend. Not used by MySQL and PostgreSQL backends.
-		ldap_uri = “ldap://127.0.0.1:389”
-		ldap_basedn = “o=domains,dc=iredmail,dc=org”
-		ldap_binddn = “cn=vmail,dc=iredmail,dc=org”
-		ldap_bindpw = “mRAEWpGRtlCs1O0QuWpXoaJ36EjRql”
+# For OpenLDAP backend. Not used by MySQL and PostgreSQL backends.
+ldap_uri = “ldap://127.0.0.1:389”
+ldap_basedn = “o=domains,dc=iredmail,dc=org”
+ldap_binddn = “cn=vmail,dc=iredmail,dc=org”
+ldap_bindpw = “mRAEWpGRtlCs1O0QuWpXoaJ36EjRql”
 
-		# For MySQL and PostgreSQL backends. Not used by OpenLDAP backend.
-		sql_server = "127.0.0.1"
-		sql_db = "vmail"
-		sql_user = "vmail"
-		sql_password = "Psaf68wsuVctYSbj4PJzRqmFsE0rlQ"
+# For MySQL and PostgreSQL backends. Not used by OpenLDAP backend.
+sql_server = "127.0.0.1"
+sql_db = "vmail"
+sql_user = "vmail"
+sql_password = "Psaf68wsuVctYSbj4PJzRqmFsE0rlQ"
+```
 
 * Create log file: `/var/log/iredapd.log`.
 
-		# touch /var/log/iredapd.log
+```shell
+# touch /var/log/iredapd.log
+```
 
 * Make iRedAPD start when boot your server.
 
-		# ---- on RHEL/CentOS ----
-		# chkconfig --level 345 iredapd on
+```shell
+# ---- on RHEL/CentOS ----
+# chkconfig --level 345 iredapd on
 
-		# ---- on Debian/Ubuntu ----
-		$ sudo update-rc.d iredapd defaults
+# ---- on Debian/Ubuntu ----
+$ sudo update-rc.d iredapd defaults
 
-		# ---- on FreeBSD, please edit /etc/rc.conf, append below line ----
-		iredapd_enable='YES'
+# ---- on FreeBSD, please edit /etc/rc.conf, append below line ----
+iredapd_enable='YES'
 		
-		# —— on OpenBSD, please list service `iredapd` in parameter `pkg_scripts=` in file `/etc/rc.conf.local` ——
-		pkg_scripts=“ ... iredapd”
+# —— on OpenBSD, please list service `iredapd` in parameter `pkg_scripts=` in file `/etc/rc.conf.local` ——
+pkg_scripts=“ ... iredapd”
+```
 
 * Start iRedAPD service:
 
-		# —— on Linux ----
-		# /etc/init.d/iredapd restart
+```shell
+# —— on Linux ----
+# /etc/init.d/iredapd restart
 		
-		# —— on FreeBSD ——
-		# /usr/local/etc/rc.d/iredapd restart
+# —— on FreeBSD ——
+# /usr/local/etc/rc.d/iredapd restart
 
-		# —— on OpenBSD ——
-		# /etc/rc.d/iredapd restart
+# —— on OpenBSD ——
+# /etc/rc.d/iredapd restart
+```
 
 # Configure Postfix to use iRedAPD as policy server
 
-* In Postfix config file `/etc/postfix/main.cf` (it’s `/usr/local/etc/postfix/main.cf` on FreeBSD), modify parameter `smtpd_recipient_restrictions =` to enable iRedAPD like below:
+In Postfix config file `/etc/postfix/main.cf` (it’s
+`/usr/local/etc/postfix/main.cf` on FreeBSD), modify parameter
+`smtpd_recipient_restrictions =` to enable iRedAPD like below:
 
-		smtpd_recipient_restrictions =
-		    ...
-		    check_policy_service inet:127.0.0.1:7777,     # <-- Insert this line before "permit_mynetworks"
-		    permit_mynetworks,
-		    permit_sasl_authenticated,
-		    ...
+```
+smtpd_recipient_restrictions =
+    ...
+    check_policy_service inet:127.0.0.1:7777,  # <-- Insert this line before "permit_mynetworks"
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    ...
+```
 
-**WARNING**: Order of restriction rules is very important, please make sure you have `check_policy_service inet:127.0.0.1:7777` before `permit_mynetworks`.
+**WARNING**: Order of restriction rules is very important, please make sure
+you have `check_policy_service inet:127.0.0.1:7777` before `permit_mynetworks`.
 
-* Restart Postfix service to enable iRedAPD.
+Restart Postfix service to enable iRedAPD.
 
-		# — on Linux
-		# /etc/init.d/postfix restart
+```shell
+# — on Linux
+# /etc/init.d/postfix restart
 		
-		# —— on FreeBSD
-		# /usr/local/etc/rc.d/postfix restart
+# —— on FreeBSD
+# /usr/local/etc/rc.d/postfix restart
 		
-		# —— on OpenBSD
-		# /etc/rc.d/postfix restart
+# —— on OpenBSD
+# /etc/rc.d/postfix restart
+```
+
+Since iRedAPD-`1.4.4`, it works with Postfix parameter
+`smtpd_end_of_data_restrictions`. So if you need plugins which should be
+applied in smtp protocol state 'END-OF-MESSAGE', please enable iRedAPD like
+below:
+
+```
+smtpd_end_of_data_restrictions = check_policy_service inet:127.0.0.1:7777
+```
 
 # Rotate iRedAPD log file with logrotate
 
 * on Linux, please add logrotate config file `/etc/logrotate.d/iredapd` to rotate iRedAPD log file:
 
-		/var/log/iredapd.log {
-		    compress
-		    daily
-		    rotate 30
-		    missingok
+```
+/var/log/iredapd.log {
+    compress
+    daily
+    rotate 30
+    missingok
 
-		    # Use bzip2 for compress.
-		    compresscmd /usr/bin/bzip2
-		    uncompresscmd /usr/bin/bunzip2
-		    compressoptions -9
-		    compressext .bz2 
+    # Use bzip2 for compress.
+    compresscmd /usr/bin/bzip2
+    uncompresscmd /usr/bin/bunzip2
+    compressoptions -9
+    compressext .bz2 
 
-		    # Used on RHEL/CentOS.
-		    postrotate
-		        /bin/kill -HUP $(cat /var/run/syslogd.pid 2> /dev/null) 2> /dev/null || true
-		    endscript
+    # Used on RHEL/CentOS.
+    postrotate
+        /bin/kill -HUP $(cat /var/run/syslogd.pid 2> /dev/null) 2> /dev/null || true
+    endscript
 
-		    # Used on Ubuntu.
-		    #postrotate
-		    #    invoke-rc.d sysklogd reload > /dev/null
-		    #endscript
-		}
+    # Used on Ubuntu.
+    #postrotate
+    #    invoke-rc.d sysklogd reload > /dev/null
+    #endscript
+}
+```
 
 * on FreeBSD, please append below line in `/etc/newsyslog.conf` to rotate iRedAPD log file:
 
-		/var/log/iredapd.log    root:wheel   640  7     *    24    Z /var/run/iredapd.pid
+```
+/var/log/iredapd.log    root:wheel   640  7     *    24    Z /var/run/iredapd.pid
+```
 
 * on OpenBSD, please append below line in `/etc/newsyslog.conf` to rotate iRedAPD log file:
 
-		/var/log/iredapd.log    root:wheel   640  7     *    24    Z “/etc/rc.d/iredapd restart >/dev/null"
+```
+/var/log/iredapd.log    root:wheel   640  7     *    24    Z “/etc/rc.d/iredapd restart >/dev/null"
+```
 
 # Troubleshooting & Debug
 
-If iRedAPD doesn't work as expected, you can simplily set log_level = debug in /opt/iredapd/etc/iredapd.ini, restart iredapd and monitor its log file /var/log/iredapd.log, create a new forum topic in iRedMail forum and paste log message in forum topic.
+If iRedAPD doesn't work as expected, please set `log_level = debug` in its
+config file `/opt/iredapd/settings.py`, restart iredapd and reproduce your
+issue. Then create a new forum topic in iRedMail
+[online support forum](http://www.iredmail.org/forum/), extract issue
+related log from log file `/var/log/iredapd.log`, then post log in your forum
+post.
 
 # FAQ
 
@@ -291,6 +329,8 @@ Below access policies are recognized in iRedAPD-1.4.0 and later releases:
 
 To add moderators for certain mail alias, just list all email addresses of moderators in SQL column `alias.moderators`, multiple addresses must be separated by comma. For example:
 
-		sql> UPDATE alias SET moderators='user1@domain.ltd' WHERE address='myalias01@domain.ltd';
-		sql> UPDATE alias SET moderators='user1@domain.ltd,user2@domain.ltd,user3@domain.ltd' WHERE address='myalias02@domain.ltd';
+```sql
+sql> UPDATE alias SET moderators='user1@domain.ltd' WHERE address='myalias01@domain.ltd';
+sql> UPDATE alias SET moderators='user1@domain.ltd,user2@domain.ltd,user3@domain.ltd' WHERE address='myalias02@domain.ltd';
+```
 

@@ -1,9 +1,20 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose: Check per-recipient message size limit stored in Amavisd database
-#          (column `policy.message_size_limit`), used in Amavisd setting
-#          '@lookup_sql_dsn'.
+#          (column `policy.message_size_limit`), reject email if message size
+#          exceeded.
+#
+# Note: Amavisd is configured to be an after-queue content filter in iRedMail,
+#       with '@lookup_sql_dsn' setting enabled in Amavisd config file, Amavisd
+#       will query per-recipient, per-domain and server-wide (a.k.a. catch-all)
+#       policy rules stored in SQL table `policy`.
+#
+#       if you don't enable this plugin, Amavisd will still reject email AFTER
+#       Postfix queued this email. If you prefer to save some system resource,
+#       you should enable this plugin to reject email BEFORE Postfix queues it.
 #
 # How to use this plugin:
+#
+# *) Enable `@lookup_sql_dsn` in Amavisd config file.
 #
 # *) Set Amavisd lookup SQL database related parameters (amavisd_db_*) in
 #    iRedAPD config file `settings.py`, and enable this plugin.
