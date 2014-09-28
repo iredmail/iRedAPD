@@ -85,6 +85,7 @@ class Modeler:
                 logging.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
 
+            # Connect to Amavisd database if required
             try:
                 plugin_require_amavisd_db = plugin.REQUIRE_AMAVISD_DB
             except:
@@ -92,8 +93,13 @@ class Modeler:
 
             if plugin_require_amavisd_db:
                 if not plugin_kwargs['amavisd_db_cursor']:
-                    amavisd_db_wrap = amavisd_lib.AmavisdDBWrap()
-                    plugin_kwargs['amavisd_db_cursor'] = amavisd_db_wrap.cursor
+                    try:
+                        amavisd_db_wrap = amavisd_lib.AmavisdDBWrap()
+                        plugin_kwargs['amavisd_db_cursor'] = amavisd_db_wrap.cursor
+                        logging.debug('Got db cursor.')
+                    except Exception, e:
+                        logging.debug('Skip plugin, error while getting db cursor: %s' % str(e))
+                        continue
 
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):

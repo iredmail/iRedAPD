@@ -39,7 +39,7 @@ def restriction(**kwargs):
             else:
                 # Reject with reason.
                 # There must be a space between smtp action and reason text.
-                return SMTP_ACTIONS['reject'] + ' ' + 'Sender login mismatch.'
+                return SMTP_ACTIONS['reject'] + ' Sender login mismatch.'
 
                 # Log message without reject.
                 #logging.info('Sender login mismatch.')

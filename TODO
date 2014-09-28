@@ -1,8 +1,8 @@
 * Query required SQL columns instead of all
 * Plugins:
-    + Message size limit, server-wide, per-domain, per-user.
+    + ~~ Message size limit, server-wide, per-domain, per-user.
       Note: with Amavisd policy lookup (@lookup_sql_dsn), we can store message
-      size limit in SQL table `amavisd.policy`.
+      size limit in SQL table `amavisd.policy`. ~~
 
     + White/Blacklisting, server-wide, per-domain, per-user.
       Note: with Amavisd policy lookup (@lookup_sql_dsn), we can store wblist

@@ -70,31 +70,31 @@ def restriction(**kwargs):
         if sender_domain == recipient_domain:
             return 'DUNNO'
         else:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     elif policy == MAILLIST_POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
         if sender.endswith(recipient_domain) or sender.endswith('.' + recipient_domain):
             return 'DUNNO'
         else:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     elif policy == MAILLIST_POLICY_MEMBERSONLY:
         # Bypass all members.
         if sender in members:
             return 'DUNNO'
         else:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     elif policy == MAILLIST_POLICY_ALLOWEDONLY:
         # Bypass all moderators.
         if sender in moderators:
             return 'DUNNO'
         else:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
         # Bypass both members and moderators.
         if sender in members or sender in moderators:
             return 'DUNNO'
         else:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     else:
         # Bypass all if policy is not defined in this plugin.
         return 'DUNNO (Policy is not defined: %s)' % policy

@@ -88,7 +88,7 @@ def restriction(**kwargs):
                    or '@' + recipient_domain in all_rejected_recipients \
                    or '@.' + recipient_domain in all_rejected_recipients \
                    or '@.' in all_rejected_recipients:
-                    return SMTP_ACTIONS['reject']
+                    return SMTP_ACTIONS['reject_not_authorized']
 
     # Get restriction rules for recipient
     # Don't perform another SQL query if sender == recipient
@@ -139,6 +139,6 @@ def restriction(**kwargs):
                    or '@' + sender_domain in all_rejected_senders \
                    or '@.' + sender_domain in all_rejected_senders \
                    or '@.' in all_rejected_senders:
-                    return SMTP_ACTIONS['reject']
+                    return SMTP_ACTIONS['reject_not_authorized']
 
     return SMTP_ACTIONS['default']

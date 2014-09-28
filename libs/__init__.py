@@ -4,7 +4,10 @@ __version__ = '1.4.4'
 SMTP_ACTIONS = {
     'default': 'DUNNO',
     'accept': 'OK',
-    'reject': 'REJECT Not authorized',
+    'reject': 'REJECT',
+    # Define actions with custom reason.
+    'reject_not_authorized': 'REJECT Not authoried',
+    'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
 }
 
 # Mail list access policies.

@@ -2,6 +2,7 @@ import logging
 import settings
 from libs import SMTP_ACTIONS, utils
 
+
 def is_valid_amavisd_address(addr):
     # Valid address format:
     #   - email: single address. e.g. user@domain.ltd
@@ -34,29 +35,41 @@ def is_valid_amavisd_address(addr):
 #      already handle it.
 # TODO query all: '@.', '@domain.com', '@.domain.com', 'user@domain.com'
 # sort by priority ASC
-def get_applicable_policy(db_cursor, account, **kwargs):
-    logging.debug('Get applicable policy')
+def get_applicable_policy(db_cursor,
+                          account,
+                          policy_columns=['policy_name', 'message_size_limit'],
+                          **kwargs):
+    logging.debug('Getting applicable policies')
     account = str(account).lower()
 
     addr_type = is_valid_amavisd_address(account)
     if addr_type == 'email':
-        valid_rcpts = [account,
-                       '@' + kwargs['recipient_domain'],
-                       '@.' + kwargs['recipient_domain'],
-                       '@.']
+        sql_valid_rcpts = """'%s', '%s', '%s', '%s'""" % (
+            account,                            # full email address
+            '@' + kwargs['recipient_domain'],   # entire domain
+            '@.' + kwargs['recipient_domain'],  # sub-domain
+            '@.')                               # catch-all
     else:
         # Postfix should use full email address as recipient.
         logging.debug('Policy account is not an email address.')
         return SMTP_ACTIONS['default']
 
-    logging.debug('Valid policy accounts for recipient %s: %s' % (account, str(valid_rcpts)))
+    logging.debug('Valid policy accounts for recipient %s: %s' % (account, sql_valid_rcpts))
     try:
-        qr = db_cursor.select('policy',
-                              vars={'valid_rcpts': valid_rcpts},
-                              where='policy_name IN $valid_rcpts',
-                              order='priority ASC')
-        if qr:
-            return (True, qr[0])
+        sql = """SELECT %s
+                 FROM users, policy
+                 WHERE
+                    (users.policy_id=policy.id)
+                    AND (users.email IN (%s))
+                 ORDER BY users.priority DESC
+                 """ % (','.join(policy_columns), sql_valid_rcpts)
+        logging.debug(sql)
+
+        db_cursor.execute(sql)
+        records = db_cursor.fetchmany(4)
+
+        if records:
+            return (True, records)
         else:
             return (True, {})
     except Exception, e:
@@ -75,7 +88,7 @@ class AmavisdDBWrap:
                                      db=settings.amavisd_db_name,
                                      user=settings.amavisd_db_user,
                                      passwd=settings.amavisd_db_password)
-                self.db_cursor = db.cursor()
+                self.cursor = db.cursor()
             except Exception, e:
                 logging.debug("Error while creating Amavisd database connection: %s" % str(e))
         elif settings.backend == 'pgsql':
@@ -86,7 +99,7 @@ class AmavisdDBWrap:
                                       database=settings.sql_db,
                                       user=settings.sql_user,
                                       password=settings.sql_password)
-                self.db_cursor = db.cursor()
+                self.cursor = db.cursor()
             except Exception, e:
                 logging.error("Error while creating Amavisd database connection: %s" % str(e))
         else:
@@ -94,7 +107,7 @@ class AmavisdDBWrap:
 
     def __del__(self):
         try:
-            self.db_cursor.close()
+            self.cursor.close()
             logging.debug('Closed Amavisd database connection.')
         except Exception, e:
             logging.debug('Error while closing Amavisd database connection: %s' % str(e))

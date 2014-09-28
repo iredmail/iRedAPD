@@ -91,11 +91,6 @@ class Modeler:
             except:
                 require_local_sender = False
 
-            try:
-                require_local_recipient = plugin.REQUIRE_LOCAL_RECIPIENT
-            except:
-                require_local_recipient = False
-
             if require_local_sender and plugin_kwargs['sender_dn'] is None:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
@@ -106,6 +101,11 @@ class Modeler:
                 plugin_kwargs['sender_ldif'] = sender_ldif
 
             # Get LDIF data of recipient if required
+            try:
+                require_local_recipient = plugin.REQUIRE_LOCAL_RECIPIENT
+            except:
+                require_local_recipient = False
+
             if require_local_recipient and plugin_kwargs['recipient_dn'] is None:
                 recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
@@ -115,7 +115,7 @@ class Modeler:
                 plugin_kwargs['recipient_dn'] = recipient_dn
                 plugin_kwargs['recipient_ldif'] = recipient_ldif
 
-            # Connect to Amavisd database
+            # Connect to Amavisd database if required
             try:
                 plugin_require_amavisd_db = plugin.REQUIRE_AMAVISD_DB
             except:
@@ -123,8 +123,13 @@ class Modeler:
 
             if plugin_require_amavisd_db:
                 if not plugin_kwargs['amavisd_db_cursor']:
-                    amavisd_db_wrap = amavisd_lib.AmavisdDBWrap()
-                    plugin_kwargs['amavisd_db_cursor'] = amavisd_db_wrap.cursor
+                    try:
+                        amavisd_db_wrap = amavisd_lib.AmavisdDBWrap()
+                        plugin_kwargs['amavisd_db_cursor'] = amavisd_db_wrap.cursor
+                        logging.debug('Got db cursor.')
+                    except Exception, e:
+                        logging.debug('Skip plugin, error while getting db cursor: %s' % str(e))
+                        continue
 
             # Apply plugins
             action = utils.apply_plugin(plugin, **plugin_kwargs)

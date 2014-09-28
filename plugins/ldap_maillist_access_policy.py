@@ -59,7 +59,7 @@ def restriction(**kwargs):
         if sender_domain in recipient_alias_domains:
             return 'DUNNO (Access policy: domain)'
         else:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     elif policy == "subdomain":
         # Bypass all users under the same domain and sub domains.
         returned = False
@@ -68,7 +68,7 @@ def restriction(**kwargs):
                 return 'DUNNO (Access policy: subdomain (%s))' % (d)
 
         if returned is False:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     elif policy in ['membersonly', 'allowedonly', 'membersandmoderatorsonly']:
         allowed_senders = recipient_ldif.get('listAllowedUser', [])
         if policy == 'allowedonly':
@@ -101,7 +101,7 @@ def restriction(**kwargs):
         if sender in allowedSenders:
             return 'DUNNO (Sender is allowed)'
         else:
-            return SMTP_ACTIONS['reject']
+            return SMTP_ACTIONS['reject_not_authorized']
     else:
         # Unknown access policy
         return SMTP_ACTIONS['default']
