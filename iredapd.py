@@ -109,8 +109,11 @@ class DaemonSocket(asyncore.dispatcher):
             self.sender_search_attrlist = ['objectClass']
             self.recipient_search_attrlist = ['objectClass']
             for plugin in self.loaded_plugins:
-                self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
-                self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
+                try:
+                    self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
+                    self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
+                except:
+                    pass
 
     def handle_accept(self):
         conn, remote_addr = self.accept()

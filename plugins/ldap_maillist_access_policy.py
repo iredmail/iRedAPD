@@ -6,13 +6,8 @@ import logging
 from libs import SMTP_ACTIONS
 from libs.ldaplib import conn_utils
 
-REQUIRE_LOCAL_SENDER = False
 REQUIRE_LOCAL_RECIPIENT = True
-SENDER_SEARCH_ATTRLIST = []
 RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy']
-
-# Target smtp protocol state.
-SMTP_PROTOCOL_STATE = 'RCPT'
 
 
 def restriction(**kwargs):

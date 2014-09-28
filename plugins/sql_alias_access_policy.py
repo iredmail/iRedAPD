@@ -18,9 +18,6 @@ from libs import MAILLIST_POLICY_MEMBERSONLY
 from libs import MAILLIST_POLICY_ALLOWEDONLY
 from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
-# Target smtp protocol state.
-SMTP_PROTOCOL_STATE = 'RCPT'
-
 
 def restriction(**kwargs):
     conn = kwargs['conn']

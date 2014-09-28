@@ -3,13 +3,6 @@
 
 import logging
 
-REQUIRE_LOCAL_SENDER = False
-REQUIRE_LOCAL_RECIPIENT = False
-SENDER_SEARCH_ATTRLIST = []
-RECIPIENT_SEARCH_ATTRLIST = []
-
-# Target smtp protocol state.
-SMTP_PROTOCOL_STATE = 'RCPT'
 
 def restriction(**kwargs):
     conn = kwargs['conn']

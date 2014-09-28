@@ -6,6 +6,7 @@ import logging
 import settings
 from libs import SMTP_ACTIONS, utils
 from libs.ldaplib import conn_utils
+from libs.amavisd import core as amavisd_lib
 
 
 class Modeler:
@@ -66,7 +67,8 @@ class Modeler:
                          'sender_dn': None,
                          'sender_ldif': None,
                          'recipient_dn': None,
-                         'recipient_ldif': None}
+                         'recipient_ldif': None,
+                         'amavisd_db_cursor': None}
 
         # TODO Perform addition plugins which don't require sender/recipient info
         # e.g.
@@ -75,17 +77,26 @@ class Modeler:
         for plugin in plugins:
             # Get plugin target smtp protocol state
             try:
-                plugin_target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
+                target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
             except:
-                plugin_target_smtp_protocol_state = 'RCPT'
+                target_smtp_protocol_state = 'RCPT'
 
-            if smtp_protocol_state != plugin_target_smtp_protocol_state:
-                logging.debug('Skip plugin: %s, target smtp protocol state mismatch (%s <-> %s).' % (plugin.__name__, smtp_protocol_state, plugin_target_smtp_protocol_state))
+            if smtp_protocol_state != target_smtp_protocol_state:
+                logging.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
 
             # Get LDIF data of sender if required
-            if plugin.REQUIRE_LOCAL_SENDER \
-                    and plugin_kwargs['sender_dn'] is None:
+            try:
+                require_local_sender = plugin.REQUIRE_LOCAL_SENDER
+            except:
+                require_local_sender = False
+
+            try:
+                require_local_recipient = plugin.REQUIRE_LOCAL_RECIPIENT
+            except:
+                require_local_recipient = False
+
+            if require_local_sender and plugin_kwargs['sender_dn'] is None:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=sasl_username,
@@ -95,8 +106,7 @@ class Modeler:
                 plugin_kwargs['sender_ldif'] = sender_ldif
 
             # Get LDIF data of recipient if required
-            if plugin.REQUIRE_LOCAL_RECIPIENT \
-                    and plugin_kwargs['recipient_dn'] is None:
+            if require_local_recipient and plugin_kwargs['recipient_dn'] is None:
                 recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=recipient,
@@ -104,6 +114,17 @@ class Modeler:
                 )
                 plugin_kwargs['recipient_dn'] = recipient_dn
                 plugin_kwargs['recipient_ldif'] = recipient_ldif
+
+            # Connect to Amavisd database
+            try:
+                plugin_require_amavisd_db = plugin.REQUIRE_AMAVISD_DB
+            except:
+                plugin_require_amavisd_db = False
+
+            if plugin_require_amavisd_db:
+                if not plugin_kwargs['amavisd_db_cursor']:
+                    amavisd_db_wrap = amavisd_lib.AmavisdDBWrap()
+                    plugin_kwargs['amavisd_db_cursor'] = amavisd_db_wrap.cursor
 
             # Apply plugins
             action = utils.apply_plugin(plugin, **plugin_kwargs)

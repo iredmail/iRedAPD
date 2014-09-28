@@ -43,3 +43,12 @@ sql_port = '3306'
 sql_db = 'vmail'
 sql_user = 'vmail'
 sql_password = 'password'
+
+# For Amavisd policy lookup
+# SQL database type: mysql, pgsql
+amavisd_db_type = 'mysql'
+amavisd_db_server = '127.0.0.1'
+amavisd_db_port = '3306'
+amavisd_db_name = 'amavisd'
+amavisd_db_user = 'amavisd'
+amavisd_db_password = 'password'

@@ -10,12 +10,7 @@
 import logging
 
 REQUIRE_LOCAL_SENDER = True
-REQUIRE_LOCAL_RECIPIENT = False
 SENDER_SEARCH_ATTRLIST = ['mailBlacklistRecipient', 'mailWhitelistRecipient']
-RECIPIENT_SEARCH_ATTRLIST = []
-
-# Target smtp protocol state.
-SMTP_PROTOCOL_STATE = 'RCPT'
 
 
 def restriction(**kwargs):

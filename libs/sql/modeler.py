@@ -3,6 +3,7 @@
 import logging
 import settings
 from libs import SMTP_ACTIONS, utils
+from libs.amavisd import core as amavisd_lib
 
 
 class Modeler:
@@ -67,7 +68,8 @@ class Modeler:
                          'recipient': recipient,
                          'sender_domain': sender.split('@')[-1],
                          'recipient_domain': recipient.split('@')[-1],
-                         'sasl_username': sasl_username}
+                         'sasl_username': sasl_username,
+                         'amavisd_db_cursor': None}
 
         # TODO Get SQL record of mail user or mail alias before applying plugins
         # TODO Query required sql columns instead of all
@@ -75,17 +77,26 @@ class Modeler:
         for plugin in plugins:
             # Get plugin target smtp protocol state
             try:
-                plugin_target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
+                target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
             except:
-                plugin_target_smtp_protocol_state = 'RCPT'
+                target_smtp_protocol_state = 'RCPT'
 
-            if smtp_protocol_state != plugin_target_smtp_protocol_state:
-                logging.debug('Skip plugin: %s, target smtp protocol state mismatch (%s <-> %s).' % (plugin.__name__, smtp_protocol_state, plugin_target_smtp_protocol_state))
+            if smtp_protocol_state != target_smtp_protocol_state:
+                logging.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
+
+            try:
+                plugin_require_amavisd_db = plugin.REQUIRE_AMAVISD_DB
+            except:
+                plugin_require_amavisd_db = False
+
+            if plugin_require_amavisd_db:
+                if not plugin_kwargs['amavisd_db_cursor']:
+                    amavisd_db_wrap = amavisd_lib.AmavisdDBWrap()
+                    plugin_kwargs['amavisd_db_cursor'] = amavisd_db_wrap.cursor
 
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
                 return action
 
         return SMTP_ACTIONS['default']
-

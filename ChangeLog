@@ -7,10 +7,12 @@ iRedAPD-1.4.4:
           Note to plugin developer: Please add parameter 'SMTP_PROTOCOL_STATE'
           in plugin file to indicate which smtp protocol state the plugin
           should be invoked. If no SMTP_PROTOCOL_STATE, 'RCPT' will be used
-          by default. For example:
+          as default protocol state. For example:
 
           SMTP_PROTOCOL_STATE = 'RCPT'  # Used in smtpd_recipient_restrictions
           SMTP_PROTOCOL_STATE = 'END-OF-MESSAGE'  # smtpd_end_of_data_restrictions
+
+          Reference: http://www.postfix.org/SMTPD_POLICY_README.html
 
     * Fixed:
         - Plugin 'sql_force_change_password_in_days.py': not correctly set

@@ -28,8 +28,6 @@ import logging
 import settings
 from libs import SMTP_ACTIONS
 
-# Target smtp protocol state.
-SMTP_PROTOCOL_STATE = 'RCPT'
 
 # You can override below two settings in iRedAPD config file 'settings.py'.
 # Force to change password in 90 days.
