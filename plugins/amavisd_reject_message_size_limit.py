@@ -65,24 +65,24 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     for rcd in policy_records:
-        (policy_name, message_size_limit) = rcd
-        if not message_size_limit:
+        (policy_name, size_limit) = rcd
+        if not size_limit:
             logging.debug('SKIP: policy_name %s, no valid message_size_limit: %s' % (
                 policy_name,
-                str(message_size_limit))
+                str(size_limit))
             )
             continue
         else:
-            message_size_limit = int(message_size_limit)
-            if message_size_limit > msg_size:
+            size_limit = int(size_limit)
+            if size_limit > msg_size:
                 logging.debug('SKIP, limit not reached. policy_name %s has valid message_size_limit: %s' % (
                     policy_name,
-                    str(message_size_limit))
+                    str(size_limit))
                 )
             else:
                 logging.debug('Reject by policy_name %s, message_size_limit: %s' % (
                     policy_name,
-                    str(message_size_limit))
+                    str(size_limit))
                 )
                 return SMTP_ACTIONS['reject_message_size_exceeded']
 
