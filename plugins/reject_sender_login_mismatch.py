@@ -2,13 +2,19 @@
 
 # Purpose: Reject sender login mismatch (addresses in 'From:' and SASL username).
 
-# Usage:
+# How to use this plugin:
 #
-# *) You must remove "sender_login_mismatch" restriction in Postfix parameter
-#    "smtpd_sender_restrictions" and let this plugin do it for you.
+# *) You must remove "sender_login_mismatch" restriction rule in Postfix
+#    setting "smtpd_sender_restrictions" (/etc/postfix/main.cf). this plugin
+#    will do the same restriction for you.
 #
-# *) Please list all allowed senders in in iRedAPD config file (settings.py),
-#    parameter ALLOWED_LOGIN_MISMATCH_SENDERS. For example:
+# *) Enable this plugin in iRedAPD config file /opt/iredapd/settings.py:
+#
+#    plugins = ['reject_sender_login_mismatch', ...]
+#
+# *) List senders who are allowed to send email as different users in iRedAPD
+#    config file (/opt/iredapd/settings.py), in parameter
+#    ALLOWED_LOGIN_MISMATCH_SENDERS. For example:
 #
 #    ALLOWED_LOGIN_MISMATCH_SENDERS = ['user1@here.com', 'user2@here.com']
 #
@@ -23,6 +29,7 @@ try:
     ALLOWED_LOGIN_MISMATCH_SENDERS = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
 except AttributeError:
     ALLOWED_LOGIN_MISMATCH_SENDERS = []
+
 
 def restriction(**kwargs):
     sender = kwargs['sender']
