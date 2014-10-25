@@ -31,7 +31,7 @@ def restriction(**kwargs):
     policy = recipient_ldif.get('accessPolicy', ['public'])[0].lower()
 
     # Log access policy and description
-    logging.debug('%s -> %s, access policy: %s' % (sender, recipient, policy))
+    logging.debug('Access policy of recipient (%s): %s' % (recipient, policy))
 
     if policy in ['domain', 'subdomain', ]:
         recipient_domain = recipient.split('@', 1)[-1]
@@ -94,7 +94,7 @@ def restriction(**kwargs):
                 all_possible_sender_domains += ['.' + '.'.join(domain_parts)]
                 domain_parts.pop(0)
 
-            logging.debug('All possible sender domains: %s' % ', '.join(all_possible_sender_domains))
+            logging.debug('Possible sender domains: %s' % ', '.join(all_possible_sender_domains))
             if set(all_possible_sender_domains) & set(allowedSenders):
                 return 'DUNNO (Sender domain or its sub-domain is allowed)'
 

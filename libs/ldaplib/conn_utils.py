@@ -127,7 +127,7 @@ def get_allowed_senders_of_mail_list(conn,
         logging.debug('Allowed subdomains: %s' % ', '.join(allowed_subdomains))
 
         if allowed_users:
-            logging.debug('Query to get user alises of allowed senders under same domain.')
+            logging.debug("[+] Getting allowed senders' alias addresses.")
 
             basedn = 'ou=Users,' + domaindn
             search_filter = '(&(objectClass=mailUser)(enabledService=shadowaddress)(|'
@@ -138,7 +138,7 @@ def get_allowed_senders_of_mail_list(conn,
             search_attrs = ['mail', 'shadowAddress']
 
             logging.debug('base dn: %s' % basedn)
-            logging.debug('search scope: 1 (ldap.SCOPE_ONELEVEL)')
+            logging.debug('search scope: ONELEVEL')
             logging.debug('search filter: %s' % search_filter)
             logging.debug('search attributes: %s' % ', '.join(search_attrs))
 
@@ -161,7 +161,7 @@ def get_allowed_senders_of_mail_list(conn,
             search_attrs = ['domainName', 'domainAliasName']
 
             logging.debug('base dn: %s' % basedn)
-            logging.debug('search scope: 1 (ldap.SCOPE_ONELEVEL)')
+            logging.debug('search scope: ONELEVEL')
             logging.debug('search filter: %s' % search_filter)
             logging.debug('search attributes: %s' % ', '.join(search_attrs))
 
