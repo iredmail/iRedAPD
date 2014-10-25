@@ -129,7 +129,6 @@ def daemonize(noClose=False):
     try:
         # Fork once to go into the background.
 
-        log.debug('Forking first child.')
         pid = _fork()
         if pid != 0:
             # Parent. Exit using os._exit(), which doesn't fire any atexit
@@ -139,7 +138,6 @@ def daemonize(noClose=False):
         # First child. Create a new session. os.setsid() creates the session
         # and makes this (child) process the process group leader. The process
         # is guaranteed not to have a control terminal.
-        log.debug('Creating new session')
         os.setsid()
     
         # Ignore SIGHUP
@@ -147,25 +145,21 @@ def daemonize(noClose=False):
 
         # Fork a second child to ensure that the daemon never reacquires
         # a control terminal.
-        log.debug('Forking second child.')
         pid = _fork()
         if pid != 0:
             # Original child. Exit.
             os._exit(0)
             
         # This is the second child. Set the umask.
-        log.debug('Setting umask')
         os.umask(UMASK)
     
         # Go to a neutral corner (i.e., the primary file system, so
         # the daemon doesn't prevent some other file system from being
         # unmounted).
-        log.debug('Changing working directory to "%s"' % WORKDIR)
         os.chdir(WORKDIR)
     
         # Unless noClose was specified, close all file descriptors.
         if not noClose:
-            log.debug('Redirecting file descriptors')
             _redirectFileDescriptors()
 
     except DaemonException:

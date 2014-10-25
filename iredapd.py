@@ -111,6 +111,10 @@ class DaemonSocket(asyncore.dispatcher):
             for plugin in self.loaded_plugins:
                 try:
                     self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
+                except:
+                    pass
+
+                try:
                     self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
                 except:
                     pass
