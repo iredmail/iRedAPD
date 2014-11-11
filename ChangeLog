@@ -1,5 +1,7 @@
 iRedAPD-1.4.4:
     * Improvements:
+        * Detect alias domains while check mail list access policy
+          (plugins/sql_alias_access_policy.py).
         * New plugin: plugins/amavisd_reject_message_size_limit.py, works
           with Postfix 'smtpd_end_of_data_restrictions'.
           Used to reject email if current message size exceeds per-recipient
