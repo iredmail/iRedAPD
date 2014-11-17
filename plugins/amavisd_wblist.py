@@ -31,7 +31,7 @@
 # *) Restart both iRedAPD and Postfix services.
 
 import logging
-from libs import SMTP_ACTIONS
+from libs import SMTP_ACTIONS, sqllist
 from libs.amavisd import core as amavisd_lib
 
 # Connect to amavisd database
@@ -53,17 +53,78 @@ def restriction(**kwargs):
     valid_senders = amavisd_lib.get_valid_addresses_from_email(sender, sender_domain)
     valid_recipitns = amavisd_lib.get_valid_addresses_from_email(recipient, recipient_domain)
 
+    if not valid_senders or not valid_recipitns:
+        logging.debug('No valid senders or recipients.')
+        return SMTP_ACTIONS['default']
+
     logging.debug('Possible senders: %s' % str(valid_senders))
     logging.debug('Possible recipients: %s' % str(valid_recipitns))
 
-    logging.debug('Query per-user, per-domain and global white/blacklists.')
-    # wblist priority:
-    #   1: per-user (user@domain.com)
-    #   2: per-domain (@domain.com)
-    #   3: global (@.)
-    # Get possible senders
-    #SELECT id FROM users where email IN ('postmaster@a.cn','postmaster','@a.cn','@.a.cn','@.cn','@.') ORDER BY priority;
-    # Get mailaddr.id for all possible senders
-    #select id as sid from mailaddr;
+    # Get 'mailaddr.id' of possible senders
+    sql = """SELECT id,priority,email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
+    logging.debug('SQL: Get senders: %s' % sql)
+
+    adb_cursor.execute(sql)
+    senders = []
+    sids = []
+    for rcd in adb_cursor.fetchall():
+        (id, priority, email) = rcd
+        senders.append((priority, id, email))
+        sids.append(id)
+
+    if not sids:
+        # don't waste time if we don't even have senders stored in sql db.
+        logging.debug('No senders found in SQL database.')
+        return SMTP_ACTIONS['default']
+
+    # Sort by priority
+    senders.reverse()
+
+    logging.debug('Senders: %s' % str(senders))
+
+    # Get 'users.id' of possible recipients
+    sql = """SELECT id,priority,email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipitns)
+    logging.debug('SQL: Get recipients: %s' % sql)
+
+    adb_cursor.execute(sql)
+    rcpts = []
+    rids = []
+    for rcd in adb_cursor.fetchall():
+        (id, priority, email) = rcd
+        rcpts.append((priority, id, email))
+        rids.append(id)
+
+    if not rids:
+        # don't waste time if we don't have any per-recipient wblist.
+        logging.debug('No recipients found in SQL database.')
+        return SMTP_ACTIONS['default']
+
+    # Sort by priority
+    rcpts.reverse()
+
+    logging.debug('Recipients: %s' % str(rcpts))
+
+    # Get wblist
+    sql = """SELECT rid,sid,wb FROM wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sids), sqllist(rids))
+    logging.debug('SQL: Get wblist: %s' % sql)
+    adb_cursor.execute(sql)
+    wblists = adb_cursor.fetchall()
+
+    if not wblists:
+        # no wblist
+        logging.debug('No per-recipient white/blacklist found.')
+        return SMTP_ACTIONS['default']
+
+    logging.debug('Found per-recipient white/blacklists: %s' % str(wblists))
+
+    for rid in rids:    # sorted by users.priority
+        for sid in sids:    # sorted by mailaddr.priority
+            if (rid, sid, 'W') in wblists:
+                logging.debug("Matched whitelist: wblist=(%d, %d, 'W')" % (rid, sid))
+                return SMTP_ACTIONS['accept']
+
+            if (rid, sid, 'B') in wblists:
+                logging.debug("Matched blacklist: (%d, %d, 'B')" % (rid, sid))
+                return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']

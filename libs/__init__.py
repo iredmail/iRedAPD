@@ -6,6 +6,7 @@ SMTP_ACTIONS = {
     'accept': 'OK',
     'reject': 'REJECT',
     # Define actions with custom reason.
+    'reject_blacklisted': 'REJECT Blacklisted',
     'reject_not_authorized': 'REJECT Not authoried',
     'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
 }
@@ -23,3 +24,22 @@ MAILLIST_POLICY_MEMBERSONLY = 'membersonly'
 MAILLIST_POLICY_ALLOWEDONLY = 'allowedonly'
 # Only members and moderators are allowed
 MAILLIST_POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
+
+
+def sqllist(values):
+    """
+        >>> _sqllist([1, 2, 3])
+        <sql: '(1, 2, 3)'>
+    """
+    items = []
+    items.append('(')
+    for i, v in enumerate(values):
+        if i != 0:
+            items.append(', ')
+
+        if isinstance(v, (int, long, float)):
+            items.append("""%s""" % v)
+        else:
+            items.append("""'%s'""" % v)
+    items.append(')')
+    return ''.join(items)

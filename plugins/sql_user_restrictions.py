@@ -62,7 +62,7 @@ def restriction(**kwargs):
 
         # If it does have restrictions
         if not allowed_recipients and not rejected_recipients:
-            logging.debug('No restrictions of sender.')
+            logging.debug('No sender restriction.')
         else:
             # Allowed first
             # single recipient, domain, sub-domain, catch-all
@@ -113,7 +113,7 @@ def restriction(**kwargs):
 
         # If it does have restrictions
         if not allowed_senders and not rejected_senders:
-            logging.debug('No restrictions of recipient.')
+            logging.debug('No recipient restriction.')
         else:
             # Allowed first
             # single recipient, domain, sub-domain, catch-all
