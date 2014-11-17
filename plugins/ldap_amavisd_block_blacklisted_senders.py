@@ -4,6 +4,7 @@
 
 import logging
 from libs import SMTP_ACTIONS
+from libs.amavisd import core as amavisd_lib
 
 RECIPIENT_SEARCH_ATTRLIST = ['amavisBlacklistSender', 'amavisWhitelistSender']
 
@@ -18,26 +19,11 @@ def restriction(**kwargs):
     if not 'amavisAccount' in recipient_ldif.get('objectClass', []):
         return 'DUNNO (Not a amavisdAccount object)'
 
-    sender = smtp_session_data.get('sender').lower()
+    sender = kwargs['sender']
+    sender_domain = kwargs['sender_domain']
 
-    # Get valid Amavisd sender, sender domain and sub-domain(s).
-    # - Sample user: user@sub2.sub1.com.cn
-    # - Valid Amavisd senders:
-    #   -> user@sub2.sub1.com.cn
-    #   -> @sub2.sub1.com.cn
-    #   -> @.sub2.sub1.com.cn
-    #   -> @.sub1.com.cn
-    #   -> @.com.cn
-    #   -> @.cn
-    splited_sender_domain = str(sender.split('@', 1)[-1]).split('.')
-
-    # Default senders (user@domain.ltd):
-    # ['@.', 'user@domain.ltd', @domain.ltd']
-    valid_amavisd_senders = set(['@.', sender, '@' + sender.split('@', 1)[-1], ])
-    for counter in range(len(splited_sender_domain)):
-        # Append domain and sub-domain.
-        valid_amavisd_senders.update(['@.' + '.'.join(splited_sender_domain)])
-        splited_sender_domain.pop(0)
+    # Get valid Amavisd senders
+    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender, sender_domain)
 
     # Get list of amavisBlacklistedSender.
     blSenders = set([v.lower() for v in recipient_ldif.get('amavisBlacklistSender', [])])
@@ -50,11 +36,11 @@ def restriction(**kwargs):
     logging.debug('Blacklisted senders: %s' % str(blSenders))
 
     # Bypass whitelisted senders.
-    if len(valid_amavisd_senders & wlSenders) > 0:
+    if set(valid_senders) & wlSenders:
         return SMTP_ACTIONS['accept']
 
     # Reject blacklisted senders.
-    if len(valid_amavisd_senders & blSenders) > 0:
+    if set(valid_senders) & blSenders:
         return 'REJECT Blacklisted'
 
     # Neither blacklisted nor whitelisted.

@@ -26,6 +26,7 @@
 #           check_policy_service inet:[127.0.0.1]:7777,
 #           ...
 #
+# *) Enable this plugin in iRedAPD config file (/opt/iredapd/settings.py).
 # *) Restart both iRedAPD and Postfix services.
 
 import logging
