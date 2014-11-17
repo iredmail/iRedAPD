@@ -78,6 +78,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     # Sort by priority
+    senders.sort()
     senders.reverse()
 
     logging.debug('Senders: %s' % str(senders))
@@ -100,6 +101,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     # Sort by priority
+    rcpts.sort()
     rcpts.reverse()
 
     logging.debug('Recipients: %s' % str(rcpts))
