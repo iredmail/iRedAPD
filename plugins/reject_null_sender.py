@@ -3,6 +3,10 @@
 # Purpose: Reject message submitted by sasl authenticated user but specifying
 #          null sender in 'From:' header (from=<> in Postfix log).
 #
+#          If your user's password was cracked by spammer, spammer can use
+#          this account to bypass smtp authentication, but with a null sender
+#          in 'From:' header, throttling won't be triggered.
+#
 # How to use this plugin:
 #
 # *) Enable this plugin in iRedAPD config file /opt/iredapd/settings.py:
