@@ -3,17 +3,17 @@
 ## SMTP protocol state
 
 If your plugin should not be applied in Postfix protocol state 'RCPT', please
-add parameter 'SMTP_PROTOCOL_STATE' in plugin file. For example:
+add variable 'SMTP_PROTOCOL_STATE' in plugin file. For example:
 
     SMTP_PROTOCOL_STATE = 'END-OF-MESSAGE'
 
 Although Postfix has several protocol states, but we usually use two of them:
 RCPT, END-OF-MESSAGE.
 
-`RCPT` is used in Postfix parameter `smtpd_sender_restrictions` or
+`RCPT` is used in Postfix variable `smtpd_sender_restrictions` or
 `smtpd_recipient_restrictions`.
 
-`END-OF-MESSAGE` is used in Postfix parameter `smtpd_end_of_data_restrictions`.
+`END-OF-MESSAGE` is used in Postfix variable `smtpd_end_of_data_restrictions`.
 
 Refer to Postfix document for more details:
 [Postfix SMTP Access Policy Delegation](http://www.postfix.org/SMTPD_POLICY_README.html#protocol)
@@ -23,7 +23,7 @@ Refer to Postfix document for more details:
 ## If plugin requires sender or recipient to be local account
 
 If your plugin requires sender or recipient to be local account, please add
-below parameters in plugin file:
+below variables in plugin file:
 
     # Require sender to be local
     REQUIRE_LOCAL_SENDER = True
@@ -34,7 +34,7 @@ below parameters in plugin file:
 ## If plugin requires some LDAP attributes
 
 If your plugin requires some LDAP attributes in sender or recipient object,
-please add below parameters in plugin file:
+please add below variables in plugin file:
 
     # Attributes in sender object
     SENDER_SEARCH_ATTRLIST = ['attr_name', 'attr_name_2', ...]
