@@ -23,10 +23,11 @@ def is_valid_amavisd_address(addr):
         domain = addr.split(r'@', 1)[-1]
         if utils.is_domain(domain):
             return 'domain'
-    else:
+    elif utils.is_email(addr):
         # single email address
-        if utils.is_email(addr):
-            return 'email'
+        return 'email'
+    elif utils.is_strict_ip(addr):
+        return 'ip'
 
     return False
 

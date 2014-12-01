@@ -20,18 +20,23 @@
 # *) Set Amavisd lookup SQL database related parameters (amavisd_db_*) in
 #    iRedAPD config file `settings.py`, and enable this plugin.
 #
-# *) Enable iRedAPD in Postfix `smtpd_end_of_data_restrictions`.
-#    For example:
-#
-#    smtpd_end_of_data_restrictions =
-#           check_policy_service inet:[127.0.0.1]:7777,
-#           ...
+# *) Enable iRedAPD in Postfix `smtpd_recipient_restrictions`.
 #
 # *) Enable this plugin in iRedAPD config file (/opt/iredapd/settings.py).
 # *) Restart both iRedAPD and Postfix services.
+#
+# Possible white/blacklist senders:
+#
+#   - user@domain.com:  single sender email address
+#   - @domain.com:  entire sender domain
+#   - @.domain.com: entire sender domain and all sub-domains
+#   - @.:           all senders
+#   - 192.168.1.1:  single sender ip address
+#   - 192.168.*.1:  wildcast sender ip addresses. NOTE: Any ip address field
+#                   can be replaced by wildcast letter (*).
 
 import logging
-from libs import SMTP_ACTIONS, sqllist
+from libs import SMTP_ACTIONS, sqllist, utils
 from libs.amavisd import core as amavisd_lib
 
 # Connect to amavisd database
@@ -41,28 +46,55 @@ REQUIRE_AMAVISD_DB = True
 def restriction(**kwargs):
     adb_cursor = kwargs['amavisd_db_cursor']
 
-    if not adb_cursor:
-        logging.debug('Error, no valid Amavisd database connection.')
-        return SMTP_ACTIONS['default']
-
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
     recipient = kwargs['recipient']
     recipient_domain = kwargs['recipient_domain']
 
-    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender, sender_domain)
-    valid_recipitns = amavisd_lib.get_valid_addresses_from_email(recipient, recipient_domain)
+    client_address = kwargs['smtp_session_data']['client_address']
 
-    if not valid_senders or not valid_recipitns:
+    if sender == recipient:
+        logging.debug('Sender is same as recipient, bypassed.')
+        return SMTP_ACTIONS['default']
+
+    if not adb_cursor:
+        logging.debug('Error, no valid Amavisd database connection.')
+        return SMTP_ACTIONS['default']
+
+    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender, sender_domain)
+    valid_recipients = amavisd_lib.get_valid_addresses_from_email(recipient, recipient_domain)
+
+    if not valid_senders or not valid_recipients:
         logging.debug('No valid senders or recipients.')
         return SMTP_ACTIONS['default']
 
-    logging.debug('Possible senders: %s' % str(valid_senders))
-    logging.debug('Possible recipients: %s' % str(valid_recipitns))
 
-    # Get 'mailaddr.id' of possible senders
+    # Append original IP address and all possible wildcast IP addresses
+    valid_senders.append(client_address)
+    if utils.is_ipv4(client_address):
+        ip4 = client_address.split('.')
+
+        ip4s = set()
+        counter = 0
+        for i in range(4):
+            a = ip4[:]
+            a[i]='*'
+            ip4s.add('.'.join(a))
+
+            if counter < 4:
+                for j in range(4 - counter):
+                    a[j+counter] = '*'
+                    ip4s.add('.'.join(a))
+
+            counter += 1
+        valid_senders += list(ip4s)
+
+    logging.debug('Possible policy senders: %s' % str(valid_senders))
+    logging.debug('Possible policy recipients: %s' % str(valid_recipients))
+
+    # Get 'mailaddr.id' of policy senders
     sql = """SELECT id,priority,email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
-    logging.debug('SQL: Get senders: %s' % sql)
+    logging.debug('SQL: Get policy senders: %s' % sql)
 
     adb_cursor.execute(sql)
     senders = []
@@ -81,11 +113,11 @@ def restriction(**kwargs):
     senders.sort()
     senders.reverse()
 
-    logging.debug('Senders: %s' % str(senders))
+    logging.debug('Senders (in sql table: amavisd.mailaddr): %s' % str(senders))
 
     # Get 'users.id' of possible recipients
-    sql = """SELECT id,priority,email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipitns)
-    logging.debug('SQL: Get recipients: %s' % sql)
+    sql = """SELECT id,priority,email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipients)
+    logging.debug('SQL: Get policy recipients: %s' % sql)
 
     adb_cursor.execute(sql)
     rcpts = []
@@ -104,7 +136,7 @@ def restriction(**kwargs):
     rcpts.sort()
     rcpts.reverse()
 
-    logging.debug('Recipients: %s' % str(rcpts))
+    logging.debug('Recipients (in sql table: amavisd.users): %s' % str(rcpts))
 
     # Get wblist
     sql = """SELECT rid,sid,wb FROM wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sids), sqllist(rids))
@@ -119,6 +151,7 @@ def restriction(**kwargs):
 
     logging.debug('Found per-recipient white/blacklists: %s' % str(wblists))
 
+    # Check sender addresses
     for rid in rids:    # sorted by users.priority
         for sid in sids:    # sorted by mailaddr.priority
             if (rid, sid, 'W') in wblists:

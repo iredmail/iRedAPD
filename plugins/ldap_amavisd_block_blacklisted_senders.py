@@ -9,7 +9,6 @@ from libs.amavisd import core as amavisd_lib
 RECIPIENT_SEARCH_ATTRLIST = ['amavisBlacklistSender', 'amavisWhitelistSender']
 
 def restriction(**kwargs):
-    smtp_session_data = kwargs['smtp_session_data']
     recipient_ldif = kwargs['recipient_ldif']
 
     # Return if recipient doesn't have objectClass=amavisdAccount.
