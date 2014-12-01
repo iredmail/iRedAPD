@@ -1,7 +1,7 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
-
+#
 # Purpose: Reject sender login mismatch (addresses in 'From:' and SASL username).
-
+#
 # How to use this plugin:
 #
 # *) You must remove "sender_login_mismatch" restriction rule in Postfix
@@ -18,6 +18,7 @@
 #
 #    ALLOWED_LOGIN_MISMATCH_SENDERS = ['user1@here.com', 'user2@here.com']
 #
+# *) Restart iRedAPD service.
 
 import logging
 from libs import SMTP_ACTIONS

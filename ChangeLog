@@ -1,21 +1,32 @@
 iRedAPD-1.4.4:
-    * Improvements:
-        * Detect alias domains while check mail list access policy
-          (plugins/sql_alias_access_policy.py).
-        * New plugin: plugins/amavisd_wblist.py. Used to reject blacklisted
-          senders and bypass whitelisted senders in Amavisd per-recipient
-          white/blacklists stored in SQL table 'amavisd.wblist'.
-        * New plugin: plugins/amavisd_reject_message_size_limit.py, works
-          with Postfix 'smtpd_end_of_data_restrictions'.
+    * New plugins:
+        * plugins/amavisd_wblist.py.
+          Used to reject blacklisted senders and bypass whitelisted senders in
+          Amavisd per-recipient white/blacklists stored in SQL table
+          'amavisd.wblist'.
+          Works with OpenLDAP/MySQL/PostgreSQL backends.
+
+        * plugins/amavisd_reject_message_size_limit.py.
+          Wworks with Postfix 'smtpd_end_of_data_restrictions'.
           Used to reject email if current message size exceeds per-recipient
           message_size_limit stored in Amavisd database (column
           `policy.message_size_limit`).
+          Works with OpenLDAP/MySQL/PostgreSQL backends.
+
+        * plugins/reject_null_sender.py.
+          Used to reject message submitted by sasl authenticated user but
+          specifying null sender in 'From:' header (from=<> in mail log).
+          Works with OpenLDAP/MySQL/PostgreSQL backends.
+
+    * Improvements:
+        * Detect alias domains while check mail list access policy
+          (plugins/sql_alias_access_policy.py).
 
         * Detect current smtp protocol state and pick up applicable plugins.
           It's now working with Postfix 'smtpd_end_of_data_restrictions'.
 
     * Fixed:
-        - Plugin 'sql_force_change_password_in_days.py': not correctly set
+        - plugin/sql_force_change_password_in_days.py: not correctly set
           password last change date if user didn't reset password before.
           Thanks Joel A.G.Oliveira <joel _at_ gabrieldeoliveira dot com.br>
           for the report.
