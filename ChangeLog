@@ -6,7 +6,7 @@ iRedAPD-1.4.4:
           'amavisd.wblist'.
           Works with OpenLDAP/MySQL/PostgreSQL backends.
 
-        * plugins/amavisd_reject_message_size_limit.py.
+        * plugins/amavisd_message_size_limit.py.
           Wworks with Postfix 'smtpd_end_of_data_restrictions'.
           Used to reject email if current message size exceeds per-recipient
           message_size_limit stored in Amavisd database (column

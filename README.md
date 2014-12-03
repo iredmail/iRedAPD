@@ -20,7 +20,7 @@ source files to understand how it works and what it does.
 
 ## Plugins for all backends
 
-* `amavisd_reject_message_size_limit`: Check per-recipient message size limit
+* `amavisd_message_size_limit`: Check per-recipient message size limit
   stored in Amavisd database (column `policy.message_size_limit`), reject email
   if message size exceeded.
 
