@@ -5,11 +5,13 @@
 # Note: Amavisd is configured to be an after-queue content filter in iRedMail.
 #       with '@lookup_sql_dsn' setting enabled in Amavisd config file, Amavisd
 #       will query per-recipient, per-domain and server-wide (a.k.a. catch-all)
-#       policy rules stored in SQL table `policy`.
+#       policy rules stored in SQL table `amavisd.policy`.
 #
 #       if you don't enable this plugin, Amavisd will quarantine emails sent
-#       from per-user blacklisted senders, and no spam/virus scanning for
-#       emails sent from per-user whitelisted senders. With this plugin,
+#       from per-user blacklisted senders, and no spam scanning for
+#       emails sent from per-user whitelisted senders (note: other checkings
+#       like banned filename, bad headers, virus are still checked - if you
+#       didn't disable them in `amavisd.policy`). With this plugin,
 #       we can tell Postfix to reject blacklisted sender BEFORE email enter
 #       mail queue, or bypass emails directly.
 #
