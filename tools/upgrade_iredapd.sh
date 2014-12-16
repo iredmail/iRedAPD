@@ -22,6 +22,7 @@ export KERNEL_NAME="$(uname -s | tr '[a-z]' '[A-Z]')"
 export RC_SCRIPT_NAME='iredapd'
 
 if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
+    export DIR_RC_SCRIPTS='/etc/init.d'
     if [ -f /etc/redhat-release ]; then
         # RHEL/CentOS
         export DISTRO='RHEL'
@@ -41,8 +42,10 @@ if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
     fi
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DISTRO='FREEBSD'
+    export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
+    export DIR_RC_SCRIPTS='/etc/rc.d'
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
@@ -105,6 +108,20 @@ rm -f ${IREDAPD_ROOT_DIR}
 
 echo "* Creating symbol link ${IREDAPD_ROOT_DIR} to ${NEW_IREDAPD_ROOT_DIR}"
 cd /opt && ln -s ${name_new_version} iredapd
+
+# Always copy init rc script.
+echo "* Copy new SysV init script."
+if [ X"${DISTRO}" == X'RHEL' ]; then
+    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.rhel ${DIR_RC_SCRIPTS}/iredapd
+elif [ X"${DISTRO}" == X'DEBIAN' -o X"${DISTRO}" == X'UBUNTU' ]; then
+    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.debian ${DIR_RC_SCRIPTS}/iredapd
+elif [ X"${DISTRO}" == X"FREEBSD" ]; then
+    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.freebsd ${DIR_RC_SCRIPTS}/iredapd
+elif [ X"${DISTRO}" == X'OPENBSD' ]; then
+    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.openbsd ${DIR_RC_SCRIPTS}/iredapd
+fi
+
+chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
