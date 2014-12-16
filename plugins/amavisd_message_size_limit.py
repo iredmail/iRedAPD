@@ -9,8 +9,8 @@
 #       policy rules stored in SQL table `policy`.
 #
 #       if you don't enable this plugin, Amavisd will still reject email AFTER
-#       Postfix queued this email. If you prefer to save some system resource,
-#       you should enable this plugin to reject email BEFORE Postfix queues it.
+#       Postfix queued the email. If you prefer to reject the email BEFORE
+#       Postfix queued it to save system resource, you should enable this plugin.
 #
 # How to use this plugin:
 #

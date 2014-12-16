@@ -19,6 +19,7 @@ iRedAPD-1.4.4:
           Works with OpenLDAP/MySQL/PostgreSQL backends.
 
     * Improvements:
+        * New tool to help upgrade iRedAPD: tools/upgrade_iredapd.sh.
         * Detect alias domains while check mail list access policy
           (plugins/sql_alias_access_policy.py).
 
