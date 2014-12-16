@@ -9,7 +9,9 @@
 **NOTES**: 
 
 * iRedAPD is a sub-project of [iRedMail project](http://www.iredmail.org).
-* iRedAPD is installed and enabled in iRedMail by default, so you don’t need this tutorial if you already have iRedMail running.
+* iRedAPD is installed and enabled in iRedMail by default, so you don’t need
+  this tutorial if you already have iRedMail running. Standalone installation
+  guide is `INSTALL.md`.
 * You can manage iRedAPD with iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
 
 # Available plugins
