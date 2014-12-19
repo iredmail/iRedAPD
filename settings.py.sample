@@ -22,7 +22,10 @@ backend = 'ldap'
 # - Plugin name is file name which placed under 'plugins/' directory,
 #   without file extension '.py'.
 # - Plugin names MUST be seperated by comma.
-plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders', 'ldap_recipient_restrictions']
+# - Plugins are applied in specified order. It's better to list plugins which
+#   doesn't require SQL/LDAP query first (e.g. reject_null_sender), then
+#   white/blacklist related plugins, e.g. amavisd_wblist.
+plugins = ['reject_null_sender', 'amavisd_wblist', 'ldap_maillist_access_policy']
 
 # For LDAP backend.
 #
