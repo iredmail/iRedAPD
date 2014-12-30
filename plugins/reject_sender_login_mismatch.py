@@ -16,7 +16,7 @@
 #    config file (/opt/iredapd/settings.py), in parameter
 #    ALLOWED_LOGIN_MISMATCH_SENDERS. For example:
 #
-#    ALLOWED_LOGIN_MISMATCH_SENDERS = ['user1@here.com', 'user2@here.com']
+#    ALLOWED_LOGIN_MISMATCH_SENDERS = ['domain.com', 'user2@here.com']
 #
 # *) Restart iRedAPD service.
 
@@ -25,24 +25,25 @@ from libs import SMTP_ACTIONS
 import settings
 
 
-# Allowed senders.
-try:
-    ALLOWED_LOGIN_MISMATCH_SENDERS = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
-except AttributeError:
-    ALLOWED_LOGIN_MISMATCH_SENDERS = []
-
-
 def restriction(**kwargs):
+    # Allowed senders or sender domains.
+    try:
+        ALLOWED_LOGIN_MISMATCH_SENDERS = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
+    except:
+        return SMTP_ACTIONS['default']
+
     sender = kwargs['sender']
+    sender_domain = kwargs['sender_domain']
     sasl_username = kwargs['sasl_username']
 
     logging.debug('Allowed SASL username: %s' % ', '.join(ALLOWED_LOGIN_MISMATCH_SENDERS))
-    logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
+    logging.debug('Sender: %s, SASL username: %s, domain: %s' % (sender, sasl_username, sender_domain))
 
     # Apply on outgoing emails
     if sasl_username:
         if sender != sasl_username:
-            if sasl_username in ALLOWED_LOGIN_MISMATCH_SENDERS:
+            if sasl_username in ALLOWED_LOGIN_MISMATCH_SENDERS \
+               or sender_domain in ALLOWED_LOGIN_MISMATCH_SENDERS:
                 return SMTP_ACTIONS['default']
             else:
                 # Reject with reason.
