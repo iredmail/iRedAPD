@@ -37,7 +37,7 @@
 #
 #       + user@primary.com
 #       + user@alias-1.com
-#       + user@alias-2.com.
+#       + user@alias-2.com
 #
 # *) Restart iRedAPD service.
 
