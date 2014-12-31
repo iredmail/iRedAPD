@@ -27,8 +27,8 @@
 #
 #       ALLOWED_LOGIN_MISMATCH_STRICTLY = False
 #
-#    - With OpenLDAP backend, user alias address is stored in user object
-#      'shadowAddress'.
+#    - With OpenLDAP backend, user alias address is stored in attribute
+#      'shadowAddress' of user object.
 #
 #    - With MySQL/PostgreSQL backends, user alias address is username part +
 #      alias domain name. For example, if primary domain 'primary.com' has
