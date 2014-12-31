@@ -22,6 +22,18 @@ source files to understand how it works and what it does.
 
 ## Plugins for all backends
 
+* `reject_sender_login_mismatch`: Reject sender login mismatch (addresses in
+  `From:` and SASL username). It will verify user alias addresses against
+  SQL/LDAP database.
+* `reject_null_sender`: Reject message submitted by sasl authenticated user but
+  specifying null sender in `From:` header (`from=<>` in Postfix log).
+
+    If your user's password was cracked by spammer, spammer can use
+    this account to bypass smtp authentication, but with a null sender
+    in `From:` header, throttling won't be triggered.
+
+* `amavisd_wblist`: Reject senders listed in per-user blacklists, bypass
+  senders listed in per-user whitelists stored in Amavisd database.
 * `amavisd_message_size_limit`: Check per-recipient message size limit
   stored in Amavisd database (column `policy.message_size_limit`), reject email
   if message size exceeded.
@@ -29,9 +41,9 @@ source files to understand how it works and what it does.
 ## Plugins for OpenLDAP backend
 
 * `ldap_maillist_access_policy`: restrict who can send email to mail list.
-* `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist.
-* `ldap_recipient_restrictions`: per-user recipient whitelist and blacklist.
 * `ldap_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
+* Not used anymore: ~~ `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist. ~~
+* Not used anymore: ~~ `ldap_recipient_restrictions`: per-user recipient whitelist and blacklist. ~~
 
 ## Plugins for MySQL/MariaDB and PostgreSQL backends
 
