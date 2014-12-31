@@ -60,7 +60,7 @@ def restriction(**kwargs):
     logging.debug('SQL: record: %s' % str(sql_record))
 
     # Recipient account doesn't exist.
-    if sql_record is None:
+    if not sql_record:
         return 'DUNNO (Not mail alias)'
 
     policy = str(sql_record[0]).lower()

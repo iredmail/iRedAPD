@@ -95,7 +95,7 @@ class Modeler:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=sasl_username,
-                    attrlist=sender_search_attrlist,
+                    attrs=sender_search_attrlist,
                 )
                 plugin_kwargs['sender_dn'] = sender_dn
                 plugin_kwargs['sender_ldif'] = sender_ldif
@@ -110,7 +110,7 @@ class Modeler:
                 recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
                     conn=self.conn,
                     account=recipient,
-                    attrlist=recipient_search_attrlist,
+                    attrs=recipient_search_attrlist,
                 )
                 plugin_kwargs['recipient_dn'] = recipient_dn
                 plugin_kwargs['recipient_ldif'] = recipient_ldif

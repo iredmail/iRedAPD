@@ -8,35 +8,37 @@ from libs import MAILLIST_POLICY_MEMBERSONLY, \
     MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
 
-def get_account_ldif(conn, account, attrlist=None):
+def get_account_ldif(conn, account, query_filter=None, attrs=None):
     logging.debug('[+] Getting LDIF data of account: %s' % account)
 
-    query_filter = '(&' + \
-                   '(|(mail=%(account)s)(shadowAddress=%(account)s))' % {'account': account} + \
-                   '(|' + \
-                   '(objectClass=mailUser)' + \
-                   '(objectClass=mailList)' + \
-                   '(objectClass=mailAlias)' + \
-                   '))'
+    if not query_filter:
+        query_filter = '(&' + \
+                       '(|(mail=%(account)s)(shadowAddress=%(account)s))' % {'account': account} + \
+                       '(|' + \
+                       '(objectClass=mailUser)' + \
+                       '(objectClass=mailList)' + \
+                       '(objectClass=mailAlias)' + \
+                       '))'
 
+    logging.debug('search base dn: %s' % settings.ldap_basedn)
     logging.debug('search filter: %s' % query_filter)
-    logging.debug('search attributes: %s' % str(attrlist))
-    if not isinstance(attrlist, list):
+    logging.debug('search attributes: %s' % str(attrs))
+    if not isinstance(attrs, list):
         # Attribute list must be None or non-empty list
-        attrlist = None
+        attrs = None
 
     try:
         result = conn.search_s(settings.ldap_basedn,
                                ldap.SCOPE_SUBTREE,
                                query_filter,
-                               attrlist)
+                               attrs)
 
-        if len(result) == 1:
+        if result:
             logging.debug('result: %s' % str(result))
-            dn, entry = result[0]
-            return (dn, entry)
+            # (dn, entry = result[0])
+            return result[0]
         else:
-            logging.debug('Not a local account.')
+            logging.debug('No such account.')
             return (None, None)
     except Exception, e:
         logging.debug('<!> ERROR, result: %s' % str(e))
