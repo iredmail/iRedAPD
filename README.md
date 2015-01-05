@@ -25,8 +25,10 @@ source files to understand how it works and what it does.
 * `reject_sender_login_mismatch`: Reject sender login mismatch (addresses in
   `From:` and SASL username). It will verify user alias addresses against
   SQL/LDAP database.
+
 * `reject_null_sender`: Reject message submitted by sasl authenticated user but
   specifying null sender in `From:` header (`from=<>` in Postfix log).
+  RECOMMEND to enable this plugin.
 
     If your user's password was cracked by spammer, spammer can use
     this account to bypass smtp authentication, but with a null sender
@@ -34,6 +36,8 @@ source files to understand how it works and what it does.
 
 * `amavisd_wblist`: Reject senders listed in per-user blacklists, bypass
   senders listed in per-user whitelists stored in Amavisd database.
+  RECOMMEND to enable this plugin.
+
 * `amavisd_message_size_limit`: Check per-recipient message size limit
   stored in Amavisd database (column `policy.message_size_limit`), reject email
   if message size exceeded.

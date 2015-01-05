@@ -128,7 +128,7 @@ log_level = "info"
 backend = "ldap"
 
 # Enabled plugins.
-plugins = ['ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders']
+plugins = ['reject_null_sender', 'ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders']
 
 # For OpenLDAP backend. Not used by MySQL and PostgreSQL backends.
 ldap_uri = “ldap://127.0.0.1:389”
