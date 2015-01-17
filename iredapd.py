@@ -69,10 +69,11 @@ class PolicyChannel(asynchat.async_chat):
                 action = SMTP_ACTIONS['default']
 
             # Log final action.
-            logging.info('[%s] %s -> %s, %s' % (self.smtp_session_data['client_address'],
-                                                self.smtp_session_data['sender'],
-                                                self.smtp_session_data['recipient'],
-                                                action))
+            logging.info('[%s] %s, %s -> %s, %s' % (self.smtp_session_data['smtp_protocol_state'],
+                                                    self.smtp_session_data['client_address'],
+                                                    self.smtp_session_data['sender'],
+                                                    self.smtp_session_data['recipient'],
+                                                    action))
 
             self.push('action=' + action + '\n')
             logging.debug("Session ended")
