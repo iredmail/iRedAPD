@@ -26,15 +26,19 @@ if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
     if [ -f /etc/redhat-release ]; then
         # RHEL/CentOS
         export DISTRO='RHEL'
+        export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
+        export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
     elif [ -f /etc/debian_version ]; then
         # Debian
         export DISTRO='DEBIAN'
+        export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
     elif [ -f /etc/SuSE-release ]; then
         # openSUSE
         export DISTRO='SUSE'
+        export IREDADMIN_CONF_PY='/srv/www/iredadmin/settings.py'
     else
         echo "<<< ERROR >>> Cannot detect Linux distribution name. Exit."
         echo "Please contact support@iredmail.org to solve it."
@@ -43,9 +47,11 @@ if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DISTRO='FREEBSD'
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
+    export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
     export DIR_RC_SCRIPTS='/etc/rc.d'
+    export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
@@ -67,10 +73,31 @@ else
     exit 255
 fi
 
+add_missing_parameter()
+{
+    # Usage: add_missing_parameter VARIABLE DEFAULT_VALUE [COMMENT]
+    var="${1}"
+    value="${2}"
+    shift 2
+    comment="$@"
+
+    if ! grep "^${var}" ${IREDAPD_CONF_PY} &>/dev/null; then
+        if [ ! -z "${comment}" ]; then
+            echo "# ${comment}" >> ${IREDAPD_CONF_PY}
+        fi
+
+        if [ X"${value}" == X'True' -o X"${value}" == X'False' ]; then
+            echo "${var} = ${value}" >> ${IREDAPD_CONF_PY}
+        else
+            # Value must be quoted as string.
+            echo "${var} = '${value}'" >> ${IREDAPD_CONF_PY}
+        fi
+    fi
+}
+
 # Copy config file
 if [ -f ${IREDAPD_CONF_PY} ]; then
     echo "* Found iRedAPD config file: ${IREDAPD_CONF_PY}"
-    cp ${IREDAPD_CONF_PY} .
 elif [ -f ${IREDAPD_CONF_INI} ]; then
     echo "* Found old iRedAPD config file: ${IREDAPD_CONF_INI}, please convert it"
     echo "  to new config format manually."
@@ -101,7 +128,7 @@ cp -rf ${dir_new_version}/* ${NEW_IREDAPD_ROOT_DIR}
 cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_ROOT_DIR}/
 chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${NEW_IREDAPD_ROOT_DIR}
 chmod -R 0555 ${NEW_IREDAPD_ROOT_DIR}
-chmod 0400 ${IREDAPD_CONF_PY}
+chmod 0400 ${NEW_IREDAPD_ROOT_DIR}/settings.py
 
 echo "* Removing old symbol link ${IREDAPD_ROOT_DIR}"
 rm -f ${IREDAPD_ROOT_DIR}
@@ -122,6 +149,20 @@ elif [ X"${DISTRO}" == X'OPENBSD' ]; then
 fi
 
 chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
+
+echo "* Add missing parameters."
+# Get Amavisd related settings from iRedAdmin config file.
+if [ -f ${IREDADMIN_CONF_PY} ]; then
+    grep '^amavisd_db_' ${IREDADMIN_CONF_PY} >> ${IREDAPD_CONF_PY}
+    perl -pi -e 's#amavisd_db_host#amavisd_db_server#g' ${IREDAPD_CONF_PY}
+else
+    # Add sample setting.
+    add_missing_parameter 'amavisd_db_server' '127.0.0.1'
+    add_missing_parameter 'amavisd_db_port' '3306'
+    add_missing_parameter 'amavisd_db_name' 'amavisd'
+    add_missing_parameter 'amavisd_db_user' 'amavisd'
+    add_missing_parameter 'amavisd_db_password' 'amavisd'
+fi
 
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
