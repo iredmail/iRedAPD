@@ -77,10 +77,6 @@ reject = 'REJECT Sender login mismatch'
 
 
 def restriction(**kwargs):
-    if not (ALLOWED_SENDERS or STRICT_RESTRICTION or ALLOW_LIST_MEMBER):
-        logging.debug('SKIP: No allowed senders.')
-        return SMTP_ACTIONS['default']
-
     sasl_username = kwargs['sasl_username']
     if not sasl_username:
         logging.debug('SKIP: No SASL username.')
@@ -92,6 +88,10 @@ def restriction(**kwargs):
     if sender == sasl_username:
         logging.debug('SKIP: Sender <=> sasl username matched.')
         return SMTP_ACTIONS['default']
+    else:
+        if not (ALLOWED_SENDERS or STRICT_RESTRICTION or ALLOW_LIST_MEMBER):
+            logging.debug('No allowed senders.')
+            return reject
 
     (sasl_sender_name, sasl_sender_domain) = sasl_username.split('@', 1)
     (sender_name, sender_domain) = sender.split('@', 1)
