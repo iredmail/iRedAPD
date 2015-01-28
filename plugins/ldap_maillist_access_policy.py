@@ -46,7 +46,7 @@ def restriction(**kwargs):
                 dn, entries = qr[0]
                 recipient_alias_domains = entries.get('domainName', []) + entries.get('domainAliasName', [])
         except Exception, e:
-            logging.debug('Error while fetching alias domains: %s' % str(e))
+            logging.error('Error while fetching alias domains: %s' % str(e))
 
         logging.debug('Recipient domain and alias domains: %s' % ','.join(recipient_alias_domains))
 

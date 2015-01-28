@@ -43,7 +43,7 @@ def restriction(**kwargs):
     adb_cursor = kwargs['amavisd_db_cursor']
 
     if not adb_cursor:
-        logging.debug('Error, no valid Amavisd database connection.')
+        logging.error('Error, no valid Amavisd database connection.')
         return SMTP_ACTIONS['default']
 
     recipient = kwargs['recipient']
