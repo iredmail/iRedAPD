@@ -21,10 +21,11 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
                        '))'
 
     logging.debug('search base dn: %s' % settings.ldap_basedn)
+    logging.debug('search scope: SUBTREE')
     logging.debug('search filter: %s' % query_filter)
     logging.debug('search attributes: %s' % str(attrs))
     if not isinstance(attrs, list):
-        # Attribute list must be None or non-empty list
+        # Attribute list must be None (search all attributes) or non-empty list
         attrs = None
 
     try:
