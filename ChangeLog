@@ -1,9 +1,13 @@
 iRedAPD-1.4.5:
     * Improvements:
-        * New optional setting ALLOWED_LOGIN_MISMATCH_LIST_MEMBER for plugin
-          `reject_sender_login_mismatch`, used to allow member of mail
-          list/alias to send as mail list/alias. Default is False. Also,
-          setting ALLOWED_LOGIN_MISMATCH_SENDERS is now optional.
+        * plugin/sql_alias_access_policy, plugin/ldap_maillist_access_policy:
+          able to use `*@domain.com` (all senders from `domain.com`) as
+          moderator.
+        * plugin/reject_sender_login_mismatch.py:
+            + New optional setting ALLOWED_LOGIN_MISMATCH_LIST_MEMBER, used to
+              allow member of mail list/alias to send as mail list/alias.
+              Default is False.
+            + Setting ALLOWED_LOGIN_MISMATCH_SENDERS is now optional.
         * Log smtp protocol state in log file.
 
 iRedAPD-1.4.4:

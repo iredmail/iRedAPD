@@ -61,7 +61,7 @@ def restriction(**kwargs):
 
     # Recipient account doesn't exist.
     if not sql_record:
-        return 'DUNNO (Not mail alias)'
+        return SMTP_ACTIONS['default'] + ' (Not a mail alias account)'
 
     policy = str(sql_record[0]).lower()
     if not policy:
@@ -70,6 +70,9 @@ def restriction(**kwargs):
     # Log access policy and description
     logging.debug('Access policy: %s' % policy)
 
+    if policy == MAILLIST_POLICY_PUBLIC:
+        return SMTP_ACTIONS['default']
+
     members = [str(v.lower()) for v in str(sql_record[1]).split(',')]
     moderators = [str(v.lower()) for v in str(sql_record[2]).split(',')]
 
@@ -77,40 +80,38 @@ def restriction(**kwargs):
     logging.debug('moderators: %s' % ', '.join(moderators))
 
     rcpt_alias_domains = []
-    if policy != MAILLIST_POLICY_PUBLIC:
-        # Get alias domains.
-        sql = """SELECT alias_domain
-                 FROM alias_domain
-                 WHERE alias_domain='%s' AND target_domain='%s'
-                 LIMIT 1""" % (sender_domain, recipient_domain)
-        logging.debug('SQL: query alias domains: %s' % sql)
+    # Get alias domains.
+    sql = """SELECT alias_domain
+             FROM alias_domain
+             WHERE alias_domain='%s' AND target_domain='%s'
+             LIMIT 1""" % (sender_domain, recipient_domain)
+    logging.debug('SQL: query alias domains: %s' % sql)
 
-        conn.execute(sql)
-        qr = conn.fetchone()
+    conn.execute(sql)
+    qr = conn.fetchone()
+
+    if qr:
         logging.debug('SQL: record: %s' % str(qr))
+        rcpt_alias_domains.append(str(qr[0]))
+    else:
+        logging.debug('SQL: No alias domain.')
 
-        if qr:
-            rcpt_alias_domains.append(str(qr[0]))
-
-    if policy == MAILLIST_POLICY_PUBLIC:
-        # Return if no access policy available or policy is @POLICY_PUBLIC.
-        return 'DUNNO'
-    elif policy == MAILLIST_POLICY_DOMAIN:
+    if policy == MAILLIST_POLICY_DOMAIN:
         # Bypass all users under the same domain.
         if sender_domain == recipient_domain or sender_domain in rcpt_alias_domains:
-            return 'DUNNO'
+            return SMTP_ACTIONS['default']
         else:
             return SMTP_ACTIONS['reject_not_authorized']
     elif policy == MAILLIST_POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
         if sender_domain == recipient_domain or sender.endswith('.' + recipient_domain):
-            return 'DUNNO'
+            return SMTP_ACTIONS['default']
 
         if rcpt_alias_domains:
             for d in rcpt_alias_domains:
                 if sender_domain == d or sender.endswith('.' + d):
                     logging.debug('Matched: %s or .%s' % (d, d))
-                    return 'DUNNO'
+                    return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
 
@@ -123,35 +124,38 @@ def restriction(**kwargs):
                                            recipient_domain,
                                            rcpt_alias_domains,
                                            members):
-            return 'DUNNO'
+            return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
 
     elif policy == MAILLIST_POLICY_ALLOWEDONLY:
         # Bypass all moderators.
         if sender in moderators \
+           or '*@' + sender_domain in moderators \
            or is_allowed_alias_domain_user(sender,
                                            sender_username,
                                            sender_domain,
                                            recipient_domain,
                                            rcpt_alias_domains,
                                            moderators):
-            return 'DUNNO'
+            return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
 
     elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
         # Bypass both members and moderators.
-        if sender in members or sender in moderators\
+        if sender in members \
+           or sender in moderators \
+           or '*@' + sender_domain in moderators \
            or is_allowed_alias_domain_user(sender,
                                            sender_username,
                                            sender_domain,
                                            recipient_domain,
                                            rcpt_alias_domains,
                                            members + moderators):
-            return 'DUNNO'
+            return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
     else:
         # Bypass all if policy is not defined in this plugin.
-        return 'DUNNO (Policy is not defined: %s)' % policy
+        return SMTP_ACTIONS['default'] + ' (Policy is not defined: %s)' % policy
