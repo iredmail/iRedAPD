@@ -19,10 +19,9 @@ def restriction(**kwargs):
         return 'DUNNO (Not a amavisdAccount object)'
 
     sender = kwargs['sender']
-    sender_domain = kwargs['sender_domain']
 
     # Get valid Amavisd senders
-    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender, sender_domain)
+    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender)
 
     # Get list of amavisBlacklistedSender.
     blSenders = set([v.lower() for v in recipient_ldif.get('amavisBlacklistSender', [])])

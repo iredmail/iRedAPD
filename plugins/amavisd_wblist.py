@@ -49,9 +49,7 @@ def restriction(**kwargs):
     adb_cursor = kwargs['amavisd_db_cursor']
 
     sender = kwargs['sender']
-    sender_domain = kwargs['sender_domain']
     recipient = kwargs['recipient']
-    recipient_domain = kwargs['recipient_domain']
 
     client_address = kwargs['smtp_session_data']['client_address']
 
@@ -60,16 +58,14 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     if not adb_cursor:
-        logging.debug('Error, no valid Amavisd database connection.')
+        logging.error('Error, no valid Amavisd database connection.')
         return SMTP_ACTIONS['default']
 
-    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender, sender_domain)
-    valid_recipients = amavisd_lib.get_valid_addresses_from_email(recipient, recipient_domain)
+    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender)
+    valid_recipients = amavisd_lib.get_valid_addresses_from_email(recipient)
 
-    if not valid_senders or not valid_recipients:
-        logging.debug('No valid senders or recipients.')
-        return SMTP_ACTIONS['default']
-
+    # 'user@*'
+    valid_recipients.append(recipient.split('@', 1)[0] + '@*')
 
     # Append original IP address and all possible wildcast IP addresses
     valid_senders.append(client_address)
@@ -80,7 +76,7 @@ def restriction(**kwargs):
         counter = 0
         for i in range(4):
             a = ip4[:]
-            a[i]='*'
+            a[i] = '*'
             ip4s.add('.'.join(a))
 
             if counter < 4:

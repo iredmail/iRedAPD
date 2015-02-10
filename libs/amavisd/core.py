@@ -26,12 +26,15 @@ def is_valid_amavisd_address(addr):
     elif utils.is_email(addr):
         # single email address
         return 'email'
+    elif utils.is_wildcard_addr(addr):
+        return 'wildcard_addr'
     elif utils.is_strict_ip(addr):
         return 'ip'
 
     return False
 
-def get_valid_addresses_from_email(email, email_domain):
+
+def get_valid_addresses_from_email(email):
     # Return list valid Amavisd senders/recipients from an email address
     # - Sample user: user@sub2.sub1.com.cn
     # - Valid Amavisd senders:
@@ -41,6 +44,7 @@ def get_valid_addresses_from_email(email, email_domain):
     #   -> @.sub1.com.cn
     #   -> @.com.cn
     #   -> @.cn
+    (username, email_domain) = email.split('@', 1)
     splited_domain_parts = email_domain.split('.')
 
     # Default senders (user@domain.ltd):
@@ -99,6 +103,7 @@ def get_applicable_policy(db_cursor,
     except Exception, e:
         logging.debug('Error while quering Amavisd policy (%s): %s' % (account, str(e)))
         return (False, str(e))
+
 
 class AmavisdDBWrap:
     def __init__(self):
