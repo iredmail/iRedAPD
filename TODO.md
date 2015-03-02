@@ -1,3 +1,4 @@
+* SQL connection pool with Python module DBUtils.
 * Plugins aims to replace Policyd/Cluebringer
 
     * Greylisting, server-wide, per-domain and per-user.
