@@ -11,27 +11,27 @@ class Modeler:
         if settings.backend == 'mysql':
             import MySQLdb
             try:
-                db = MySQLdb.connect(
+                self.db = MySQLdb.connect(
                     host=settings.sql_server,
                     port=int(settings.sql_port),
                     db=settings.sql_db,
                     user=settings.sql_user,
                     passwd=settings.sql_password,
                 )
-                self.cursor = db.cursor()
+                self.cursor = self.db.cursor()
             except Exception, e:
                 logging.error("Error while creating database connection: %s" % str(e))
         elif settings.backend == 'pgsql':
             import psycopg2
             try:
-                db = psycopg2.connect(
+                self.db = psycopg2.connect(
                     host=settings.sql_server,
                     port=int(settings.sql_port),
                     database=settings.sql_db,
                     user=settings.sql_user,
                     password=settings.sql_password,
                 )
-                self.cursor = db.cursor()
+                self.cursor = self.db.cursor()
             except Exception, e:
                 logging.error("Error while creating database connection: %s" % str(e))
         else:
@@ -39,7 +39,7 @@ class Modeler:
 
     def __del__(self):
         try:
-            self.cursor.close()
+            self.db.close()
             logging.debug('Closed SQL connection.')
         except Exception, e:
             logging.debug('Error while closing connection: %s' % str(e))

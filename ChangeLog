@@ -12,6 +12,9 @@ iRedAPD-1.4.5:
             + Setting ALLOWED_LOGIN_MISMATCH_SENDERS is now optional.
         * Log smtp protocol state in log file.
 
+    * Fixed issues:
+        * Not close sql connection explicitly.
+
 iRedAPD-1.4.4:
     * New plugins:
         * plugins/amavisd_wblist.py.
