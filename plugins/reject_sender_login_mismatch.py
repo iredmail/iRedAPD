@@ -92,6 +92,7 @@ def restriction(**kwargs):
             # *) sender == recipient, sender must log in first.
             # *) sender != recipient but under same domain, since domain is
             #    hosted locally, sender must login first too.
+            logging.debug('Sender is forged address (sender domain == recipient domain).')
             sender_is_forged = True
         else:
             # Check whether sender domain is hosted on localhost
@@ -100,13 +101,12 @@ def restriction(**kwargs):
                 filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (sender_domain, sender_domain)
                 filter_domains += ')'
 
-                qr = conn_utils.get_account_ldif(
-                    conn=conn,
-                    account=sasl_username,
-                    query_filter=filter_domains,
-                    attrs=['dn'],
-                )
+                qr = conn.search_s(settings.ldap_basedn,
+                                   1,   # 1 == ldap.SCOPE_ONELEVEL
+                                   filter_domains,
+                                   ['dn'])
                 if qr:
+                    logging.debug('Sender is forged address (sender domain is hosted locally).')
                     sender_is_forged = True
 
             elif settings.backend in ['mysql', 'pgsql']:
@@ -120,12 +120,13 @@ def restriction(**kwargs):
                 logging.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
-                    logging.debug('Found alias domain, sender is forged address.')
+                    logging.debug('Sender is forged address (sender domain is hosted locally).')
                     sender_is_forged = True
 
         if sender_is_forged:
             return SMTP_ACTIONS['reject'] + ' not logged in'
         else:
+            logging.debug('Sender domain is not hosted locally.')
             return SMTP_ACTIONS['default']
 
     logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
