@@ -78,11 +78,56 @@ reject = 'REJECT Sender login mismatch'
 
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
-    if not sasl_username:
-        logging.debug('SKIP: No SASL username.')
-        return SMTP_ACTIONS['default']
-
     sender = kwargs['sender']
+    sender_domain = kwargs['sender_domain']
+    recipient_domain = kwargs['recipient_domain']
+
+    conn = kwargs['conn']
+
+    if not sasl_username:
+        logging.debug('Not an authenticated sender (no sasl_username).')
+
+        sender_is_forged = False
+        if sender_domain == recipient_domain:
+            # *) sender == recipient, sender must log in first.
+            # *) sender != recipient but under same domain, since domain is
+            #    hosted locally, sender must login first too.
+            sender_is_forged = True
+        else:
+            # Check whether sender domain is hosted on localhost
+            if settings.backend == 'ldap':
+                filter_domains = '(&(objectClass=mailDomain)'
+                filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (sender_domain, sender_domain)
+                filter_domains += ')'
+
+                qr = conn_utils.get_account_ldif(
+                    conn=conn,
+                    account=sasl_username,
+                    query_filter=filter_domains,
+                    attrs=['dn'],
+                )
+                if qr:
+                    sender_is_forged = True
+
+            elif settings.backend in ['mysql', 'pgsql']:
+                sql = """SELECT alias_domain FROM alias_domain
+                         WHERE alias_domain='%s' OR target_domain='%s'
+                         LIMIT 1""" % (sender_domain, sender_domain)
+                logging.debug('SQL: query alias domains: %s' % sql)
+
+                conn.execute(sql)
+                sql_record = conn.fetchone()
+                logging.debug('SQL query result: %s' % str(sql_record))
+
+                if sql_record:
+                    logging.debug('Found alias domain, sender is forged address.')
+                    sender_is_forged = True
+
+        if sender_is_forged:
+            return SMTP_ACTIONS['reject'] + ' not logged in'
+        else:
+            return SMTP_ACTIONS['default']
+
     logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
 
     if sender == sasl_username:
@@ -109,8 +154,6 @@ def restriction(**kwargs):
 
         if ALLOW_LIST_MEMBER:
             logging.debug('Apply list/alias member restriction (ALLOWED_LOGIN_MISMATCH_LIST_MEMBER=True).')
-
-        conn = kwargs['conn']
 
         if settings.backend == 'ldap':
             filter_user_alias = '(&(objectClass=mailUser)(mail=%s)(shadowAddress=%s))' % (sasl_username, sender)

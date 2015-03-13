@@ -15,6 +15,8 @@ iRedAPD-1.4.5:
         * Log smtp protocol state in log file.
 
     * Fixed issues:
+        * plugin/reject_sender_login_mismatch.py: not reject email if sender
+          is forged address (sender domain is hosted locally).
         * Not close sql connection explicitly.
 
 iRedAPD-1.4.4:
