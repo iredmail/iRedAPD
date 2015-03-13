@@ -1,5 +1,7 @@
 iRedAPD-1.4.5:
     * Improvements:
+        * Log reject and other non-DUNNO actions in iredadmin database
+          (log_action_in_db = True).
         * plugin/amavisd_wblist: able to use 'user@*' as white/blacklist
           sender.
         * plugin/sql_alias_access_policy, plugin/ldap_maillist_access_policy:

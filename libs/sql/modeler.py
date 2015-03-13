@@ -4,6 +4,7 @@ import logging
 import settings
 from libs import SMTP_ACTIONS, utils
 from libs.amavisd import core as amavisd_lib
+from libs.log_to_db import log_action
 
 
 class Modeler:
@@ -103,6 +104,13 @@ class Modeler:
 
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
+                # Log action
+                log_action(action=action,
+                           sender=sender,
+                           recipient=recipient,
+                           ip=smtp_session_data['client_address'],
+                           plugin_name=plugin.__name__)
+
                 return action
 
         return SMTP_ACTIONS['default']
