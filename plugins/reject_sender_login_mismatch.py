@@ -87,6 +87,13 @@ def restriction(**kwargs):
     if not sasl_username:
         logging.debug('Not an authenticated sender (no sasl_username).')
 
+        # Bypass localhost.
+        # NOTE: if sender sent email through SOGo, smtp session may not
+        #       have sasl_username.
+        if kwargs['smtp_session_data']['client_address'] in ['127.0.0.1', '::1']:
+            logging.debug('Bypass local sender.')
+            return SMTP_ACTIONS['default']
+
         sender_is_forged = False
         if sender_domain == recipient_domain:
             # *) sender == recipient, sender must log in first.
