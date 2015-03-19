@@ -134,7 +134,7 @@ class Modeler:
 
             # Apply plugins
             action = utils.apply_plugin(plugin, **plugin_kwargs)
-            if not action.startswith('DUNNO'):
+            if not (action.startswith('DUNNO') or action.startswith('OK')):
                 # Log action
                 log_action(action=action,
                            sender=sender,
