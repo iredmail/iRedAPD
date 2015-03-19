@@ -5,9 +5,9 @@ SMTP_ACTIONS = {
     'default': 'DUNNO',
     'accept': 'OK',
     # discard email without return error message to sender
-    'discard': 'DISCARD',
+    'discard': 'DISCARD Policy discard',
     # reject
-    'reject': 'REJECT',
+    'reject': 'REJECT Policy rejection',
     # reject with reason
     'reject_blacklisted': 'REJECT Blacklisted',
     'reject_not_authorized': 'REJECT Not authoried',
