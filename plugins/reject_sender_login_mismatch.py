@@ -6,44 +6,46 @@
 #
 # *) You must remove "sender_login_mismatch" restriction rule in Postfix
 #    setting "smtpd_sender_restrictions" (/etc/postfix/main.cf). this plugin
-#    will do the same restriction for you.
+#    will do the same and additonal restrictions for you.
 #
 # *) Enable this plugin in iRedAPD config file /opt/iredapd/settings.py:
 #
 #       plugins = ['reject_sender_login_mismatch', ...]
 #
-# *) Optional setting: List senders who are allowed to send email as different
-#    users in iRedAPD config file (/opt/iredapd/settings.py). Sample setting:
+# *) Optional settings (set in iRedAPD config file /opt/iredapd/settings.py):
+#
+#   1) List senders who are allowed to send email as different
+#      users in iRedAPD config file (/opt/iredapd/settings.py). Sample setting:
 #
 #       ALLOWED_LOGIN_MISMATCH_SENDERS = ['domain.com', 'user2@here.com']
 #
-#    If no sender spcified, all users are allowed to send as different users,
-#    except you have other optional settings (listed below) enabled.
+#      If no sender spcified, all users are allowed to send as different users,
+#      except you have other optional settings (listed below) enabled.
 #
-#    Note: this setting doesn't need to be used together with optional settings
-#    listed below.
+#      Note: this setting doesn't need to be used together with optional
+#      settings listed below.
 #
-# *) Optional setting: Set whether or not strictly allow sender to send as one
-#    of user alias addresses. Default is True.
+#  2) Set whether or not strictly allow sender to send as one of user alias
+#     addresses. Default is True.
 #
 #       ALLOWED_LOGIN_MISMATCH_STRICTLY = True
 #       ALLOWED_LOGIN_MISMATCH_STRICTLY = False
 #
-#    - With OpenLDAP backend, user alias address is stored in attribute
-#      'shadowAddress' of user object.
+#     - With OpenLDAP backend, user alias address is stored in attribute
+#       'shadowAddress' of user object.
 #
-#    - With MySQL/PostgreSQL backends, user alias address is username part +
-#      alias domain name. For example, if primary domain 'primary.com' has
-#      two alias domains: 'alias-1.com', 'alias-2.com'. User 'user@primary.com'
-#      is allowed to send email as:
+#     - With MySQL/PostgreSQL backends, user alias address is username part +
+#       alias domain name. For example, if primary domain 'primary.com' has
+#       two alias domains: 'alias-1.com', 'alias-2.com'. User 'user@primary.com'
+#       is allowed to send email as:
 #
 #       + user@primary.com
 #       + user@alias-1.com
 #       + user@alias-2.com
 #
-# *) Optional setting: set whether or not allow member of mail lists/alias
-#    account to send email as mail list/alias ('From: <list@domain.ltd>' in
-#    mail header. Default is False. Sample setting:
+#  3) set whether or not allow member of mail lists/alias account to send email
+#     as mail list/alias ('From: <list@domain.ltd>' in mail header. Default is
+#     False. Sample setting:
 #
 #       ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = True
 #
