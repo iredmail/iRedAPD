@@ -6,8 +6,9 @@ Read Postfix document for more details if you want to develop plugin for iRedAPD
 
 ## SMTP protocol state
 
-If your plugin should not be applied in Postfix protocol state `RCPT`, please
-add variable `SMTP_PROTOCOL_STATE` in plugin file. For example:
+Plugins are applied to Postfix protocol state `RCPT` by default, 
+if your plugin works in another protocol state, please explicitly set the
+protocol state with variable `SMTP_PROTOCOL_STATE` in plugin file. For example:
 
     SMTP_PROTOCOL_STATE = 'END-OF-MESSAGE'
 
@@ -17,7 +18,7 @@ Although Postfix has several protocol states, but we usually use two of them:
 * `RCPT` is used in Postfix setting `smtpd_sender_restrictions` or
   `smtpd_recipient_restrictions`, do NOT enable iRedAPD in BOTH of them.
 
-* `END-OF-MESSAGE` is used in Postfix variable `smtpd_end_of_data_restrictions`.
+* `END-OF-MESSAGE` is used in Postfix setting `smtpd_end_of_data_restrictions`.
 
 # For plugins applied to LDAP backend
 
