@@ -80,6 +80,8 @@ def restriction(**kwargs):
                     policy_name,
                     str(size_limit))
                 )
+                # Just use the first valid size limit (with highest priority) and skip others.
+                break
             else:
                 logging.debug('Reject by policy_name %s, message_size_limit: %s' % (
                     policy_name,
