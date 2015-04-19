@@ -1,22 +1,23 @@
+
+Read Postfix document for more details if you want to develop plugin for iRedAPD:
+[Postfix SMTP Access Policy Delegation](http://www.postfix.org/SMTPD_POLICY_README.html#protocol)
+
 # For all plugins
 
 ## SMTP protocol state
 
-If your plugin should not be applied in Postfix protocol state 'RCPT', please
-add variable 'SMTP_PROTOCOL_STATE' in plugin file. For example:
+If your plugin should not be applied in Postfix protocol state `RCPT`, please
+add variable `SMTP_PROTOCOL_STATE` in plugin file. For example:
 
     SMTP_PROTOCOL_STATE = 'END-OF-MESSAGE'
 
 Although Postfix has several protocol states, but we usually use two of them:
-RCPT, END-OF-MESSAGE.
+`RCPT`, `END-OF-MESSAGE`.
 
-`RCPT` is used in Postfix variable `smtpd_sender_restrictions` or
-`smtpd_recipient_restrictions`.
+* `RCPT` is used in Postfix setting `smtpd_sender_restrictions` or
+  `smtpd_recipient_restrictions`, do NOT enable iRedAPD in BOTH of them.
 
-`END-OF-MESSAGE` is used in Postfix variable `smtpd_end_of_data_restrictions`.
-
-Refer to Postfix document for more details:
-[Postfix SMTP Access Policy Delegation](http://www.postfix.org/SMTPD_POLICY_README.html#protocol)
+* `END-OF-MESSAGE` is used in Postfix variable `smtpd_end_of_data_restrictions`.
 
 # For plugins applied to LDAP backend
 
@@ -25,19 +26,19 @@ Refer to Postfix document for more details:
 If your plugin requires sender or recipient to be local account, please add
 below variables in plugin file:
 
-    # Require sender to be local
+    # Skip this plugin if sender is not local.
     REQUIRE_LOCAL_SENDER = True
 
-    # Require recipient to be local
+    # Skip this plugin if recipient is not local.
     REQUIRE_LOCAL_RECIPIENT = True
 
-## If plugin requires some LDAP attributes
+## If plugin requires specified LDAP attributes
 
 If your plugin requires some LDAP attributes in sender or recipient object,
 please add below variables in plugin file:
 
     # Attributes in sender object
-    SENDER_SEARCH_ATTRLIST = ['attr_name', 'attr_name_2', ...]
+    SENDER_SEARCH_ATTRLIST = ['attr_name_1', 'attr_name_2', ...]
 
     # Attributes in recipient object
-    RECIPIENT_SEARCH_ATTRLIST = ['attr_name', 'attr_name_2', ...]
+    RECIPIENT_SEARCH_ATTRLIST = ['attr_name_1', 'attr_name_2', ...]
