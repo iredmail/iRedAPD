@@ -38,7 +38,7 @@ def is_allowed_alias_domain_user(sender,
 
 
 def restriction(**kwargs):
-    conn = kwargs['conn']
+    conn = kwargs['conn_vmail']
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
     sender_username = sender.split('@', 1)[0]

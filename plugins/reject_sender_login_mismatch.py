@@ -84,7 +84,7 @@ def restriction(**kwargs):
     sender_domain = kwargs['sender_domain']
     recipient_domain = kwargs['recipient_domain']
 
-    conn = kwargs['conn']
+    conn = kwargs['conn_vmail']
 
     if not sasl_username:
         logging.debug('Not an authenticated sender (no sasl_username).')

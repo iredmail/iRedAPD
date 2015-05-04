@@ -54,7 +54,7 @@ def restriction(**kwargs):
     sql = """SELECT passwordlastchange FROM mailbox WHERE username='%s' LIMIT 1""" % sasl_username
     logging.debug('SQL to get mailbox.passwordlastchange of sender (%s): %s' % (sasl_username, sql))
 
-    conn = kwargs['conn']
+    conn = kwargs['conn_vmail']
     conn.execute(sql)
     sql_record = conn.fetchone()
     logging.debug('Returned SQL Record: %s' % str(sql_record))

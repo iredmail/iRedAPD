@@ -40,11 +40,7 @@ REQUIRE_AMAVISD_DB = True
 
 
 def restriction(**kwargs):
-    adb_cursor = kwargs['amavisd_db_cursor']
-
-    if not adb_cursor:
-        logging.error('Error, no valid Amavisd database connection.')
-        return SMTP_ACTIONS['default']
+    conn = kwargs['conn_amavisd']
 
     recipient = kwargs['recipient']
 
@@ -54,7 +50,7 @@ def restriction(**kwargs):
 
     wanted_policy_columns = ['policy_name', 'message_size_limit']
 
-    (status, policy_records) = amavisd_lib.get_applicable_policy(adb_cursor,
+    (status, policy_records) = amavisd_lib.get_applicable_policy(conn,
                                                                  recipient,
                                                                  policy_columns=wanted_policy_columns,
                                                                  **kwargs)

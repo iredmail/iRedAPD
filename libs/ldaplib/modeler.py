@@ -6,12 +6,11 @@ import logging
 import settings
 from libs import SMTP_ACTIONS, utils
 from libs.ldaplib import conn_utils
-from libs.amavisd import core as amavisd_lib
-from libs.log_to_db import log_action
+from libs.utils import log_action
 
 
 class Modeler:
-    def __init__(self):
+    def __init__(self, conns):
         # Initialize ldap connection.
         try:
             self.conn = ldap.initialize(settings.ldap_uri)
@@ -30,6 +29,9 @@ class Modeler:
         except Exception, e:
             logging.error('LDAP bind failed: %s.' % str(e))
             sys.exit()
+
+        self.conns = conns
+        self.conns['conn_vmail'] = self.conn
 
     def __del__(self):
         try:
@@ -58,7 +60,9 @@ class Modeler:
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
-                         'conn': self.conn,
+                         'conn_vmail': self.conn,
+                         'conn_amavisd': self.conns['conn_amavisd'].connect(),
+                         #'conn_iredadmin': self.conns['conn_iredadmin'].connect(),
                          'base_dn': settings.ldap_basedn,
                          'sender': sender,
                          'sender_domain': sender.split('@', 1)[-1],
@@ -70,6 +74,8 @@ class Modeler:
                          'recipient_dn': None,
                          'recipient_ldif': None,
                          'amavisd_db_cursor': None}
+
+        logging.debug('Keyword arguments passed to plugin: %s' % str(plugin_kwargs))
 
         # TODO Perform addition plugins which don't require sender/recipient info
         # e.g.
@@ -116,31 +122,17 @@ class Modeler:
                 plugin_kwargs['recipient_dn'] = recipient_dn
                 plugin_kwargs['recipient_ldif'] = recipient_ldif
 
-            # Connect to Amavisd database if required
-            try:
-                plugin_require_amavisd_db = plugin.REQUIRE_AMAVISD_DB
-            except:
-                plugin_require_amavisd_db = False
-
-            if plugin_require_amavisd_db:
-                if not plugin_kwargs['amavisd_db_cursor']:
-                    try:
-                        amavisd_db_wrap = amavisd_lib.AmavisdDBWrap()
-                        plugin_kwargs['amavisd_db_cursor'] = amavisd_db_wrap.cursor
-                        logging.debug('Got db cursor.')
-                    except Exception, e:
-                        logging.debug('Skip plugin, error while getting db cursor: %s' % str(e))
-                        continue
-
             # Apply plugins
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not (action.startswith('DUNNO') or action.startswith('OK')):
                 # Log action
-                log_action(action=action,
-                           sender=sender,
-                           recipient=recipient,
-                           ip=smtp_session_data['client_address'],
-                           plugin_name=plugin.__name__)
+                if self.conns['conn_iredadmin']:
+                    log_action(conn=self.conns['conn_iredadmin'].connect(),
+                               action=action,
+                               sender=sender,
+                               recipient=recipient,
+                               ip=smtp_session_data['client_address'],
+                               plugin_name=plugin.__name__)
 
                 return action
 

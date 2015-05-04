@@ -1,5 +1,6 @@
 iRedAPD-1.5.0:
     * Improvements:
+        * Use sql connection pool provided by SQLAlchemy.
         * Log reject and other non-DUNNO actions in iredadmin database
           (log_action_in_db = True).
         * plugin/amavisd_wblist: able to use 'user@*' as white/blacklist

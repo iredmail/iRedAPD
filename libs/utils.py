@@ -1,6 +1,7 @@
 import re
 import logging
 from libs import SMTP_ACTIONS
+import settings
 
 # Mail address. +, = is used in SRS rewritten addresses.
 regx_email = r'''[\w\-][\w\-\.\+\=]*@[\w\-][\w\-\.]*\.[a-zA-Z]{2,15}'''
@@ -83,3 +84,24 @@ def is_wildcard_addr(s):
         return True
 
     return False
+
+
+def log_action(conn, action, sender, recipient, ip, plugin_name):
+    try:
+        do_log = settings.log_action_in_db
+    except:
+        do_log = False
+
+    if not (do_log and conn):
+        return None
+
+    # Log action
+    try:
+        comment = '%s (%s -> %s, %s)' % (action, sender, recipient, plugin_name)
+        sql = """INSERT INTO log (admin, ip, msg, timestamp) VALUES ('iredapd', '%s', '%s', NOW());
+        """ % (ip, comment)
+
+        logging.debug(sql)
+        conn.execute(sql)
+    except Exception, e:
+        logging.debug(e)

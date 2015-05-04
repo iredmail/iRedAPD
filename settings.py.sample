@@ -55,8 +55,8 @@ amavisd_db_password = 'password'
 
 # Log reject (and other non-DUNNO) action in iRedAdmin SQL database
 log_action_in_db = True
-log_db_server = '127.0.0.1'
-log_db_port = '3306'
-log_db_name = 'iredadmin'
-log_db_user = 'iredadmin'
-log_db_password = 'password'
+iredadmin_db_server = '127.0.0.1'
+iredadmin_db_port = '3306'
+iredadmin_db_name = 'iredadmin'
+iredadmin_db_user = 'iredadmin'
+iredadmin_db_password = 'password'

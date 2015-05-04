@@ -30,7 +30,7 @@ from libs import SMTP_ACTIONS
 
 
 def restriction(**kwargs):
-    conn = kwargs['conn']
+    conn = kwargs['conn_vmail']
     smtp_session_data = kwargs['smtp_session_data']
 
     try:

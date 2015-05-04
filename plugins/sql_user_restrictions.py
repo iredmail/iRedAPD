@@ -35,7 +35,7 @@ from libs import SMTP_ACTIONS
 
 
 def restriction(**kwargs):
-    conn = kwargs['conn']
+    conn = kwargs['conn_vmail']
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
     recipient = kwargs['recipient']

@@ -1,5 +1,4 @@
 import logging
-import settings
 from libs import SMTP_ACTIONS, utils
 
 
@@ -103,40 +102,3 @@ def get_applicable_policy(db_cursor,
     except Exception, e:
         logging.debug('Error while quering Amavisd policy (%s): %s' % (account, str(e)))
         return (False, str(e))
-
-
-class AmavisdDBWrap:
-    def __init__(self):
-        logging.debug('Creating Amavisd database connection.')
-
-        if settings.backend in ['ldap', 'mysql']:
-            import MySQLdb
-            try:
-                db = MySQLdb.connect(host=settings.amavisd_db_server,
-                                     port=int(settings.amavisd_db_port),
-                                     db=settings.amavisd_db_name,
-                                     user=settings.amavisd_db_user,
-                                     passwd=settings.amavisd_db_password)
-                self.cursor = db.cursor()
-            except Exception, e:
-                logging.debug("Error while creating Amavisd database connection: %s" % str(e))
-        elif settings.backend == 'pgsql':
-            import psycopg2
-            try:
-                db = psycopg2.connect(host=settings.sql_server,
-                                      port=int(settings.sql_port),
-                                      database=settings.sql_db,
-                                      user=settings.sql_user,
-                                      password=settings.sql_password)
-                self.cursor = db.cursor()
-            except Exception, e:
-                logging.error("Error while creating Amavisd database connection: %s" % str(e))
-        else:
-            return SMTP_ACTIONS['default']
-
-    def __del__(self):
-        try:
-            self.cursor.close()
-            logging.debug('Closed Amavisd database connection.')
-        except Exception, e:
-            logging.debug('Error while closing Amavisd database connection: %s' % str(e))

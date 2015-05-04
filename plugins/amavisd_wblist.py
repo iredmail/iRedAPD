@@ -41,12 +41,13 @@ import logging
 from libs import SMTP_ACTIONS, sqllist, utils
 from libs.amavisd import core as amavisd_lib
 
-# Connect to amavisd database
-REQUIRE_AMAVISD_DB = True
-
 
 def restriction(**kwargs):
-    adb_cursor = kwargs['amavisd_db_cursor']
+    conn = kwargs['conn_amavisd']
+
+    if not conn:
+        logging.error('Error, no valid Amavisd database connection.')
+        return SMTP_ACTIONS['default']
 
     sender = kwargs['sender']
     recipient = kwargs['recipient']
@@ -55,10 +56,6 @@ def restriction(**kwargs):
 
     if sender == recipient:
         logging.debug('Sender is same as recipient, bypassed.')
-        return SMTP_ACTIONS['default']
-
-    if not adb_cursor:
-        logging.error('Error, no valid Amavisd database connection.')
         return SMTP_ACTIONS['default']
 
     valid_senders = amavisd_lib.get_valid_addresses_from_email(sender)
@@ -94,10 +91,10 @@ def restriction(**kwargs):
     sql = """SELECT id,priority,email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
     logging.debug('SQL: Get policy senders: %s' % sql)
 
-    adb_cursor.execute(sql)
+    qr = conn.execute(sql)
     senders = []
     sids = []
-    for rcd in adb_cursor.fetchall():
+    for rcd in qr.fetchall():
         (id, priority, email) = rcd
         senders.append((priority, id, email))
         sids.append(id)
@@ -117,10 +114,10 @@ def restriction(**kwargs):
     sql = """SELECT id,priority,email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipients)
     logging.debug('SQL: Get policy recipients: %s' % sql)
 
-    adb_cursor.execute(sql)
+    qr = conn.execute(sql)
     rcpts = []
     rids = []
-    for rcd in adb_cursor.fetchall():
+    for rcd in qr.fetchall():
         (id, priority, email) = rcd
         rcpts.append((priority, id, email))
         rids.append(id)
@@ -139,8 +136,8 @@ def restriction(**kwargs):
     # Get wblist
     sql = """SELECT rid,sid,wb FROM wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sids), sqllist(rids))
     logging.debug('SQL: Get wblist: %s' % sql)
-    adb_cursor.execute(sql)
-    wblists = adb_cursor.fetchall()
+    qr = conn.execute(sql)
+    wblists = qr.fetchall()
 
     if not wblists:
         # no wblist
@@ -153,15 +150,11 @@ def restriction(**kwargs):
     for rid in rids:    # sorted by users.priority
         for sid in sids:    # sorted by mailaddr.priority
             if (rid, sid, 'W') in wblists:
-                logging.debug("Matched whitelist: (%d, %d, 'W')" % (rid, sid))
-                # TODO Log whitelist item (e.g. full email address, ip address)
-                # TODO Log action in SQL database
+                logging.info("Matched whitelist: wblist=(%d, %d, 'W'), mailaddr=(id=%d)" % (rid, sid, sid))
                 return SMTP_ACTIONS['accept']
 
             if (rid, sid, 'B') in wblists:
-                logging.debug("Matched blacklist: (%d, %d, 'B')" % (rid, sid))
-                # TODO Log blacklist item (e.g. full email address, ip address)
-                # TODO Log action in SQL database
+                logging.info("Matched blacklist: wblist=(%d, %d, 'B'), mailaddr=(id=%d)" % (rid, sid, sid))
                 return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']

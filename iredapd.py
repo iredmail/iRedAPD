@@ -8,18 +8,75 @@ import asyncore
 import asynchat
 import logging
 
+from sqlalchemy import create_engine
+
 # iRedAPD setting file and modules
 import settings
 from libs import __version__, SMTP_ACTIONS, daemon
 
-if settings.backend == 'ldap':
-    from libs.ldaplib.modeler import Modeler
-elif settings.backend in ['mysql', 'pgsql']:
-    from libs.sql.modeler import Modeler
-else:
+# Plugin directory.
+sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
+
+if not settings.backend in ['ldap', 'mysql', 'pgsql']:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
+conn_vmail = None
+conn_amavisd = None
+conn_iredadmin = None
+
+if settings.backend == 'ldap':
+    from libs.ldaplib.modeler import Modeler
+    sql_dbn = 'mysql'
+
+elif settings.backend in ['mysql', 'pgsql']:
+    from libs.sql.modeler import Modeler
+
+    if settings.backend == 'mysql':
+        sql_dbn = 'mysql'
+        conn_string_vmail = 'mysql://%s:%s@%s/%s' % (settings.sql_user,
+                                                     settings.sql_password,
+                                                     settings.sql_server,
+                                                     settings.sql_db)
+
+
+    elif settings.backend == 'pgsql':
+        sql_dbn = 'postgresql'
+        conn_string_vmail = 'postgresql://%s:%s@%s/%s' % (settings.sql_user,
+                                                          settings.sql_password,
+                                                          settings.sql_server,
+                                                          settings.sql_db)
+
+    uri_db_vmail = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
+                                            settings.sql_user,
+                                            settings.sql_password,
+                                            settings.sql_server,
+                                            int(settings.sql_port),
+                                            settings.sql_db)
+    conn_vmail = create_engine(uri_db_vmail, pool_size=20, pool_recycle=3600, max_overflow=0)
+
+uri_db_amavisd = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
+                                          settings.amavisd_db_user,
+                                          settings.amavisd_db_password,
+                                          settings.amavisd_db_server,
+                                          int(settings.amavisd_db_port),
+                                          settings.amavisd_db_name)
+
+uri_db_iredadmin = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
+                                            settings.iredadmin_db_user,
+                                            settings.iredadmin_db_password,
+                                            settings.iredadmin_db_server,
+                                            int(settings.iredadmin_db_port),
+                                            settings.iredadmin_db_name)
+
+try:
+    conn_amavisd = create_engine(uri_db_amavisd, pool_size=10, pool_recycle=3600, max_overflow=0)
+except:
+    pass
+
+try:
+    conn_iredadmin = create_engine(uri_db_iredadmin, pool_size=10, pool_recycle=3600, max_overflow=0)
+except:
+    pass
 
 class PolicyChannel(asynchat.async_chat):
     """Process each smtp policy request"""
@@ -53,7 +110,11 @@ class PolicyChannel(asynchat.async_chat):
                 self.smtp_session_data[key] = value
         elif len(self.smtp_session_data) != 0:
             try:
-                modeler = Modeler()
+                conns = {'conn_vmail': conn_vmail,
+                         'conn_amavisd': conn_amavisd,
+                         'conn_iredadmin': conn_iredadmin}
+
+                modeler = Modeler(conns=conns)
                 result = modeler.handle_data(
                     smtp_session_data=self.smtp_session_data,
                     plugins=self.plugins,
@@ -122,14 +183,13 @@ class DaemonSocket(asyncore.dispatcher):
 
     def handle_accept(self):
         conn, remote_addr = self.accept()
+        print conn, remote_addr
         logging.debug("Connect from %s, port %s." % remote_addr)
 
-        PolicyChannel(
-            conn,
-            plugins=self.loaded_plugins,
-            sender_search_attrlist=self.sender_search_attrlist,
-            recipient_search_attrlist=self.recipient_search_attrlist,
-        )
+        PolicyChannel(conn,
+                      plugins=self.loaded_plugins,
+                      sender_search_attrlist=self.sender_search_attrlist,
+                      recipient_search_attrlist=self.recipient_search_attrlist)
 
 
 def main():

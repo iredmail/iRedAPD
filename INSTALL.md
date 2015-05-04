@@ -2,9 +2,14 @@
 
 * `iRedMail`: All iRedMail versions should work as expected.
 * `Python` >= 2.4: core programming language.
-* `Python-LDAP` >= 2.3.7: API to access LDAP directory servers from Python programs. Required by OpenLDAP backend.
-* `Python-MySQLdb` >= 1.2.2: Python DB API interface for MySQL database. Required by MySQL backend.
-* `psycopg2` >= 2.4: Python DB API interface for PostgreSQL database. Required by PostgreSQL backend.
+* `SQLAlchemy` >= 0.9: The Python SQL Toolkit and Object Relational Mapper.
+  iRedAPD just uses its sql connection pool, not ORM.
+* `Python-LDAP` >= 2.3.7: API to access LDAP directory servers from Python
+  programs. Required by OpenLDAP backend.
+* `Python-MySQLdb` >= 1.2.2: Python DB API interface for MySQL database.
+  Required by OpenLDAP and MySQL backend.
+* `psycopg2` >= 2.4: Python DB API interface for PostgreSQL database.
+  Required by PostgreSQL backend.
 
 # Install iRedAPD
 
@@ -30,26 +35,26 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 
 ```shell
 # ---- For OpenLDAP backend:
-# yum install python-ldap
+# yum install python-ldap MySQL-python python-sqlalchemy
 
 # ---- For MySQL backend:
-# yum install MySQL-python
+# yum install MySQL-python python-sqlalchemy
 
 # ---- For PostgreSQL backend:
-# yum install python-pyscopg2
+# yum install python-pyscopg2 python-sqlalchemy
 ```
 
 * on Debian, Ubuntu:
 
 ```shell
 # —— For OpenLDAP backend:
-$ sudo apt-get install python-ldap
+$ sudo apt-get install python-ldap python-mysqldb python-sqlalchemy
 
 # —— For MySQL backend:
-$ sudo apt-get install python-mysqldb
+$ sudo apt-get install python-mysqldb python-sqlalchemy
 
 # —— For PostgreSQL backend:
-$ sudo apt-get install python-psycopg2
+$ sudo apt-get install python-psycopg2 python-sqlalchemy
 ```
 
 * on FreeBSD:
@@ -57,25 +62,29 @@ $ sudo apt-get install python-psycopg2
 ```shell
 # ---- For OpenLDAP backend:
 # cd /usr/ports/net/py-ldap2 && make install clean
+# cd /usr/ports/databases/py-MySQLdb && make install clean
+# cd /usr/ports/databases/py-sqlalchemy && make install clean
 
 # ---- For MySQL backend:
 # cd /usr/ports/databases/py-MySQLdb && make install clean
+# cd /usr/ports/databases/py-sqlalchemy && make install clean
 
 # ---- For PostgreSQL backend:
 # cd /usr/ports/databases/py-psycopg2 && make install clean
+# cd /usr/ports/databases/py-sqlalchemy && make install clean
 ```
 
 * on OpenBSD:
 
 ```
 # ---- For OpenLDAP backend:
-# pkg_add -r py-ldap
+# pkg_add -r py-ldap py-mysql py-sqlalchemy
 
 # ---- For MySQL backend:
-# pkg_add -r py-mysql
+# pkg_add -r py-mysql py-mysql py-sqlalchemy
 
 # ---- For PostgreSQL backend:
-# pkg_add -r py-psycopg2
+# pkg_add -r py-psycopg2 py-mysql py-sqlalchemy
 ```
 
 ## Download and configure iRedAPD
