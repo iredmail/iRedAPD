@@ -80,8 +80,6 @@ class Modeler:
                          'recipient_ldif': None,
                          'amavisd_db_cursor': None}
 
-        logging.debug('Keyword arguments passed to plugin: %s' % str(plugin_kwargs))
-
         # TODO Perform addition plugins which don't require sender/recipient info
         # e.g.
         #   - security enforce: encryption_protocol=TLSv1/SSLv3

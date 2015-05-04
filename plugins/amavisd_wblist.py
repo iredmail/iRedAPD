@@ -41,6 +41,9 @@ import logging
 from libs import SMTP_ACTIONS, sqllist, utils
 from libs.amavisd import core as amavisd_lib
 
+# Connect to amavisd database
+REQUIRE_AMAVISD_DB = True
+
 
 def restriction(**kwargs):
     conn = kwargs['conn_amavisd']

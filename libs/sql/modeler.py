@@ -43,8 +43,6 @@ class Modeler:
                          'sasl_username': sasl_username,
                          'amavisd_db_cursor': None}
 
-        logging.debug('Keyword arguments passed to plugin: %s' % str(plugin_kwargs))
-
         # TODO Get SQL record of mail user or mail alias before applying plugins
         # TODO Query required sql columns instead of all
 

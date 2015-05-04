@@ -54,26 +54,26 @@ elif settings.backend in ['mysql', 'pgsql']:
                                             settings.sql_db)
     conn_vmail = create_engine(uri_db_vmail, pool_size=20, pool_recycle=3600, max_overflow=0)
 
-uri_db_amavisd = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
-                                          settings.amavisd_db_user,
-                                          settings.amavisd_db_password,
-                                          settings.amavisd_db_server,
-                                          int(settings.amavisd_db_port),
-                                          settings.amavisd_db_name)
-
-uri_db_iredadmin = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
-                                            settings.iredadmin_db_user,
-                                            settings.iredadmin_db_password,
-                                            settings.iredadmin_db_server,
-                                            int(settings.iredadmin_db_port),
-                                            settings.iredadmin_db_name)
-
 try:
+    uri_db_amavisd = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
+                                              settings.amavisd_db_user,
+                                              settings.amavisd_db_password,
+                                              settings.amavisd_db_server,
+                                              int(settings.amavisd_db_port),
+                                              settings.amavisd_db_name)
+
     conn_amavisd = create_engine(uri_db_amavisd, pool_size=10, pool_recycle=3600, max_overflow=0)
 except:
     pass
 
 try:
+    uri_db_iredadmin = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
+                                                settings.iredadmin_db_user,
+                                                settings.iredadmin_db_password,
+                                                settings.iredadmin_db_server,
+                                                int(settings.iredadmin_db_port),
+                                                settings.iredadmin_db_name)
+
     conn_iredadmin = create_engine(uri_db_iredadmin, pool_size=10, pool_recycle=3600, max_overflow=0)
 except:
     pass
