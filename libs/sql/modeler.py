@@ -6,9 +6,10 @@ from libs.utils import log_action
 
 
 class Modeler:
-    def __init__(self, conns):
+    def __init__(self, conns, require_amavisd_db=False):
         # :param conns: a dict which contains pooled sql connections.
         self.conns = conns
+        self.require_amavisd_db = require_amavisd_db
 
     def handle_data(self,
                     smtp_session_data,
@@ -28,10 +29,13 @@ class Modeler:
         sasl_username = smtp_session_data['sasl_username'].lower()
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
+        conn_amavisd = None
+        if self.require_amavisd_db:
+            conn_amavisd = self.conns['conn_amavisd'].connect()
+
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn_vmail': self.conns['conn_vmail'].connect(),
-                         'conn_amavisd': self.conns['conn_amavisd'].connect(),
-                         #'conn_iredadmin': self.conns['conn_iredadmin'].connect(),
+                         'conn_amavisd': conn_amavisd,
                          'sender': sender,
                          'recipient': recipient,
                          'sender_domain': sender.split('@')[-1],

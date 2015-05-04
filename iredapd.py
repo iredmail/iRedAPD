@@ -114,7 +114,16 @@ class PolicyChannel(asynchat.async_chat):
                          'conn_amavisd': conn_amavisd,
                          'conn_iredadmin': conn_iredadmin}
 
-                modeler = Modeler(conns=conns)
+                # Connect to Amavisd database if required
+                require_amavisd_db = False
+                for p in self.plugins:
+                    if p.__dict__.get('REQUIRE_AMAVISD_DB', False):
+                        require_amavisd_db = True
+                        break
+
+                modeler = Modeler(conns=conns,
+                                  require_amavisd_db=require_amavisd_db)
+
                 result = modeler.handle_data(
                     smtp_session_data=self.smtp_session_data,
                     plugins=self.plugins,
