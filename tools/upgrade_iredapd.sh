@@ -30,11 +30,19 @@ if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
-        export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
+        if [ -f '/usr/share/apache2/iredadmin/settings.py' ]; then
+            export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
+        elif [ -f '/opt/www/iredadmin/settings.py' ]; then
+            export IREDADMIN_CONF_PY='/opt/www/iredadmin/settings.py'
+        fi
     elif [ -f /etc/debian_version ]; then
         # Debian
         export DISTRO='DEBIAN'
-        export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
+        if [ -f '/usr/share/apache2/iredadmin/settings.py' ]; then
+            export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
+        elif [ -f '/opt/www/iredadmin/settings.py' ]; then
+            export IREDADMIN_CONF_PY='/opt/www/iredadmin/settings.py'
+        fi
     elif [ -f /etc/SuSE-release ]; then
         # openSUSE
         export DISTRO='SUSE'
@@ -72,6 +80,35 @@ else
     echo "<<< ERROR >>> Directory is not a symbol link created by iRedMail. Exit."
     exit 255
 fi
+
+install_pkg()
+{
+    echo "Install package: $@"
+
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        yum -y install $@
+    elif [ X"${DISTRO}" == X'DEBIAN' -o X"${DISTRO}" == X'UBUNTU' ]; then
+        apt-get install -y --force-yes $@
+    elif [ X"${DISTRO}" == X'FREEBSD' ]; then
+        cd /usr/ports/$@ && make install clean
+    elif [ X"${DISTRO}" == X'OPENBSD' ]; then
+        pkg_add -r $@
+    else
+        echo "<< ERROR >> Please install package(s) manually: $@"
+    fi
+}
+
+has_python_module()
+{
+    for mod in $@; do
+        python -c "import $mod" &>/dev/null
+        if [ X"$?" == X'0' ]; then
+            echo 'YES'
+        else
+            echo 'NO'
+        fi
+    done
+}
 
 add_missing_parameter()
 {
@@ -113,6 +150,19 @@ if ! echo ${PWD} | grep 'iRedAPD.*/tools' >/dev/null; then
     echo "<<< ERROR >>> Cannot find new version of iRedAPD in current directory. Exit."
     exit 255
 fi
+
+
+# Check dependent packages. Prompt to install missed ones manually.
+echo "* Checking dependent Python modules:"
+echo "  + [required] python-sqlalchemy"
+if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
+    [ X"${DISTRO}" == X'RHEL' ] && install_pkg python-sqlalchemy
+    [ X"${DISTRO}" == X'DEBIAN' ] && install_pkg python-sqlalchemy
+    [ X"${DISTRO}" == X'UBUNTU' ] && install_pkg python-sqlalchemy
+    [ X"${DISTRO}" == X'FREEBSD' ] && install_pkg databases/py-sqlalchemy
+    [ X"${DISTRO}" == X'UBUNTU' ] && install_pkg py-sqlalchemy
+fi
+
 
 # Copy current directory to Apache server root
 dir_new_version="$(dirname ${PWD})"
@@ -161,8 +211,9 @@ else
     add_missing_parameter 'amavisd_db_port' '3306'
     add_missing_parameter 'amavisd_db_name' 'amavisd'
     add_missing_parameter 'amavisd_db_user' 'amavisd'
-    add_missing_parameter 'amavisd_db_password' 'amavisd'
+    add_missing_parameter 'amavisd_db_password' 'password'
 fi
+
 
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
