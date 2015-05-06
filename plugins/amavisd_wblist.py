@@ -153,11 +153,11 @@ def restriction(**kwargs):
     for rid in rids:    # sorted by users.priority
         for sid in sids:    # sorted by mailaddr.priority
             if (rid, sid, 'W') in wblists:
-                logging.info("Matched whitelist: wblist=(%d, %d, 'W'), mailaddr=(id=%d)" % (rid, sid, sid))
+                logging.info("Matched whitelist: sender=%s, wblist=(%d, %d, 'W'), mailaddr=(id=%d)" % (sender, rid, sid, sid))
                 return SMTP_ACTIONS['accept']
 
             if (rid, sid, 'B') in wblists:
-                logging.info("Matched blacklist: wblist=(%d, %d, 'B'), mailaddr=(id=%d)" % (rid, sid, sid))
+                logging.info("Matched blacklist: sender=%s, wblist=(%d, %d, 'B'), mailaddr=(id=%d)" % (sender, rid, sid, sid))
                 return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']
