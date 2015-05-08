@@ -23,6 +23,10 @@ def restriction(**kwargs):
     sender = kwargs['sender']
     sasl_username = kwargs['sasl_username']
 
+    if not (sender or sasl_username):
+        logging.debug('Spam (no sender address and sasl_username at all).')
+        return SMTP_ACTIONS['reject']
+
     if sasl_username and not sender:
         logging.debug('Spam (sasl authenticated but null sender).')
         return SMTP_ACTIONS['reject']
