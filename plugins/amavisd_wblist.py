@@ -90,7 +90,7 @@ def restriction(**kwargs):
     logging.debug('Possible policy senders: %s' % str(valid_senders))
     logging.debug('Possible policy recipients: %s' % str(valid_recipients))
 
-    # Get 'mailaddr.id' of policy senders
+    # Get 'mailaddr.id' of policy senders, ordered by priority
     sql = """SELECT id,priority,email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
     logging.debug('SQL: Get policy senders: %s' % sql)
 
@@ -150,14 +150,16 @@ def restriction(**kwargs):
     logging.debug('Found per-recipient white/blacklists: %s' % str(wblists))
 
     # Check sender addresses
-    for rid in rids:    # sorted by users.priority
-        for sid in sids:    # sorted by mailaddr.priority
+    # rids/recipients are orded by priority
+    for rid in rids:
+        # sids/senders are sorted by priority
+        for sid in sids:
             if (rid, sid, 'W') in wblists:
-                logging.info("Matched whitelist: sender=%s, wblist=(%d, %d, 'W'), mailaddr=(id=%d)" % (sender, rid, sid, sid))
+                logging.info("Whitelisted: sender=%s, wblist=(%d, %d, 'W')" % (sender, rid, sid))
                 return SMTP_ACTIONS['accept']
 
             if (rid, sid, 'B') in wblists:
-                logging.info("Matched blacklist: sender=%s, wblist=(%d, %d, 'B'), mailaddr=(id=%d)" % (sender, rid, sid, sid))
+                logging.info("Blacklisted: sender=%s, wblist=(%d, %d, 'W')" % (sender, rid, sid))
                 return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']
