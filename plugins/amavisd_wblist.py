@@ -159,7 +159,7 @@ def restriction(**kwargs):
                 return SMTP_ACTIONS['accept']
 
             if (rid, sid, 'B') in wblists:
-                logging.info("Blacklisted: sender=%s, wblist=(%d, %d, 'W')" % (sender, rid, sid))
+                logging.info("Blacklisted: sender=%s, wblist=(%d, %d, 'B')" % (sender, rid, sid))
                 return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']

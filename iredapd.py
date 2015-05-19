@@ -223,16 +223,16 @@ def main():
     # Run as a low privileged user.
     uid = pwd.getpwnam(settings.run_as_user)[2]
 
+    # Write pid number into pid file.
+    f = open(settings.pid_file, 'w')
+    f.write(str(os.getpid()))
+    f.close()
+
+    # Set uid.
+    os.setuid(uid)
+
+    # Starting loop.
     try:
-        # Write pid number into pid file.
-        f = open(settings.pid_file, 'w')
-        f.write(str(os.getpid()))
-        f.close()
-
-        # Set uid.
-        os.setuid(uid)
-
-        # Starting loop.
         asyncore.loop()
     except KeyboardInterrupt:
         pass

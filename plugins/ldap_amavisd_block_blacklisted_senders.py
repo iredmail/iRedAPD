@@ -1,5 +1,9 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
+#----------
+# WARNING: This plugin is deprecated, please use `amavisd_wblist` instead.
+#----------
+
 # Priority: whitelist first, then blacklist.
 
 import logging

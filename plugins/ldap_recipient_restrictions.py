@@ -1,6 +1,10 @@
 # Author:   Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose:  Check whether local user (sender) is allowed to mail to recipient.
 
+#----------
+# WARNING: This plugin is deprecated, please use `amavisd_wblist` instead.
+#----------
+
 # Value of mailWhitelistRecipient and mailBlacklistRecipient:
 #   - Single address:   user@domain.ltd
 #   - Whole domain:     @domain.ltd
