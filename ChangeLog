@@ -1,3 +1,8 @@
+iRedAPD-1.6.0:
+    * Plugin `ldap_domain_wblist` was removed, we didn't use it at all.
+    * Plugin `ldap_recipient_restrictions` is deprecated, please use
+      `amavisd_wblist` instead.
+
 iRedAPD-1.5.0:
     * Improvements:
         * Use sql connection pool provided by SQLAlchemy.
