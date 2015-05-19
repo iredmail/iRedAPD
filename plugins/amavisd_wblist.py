@@ -155,8 +155,7 @@ def restriction(**kwargs):
         # sids/senders are sorted by priority
         for sid in sids:
             if (rid, sid, 'W') in wblists:
-                logging.info("Whitelisted: sender=%s, wblist=(%d, %d, 'W')" % (sender, rid, sid))
-                return SMTP_ACTIONS['accept']
+                return SMTP_ACTIONS['accept'] + " wblist=(%d, %d, 'W')" % (sender, rid, sid)
 
             if (rid, sid, 'B') in wblists:
                 logging.info("Blacklisted: sender=%s, wblist=(%d, %d, 'B')" % (sender, rid, sid))
