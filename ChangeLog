@@ -1,4 +1,5 @@
 iRedAPD-1.6.0:
+    * New setting: `mynetworks`. used to set trusted or internal networks.
     * Plugin `ldap_domain_wblist` was removed, we didn't use it at all.
     * Plugin `ldap_recipient_restrictions` is deprecated, please use
       `amavisd_wblist` instead.

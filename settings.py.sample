@@ -18,6 +18,9 @@ log_level = 'info'
 # Backend: ldap, mysql, pgsql.
 backend = 'ldap'
 
+# Trusted or internal networks.
+mynetworks = []
+
 # Enabled plugins.
 #
 # - Plugin name is file name which placed under 'plugins/' directory,

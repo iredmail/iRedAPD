@@ -214,6 +214,8 @@ else
     add_missing_parameter 'amavisd_db_password' 'password'
 fi
 
+# trusted or internal networks.
+add_missing_parameter 'mynetworks' '[]'
 
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
