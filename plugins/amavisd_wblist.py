@@ -91,50 +91,38 @@ def restriction(**kwargs):
     logging.debug('Possible policy recipients: %s' % str(valid_recipients))
 
     # Get 'mailaddr.id' of policy senders, ordered by priority
-    sql = """SELECT id,priority,email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
+    sql = """SELECT id,email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
     logging.debug('SQL: Get policy senders: %s' % sql)
 
     qr = conn.execute(sql)
-    senders = []
+    senders = qr.fetchall()
     sids = []
-    for rcd in qr.fetchall():
-        (id, priority, email) = rcd
-        senders.append((priority, id, email))
-        sids.append(id)
+    if senders:
+        sids = [r.id for r in senders]
 
     if not sids:
         # don't waste time if we don't even have senders stored in sql db.
         logging.debug('No senders found in SQL database.')
         return SMTP_ACTIONS['default']
 
-    # Sort by priority
-    senders.sort()
-    senders.reverse()
-
     logging.debug('Senders (in sql table: amavisd.mailaddr): %s' % str(senders))
 
     # Get 'users.id' of possible recipients
-    sql = """SELECT id,priority,email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipients)
+    sql = """SELECT id,email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipients)
     logging.debug('SQL: Get policy recipients: %s' % sql)
 
     qr = conn.execute(sql)
-    rcpts = []
+    rcpts = qr.fetchall()
     rids = []
-    for rcd in qr.fetchall():
-        (id, priority, email) = rcd
-        rcpts.append((priority, id, email))
-        rids.append(id)
+    if rcpts:
+        rids = [r.id for r in rcpts]
 
     if not rids:
         # don't waste time if we don't have any per-recipient wblist.
         logging.debug('No recipients found in SQL database.')
         return SMTP_ACTIONS['default']
 
-    # Sort by priority
-    rcpts.sort()
-    rcpts.reverse()
-
-    logging.debug('Recipients (in sql table: amavisd.users): %s' % str(rcpts))
+    logging.debug('Recipients (in `amavisd.users`): %s' % str(rcpts))
 
     # Get wblist
     sql = """SELECT rid,sid,wb FROM wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sids), sqllist(rids))
