@@ -1,3 +1,12 @@
+############################################################
+# DO NOT TOUCH BELOW LINE.
+#
+# Import default settings.
+# You can always override default settings by placing custom settings in this
+# file.
+from libs.default_settings import *
+############################################################
+
 # Listen address and port.
 listen_address = '127.0.0.1'
 listen_port = 7777
@@ -17,9 +26,6 @@ log_level = 'info'
 
 # Backend: ldap, mysql, pgsql.
 backend = 'ldap'
-
-# Trusted or internal networks.
-mynetworks = []
 
 # Enabled plugins.
 #

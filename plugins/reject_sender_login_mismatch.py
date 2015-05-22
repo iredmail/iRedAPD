@@ -57,23 +57,12 @@ import logging
 from libs import SMTP_ACTIONS
 import settings
 
-# Allowed senders or sender domains.
-try:
-    ALLOWED_SENDERS = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
-except:
-    ALLOWED_SENDERS = []
 
-try:
-    STRICT_RESTRICTION = settings.ALLOWED_LOGIN_MISMATCH_STRICTLY
-except:
-    STRICT_RESTRICTION = True
+allowed_senders = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
+is_strict = settings.ALLOWED_LOGIN_MISMATCH_STRICTLY
+allow_list_member = settings.ALLOWED_LOGIN_MISMATCH_LIST_MEMBER
 
-try:
-    ALLOW_LIST_MEMBER = settings.ALLOWED_LOGIN_MISMATCH_LIST_MEMBER
-except:
-    ALLOW_LIST_MEMBER = False
-
-if STRICT_RESTRICTION or ALLOW_LIST_MEMBER:
+if is_strict or allow_list_member:
     if settings.backend == 'ldap':
         from libs.ldaplib import conn_utils
 
@@ -98,8 +87,8 @@ def restriction(**kwargs):
         if client_address in ['127.0.0.1', '::1']:
             logging.debug('Bypass local sender.')
             return SMTP_ACTIONS['default']
-        
-        if client_address in settings.mynetworks:
+
+        if client_address in settings.MYNETWORKS:
             logging.debug('Bypass sender from trusted/internal networks (%s).' % client_address)
             return SMTP_ACTIONS['default']
 
@@ -151,25 +140,25 @@ def restriction(**kwargs):
         logging.debug('SKIP: Sender <=> sasl username matched.')
         return SMTP_ACTIONS['default']
     else:
-        if not (ALLOWED_SENDERS or STRICT_RESTRICTION or ALLOW_LIST_MEMBER):
+        if not (allowed_senders or is_strict or allow_list_member):
             logging.debug('No allowed senders.')
             return reject
 
     (sasl_sender_name, sasl_sender_domain) = sasl_username.split('@', 1)
     (sender_name, sender_domain) = sender.split('@', 1)
 
-    if ALLOWED_SENDERS:
-        logging.debug('Allowed SASL senders: %s' % ', '.join(ALLOWED_SENDERS))
-        if not (sasl_username in ALLOWED_SENDERS or sasl_sender_domain in ALLOWED_SENDERS):
+    if allowed_senders:
+        logging.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
+        if not (sasl_username in allowed_senders or sasl_sender_domain in allowed_senders):
             logging.debug('REJECT: Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
             return reject
 
     # Check alias domains and user alias addresses
-    if STRICT_RESTRICTION or ALLOW_LIST_MEMBER:
-        if STRICT_RESTRICTION:
+    if is_strict or allow_list_member:
+        if is_strict:
             logging.debug('Apply strict restriction (ALLOWED_LOGIN_MISMATCH_STRICTLY=True).')
 
-        if ALLOW_LIST_MEMBER:
+        if allow_list_member:
             logging.debug('Apply list/alias member restriction (ALLOWED_LOGIN_MISMATCH_LIST_MEMBER=True).')
 
         if settings.backend == 'ldap':
@@ -177,14 +166,14 @@ def restriction(**kwargs):
             filter_list_member = '(&(objectClass=mailUser)(|(mail=%s)(shadowAddress=%s))(memberOfGroup=%s))' % (sasl_username, sasl_username, sender)
             filter_alias_member = '(&(objectClass=mailAlias)(|(mail=%s)(shadowAddress=%s))(mailForwardingAddress=%s))' % (sender, sender, sasl_username)
 
-            if STRICT_RESTRICTION and ALLOW_LIST_MEMBER:
+            if allowed_senders and allow_list_member:
                 query_filter = '(|' + filter_user_alias + filter_list_member + filter_alias_member + ')'
                 success_msg = 'Sender (%s) is an user alias address or list/alias member (%s).' % (sasl_username, sender)
-            elif STRICT_RESTRICTION and not ALLOW_LIST_MEMBER:
+            elif is_strict and not allow_list_member:
                 # Query mail account directly
                 query_filter = filter_user_alias
                 success_msg = 'Sender is an user alias address.'
-            elif not STRICT_RESTRICTION and ALLOW_LIST_MEMBER:
+            elif not is_strict and allow_list_member:
                 query_filter = '(|' + filter_list_member + filter_alias_member + ')'
                 success_msg = 'Sender (%s) is member of mail list/alias (%s).' % (sasl_username, sender)
             else:
@@ -205,7 +194,7 @@ def restriction(**kwargs):
                 return reject
 
         elif settings.backend in ['mysql', 'pgsql']:
-            if STRICT_RESTRICTION:
+            if is_strict:
                 # Get alias domains
                 sql = """SELECT alias_domain FROM alias_domain
                          WHERE alias_domain='%s' AND target_domain='%s'
@@ -227,7 +216,7 @@ def restriction(**kwargs):
                         logging.debug('Sender is an alias address of sasl username.')
                         return SMTP_ACTIONS['default']
 
-            if ALLOW_LIST_MEMBER:
+            if allow_list_member:
                 # Get alias members
                 sql = """SELECT goto FROM alias
                          WHERE address='%s'

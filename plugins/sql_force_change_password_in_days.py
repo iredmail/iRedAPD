@@ -29,21 +29,7 @@ import settings
 from libs import SMTP_ACTIONS
 
 
-# You can override below two settings in iRedAPD config file 'settings.py'.
-# Force to change password in 90 days.
-try:
-    CHANGE_PASSWORD_DAYS = int(settings.CHANGE_PASSWORD_DAYS)
-except:
-    CHANGE_PASSWORD_DAYS = 90
-
-# Reject reason.
-# It's recommended to add URL of your webmail in this message.
-try:
-    CHANGE_PASSWORD_MESSAGE = settings.CHANGE_PASSWORD_MESSAGE
-except:
-    CHANGE_PASSWORD_MESSAGE = 'Please change your password in webmail before sending email'
-
-reject_action = 'REJECT ' + CHANGE_PASSWORD_MESSAGE
+reject_action = 'REJECT ' + settings.CHANGE_PASSWORD_MESSAGE
 
 def restriction(**kwargs):
     if not kwargs['sasl_username']:
@@ -70,12 +56,12 @@ def restriction(**kwargs):
 
     # Compare date to make sure it's less than CHANGE_PASSWORD_DAYS.
     shift = datetime.datetime.now() - pwchdate
-    if not shift < datetime.timedelta(days=CHANGE_PASSWORD_DAYS):
-        logging.debug("Password last change date is older than %d days." % CHANGE_PASSWORD_DAYS)
+    if not shift < datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS):
+        logging.debug("Password last change date is older than %d days." % settings.CHANGE_PASSWORD_DAYS)
         return reject_action
     else:
         logging.debug("Sender didn't change password before.")
         return reject_action
 
-    logging.debug("Sender will be forced to change password on %s." % str(pwchdate + datetime.timedelta(days=CHANGE_PASSWORD_DAYS)))
+    logging.debug("Sender will be forced to change password on %s." % str(pwchdate + datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS)))
     return SMTP_ACTIONS['default']

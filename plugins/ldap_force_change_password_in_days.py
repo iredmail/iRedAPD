@@ -4,10 +4,10 @@
 #
 # Below settings can be placed in iRedAPD config file 'settings.py':
 #
-#   - CHANGE_PASSWORD_DAYS: value must be an integer number. e.g. 90 (90 days)
+#   - CHANGE_PASSWORD_DAYS: value must be an integer number. Default is 90 (90 days)
 #   - CHANGE_PASSWORD_MESSAGE: message string which will be read by user
 #
-# Sample settings:
+#   Sample settings:
 #
 #   - CHANGE_PASSWORD_DAYS = 90
 #   - CHANGE_PASSWORD_MESSAGE = 'Please change your password in webmail immediately: https://xxx/webmail/'
@@ -31,22 +31,7 @@ from libs import SMTP_ACTIONS
 REQUIRE_LOCAL_SENDER = True
 SENDER_SEARCH_ATTRLIST = ['shadowLastChange']
 
-
-# You can override below two settings in iRedAPD config file 'settings.py'.
-# Force to change password in 90 days.
-try:
-    CHANGE_PASSWORD_DAYS = settings.CHANGE_PASSWORD_DAYS
-except:
-    CHANGE_PASSWORD_DAYS = 90
-
-# Reject reason.
-# It's recommended to add URL of your webmail in this message.
-try:
-    CHANGE_PASSWORD_MESSAGE = settings.CHANGE_PASSWORD_MESSAGE
-except:
-    CHANGE_PASSWORD_MESSAGE = 'Please change your password in webmail before sending email'
-
-reject_action = 'REJECT ' + CHANGE_PASSWORD_MESSAGE
+reject_action = 'REJECT ' + settings.CHANGE_PASSWORD_MESSAGE
 
 
 def get_days_of_today():
@@ -79,9 +64,9 @@ def restriction(**kwargs):
 
     logging.debug('Days of password last change: %d (today: %d)' % (shadow_last_change, days_of_today))
 
-    if passed_days >= CHANGE_PASSWORD_DAYS:
-        logging.debug("Password last change date is older than %d days." % CHANGE_PASSWORD_DAYS)
+    if passed_days >= settings.CHANGE_PASSWORD_DAYS:
+        logging.debug("Password last change date is older than %d days." % settings.CHANGE_PASSWORD_DAYS)
         return reject_action
 
-    logging.debug("Sender will be forced to change password in %d day(s)." % (CHANGE_PASSWORD_DAYS - passed_days))
+    logging.debug("Sender will be forced to change password in %d day(s)." % (settings.CHANGE_PASSWORD_DAYS - passed_days))
     return SMTP_ACTIONS['default']

@@ -125,6 +125,9 @@ add_missing_parameter()
 
         if [ X"${value}" == X'True' -o X"${value}" == X'False' ]; then
             echo "${var} = ${value}" >> ${IREDAPD_CONF_PY}
+        elif echo ${value} | grep '^[\[|\(]' &>/dev/null; then
+            # Value is a list or tuple in Python format.
+            echo "${var} = ${value}" >> ${IREDAPD_CONF_PY}
         else
             # Value must be quoted as string.
             echo "${var} = '${value}'" >> ${IREDAPD_CONF_PY}
@@ -168,6 +171,7 @@ fi
 dir_new_version="$(dirname ${PWD})"
 name_new_version="$(basename ${dir_new_version})"
 NEW_IREDAPD_ROOT_DIR="/opt/${name_new_version}"
+NEW_IREDAPD_CONF="${NEW_IREDAPD_ROOT_DIR}/settings.py"
 if [ ! -d ${NEW_IREDAPD_ROOT_DIR} ]; then
     echo "* Create directory ${NEW_IREDAPD_ROOT_DIR}."
     mkdir ${NEW_IREDAPD_ROOT_DIR} &>/dev/null
@@ -175,7 +179,26 @@ fi
 
 echo "* Copying new version to ${NEW_IREDAPD_ROOT_DIR}"
 cp -rf ${dir_new_version}/* ${NEW_IREDAPD_ROOT_DIR}
-cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_ROOT_DIR}/
+
+# able to import default settings from libs/default_settings.py
+cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_CONF}
+
+if ! grep '^from libs.default_settings import' ${IREDAPD_CONF_PY} &>/dev/null; then
+    cat > ${NEW_IREDAPD_CONF}_tmp <<EOF
+############################################################
+# DO NOT TOUCH BELOW LINE.
+#
+# Import default settings.
+# You can always override default settings by placing custom settings in this
+# file.
+from libs.default_settings import *
+############################################################
+EOF
+
+    cat ${NEW_IREDAPD_CONF} >> ${NEW_IREDAPD_CONF}_tmp
+    mv ${NEW_IREDAPD_CONF}_tmp ${NEW_IREDAPD_CONF}
+fi
+
 chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${NEW_IREDAPD_ROOT_DIR}
 chmod -R 0555 ${NEW_IREDAPD_ROOT_DIR}
 chmod 0400 ${NEW_IREDAPD_ROOT_DIR}/settings.py
@@ -202,20 +225,19 @@ chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 
 echo "* Add missing parameters."
 # Get Amavisd related settings from iRedAdmin config file.
-if [ -f ${IREDADMIN_CONF_PY} ]; then
-    grep '^amavisd_db_' ${IREDADMIN_CONF_PY} >> ${IREDAPD_CONF_PY}
-    perl -pi -e 's#amavisd_db_host#amavisd_db_server#g' ${IREDAPD_CONF_PY}
-else
-    # Add sample setting.
-    add_missing_parameter 'amavisd_db_server' '127.0.0.1'
-    add_missing_parameter 'amavisd_db_port' '3306'
-    add_missing_parameter 'amavisd_db_name' 'amavisd'
-    add_missing_parameter 'amavisd_db_user' 'amavisd'
-    add_missing_parameter 'amavisd_db_password' 'password'
+if ! grep '^amavisd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
+    if [ -f ${IREDADMIN_CONF_PY} ]; then
+        grep '^amavisd_db_' ${IREDADMIN_CONF_PY} >> ${IREDAPD_CONF_PY}
+        perl -pi -e 's#amavisd_db_host#amavisd_db_server#g' ${IREDAPD_CONF_PY}
+    else
+        # Add sample setting.
+        add_missing_parameter 'amavisd_db_server' '127.0.0.1'
+        add_missing_parameter 'amavisd_db_port' '3306'
+        add_missing_parameter 'amavisd_db_name' 'amavisd'
+        add_missing_parameter 'amavisd_db_user' 'amavisd'
+        add_missing_parameter 'amavisd_db_password' 'password'
+    fi
 fi
-
-# trusted or internal networks.
-add_missing_parameter 'mynetworks' '[]'
 
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
