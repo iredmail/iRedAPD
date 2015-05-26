@@ -135,8 +135,8 @@ class PolicyChannel(asynchat.async_chat):
                 else:
                     action = SMTP_ACTIONS['default']
             except Exception, e:
-                logging.debug('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
                 action = SMTP_ACTIONS['default']
+                logging.debug('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
             # Log final action.
             logging.info('[%s] %s, %s -> %s, %s' % (self.smtp_session_data['client_address'],
@@ -218,7 +218,10 @@ def main():
     DaemonSocket((settings.listen_address, int(settings.listen_port)))
 
     # Run this program as daemon.
-    daemon.daemonize()
+    try:
+        daemon.daemonize(noClose=True)
+    except Exception, e:
+        logging.info('Error in daemon.daemonize: ' + str(e))
 
     # Run as a low privileged user.
     uid = pwd.getpwnam(settings.run_as_user)[2]
@@ -245,6 +248,8 @@ def main():
 
     except KeyboardInterrupt:
         pass
+    except Exception, e:
+        logging.info('Error in asyncore.loop: ' + str(e))
 
 if __name__ == '__main__':
     main()

@@ -162,12 +162,8 @@ def daemonize(noClose=False):
         if not noClose:
             _redirectFileDescriptors()
 
-    except DaemonException:
-        raise
-
-    except OSError, e:
-        raise DaemonException('Error during daemonizing: %s [%d]' %\
-              (e.strerror, e.errno))
+    except Exception, e:
+        raise DaemonError, 'Error during daemonizing: %s [%d]' % (e.strerror, e.errno)
             
 
 # ---------------------------------------------------------------------------
@@ -178,7 +174,7 @@ def _fork():
     try:
         return os.fork()
     except OSError, e:
-        raise DaemonException, 'Cannot fork: %s [%d]' % (e.strerror, e.errno)
+        raise DaemonError, 'Cannot fork: %s [%d]' % (e.strerror, e.errno)
 
 def _redirectFileDescriptors():
     import resource  # POSIX resource information
@@ -197,9 +193,12 @@ def _redirectFileDescriptors():
 
         try:
             os.close(fd)
-        except OSError:
+        except OSError, e:
             # File descriptor wasn't open. Ignore.
-            pass
+            logging.info('Error in _redirectFileDescriptors 1: (%d, %s)' % (e.errno, e.strerror))
+        except Exception, e:
+            logging.info('Error in _redirectFileDescriptors 2: (%d, %s)' % (e.errno, e.strerror))
+
 
     # Redirect standard input, output and error to something safe.
     # os.open() is guaranteed to return the lowest available file
