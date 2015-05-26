@@ -33,18 +33,9 @@ elif settings.backend in ['mysql', 'pgsql']:
 
     if settings.backend == 'mysql':
         sql_dbn = 'mysql'
-        conn_string_vmail = 'mysql://%s:%s@%s/%s' % (settings.sql_user,
-                                                     settings.sql_password,
-                                                     settings.sql_server,
-                                                     settings.sql_db)
-
 
     elif settings.backend == 'pgsql':
-        sql_dbn = 'postgresql'
-        conn_string_vmail = 'postgresql://%s:%s@%s/%s' % (settings.sql_user,
-                                                          settings.sql_password,
-                                                          settings.sql_server,
-                                                          settings.sql_db)
+        sql_dbn = 'postgres'
 
     uri_db_vmail = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
                                             settings.sql_user,

@@ -5,6 +5,7 @@ iRedAPD-1.6.0:
       `amavisd_wblist` instead.
 
     * Fixed issues:
+        * Doesn't work with PostgreSQL backend.
         * iRedAPD daemon exits with error (9, 'Bad file descriptor').
 
 iRedAPD-1.5.0:
