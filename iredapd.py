@@ -183,7 +183,6 @@ class DaemonSocket(asyncore.dispatcher):
 
     def handle_accept(self):
         conn, remote_addr = self.accept()
-        print conn, remote_addr
         logging.debug("Connect from %s, port %s." % remote_addr)
 
         PolicyChannel(conn,
