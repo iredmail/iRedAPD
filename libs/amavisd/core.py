@@ -92,8 +92,8 @@ def get_applicable_policy(db_cursor,
                  """ % (','.join(policy_columns), sql_valid_rcpts)
         logging.debug(sql)
 
-        db_cursor.execute(sql)
-        records = db_cursor.fetchmany(4)
+        qr = db_cursor.execute(sql)
+        records = qr.fetchmany(4)
 
         if records:
             return (True, records)

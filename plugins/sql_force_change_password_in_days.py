@@ -41,8 +41,8 @@ def restriction(**kwargs):
     logging.debug('SQL to get mailbox.passwordlastchange of sender (%s): %s' % (sasl_username, sql))
 
     conn = kwargs['conn_vmail']
-    conn.execute(sql)
-    sql_record = conn.fetchone()
+    qr = conn.execute(sql)
+    sql_record = qr.fetchone()
     logging.debug('Returned SQL Record: %s' % str(sql_record))
 
     if sql_record:

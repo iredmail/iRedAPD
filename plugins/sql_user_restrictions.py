@@ -52,8 +52,8 @@ def restriction(**kwargs):
     ''' % sender
     logging.debug('SQL to get restriction rules of sender (%s): %s' % (sender, sql))
 
-    conn.execute(sql)
-    sql_record = conn.fetchone()
+    qr = conn.execute(sql)
+    sql_record = qr.fetchone()
     logging.debug('Returned SQL Record: %s' % str(sql_record))
 
     # Sender account exists, perform recipient restrictions
@@ -103,8 +103,8 @@ def restriction(**kwargs):
         ''' % recipient
         logging.debug('SQL to get restriction rules of recipient (%s): %s' % (recipient, sql))
 
-        conn.execute(sql)
-        sql_record = conn.fetchone()
+        qr = conn.execute(sql)
+        sql_record = qr.fetchone()
         logging.debug('Returned SQL Record: %s' % str(sql_record))
 
     # Recipient account exists, perform sender restrictions

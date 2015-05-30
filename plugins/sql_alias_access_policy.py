@@ -55,8 +55,8 @@ def restriction(**kwargs):
     ''' % (recipient)
     logging.debug('SQL: query access policy: %s' % sql)
 
-    conn.execute(sql)
-    sql_record = conn.fetchone()
+    qr = conn.execute(sql)
+    sql_record = qr.fetchone()
     logging.debug('SQL: record: %s' % str(sql_record))
 
     # Recipient account doesn't exist.
@@ -87,12 +87,12 @@ def restriction(**kwargs):
              LIMIT 1""" % (sender_domain, recipient_domain)
     logging.debug('SQL: query alias domains: %s' % sql)
 
-    conn.execute(sql)
-    qr = conn.fetchone()
+    qr = conn.execute(sql)
+    sql_record = qr.fetchone()
 
-    if qr:
-        logging.debug('SQL: record: %s' % str(qr))
-        rcpt_alias_domains.append(str(qr[0]))
+    if sql_record:
+        logging.debug('SQL: record: %s' % str(sql_record))
+        rcpt_alias_domains.append(str(sql_record[0]))
     else:
         logging.debug('SQL: No alias domain.')
 

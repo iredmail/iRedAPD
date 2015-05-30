@@ -33,8 +33,10 @@ class Modeler:
         if self.require_amavisd_db:
             conn_amavisd = self.conns['conn_amavisd'].connect()
 
+        conn_vmail = self.conns['conn_vmail'].connect()
+
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
-                         'conn_vmail': self.conns['conn_vmail'].connect(),
+                         'conn_vmail': conn_vmail,
                          'conn_amavisd': conn_amavisd,
                          'sender': sender,
                          'recipient': recipient,
@@ -61,13 +63,23 @@ class Modeler:
             if not action.startswith('DUNNO'):
                 # Log action returned by plugin, except whitelist ('OK')
                 if (not action.startswith('OK')) and self.conns['conn_iredadmin']:
-                    log_action(conn=self.conns['conn_iredadmin'].connect(),
+                    conn_iredadmin = self.conns['conn_iredadmin'].connect()
+
+                    log_action(conn=conn_iredadmin,
                                action=action,
                                sender=sender,
                                recipient=recipient,
                                ip=smtp_session_data['client_address'],
                                plugin_name=plugin.__name__)
 
+                    conn_iredadmin.close()
+
                 return action
+
+        try:
+            conn_vmail.close()
+            conn_amavisd.close()
+        except:
+            pass
 
         return SMTP_ACTIONS['default']

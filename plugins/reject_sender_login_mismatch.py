@@ -120,8 +120,8 @@ def restriction(**kwargs):
                          LIMIT 1""" % (sender_domain, sender_domain)
                 logging.debug('SQL: query alias domains: %s' % sql)
 
-                conn.execute(sql)
-                sql_record = conn.fetchone()
+                qr = conn.execute(sql)
+                sql_record = qr.fetchone()
                 logging.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
@@ -201,8 +201,8 @@ def restriction(**kwargs):
                          LIMIT 1""" % (sender_domain, sasl_sender_domain)
                 logging.debug('SQL: query alias domains: %s' % sql)
 
-                conn.execute(sql)
-                sql_record = conn.fetchone()
+                qr = conn.execute(sql)
+                sql_record = qr.fetchone()
                 logging.debug('SQL query result: %s' % str(sql_record))
 
                 if not sql_record:
@@ -223,8 +223,8 @@ def restriction(**kwargs):
                          LIMIT 1""" % (sender)
                 logging.debug('SQL: query members of alias account: %s' % sql)
 
-                conn.execute(sql)
-                sql_record = conn.fetchone()
+                qr = conn.execute(sql)
+                sql_record = qr.fetchone()
                 logging.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
