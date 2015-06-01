@@ -137,11 +137,11 @@ def restriction(**kwargs):
     logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
 
     if sender == sasl_username:
-        logging.debug('SKIP: Sender <=> sasl username matched.')
+        logging.debug('SKIP: sender = sasl username.')
         return SMTP_ACTIONS['default']
     else:
         if not (allowed_senders or is_strict or allow_list_member):
-            logging.debug('No allowed senders.')
+            logging.debug('No allowed senders in config file.')
             return reject
 
     (sasl_sender_name, sasl_sender_domain) = sasl_username.split('@', 1)
@@ -149,9 +149,10 @@ def restriction(**kwargs):
 
     if allowed_senders:
         logging.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
-        if not (sasl_username in allowed_senders or sasl_sender_domain in allowed_senders):
-            logging.debug('REJECT: Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
-            return reject
+        if sasl_username in allowed_senders or sasl_sender_domain in allowed_senders:
+            return SMTP_ACTIONS['default']
+        else:
+            logging.debug('Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
 
     # Check alias domains and user alias addresses
     if is_strict or allow_list_member:

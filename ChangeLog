@@ -5,6 +5,8 @@ iRedAPD-1.6.0:
       `amavisd_wblist` instead.
 
     * Fixed issues:
+        * plugin/reject_sender_login_mismatch.py: Not return correct value for
+          allowed senders.
         * Not correctly fetch SQL query result with SQLAlchemy.
         * Doesn't work with PostgreSQL backend.
         * iRedAPD daemon exits with error (9, 'Bad file descriptor').
