@@ -10,7 +10,7 @@ SMTP_ACTIONS = {
     'reject': 'REJECT Policy rejection',
     # reject with reason
     'reject_blacklisted': 'REJECT Blacklisted',
-    'reject_not_authorized': 'REJECT Not authoried',
+    'reject_not_authorized': 'REJECT Not authorized',
     'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
 }
 
