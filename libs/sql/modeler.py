@@ -62,7 +62,7 @@ class Modeler:
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
                 # Log action returned by plugin, except whitelist ('OK')
-                if (not action.startswith('OK')) and self.conns['conn_iredadmin']:
+                if not action.startswith('OK') and self.conns['conn_iredadmin']:
                     conn_iredadmin = self.conns['conn_iredadmin'].connect()
 
                     log_action(conn=conn_iredadmin,

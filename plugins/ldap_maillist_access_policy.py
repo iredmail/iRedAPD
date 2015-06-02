@@ -28,7 +28,7 @@ def restriction(**kwargs):
     if policy == 'public':
         return SMTP_ACTIONS['default'] + ' (Access policy: public, no restriction)'
 
-    conn = kwargs['conn']
+    conn = kwargs['conn_vmail']
     base_dn = kwargs['base_dn']
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
@@ -49,7 +49,7 @@ def restriction(**kwargs):
                 dn, entries = qr[0]
                 recipient_alias_domains = entries.get('domainName', []) + entries.get('domainAliasName', [])
         except Exception, e:
-            logging.error('Error while fetching alias domains: %s' % str(e))
+            logging.error('Error while fetching alias domains of recipient domain %s: %s' % (recipient_domain, str(e)))
 
         logging.debug('Recipient domain and alias domains: %s' % ','.join(recipient_alias_domains))
 

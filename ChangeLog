@@ -5,6 +5,8 @@ iRedAPD-1.6.0:
       `amavisd_wblist` instead.
 
     * Fixed issues:
+        * plugin/ldap_maillist_access_policy.py: not use correct ldap
+          connection cursor. this causes access policy not work.
         * plugin/reject_sender_login_mismatch.py: Not return correct value for
           allowed senders.
         * Not correctly fetch SQL query result with SQLAlchemy.

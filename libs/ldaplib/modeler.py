@@ -40,7 +40,7 @@ class Modeler:
             self.conn.unbind_s()
             logging.debug('Close LDAP connection.')
         except Exception, e:
-            logging.debug('Error while closing connection: %s' % str(e))
+            logging.error('Error while closing connection: %s' % str(e))
 
     def handle_data(self,
                     smtp_session_data,

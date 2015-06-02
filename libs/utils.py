@@ -104,4 +104,4 @@ def log_action(conn, action, sender, recipient, ip, plugin_name):
         logging.debug(sql)
         conn.execute(sql)
     except Exception, e:
-        logging.debug(e)
+        logging.error(e)
