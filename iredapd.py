@@ -12,7 +12,7 @@ from sqlalchemy import create_engine
 
 # iRedAPD setting file and modules
 import settings
-from libs import __version__, SMTP_ACTIONS, daemon
+from libs import __version__, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
 
 # Plugin directory.
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
@@ -98,7 +98,12 @@ class PolicyChannel(asynchat.async_chat):
             logging.debug("smtp session: " + line)
             if '=' in line:
                 (key, value) = line.split('=', 1)
-                self.smtp_session_data[key] = value
+
+                if key in SMTP_SESSION_ATTRIBUTES:
+                    self.smtp_session_data[key] = value
+                else:
+                    logging.debug('Drop invalid smtp session attribute/value: %s' % line)
+
         elif len(self.smtp_session_data) != 0:
             try:
                 conns = {'conn_vmail': conn_vmail,

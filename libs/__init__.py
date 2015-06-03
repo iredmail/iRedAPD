@@ -29,6 +29,45 @@ MAILLIST_POLICY_ALLOWEDONLY = 'allowedonly'
 MAILLIST_POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 
 
+# All the attributes that the Postfix SMTP server sends in a delegated SMTPD
+# access policy request.
+# Reference: http://www.postfix.org/SMTPD_POLICY_README.html
+SMTP_SESSION_ATTRIBUTES = [
+    # Postfix version 2.1 and later:
+    'request',
+    'protocol_state',
+    'protocol_name',
+    'helo_name',
+    'queue_id',
+    'sender',
+    'recipient',
+    'recipient_count',
+    'client_address',
+    'client_name',
+    'reverse_client_name',
+    'instance',
+    # Postfix version 2.2 and later:
+    'sasl_method',
+    'sasl_username',
+    'sasl_sender',
+    'size',
+    'ccert_subject',
+    'ccert_issuer',
+    'ccert_fingerprint',
+    # Postfix version 2.3 and later:
+    'encryption_protocol',
+    'encryption_cipher',
+    'encryption_keysize',
+    'etrn_domain',
+    # Postfix version 2.5 and later:
+    'stress',
+    # Postfix version 2.9 and later:
+    'ccert_pubkey_fingerprint',
+    # Postfix version 3.0 and later:
+    'client_port',
+]
+
+
 def sqllist(values):
     """
         >>> _sqllist([1, 2, 3])
