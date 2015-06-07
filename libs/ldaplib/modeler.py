@@ -59,9 +59,11 @@ class Modeler:
         sasl_username = smtp_session_data['sasl_username'].lower()
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
+        conn_amavisd = None
         if self.conns['conn_amavisd']:
             conn_amavisd = self.conns['conn_amavisd'].connect()
 
+        conn_iredapd = None
         if self.conns['conn_iredapd']:
             conn_iredapd = self.conns['conn_iredapd'].connect()
 
