@@ -8,11 +8,11 @@ import asyncore
 import asynchat
 import logging
 
-from sqlalchemy import create_engine
 
 # iRedAPD setting file and modules
 import settings
 from libs import __version__, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
+from libs import get_db_conn
 
 # Plugin directory.
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
@@ -20,67 +20,27 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
 if not settings.backend in ['ldap', 'mysql', 'pgsql']:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
-conn_vmail = None
-conn_amavisd = None
-conn_iredadmin = None
-
 if settings.backend == 'ldap':
     from libs.ldaplib.modeler import Modeler
-    sql_dbn = 'mysql'
 
 elif settings.backend in ['mysql', 'pgsql']:
     from libs.sql.modeler import Modeler
 
-    if settings.backend == 'mysql':
-        sql_dbn = 'mysql'
-
-    elif settings.backend == 'pgsql':
-        sql_dbn = 'postgres'
-
-    uri_db_vmail = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
-                                            settings.sql_user,
-                                            settings.sql_password,
-                                            settings.sql_server,
-                                            int(settings.sql_port),
-                                            settings.sql_db)
-    conn_vmail = create_engine(uri_db_vmail, pool_size=20, pool_recycle=3600, max_overflow=0)
-
-try:
-    uri_db_amavisd = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
-                                              settings.amavisd_db_user,
-                                              settings.amavisd_db_password,
-                                              settings.amavisd_db_server,
-                                              int(settings.amavisd_db_port),
-                                              settings.amavisd_db_name)
-
-    conn_amavisd = create_engine(uri_db_amavisd, pool_size=10, pool_recycle=3600, max_overflow=0)
-except:
-    pass
-
-try:
-    uri_db_iredadmin = '%s://%s:%s@%s:%d/%s' % (sql_dbn,
-                                                settings.iredadmin_db_user,
-                                                settings.iredadmin_db_password,
-                                                settings.iredadmin_db_server,
-                                                int(settings.iredadmin_db_port),
-                                                settings.iredadmin_db_name)
-
-    conn_iredadmin = create_engine(uri_db_iredadmin, pool_size=10, pool_recycle=3600, max_overflow=0)
-except:
-    pass
 
 class PolicyChannel(asynchat.async_chat):
     """Process each smtp policy request"""
     def __init__(self,
-                 conn,
+                 sock,
+                 db_conns=None,
                  plugins=[],
                  sender_search_attrlist=None,
                  recipient_search_attrlist=None):
-        asynchat.async_chat.__init__(self, conn)
+        asynchat.async_chat.__init__(self, sock)
         self.buffer = []
         self.smtp_session_data = {}
         self.set_terminator('\n')
 
+        self.db_conns = db_conns
         self.plugins = plugins
         self.sender_search_attrlist = sender_search_attrlist
         self.recipient_search_attrlist = recipient_search_attrlist
@@ -106,20 +66,7 @@ class PolicyChannel(asynchat.async_chat):
 
         elif len(self.smtp_session_data) != 0:
             try:
-                conns = {'conn_vmail': conn_vmail,
-                         'conn_amavisd': conn_amavisd,
-                         'conn_iredadmin': conn_iredadmin}
-
-                # Connect to Amavisd database if required
-                require_amavisd_db = False
-                for p in self.plugins:
-                    if p.__dict__.get('REQUIRE_AMAVISD_DB', False):
-                        require_amavisd_db = True
-                        break
-
-                modeler = Modeler(conns=conns,
-                                  require_amavisd_db=require_amavisd_db)
-
+                modeler = Modeler(conns=self.db_conns)
                 result = modeler.handle_data(
                     smtp_session_data=self.smtp_session_data,
                     plugins=self.plugins,
@@ -152,13 +99,15 @@ class PolicyChannel(asynchat.async_chat):
 
 class DaemonSocket(asyncore.dispatcher):
     """Create socket daemon"""
-    def __init__(self, localaddr):
+    def __init__(self, local_addr, db_conns):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
-        self.bind(localaddr)
+        self.bind(local_addr)
         self.listen(5)
-        ip, port = localaddr
+        ip, port = local_addr
+        self.db_conns = db_conns
+
         logging.info("Starting iRedAPD (version: %s, backend: %s), listening on %s:%d." % (__version__, settings.backend, ip, port))
 
         # Load plugins.
@@ -187,10 +136,11 @@ class DaemonSocket(asyncore.dispatcher):
                     pass
 
     def handle_accept(self):
-        conn, remote_addr = self.accept()
+        sock, remote_addr = self.accept()
         logging.debug("Connect from %s, port %s." % remote_addr)
 
-        PolicyChannel(conn,
+        PolicyChannel(sock,
+                      db_conns=self.db_conns,
                       plugins=self.loaded_plugins,
                       sender_search_attrlist=self.sender_search_attrlist,
                       recipient_search_attrlist=self.recipient_search_attrlist)
@@ -209,8 +159,31 @@ def main():
                         datefmt='%Y-%m-%d %H:%M:%S',
                         filename=settings.log_file)
 
+    conn_vmail = None
+    conn_amavisd = None
+    conn_iredadmin = None
+    conn_iredapd = None
+
+    if settings.backend == 'pgsql':
+        sql_dbn = 'postgres'
+    else:
+        sql_dbn = 'mysql'
+
+    if settings.backend in ['mysql', 'pgsql']:
+        conn_vmail = get_db_conn(sql_dbn, 'vmail')
+
+    conn_amavisd = get_db_conn(sql_dbn, 'amavisd')
+    conn_iredadmin = get_db_conn(sql_dbn, 'iredadmin')
+    conn_iredapd = get_db_conn(sql_dbn, 'iredapd')
+
+    db_conns = {'conn_vmail': conn_vmail,
+                'conn_amavisd': conn_amavisd,
+                'conn_iredadmin': conn_iredadmin,
+                'conn_iredapd': conn_iredapd}
+
     # Initialize policy daemon.
-    DaemonSocket((settings.listen_address, int(settings.listen_port)))
+    local_addr = (settings.listen_address, int(settings.listen_port))
+    DaemonSocket(local_addr, db_conns)
 
     # Run this program as daemon.
     try:

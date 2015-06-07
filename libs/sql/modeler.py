@@ -6,10 +6,9 @@ from libs.utils import log_action
 
 
 class Modeler:
-    def __init__(self, conns, require_amavisd_db=False):
+    def __init__(self, conns):
         # :param conns: a dict which contains pooled sql connections.
         self.conns = conns
-        self.require_amavisd_db = require_amavisd_db
 
     def handle_data(self,
                     smtp_session_data,
@@ -29,21 +28,23 @@ class Modeler:
         sasl_username = smtp_session_data['sasl_username'].lower()
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
-        conn_amavisd = None
-        if self.require_amavisd_db:
+        conn_vmail = self.conns['conn_vmail'].connect()
+
+        if self.conns['conn_amavisd']:
             conn_amavisd = self.conns['conn_amavisd'].connect()
 
-        conn_vmail = self.conns['conn_vmail'].connect()
+        if self.conns['conn_iredapd']:
+            conn_iredapd = self.conns['conn_iredapd'].connect()
 
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn_vmail': conn_vmail,
                          'conn_amavisd': conn_amavisd,
+                         'conn_iredapd': conn_iredapd,
                          'sender': sender,
                          'recipient': recipient,
                          'sender_domain': sender.split('@')[-1],
                          'recipient_domain': recipient.split('@')[-1],
-                         'sasl_username': sasl_username,
-                         'amavisd_db_cursor': None}
+                         'sasl_username': sasl_username}
 
         # TODO Get SQL record of mail user or mail alias before applying plugins
         # TODO Query required sql columns instead of all

@@ -10,7 +10,7 @@ from libs.utils import log_action
 
 
 class Modeler:
-    def __init__(self, conns, require_amavisd_db=False):
+    def __init__(self, conns):
         # Initialize ldap connection.
         try:
             self.conn = ldap.initialize(settings.ldap_uri)
@@ -32,8 +32,6 @@ class Modeler:
 
         self.conns = conns
         self.conns['conn_vmail'] = self.conn
-
-        self.require_amavisd_db = require_amavisd_db
 
     def __del__(self):
         try:
@@ -61,13 +59,16 @@ class Modeler:
         sasl_username = smtp_session_data['sasl_username'].lower()
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
-        conn_amavisd = None
-        if self.require_amavisd_db:
+        if self.conns['conn_amavisd']:
             conn_amavisd = self.conns['conn_amavisd'].connect()
+
+        if self.conns['conn_iredapd']:
+            conn_iredapd = self.conns['conn_iredapd'].connect()
 
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn_vmail': self.conn,
                          'conn_amavisd': conn_amavisd,
+                         'conn_iredapd': conn_iredapd,
                          'base_dn': settings.ldap_basedn,
                          'sender': sender,
                          'sender_domain': sender.split('@', 1)[-1],
@@ -77,8 +78,7 @@ class Modeler:
                          'sender_dn': None,
                          'sender_ldif': None,
                          'recipient_dn': None,
-                         'recipient_ldif': None,
-                         'amavisd_db_cursor': None}
+                         'recipient_ldif': None}
 
         # TODO Perform addition plugins which don't require sender/recipient info
         # e.g.
