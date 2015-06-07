@@ -1,5 +1,6 @@
 iRedAPD-1.6.1:
     * Improvements:
+        - Don't check white/blacklist on outgoing emails.
         - Drop invalid smtp session attributes.
 
 iRedAPD-1.6.0:

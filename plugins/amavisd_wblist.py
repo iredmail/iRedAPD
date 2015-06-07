@@ -46,6 +46,11 @@ REQUIRE_AMAVISD_DB = True
 
 
 def restriction(**kwargs):
+    # Bypass outgoing emails.
+    if kwargs['smtp_session_data']['sasl_username']:
+        logging.debug('Found SASL username, bypass outgoing email.')
+        return SMTP_ACTIONS['default']
+
     conn = kwargs['conn_amavisd']
 
     if not conn:
