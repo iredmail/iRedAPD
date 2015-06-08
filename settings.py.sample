@@ -66,11 +66,11 @@ ldap_binddn = 'cn=vmail,dc=iredmail,dc=org'
 ldap_bindpw = 'password'
 
 # For SQL (MySQL/MariaDB/PostgreSQL) backends, used to query mail accounts.
-sql_server = '127.0.0.1'
-sql_port = '3306'
-sql_db = 'vmail'
-sql_user = 'vmail'
-sql_password = 'password'
+vmail_db_server = '127.0.0.1'
+vmail_db_port = '3306'
+vmail_db_name = 'vmail'
+vmail_db_user = 'vmail'
+vmail_db_password = 'password'
 
 # For Amavisd policy lookup and white/blacklists.
 amavisd_db_server = '127.0.0.1'

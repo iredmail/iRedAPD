@@ -221,9 +221,12 @@ elif [ X"${DISTRO}" == X'OPENBSD' ]; then
     cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.openbsd ${DIR_RC_SCRIPTS}/iredapd
 fi
 
+systemctl daemon-reload &>/dev/null
+
 chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 
-echo "* Add missing parameters."
+echo "* Add missing parameters or rename old parameter names."
+
 # Get Amavisd related settings from iRedAdmin config file.
 if ! grep '^amavisd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
     if [ -f ${IREDADMIN_CONF_PY} ]; then
@@ -237,6 +240,12 @@ if ! grep '^amavisd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
         add_missing_parameter 'amavisd_db_user' 'amavisd'
         add_missing_parameter 'amavisd_db_password' 'password'
     fi
+fi
+
+# replace old parameter names: sql_[XX] -> vmail_db_[XX]
+if grep '^sql_server' ${IREDAPD_CONF_PY} &>/dev/null; then
+    perl -pi -e 's#^(sql_db)#vmail_db_name#g' ${IREDAPD_CONF_PY}
+    perl -pi -e 's#^(sql_)#vmail_db_#g' ${IREDAPD_CONF_PY}
 fi
 
 echo "* Restarting iRedAPD service."

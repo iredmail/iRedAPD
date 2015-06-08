@@ -67,6 +67,10 @@ class Modeler:
         if self.conns['conn_iredapd']:
             conn_iredapd = self.conns['conn_iredapd'].connect()
 
+        conn_iredadmin = None
+        if self.conns['conn_iredadmin']:
+            conn_iredadmin = self.conns['conn_iredadmin'].connect()
+
         plugin_kwargs = {'smtp_session_data': smtp_session_data,
                          'conn_vmail': self.conn,
                          'conn_amavisd': conn_amavisd,
@@ -130,15 +134,21 @@ class Modeler:
             # Apply plugins
             action = utils.apply_plugin(plugin, **plugin_kwargs)
             if not action.startswith('DUNNO'):
-                # Log action returned by plugin, except whitelist ('OK')
-                if (not action.startswith('OK')) and self.conns['conn_iredadmin']:
-                    log_action(conn=self.conns['conn_iredadmin'].connect(),
-                               action=action,
-                               sender=sender,
-                               recipient=recipient,
-                               ip=smtp_session_data['client_address'],
-                               plugin_name=plugin.__name__)
+                # Log action returned by plugin
+                log_action(conn=conn_iredadmin,
+                           action=action,
+                           sender=sender,
+                           recipient=recipient,
+                           ip=smtp_session_data['client_address'],
+                           plugin_name=plugin.__name__)
 
                 return action
+
+        try:
+            conn_amavisd.close()
+            conn_iredapd.close()
+            conn_iredadmin.close()
+        except:
+            pass
 
         return SMTP_ACTIONS['default']

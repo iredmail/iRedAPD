@@ -15,6 +15,7 @@ SMTP_ACTIONS = {
     'reject_blacklisted': 'REJECT Blacklisted',
     'reject_not_authorized': 'REJECT Not authorized',
     'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
+    'greylisting': '451 4.7.1',
 }
 
 # Mail list access policies.

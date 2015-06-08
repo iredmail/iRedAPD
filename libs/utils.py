@@ -25,7 +25,7 @@ def apply_plugin(plugin, **kwargs):
         action = plugin.restriction(**kwargs)
         logging.debug('<-- Result: %s' % action)
     except Exception, e:
-        logging.error('<!> Error applying plugin %s: %s' % (plugin.__name__, str(e)))
+        logging.error('<!> Error applying plugin "%s": %s' % (plugin.__name__, str(e)))
 
     return action
 
@@ -87,6 +87,16 @@ def is_wildcard_addr(s):
 
 
 def log_action(conn, action, sender, recipient, ip, plugin_name):
+    # Don't log certain actions:
+    #
+    #   - DUNNO
+    #   - OK (whitelist)
+    #   - 451 ... (greylisting)
+    if action.startswith('DUNNO') \
+       or action.startswith('OK') \
+       or action.startswith('451'):
+        return None
+
     try:
         do_log = settings.log_action_in_db
     except:
