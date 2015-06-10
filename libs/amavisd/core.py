@@ -69,17 +69,16 @@ def get_applicable_policy(db_cursor,
     logging.debug('Getting applicable policies')
     account = str(account).lower()
 
-    addr_type = is_valid_amavisd_address(account)
-    if addr_type == 'email':
-        sql_valid_rcpts = """'%s', '%s', '%s', '%s'""" % (
-            account,                            # full email address
-            '@' + kwargs['recipient_domain'],   # entire domain
-            '@.' + kwargs['recipient_domain'],  # sub-domain
-            '@.')                               # catch-all
-    else:
+    if is_valid_amavisd_address(account) != 'email':
         # Postfix should use full email address as recipient.
         logging.debug('Policy account is not an email address.')
-        return SMTP_ACTIONS['default']
+        return (True, {})
+
+    sql_valid_rcpts = """'%s', '%s', '%s', '%s'""" % (
+        account,                            # full email address
+        '@' + kwargs['recipient_domain'],   # entire domain
+        '@.' + kwargs['recipient_domain'],  # sub-domain
+        '@.')                               # catch-all
 
     logging.debug('Valid policy accounts for recipient %s: %s' % (account, sql_valid_rcpts))
     try:

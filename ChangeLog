@@ -1,10 +1,13 @@
-iRedAPD-1.6.1:
+iRedAPD-1.7.0:
     * Improvements:
         - Don't check white/blacklist on outgoing emails sent by authenticated
           user.
         - Drop invalid smtp session attributes.
 
     * Fixed issues:
+        * Not correctly return value in libs/amavisd/core.py, function
+          get_applicable_policy().
+          Thanks <kmihalj _at_ efzg.hr> for the report in forum.
         * plugin/amavisd_wblist.py: sender 'user@*' doesn't work.
           Thanks <kmihalj _at_ efzg.hr> for the report in forum.
 

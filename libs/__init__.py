@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 import settings
 
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
-__version__ = '1.6.0'
+__version__ = '1.7.0'
 
 SMTP_ACTIONS = {
     'default': 'DUNNO',
