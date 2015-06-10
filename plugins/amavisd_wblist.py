@@ -69,8 +69,12 @@ def restriction(**kwargs):
     valid_senders = amavisd_lib.get_valid_addresses_from_email(sender)
     valid_recipients = amavisd_lib.get_valid_addresses_from_email(recipient)
 
-    # 'user@*'
-    valid_recipients.append(recipient.split('@', 1)[0] + '@*')
+    # Sender 'username@*'
+    sender_username = sender.split('@', 1)[0]
+    if '+' in sender_username:
+        valid_senders.append(sender_username.split('+', 1)[0] + '@*')
+    else:
+        valid_senders.append(sender_username + '@*')
 
     # Append original IP address and all possible wildcast IP addresses
     valid_senders.append(client_address)

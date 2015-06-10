@@ -1,7 +1,12 @@
 iRedAPD-1.6.1:
     * Improvements:
-        - Don't check white/blacklist on outgoing emails.
+        - Don't check white/blacklist on outgoing emails sent by authenticated
+          user.
         - Drop invalid smtp session attributes.
+
+    * Fixed issues:
+        * plugin/amavisd_wblist.py: sender 'user@*' doesn't work.
+          Thanks <kmihalj _at_ efzg.hr> for the report in forum.
 
 iRedAPD-1.6.0:
     * New setting: `MYNETWORKS`. used to set trusted or internal networks.
