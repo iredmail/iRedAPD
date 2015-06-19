@@ -102,7 +102,7 @@ def restriction(**kwargs):
 
     # Get 'mailaddr.id' of policy senders, ordered by priority
     sql = """SELECT id,email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
-    logging.debug('SQL: Get policy senders: %s' % sql)
+    logging.debug('SQL: Get policy senders: \n%s' % sql)
 
     qr = conn.execute(sql)
     senders = qr.fetchall()
@@ -119,7 +119,7 @@ def restriction(**kwargs):
 
     # Get 'users.id' of possible recipients
     sql = """SELECT id,email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipients)
-    logging.debug('SQL: Get policy recipients: %s' % sql)
+    logging.debug('SQL: Get policy recipients: \n%s' % sql)
 
     qr = conn.execute(sql)
     rcpts = qr.fetchall()
@@ -136,7 +136,7 @@ def restriction(**kwargs):
 
     # Get wblist
     sql = """SELECT rid,sid,wb FROM wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sids), sqllist(rids))
-    logging.debug('SQL: Get wblist: %s' % sql)
+    logging.debug('SQL: Get wblist: \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 

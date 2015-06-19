@@ -118,7 +118,7 @@ def restriction(**kwargs):
                 sql = """SELECT alias_domain FROM alias_domain
                          WHERE alias_domain='%s' OR target_domain='%s'
                          LIMIT 1""" % (sender_domain, sender_domain)
-                logging.debug('SQL: query alias domains: %s' % sql)
+                logging.debug('SQL: query alias domains: \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
@@ -200,7 +200,7 @@ def restriction(**kwargs):
                 sql = """SELECT alias_domain FROM alias_domain
                          WHERE alias_domain='%s' AND target_domain='%s'
                          LIMIT 1""" % (sender_domain, sasl_sender_domain)
-                logging.debug('SQL: query alias domains: %s' % sql)
+                logging.debug('SQL: query alias domains: \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
@@ -222,7 +222,7 @@ def restriction(**kwargs):
                 sql = """SELECT goto FROM alias
                          WHERE address='%s'
                          LIMIT 1""" % (sender)
-                logging.debug('SQL: query members of alias account (sender): %s' % sql)
+                logging.debug('SQL: query members of alias account (sender): \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
@@ -231,7 +231,7 @@ def restriction(**kwargs):
                 if sql_record:
                     members = sql_record[0].split(',')
                     if sasl_username in members:
-                        logging.debug('Sender (%s) is member of mail alias (%s).' % (sasl_username, sender))
+                        logging.debug('SASL username (%s) is a member of mail alias (%s).' % (sasl_username, sender))
                         return SMTP_ACTIONS['default']
                 else:
                     logging.debug('No such mail alias account.')

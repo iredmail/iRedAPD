@@ -17,7 +17,7 @@ def should_be_greylisted(conn, senders):
     sql = """SELECT sender, enable, priority FROM greylisting
              WHERE sender IN %s
              ORDER BY priority DESC""" % sqllist(senders)
-    logging.debug('SQL: query policy senders:\n %s' % sql)
+    logging.debug('SQL: query policy senders: \n%s' % sql)
 
     qr = conn.execute(sql)
     records = qr.fetchall()

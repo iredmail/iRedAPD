@@ -53,11 +53,11 @@ def restriction(**kwargs):
                 AND active=1
             LIMIT 1
     ''' % (recipient)
-    logging.debug('SQL: query access policy: %s' % sql)
+    logging.debug('SQL: query access policy: \n%s' % sql)
 
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
-    logging.debug('SQL: record: %s' % str(sql_record))
+    logging.debug('SQL query result: %s' % str(sql_record))
 
     # Recipient account doesn't exist.
     if not sql_record:
@@ -85,16 +85,16 @@ def restriction(**kwargs):
              FROM alias_domain
              WHERE alias_domain='%s' AND target_domain='%s'
              LIMIT 1""" % (sender_domain, recipient_domain)
-    logging.debug('SQL: query alias domains: %s' % sql)
+    logging.debug('SQL: query alias domains: \n%s' % sql)
 
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
 
     if sql_record:
-        logging.debug('SQL: record: %s' % str(sql_record))
+        logging.debug('SQL query result: %s' % str(sql_record))
         rcpt_alias_domains.append(str(sql_record[0]))
     else:
-        logging.debug('SQL: No alias domain.')
+        logging.debug('No alias domain.')
 
     if policy == MAILLIST_POLICY_DOMAIN:
         # Bypass all users under the same domain.
