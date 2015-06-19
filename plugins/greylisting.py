@@ -8,12 +8,17 @@ import settings
 # Return 4xx with greylisting message to Postfix.
 action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
 
-def should_be_greylisted(conn, senders):
+
+def should_be_greylisted(conn, recipient, senders):
     """Check if greylisting should be applied to specified senders.
 
     conn - sql connection cursor
+    recipient - full email address of recipient
     senders - list of senders we should check greylisting
     """
+    # TODO check specified enable time. e.g. 9PM-6AM. (global, per-domain, per-user)
+    # TODO check greylisting history of this client
+    # TODO check whitelists (not same as whitelists used by plugin `amavisd_wblist`.
     sql = """SELECT sender, enable, priority FROM greylisting
              WHERE sender IN %s
              ORDER BY priority DESC""" % sqllist(senders)
@@ -26,18 +31,19 @@ def should_be_greylisted(conn, senders):
     for r in records:
         (_, enable, _) = r
         if enable == 1:
-            logging.debug('Greylisting should be applied with record: %s' % str(r))
+            logging.debug('Greylisting should be applied due to SQL record: %s' % str(r))
             return True
 
     return False
 
 
 def restriction(**kwargs):
-    # Bypass outgoing emails and mynetworks.
+    # Bypass outgoing emails.
     if kwargs['smtp_session_data']['sasl_username']:
         logging.debug('Found SASL username, bypass greylisting.')
         return SMTP_ACTIONS['default']
 
+    # Bypass mynetworks.
     client_address = kwargs['smtp_session_data']['client_address']
     if client_address in settings.MYNETWORKS:
         logging.debug('Trusted/internal networks detected, bypass greylisting.')
@@ -46,20 +52,23 @@ def restriction(**kwargs):
     conn = kwargs['conn_iredapd']
 
     if not conn:
-        logging.error('No valid database connection.')
+        logging.error('No valid database connection, fallback to default action.')
         return SMTP_ACTIONS['default']
 
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
+    recipient = kwargs['recipient']
 
     # TODO: add network of client address (e.g. xx.xx.xx/24)
     policy_senders = [sender,
-                      '@' + sender_domain,
-                      '@.' + sender_domain,
-                      '@.',
+                      '@' + sender_domain,      # per-domain
+                      '@.' + sender_domain,     # sub-domains
+                      '@.',                     # catch-all
                       client_address]
 
-    if should_be_greylisted(conn=conn, senders=policy_senders):
+    if should_be_greylisted(conn=conn, recipient=recipient, senders=policy_senders):
+        # TODO check time period
+
         # Apply greylisting
         return action_greylisting
 
