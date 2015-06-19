@@ -222,7 +222,7 @@ def restriction(**kwargs):
                 sql = """SELECT goto FROM alias
                          WHERE address='%s'
                          LIMIT 1""" % (sender)
-                logging.debug('SQL: query members of alias account: %s' % sql)
+                logging.debug('SQL: query members of alias account (sender): %s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()

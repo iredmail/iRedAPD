@@ -40,6 +40,7 @@
 import logging
 from libs import SMTP_ACTIONS, sqllist, utils
 from libs.amavisd import core as amavisd_lib
+import settings
 
 # Connect to amavisd database
 REQUIRE_AMAVISD_DB = True
@@ -47,7 +48,7 @@ REQUIRE_AMAVISD_DB = True
 
 def restriction(**kwargs):
     # Bypass outgoing emails.
-    if kwargs['smtp_session_data']['sasl_username']:
+    if kwargs['smtp_session_data']['sasl_username'] and settings.WBLIST_BYPASS_OUTGOING_EMAIL:
         logging.debug('Found SASL username, bypass outgoing email.')
         return SMTP_ACTIONS['default']
 

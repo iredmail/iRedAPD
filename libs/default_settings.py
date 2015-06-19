@@ -2,6 +2,12 @@
 MYNETWORKS = []
 
 # ---------------
+# Required by: plugins/amavisd_wblist.py
+#
+# Don't check white/blacklists for outgoing emails sent by sasl authenticated user.
+WBLIST_BYPASS_OUTGOING_EMAIL = False
+
+# ---------------
 # Required by:
 #   - plugins/sql_force_change_password_in_days.py
 #   - plugins/ldap_force_change_password_in_days.py

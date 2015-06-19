@@ -1,7 +1,9 @@
 iRedAPD-1.7.0:
     * Improvements:
-        - Don't check white/blacklist on outgoing emails sent by authenticated
-          user.
+        - plugins/amavisd_wblist.py: Able to not check white/blacklists on
+          outgoing emails sent by authenticated user. Default is not bypassed.
+          Controlled by new setting: `WBLIST_BYPASS_OUTGOING_EMAIL`,
+          default value is False (not bypassed).
         - Drop invalid smtp session attributes.
 
     * Fixed issues:
