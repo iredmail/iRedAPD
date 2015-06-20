@@ -1,10 +1,6 @@
 # Author:   Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose:  Check whether local user (sender) is allowed to mail to recipient.
 
-#----------
-# WARNING: This plugin is deprecated, please use `amavisd_wblist` instead.
-#----------
-
 # Value of mailWhitelistRecipient and mailBlacklistRecipient:
 #   - Single address:   user@domain.ltd
 #   - Whole domain:     @domain.ltd
@@ -23,9 +19,9 @@ def restriction(**kwargs):
         return 'DUNNO (No sender LDIF data)'
 
     # Get recipient address.
-    smtp_session_data = kwargs['smtp_session_data']
-    recipient = smtp_session_data.get('recipient').lower()
-    splited_recipient_domain = str(recipient.split('@')[-1]).split('.')
+    recipient = kwargs['recipient']
+    recipient_domain = kwargs['recipient_domain']
+    splited_recipient_domain = recipient_domain.split('.')
 
     # Get correct domain name and sub-domain name.
     # Sample recipient domain: sub2.sub1.com.cn
@@ -48,13 +44,12 @@ def restriction(**kwargs):
                          for v in sender_ldif.get('mailWhitelistRecipient', [])]
 
     # Bypass whitelisted recipients if has intersection set.
-    if len(set(allowed_recipients) & set(whitelisted_rcpts)) > 0:
+    if (set(allowed_recipients) & set(whitelisted_rcpts)):
         return 'DUNNO (Whitelisted)'
 
     # Reject blacklisted recipients if has intersection set.
-    if len(set(allowed_recipients) & set(blacklisted_rcpts)) > 0 \
-       or '@.' in blacklisted_rcpts:
+    if (set(allowed_recipients) & set(blacklisted_rcpts)) or '@.' in blacklisted_rcpts:
         return 'REJECT Permission denied'
 
     # If not matched bl/wl list:
-    return 'DUNNO (Not listed in either white/blacklists)'
+    return 'DUNNO (Not listed in either whitelists or blacklists)'
