@@ -56,11 +56,11 @@ def restriction(**kwargs):
 
     # Compare date to make sure it's less than CHANGE_PASSWORD_DAYS.
     shift = datetime.datetime.now() - pwchdate
-    if not shift < datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS):
-        logging.debug("Password last change date is older than %d days." % settings.CHANGE_PASSWORD_DAYS)
-        return reject_action
+    if shift < datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS):
+        logging.debug("Current password was changed in %d days." % settings.CHANGE_PASSWORD_DAYS)
+        return SMTP_ACTIONS['default']
     else:
-        logging.debug("Sender didn't change password before.")
+        logging.debug("Sender didn't change password in last %d days." % settings.CHANGE_PASSWORD_DAYS)
         return reject_action
 
     logging.debug("Sender will be forced to change password on %s." % str(pwchdate + datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS)))

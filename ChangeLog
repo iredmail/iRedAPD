@@ -7,10 +7,12 @@ iRedAPD-1.7.0:
         - Drop invalid smtp session attributes.
 
     * Fixed issues:
+        * plugins/sql_force_change_password_in_days.py: Not correctly compare
+          password last change date.
         * Not correctly return value in libs/amavisd/core.py, function
           get_applicable_policy().
           Thanks <kmihalj _at_ efzg.hr> for the report in forum.
-        * plugin/amavisd_wblist.py: sender 'user@*' doesn't work.
+        * plugins/amavisd_wblist.py: sender 'user@*' doesn't work.
           Thanks <kmihalj _at_ efzg.hr> for the report in forum.
 
 iRedAPD-1.6.0:
@@ -20,9 +22,9 @@ iRedAPD-1.6.0:
       `amavisd_wblist` instead.
 
     * Fixed issues:
-        * plugin/ldap_maillist_access_policy.py: not use correct ldap
+        * plugins/ldap_maillist_access_policy.py: not use correct ldap
           connection cursor. this causes access policy not work.
-        * plugin/reject_sender_login_mismatch.py: Not return correct value for
+        * plugins/reject_sender_login_mismatch.py: Not return correct value for
           allowed senders.
         * Not correctly fetch SQL query result with SQLAlchemy.
         * Doesn't work with PostgreSQL backend.
@@ -33,12 +35,12 @@ iRedAPD-1.5.0:
         * Use sql connection pool provided by SQLAlchemy.
         * Log reject and other non-DUNNO actions in iredadmin database
           (log_action_in_db = True).
-        * plugin/amavisd_wblist: able to use 'user@*' as white/blacklist
+        * plugins/amavisd_wblist: able to use 'user@*' as white/blacklist
           sender.
-        * plugin/sql_alias_access_policy, plugin/ldap_maillist_access_policy:
+        * plugins/sql_alias_access_policy, plugins/ldap_maillist_access_policy:
           able to use `*@domain.com` (all senders from `domain.com`) as
           moderator.
-        * plugin/reject_sender_login_mismatch.py:
+        * plugins/reject_sender_login_mismatch.py:
             + New optional setting ALLOWED_LOGIN_MISMATCH_LIST_MEMBER, used to
               allow member of mail list/alias to send as mail list/alias.
               Default is False.
@@ -46,9 +48,9 @@ iRedAPD-1.5.0:
         * Log smtp protocol state in log file.
 
     * Fixed issues:
-        * plugin/amavisd_message_size_limit.py: just use the first valid
+        * plugins/amavisd_message_size_limit.py: just use the first valid
           policy (with highest priority) and skip rest.
-        * plugin/reject_sender_login_mismatch.py: not reject email if sender
+        * plugins/reject_sender_login_mismatch.py: not reject email if sender
           is forged address (sender domain is hosted locally).
         * Not close sql connection explicitly.
 
@@ -85,7 +87,7 @@ iRedAPD-1.4.4:
           It's now working with Postfix 'smtpd_end_of_data_restrictions'.
 
     * Fixed:
-        - plugin/sql_force_change_password_in_days.py: not correctly set
+        - plugins/sql_force_change_password_in_days.py: not correctly set
           password last change date if user didn't reset password before.
           Thanks Joel A.G.Oliveira <joel _at_ gabrieldeoliveira dot com.br>
           for the report.
