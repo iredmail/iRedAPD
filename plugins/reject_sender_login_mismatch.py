@@ -71,6 +71,7 @@ reject = 'REJECT Sender login mismatch'
 
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
+    sasl_username_domain = kwargs['sasl_username_domain']
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
     recipient_domain = kwargs['recipient_domain']
@@ -144,12 +145,12 @@ def restriction(**kwargs):
             logging.debug('No allowed senders in config file.')
             return reject
 
-    (sasl_sender_name, sasl_sender_domain) = sasl_username.split('@', 1)
+    (sasl_username_user, _) = sasl_username.split('@', 1)
     (sender_name, sender_domain) = sender.split('@', 1)
 
     if allowed_senders:
         logging.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
-        if sasl_username in allowed_senders or sasl_sender_domain in allowed_senders:
+        if sasl_username in allowed_senders or sasl_username_domain in allowed_senders:
             return SMTP_ACTIONS['default']
         else:
             logging.debug('Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
@@ -199,7 +200,7 @@ def restriction(**kwargs):
                 # Get alias domains
                 sql = """SELECT alias_domain FROM alias_domain
                          WHERE alias_domain='%s' AND target_domain='%s'
-                         LIMIT 1""" % (sender_domain, sasl_sender_domain)
+                         LIMIT 1""" % (sender_domain, sasl_username_domain)
                 logging.debug('SQL: query alias domains: \n%s' % sql)
 
                 qr = conn.execute(sql)
@@ -209,9 +210,9 @@ def restriction(**kwargs):
                 if not sql_record:
                     logging.debug('No alias domain found.')
                 else:
-                    logging.debug('Sender domain %s is alias domain of %s.' % (sender_domain, sasl_sender_domain))
+                    logging.debug('Sender domain %s is alias domain of %s.' % (sender_domain, sasl_username_domain))
                     # sender_domain is one of alias domains
-                    if sender_name != sasl_sender_name:
+                    if sender_name != sasl_username_user:
                         logging.debug('Sender is not an user alias address.')
                     else:
                         logging.debug('Sender is an alias address of sasl username.')

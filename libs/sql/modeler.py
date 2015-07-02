@@ -26,6 +26,7 @@ class Modeler:
         sender = smtp_session_data['sender'].lower()
         recipient = smtp_session_data['recipient'].lower()
         sasl_username = smtp_session_data['sasl_username'].lower()
+        sasl_username_domain = sasl_username.split('@', 1)[-1]
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
 
         conn_vmail = self.conns['conn_vmail'].connect()
@@ -47,10 +48,11 @@ class Modeler:
                          'conn_amavisd': conn_amavisd,
                          'conn_iredapd': conn_iredapd,
                          'sender': sender,
-                         'recipient': recipient,
                          'sender_domain': sender.split('@')[-1],
+                         'recipient': recipient,
                          'recipient_domain': recipient.split('@')[-1],
-                         'sasl_username': sasl_username}
+                         'sasl_username': sasl_username,
+                         'sasl_username_domain': sasl_username_domain}
 
         # TODO Get SQL record of mail user or mail alias before applying plugins
         # TODO Query required sql columns instead of all

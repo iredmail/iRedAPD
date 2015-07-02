@@ -36,11 +36,11 @@ def restriction(**kwargs):
         return 'DUNNO Not a local user'
 
     sasl_username = kwargs['sasl_username']
-    sasl_user_domain = sasl_username.split('@', 1)[-1]
+    sasl_username_domain = kwargs['sasl_username_domain']
 
     # Bypass allowed senders.
     if sasl_username in settings.CHANGE_PASSWORD_NEVER_EXPIRE_USERS \
-       or sasl_user_domain in settings.CHANGE_PASSWORD_NEVER_EXPIRE_USERS:
+       or sasl_username_domain in settings.CHANGE_PASSWORD_NEVER_EXPIRE_USERS:
         return 'DUNNO User or domain is allowed to never change password.'
 
     # Get `mailbox.passwordlastchange`.
