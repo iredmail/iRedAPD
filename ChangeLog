@@ -1,5 +1,7 @@
 iRedAPD-1.7.0:
     * Improvements:
+        - plugins/{sql,ldap}_force_change_password_in_days.py: Allow specified
+          users or domains to never change password.
         - plugins/amavisd_wblist.py: Able to not check white/blacklists on
           outgoing emails sent by authenticated user. Default is not bypassed.
           Controlled by new setting: `WBLIST_BYPASS_OUTGOING_EMAIL`,

@@ -35,8 +35,15 @@ def restriction(**kwargs):
     if not kwargs['sasl_username']:
         return 'DUNNO Not a local user'
 
-    # Get `mailbox.passwordlastchange`.
     sasl_username = kwargs['sasl_username']
+    sasl_user_domain = sasl_username.split('@', 1)[-1]
+
+    # Bypass allowed senders.
+    if sasl_username in settings.CHANGE_PASSWORD_NEVER_EXPIRE_USERS \
+       or sasl_user_domain in settings.CHANGE_PASSWORD_NEVER_EXPIRE_USERS:
+        return 'DUNNO User or domain is allowed to never change password.'
+
+    # Get `mailbox.passwordlastchange`.
     sql = """SELECT passwordlastchange FROM mailbox WHERE username='%s' LIMIT 1""" % sasl_username
     logging.debug('SQL to get mailbox.passwordlastchange of sender (%s): %s' % (sasl_username, sql))
 

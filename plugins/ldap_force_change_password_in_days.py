@@ -46,12 +46,18 @@ def get_days_of_today():
 
 def restriction(**kwargs):
     if not kwargs['sasl_username']:
-        logging.debug('DUNNO Not an authenticated user (no sasl_username in smtp session)')
         return 'DUNNO Not an authenticated user (no sasl_username in smtp session)'
 
     if not kwargs['sender_ldif']:
-        logging.debug('DUNNO Not a local user (no sender ldif)')
         return 'DUNNO Not a local user (no sender ldif)'
+
+    sasl_username = kwargs['sasl_username']
+    sasl_user_domain = sasl_username.split('@', 1)[-1]
+
+    # Bypass allowed senders.
+    if sasl_username in settings.CHANGE_PASSWORD_NEVER_EXPIRE_USERS \
+       or sasl_user_domain in settings.CHANGE_PASSWORD_NEVER_EXPIRE_USERS:
+        return 'DUNNO User or domain is allowed to never change password.'
 
     sender_ldif = kwargs['sender_ldif']
 

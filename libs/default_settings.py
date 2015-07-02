@@ -18,7 +18,11 @@ CHANGE_PASSWORD_DAYS = 90
 # Reject reason.
 # It's recommended to add URL of the web applications which user can login
 # to change password in this message. e.g. Roundcube webmail, iRedAdmin-Pro.
-CHANGE_PASSWORD_MESSAGE = 'Please change your password in webmail before sending email'
+CHANGE_PASSWORD_MESSAGE = 'Password expired or never changed, please change your password in webmail before sending email'
+
+# Allow certain users or domains to never change password.
+# sample values: ['user@example.com', 'domain.com']
+CHANGE_PASSWORD_NEVER_EXPIRE_USERS = []
 
 # --------------
 # Required by: plugins/reject_sender_login_mismatch.py
