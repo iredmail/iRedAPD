@@ -5,50 +5,54 @@
 # Note: Amavisd is configured to be an after-queue content filter in iRedMail.
 #       with '@lookup_sql_dsn' setting enabled in Amavisd config file, Amavisd
 #       will query per-recipient, per-domain and server-wide (a.k.a. catch-all)
-#       policy rules stored in SQL table `amavisd.policy`.
+#       white/blacklists and policy rules (tables: `mailaddr`, `users`,
+#       `wblist`, `policy`) stored in Amavisd SQL database.
 #
 #       if you don't enable this plugin, Amavisd will quarantine emails sent
-#       from per-user blacklisted senders, and no spam scanning for
-#       emails sent from per-user whitelisted senders (note: other checkings
-#       like banned filename, bad headers, virus are still checked - if you
-#       didn't disable them in `amavisd.policy`). With this plugin,
-#       we can tell Postfix to reject blacklisted sender BEFORE email enter
-#       mail queue, or bypass emails directly.
+#       from blacklisted senders, and bypass spam scanning for emails sent from
+#       whitelisted senders (note: other checkings like banned filename, bad
+#       headers, virus are still checked - if you didn't disable them in
+#       `amavisd.policy`). With this plugin, we can tell Postfix to reject
+#       blacklisted sender BEFORE email enter mail queue, or bypass emails sent
+#       from whitelisted senders directly.
 #
 # How to use this plugin:
 #
-# *) Enable `@lookup_sql_dsn` in Amavisd config file.
+#   *) Enable `@lookup_sql_dsn` with correct SQL account credential in Amavisd
+#      config file.
 #
-# *) Set Amavisd lookup SQL database related parameters (amavisd_db_*) in
-#    iRedAPD config file `settings.py`, and enable this plugin.
+#   *) Set Amavisd lookup SQL database related parameters (`amavisd_db_*`) in
+#      iRedAPD config file `/opt/iredapd/settings.py`.
 #
-# *) Enable iRedAPD in Postfix `smtpd_recipient_restrictions`.
+#   *) Enable this plugin in iRedAPD config file `/opt/iredapd/settings.py`,
+#      parameter `plugins =`.
 #
-# *) Enable this plugin in iRedAPD config file (/opt/iredapd/settings.py).
-# *) Restart both iRedAPD and Postfix services.
+#   *) Restart iRedAPD service.
 #
-# Possible white/blacklist senders:
+# Formats of valid white/blacklist senders:
 #
 #   - user@domain.com:  single sender email address
 #   - @domain.com:  entire sender domain
 #   - @.domain.com: entire sender domain and all sub-domains
 #   - @.:           all senders
-#   - 192.168.1.1:  single sender ip address
-#   - 192.168.*.1:  wildcast sender ip addresses. NOTE: Any ip address field
-#                   can be replaced by wildcast letter (*).
+#   - 192.168.1.2:  single sender ip address
+#   - 192.168.1.*, 192.168.*.2:  wildcard sender ip addresses.
+#                   NOTE: if you want to use
+#                   wildcard IP address like '192.*.1.2', '192.*.*.2', please
+#                   set 'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
+#                   /opt/iredapd/settings.py.
 
 import logging
 from libs import SMTP_ACTIONS, sqllist, utils
 from libs.amavisd import core as amavisd_lib
 import settings
 
-# Connect to amavisd database
 REQUIRE_AMAVISD_DB = True
 
 
 def restriction(**kwargs):
     # Bypass outgoing emails.
-    if kwargs['smtp_session_data']['sasl_username'] and settings.WBLIST_BYPASS_OUTGOING_EMAIL:
+    if kwargs['sasl_username'] and settings.WBLIST_BYPASS_OUTGOING_EMAIL:
         logging.debug('Found SASL username, bypass outgoing email.')
         return SMTP_ACTIONS['default']
 
@@ -98,8 +102,10 @@ def restriction(**kwargs):
                 counter += 1
             valid_senders += list(ip4s)
         else:
-            # xx.yy.zz.*
+            # 11.22.33.*
             valid_senders.append('.'.join(ip4[:3]) + '.*')
+            # 11.22.*.44
+            valid_senders.append('.'.join(ip4[:2]) + '.*.' + ip4[3])
 
     logging.debug('Possible policy senders: %s' % str(valid_senders))
     logging.debug('Possible policy recipients: %s' % str(valid_recipients))
