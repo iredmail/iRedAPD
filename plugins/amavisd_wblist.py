@@ -95,6 +95,11 @@ def query_local_addresses(conn, addresses):
 
 
 def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
+    # Return if no valid sender or recipient id.
+    if not (sender_ids and recipient_ids):
+        logging.debug('No valid sender id or recipient id.')
+        return SMTP_ACTIONS['default']
+
     # Get wblist
     sql = """SELECT rid, sid, wb FROM wblist
              WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
@@ -125,6 +130,11 @@ def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
 
 
 def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
+    # Return if no valid sender or recipient id.
+    if not (sender_ids and recipient_ids):
+        logging.debug('No valid sender id or recipient id.')
+        return SMTP_ACTIONS['default']
+
     # Bypass outgoing emails.
     if settings.WBLIST_BYPASS_OUTGOING_EMAIL:
         logging.debug('Bypass outgoing email as defined in WBLIST_BYPASS_OUTGOING_EMAIL.')
