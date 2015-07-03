@@ -233,8 +233,10 @@ def restriction(**kwargs):
     if kwargs['sasl_username']:
         logging.debug('Apply wblist for outbound message.')
 
-        id_of_ext_addresses = query_external_addresses(conn, valid_recipients)
+        id_of_ext_addresses = []
         id_of_local_addresses = query_local_addresses(conn, valid_senders)
+        if id_of_local_addresses:
+            id_of_ext_addresses = query_external_addresses(conn, valid_recipients)
 
         return apply_wblist_on_outbound(conn,
                                         sender_ids=id_of_local_addresses,
@@ -242,8 +244,10 @@ def restriction(**kwargs):
     else:
         logging.debug('Apply wblist for inbound message.')
 
-        id_of_ext_addresses = query_external_addresses(conn, valid_senders)
+        id_of_ext_addresses = []
         id_of_local_addresses = query_local_addresses(conn, valid_recipients)
+        if id_of_local_addresses:
+            id_of_ext_addresses = query_external_addresses(conn, valid_senders)
 
         return apply_wblist_on_inbound(conn,
                                        sender_ids=id_of_ext_addresses,
