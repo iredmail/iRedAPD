@@ -82,20 +82,24 @@ def restriction(**kwargs):
     if utils.is_ipv4(client_address):
         ip4 = client_address.split('.')
 
-        ip4s = set()
-        counter = 0
-        for i in range(4):
-            a = ip4[:]
-            a[i] = '*'
-            ip4s.add('.'.join(a))
+        if settings.WBLIST_ENABLE_ALL_WILDCARD_IP:
+            ip4s = set()
+            counter = 0
+            for i in range(4):
+                a = ip4[:]
+                a[i] = '*'
+                ip4s.add('.'.join(a))
 
-            if counter < 4:
-                for j in range(4 - counter):
-                    a[j+counter] = '*'
-                    ip4s.add('.'.join(a))
+                if counter < 4:
+                    for j in range(4 - counter):
+                        a[j+counter] = '*'
+                        ip4s.add('.'.join(a))
 
-            counter += 1
-        valid_senders += list(ip4s)
+                counter += 1
+            valid_senders += list(ip4s)
+        else:
+            # xx.yy.zz.*
+            valid_senders.append('.'.join(ip4[:3]) + '.*')
 
     logging.debug('Possible policy senders: %s' % str(valid_senders))
     logging.debug('Possible policy recipients: %s' % str(valid_recipients))

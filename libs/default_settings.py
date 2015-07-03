@@ -7,6 +7,14 @@ MYNETWORKS = []
 # Don't check white/blacklists for outgoing emails sent by sasl authenticated user.
 WBLIST_BYPASS_OUTGOING_EMAIL = False
 
+# Query additional wildcard IP(v4) addresses for white/blacklists.
+# For example, for client address 'w.x.y.z', if this option is disabled (False),
+# it just query 'w.x.y.z' and 'w.x.y.*' (wildcard). If enabled (True), it will
+# replace all possible fields by '*' as wildcard:
+#   w.x.y.z, w.x.y.*, w.x.*.z, w.*.y.z, *.x.y.z, w.x.*.*, w.*.*.*, ...
+# Default is disabled for better SQL query performance.
+WBLIST_ENABLE_ALL_WILDCARD_IP = False
+
 # ---------------
 # Required by:
 #   - plugins/sql_force_change_password_in_days.py
