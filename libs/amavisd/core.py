@@ -1,5 +1,5 @@
 import logging
-from libs import SMTP_ACTIONS, utils
+from libs import utils
 
 
 def is_valid_amavisd_address(addr):
