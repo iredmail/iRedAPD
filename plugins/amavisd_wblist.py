@@ -50,44 +50,55 @@ import settings
 REQUIRE_AMAVISD_DB = True
 
 
-def apply_wblist_on_inbound(conn, valid_senders, valid_recipients):
-    # Get 'mailaddr.id' of policy senders, ordered by priority
-    sql = """SELECT id, email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
-    logging.debug('SQL: Get policy senders: \n%s' % sql)
+def query_external_addresses(conn, addresses):
+    '''Return list of `mailaddr.id` of external addresses.'''
+
+    # Get 'mailaddr.id' of external addresses, ordered by priority
+    sql = """SELECT id, email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(addresses)
+    logging.debug('[SQL] Query external addresses: \n%s' % sql)
 
     qr = conn.execute(sql)
-    senders = qr.fetchall()
-    sids = []
-    if senders:
-        sids = [r.id for r in senders]
+    qr_addresses = qr.fetchall()
+    ids = []
+    if qr_addresses:
+        ids = [r.id for r in qr_addresses]
 
-    if not sids:
+    if not ids:
         # don't waste time if we don't even have senders stored in sql db.
-        logging.debug('No senders found in SQL database.')
-        return SMTP_ACTIONS['default']
+        logging.debug('No record found in SQL database.')
+        return []
+    else:
+        logging.debug('Addresses (in sql table: amavisd.mailaddr): %s' % str(qr_addresses))
+        return ids
 
-    logging.debug('Senders (in sql table: amavisd.mailaddr): %s' % str(senders))
 
-    # Get 'users.id' of possible recipients
-    sql = """SELECT id, email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipients)
-    logging.debug('SQL: Get policy recipients: \n%s' % sql)
+def query_local_addresses(conn, addresses):
+    '''Return list of `users.id` of local addresses.'''
+
+    # Get 'users.id' of local addresses
+    sql = """SELECT id, email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(addresses)
+    logging.debug('[SQL] Query local addresses: \n%s' % sql)
 
     qr = conn.execute(sql)
-    rcpts = qr.fetchall()
-    rids = []
-    if rcpts:
-        rids = [r.id for r in rcpts]
+    qr_addresses = qr.fetchall()
+    ids = []
+    if qr_addresses:
+        ids = [r.id for r in qr_addresses]
 
-    if not rids:
+    if not ids:
         # don't waste time if we don't have any per-recipient wblist.
-        logging.debug('No recipients found in SQL database.')
-        return SMTP_ACTIONS['default']
+        logging.debug('No record found in SQL database.')
+        return []
+    else:
+        logging.debug('Local addresses (in `amavisd.users`): %s' % str(qr_addresses))
+        return ids
 
-    logging.debug('Recipients (in `amavisd.users`): %s' % str(rcpts))
 
+def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
     # Get wblist
-    sql = """SELECT rid, sid, wb FROM wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sids), sqllist(rids))
-    logging.debug('SQL: Get wblist: \n%s' % sql)
+    sql = """SELECT rid, sid, wb FROM wblist
+             WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
+    logging.debug('[SQL] Query wblist (in table `amavisd.wblist`): \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
@@ -100,9 +111,9 @@ def apply_wblist_on_inbound(conn, valid_senders, valid_recipients):
 
     # Check sender addresses
     # rids/recipients are orded by priority
-    for rid in rids:
+    for rid in recipient_ids:
         # sids/senders are sorted by priority
-        for sid in sids:
+        for sid in sender_ids:
             if (rid, sid, 'W') in wblists:
                 return SMTP_ACTIONS['accept'] + " wblist=(%d, %d, 'W')" % (rid, sid)
 
@@ -113,49 +124,16 @@ def apply_wblist_on_inbound(conn, valid_senders, valid_recipients):
     return SMTP_ACTIONS['default']
 
 
-def apply_wblist_on_outbound(conn, valid_senders, valid_recipients):
+def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
     # Bypass outgoing emails.
     if settings.WBLIST_BYPASS_OUTGOING_EMAIL:
         logging.debug('Bypass outgoing email as defined in WBLIST_BYPASS_OUTGOING_EMAIL.')
         return SMTP_ACTIONS['default']
 
-    # Get 'mailaddr.id' of policy recipients, ordered by priority
-    sql = """SELECT id, email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_recipients)
-    logging.debug('SQL: Get policy recipient: \n%s' % sql)
-
-    qr = conn.execute(sql)
-    recipients = qr.fetchall()
-    rids = []
-    if recipients:
-        rids = [r.id for r in recipients]
-
-    if not rids:
-        # don't waste time if we don't even have senders stored in sql db.
-        logging.debug('No recipient found in SQL database.')
-        return SMTP_ACTIONS['default']
-
-    logging.debug('Recipients (in sql table: amavisd.mailaddr): %s' % str(recipients))
-
-    # Get 'users.id' of possible senders
-    sql = """SELECT id, email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(valid_senders)
-    logging.debug('SQL: Get policy recipients: \n%s' % sql)
-
-    qr = conn.execute(sql)
-    senders = qr.fetchall()
-    sids = []
-    if senders:
-        sids = [r.id for r in senders]
-
-    if not sids:
-        # don't waste time if we don't have any per-recipient wblist.
-        logging.debug('No senders found in SQL database.')
-        return SMTP_ACTIONS['default']
-
-    logging.debug('Senders (in `amavisd.users`): %s' % str(senders))
-
     # Get wblist
-    sql = """SELECT rid, sid, wb FROM wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sids), sqllist(rids))
-    logging.debug('SQL: Get wblist: \n%s' % sql)
+    sql = """SELECT rid, sid, wb
+             FROM outbound_wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
+    logging.debug('[SQL] Get wblist: \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
@@ -168,9 +146,9 @@ def apply_wblist_on_outbound(conn, valid_senders, valid_recipients):
 
     # Check sender addresses
     # rids/recipients are orded by priority
-    for rid in rids:
+    for rid in recipient_ids:
         # sids/senders are sorted by priority
-        for sid in sids:
+        for sid in sender_ids:
             if (rid, sid, 'W') in wblists:
                 return SMTP_ACTIONS['accept'] + " wblist=(%d, %d, 'W')" % (rid, sid)
 
@@ -244,7 +222,19 @@ def restriction(**kwargs):
 
     if kwargs['sasl_username']:
         logging.debug('Apply wblist for outbound message.')
-        return apply_wblist_on_outbound(conn, valid_senders, valid_recipients)
+
+        id_of_ext_addresses = query_external_addresses(valid_recipients)
+        id_of_local_addresses = query_local_addresses(valid_senders)
+
+        return apply_wblist_on_outbound(conn,
+                                        sender_ids=id_of_local_addresses,
+                                        recipient_ids=id_of_ext_addresses)
     else:
         logging.debug('Apply wblist for inbound message.')
-        return apply_wblist_on_inbound(conn, valid_senders, valid_recipients)
+
+        id_of_ext_addresses = query_external_addresses(valid_senders)
+        id_of_local_addresses = query_local_addresses(valid_recipients)
+
+        return apply_wblist_on_inbound(conn,
+                                       sender_ids=id_of_ext_addresses,
+                                       recipient_ids=id_of_local_addresses)
