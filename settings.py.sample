@@ -34,22 +34,22 @@ backend = 'ldap'
 # - Plugins are applied in specified order. It's better to list plugins which
 #   doesn't require SQL/LDAP query first (e.g. reject_null_sender), then
 #   white/blacklist related plugins, e.g. amavisd_wblist.
-# - Suggested order of plugins (if you enable them) for RCPT state:
+#
+# Suggested order of plugins (if you enable them) for RCPT state:
 #
 #   1: reject_null_sender
 #   2: amavisd_wblist
 #   3: reject_sender_login_mismatch
 #
-#   LDAP backend:
+# LDAP backend:
 #
 #   4: ldap_force_change_password_in_days
 #   5: ldap_maillist_access_policy
 #
-#   SQL backends:
+# SQL backends:
 #
 #   4: sql_force_change_password_in_days
 #   5: sql_alias_access_policy
-#   6: sql_user_restrictions
 #
 plugins = ['reject_null_sender', 'amavisd_wblist', 'ldap_maillist_access_policy']
 
