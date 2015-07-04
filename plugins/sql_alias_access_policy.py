@@ -53,7 +53,7 @@ def restriction(**kwargs):
                 AND active=1
             LIMIT 1
     ''' % (recipient)
-    logging.debug('SQL: query access policy: \n%s' % sql)
+    logging.debug('[SQL] query access policy: \n%s' % sql)
 
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
@@ -85,7 +85,7 @@ def restriction(**kwargs):
              FROM alias_domain
              WHERE alias_domain='%s' AND target_domain='%s'
              LIMIT 1""" % (sender_domain, recipient_domain)
-    logging.debug('SQL: query alias domains: \n%s' % sql)
+    logging.debug('[SQL] query alias domains: \n%s' % sql)
 
     qr = conn.execute(sql)
     sql_record = qr.fetchone()

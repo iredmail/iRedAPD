@@ -119,7 +119,7 @@ def restriction(**kwargs):
                 sql = """SELECT alias_domain FROM alias_domain
                          WHERE alias_domain='%s' OR target_domain='%s'
                          LIMIT 1""" % (sender_domain, sender_domain)
-                logging.debug('SQL: query alias domains: \n%s' % sql)
+                logging.debug('[SQL] query alias domains: \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
@@ -201,7 +201,7 @@ def restriction(**kwargs):
                 sql = """SELECT alias_domain FROM alias_domain
                          WHERE alias_domain='%s' AND target_domain='%s'
                          LIMIT 1""" % (sender_domain, sasl_username_domain)
-                logging.debug('SQL: query alias domains: \n%s' % sql)
+                logging.debug('[SQL] query alias domains: \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
@@ -223,7 +223,7 @@ def restriction(**kwargs):
                 sql = """SELECT goto FROM alias
                          WHERE address='%s'
                          LIMIT 1""" % (sender)
-                logging.debug('SQL: query members of alias account (sender): \n%s' % sql)
+                logging.debug('[SQL] query members of alias account (sender): \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()

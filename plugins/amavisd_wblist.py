@@ -68,7 +68,7 @@ def query_external_addresses(conn, addresses):
         logging.debug('No record found in SQL database.')
         return []
     else:
-        logging.debug('Addresses (in sql table: amavisd.mailaddr): %s' % str(qr_addresses))
+        logging.debug('Addresses (in `mailaddr`): %s' % str(qr_addresses))
         return ids
 
 
@@ -90,7 +90,7 @@ def query_local_addresses(conn, addresses):
         logging.debug('No record found in SQL database.')
         return []
     else:
-        logging.debug('Local addresses (in `amavisd.users`): %s' % str(qr_addresses))
+        logging.debug('Local addresses (in `users`): %s' % str(qr_addresses))
         return ids
 
 
@@ -103,16 +103,16 @@ def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
     # Get wblist
     sql = """SELECT rid, sid, wb FROM wblist
              WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
-    logging.debug('[SQL] Query wblist (in table `amavisd.wblist`): \n%s' % sql)
+    logging.debug('[SQL] Query inbound wblist (in `wblist`): \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
     if not wblists:
         # no wblist
-        logging.debug('No per-recipient white/blacklist found.')
+        logging.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logging.debug('Found per-recipient white/blacklists: %s' % str(wblists))
+    logging.debug('Found wblist: %s' % str(wblists))
 
     # Check sender addresses
     # rids/recipients are orded by priority
@@ -143,16 +143,16 @@ def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
     # Get wblist
     sql = """SELECT rid, sid, wb
              FROM outbound_wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
-    logging.debug('[SQL] Get wblist: \n%s' % sql)
+    logging.debug('[SQL] Get outbound wblist: \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
     if not wblists:
         # no wblist
-        logging.debug('No per-recipient white/blacklist found.')
+        logging.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logging.debug('Found per-recipient white/blacklists: %s' % str(wblists))
+    logging.debug('Found wblist: %s' % str(wblists))
 
     # Check sender addresses
     # rids/recipients are orded by priority
