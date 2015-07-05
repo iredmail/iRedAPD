@@ -14,6 +14,8 @@
 #       # cd /opt/iRedAPD-xxx/tools/
 #       # bash upgrade_iredapd.sh
 
+export SYS_ROOT_USER='root'
+export SYS_ROOT_GROUP='root'
 export IREDAPD_DAEMON_USER='iredapd'
 export IREDAPD_DAEMON_GROUP='iredapd'
 
@@ -54,10 +56,12 @@ if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
     fi
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DISTRO='FREEBSD'
+    export SYS_ROOT_GROUP='wheel'
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
+    export SYS_ROOT_GROUP='wheel'
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
 else
@@ -199,9 +203,9 @@ EOF
     mv ${NEW_IREDAPD_CONF}_tmp ${NEW_IREDAPD_CONF}
 fi
 
-chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${NEW_IREDAPD_ROOT_DIR}
-chmod -R 0555 ${NEW_IREDAPD_ROOT_DIR}
-chmod 0400 ${NEW_IREDAPD_ROOT_DIR}/settings.py
+chown -R ${SYS_ROOT_USER}:${SYS_ROOT_GROUP} ${NEW_IREDAPD_ROOT_DIR}
+chmod -R 0500 ${NEW_IREDAPD_ROOT_DIR}
+chmod 0400 ${NEW_IREDAPD_CONF}
 
 echo "* Removing old symbol link ${IREDAPD_ROOT_DIR}"
 rm -f ${IREDAPD_ROOT_DIR}
