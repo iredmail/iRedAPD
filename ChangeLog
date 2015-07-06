@@ -1,5 +1,12 @@
 iRedAPD-1.7.0:
+    * Removed plugins (They're replaced by 'plugins/amavisd_wblist.py').
+        - plugins/ldap_amavisd_block_blacklisted_senders.py,
+        - plugins/ldap_recipient_restrictions.py
+        - plugins/sql_user_restrictions.py
+
     * Improvements:
+        - plugins/amavisd_wblist.py: able to check white/blacklist for
+          outbound message.
         - plugins/{sql,ldap}_force_change_password_in_days.py: Allow specified
           users or domains to never change password.
         - plugins/amavisd_wblist.py: Able to not check white/blacklists on
