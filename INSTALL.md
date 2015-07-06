@@ -95,8 +95,8 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy
 ```shell
 # tar xjf iRedAPD-x.y.z.tar.bz2 -C /opt/
 # ln -s /opt/iRedAPD-x.y.z /opt/iredapd
-# chown -R iredapd:iredapd /opt/iRedAPD-x.y.z/
-# chmod -R 0700 /opt/iRedAPD-x.y.z/
+# chown -R root:root /opt/iRedAPD-x.y.z/
+# chmod -R 0500 /opt/iRedAPD-x.y.z/
 ```
 
 * Copy RC script to /etc/init.d/ (Linux) , /usr/local/etc/rc.d/ (FreeBSD), /etc/rc.d/ (OpenBSD), and set correct permission. **NOTE**: We have RC scripts for different Linux/BSD distributions, please copy the one for your distribution. e.g. `iredapd.rhel` for Red Hat, CentOS, Scientific Linux, `iredapd.debian` for Debian, Ubuntu.
@@ -110,7 +110,8 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy
 
 ```shell
 # cp /opt/iredapd/settings.py.sample /opt/iredapd/settings.py
-# chmod 0600 /opt/iredapd/settings.py
+# chown root:root /opt/iredapd/settings.py
+# chmod 0400 /opt/iredapd/settings.py
 ```
 
 * Open /opt/iredapd/settings.py and set correct values:
@@ -137,7 +138,7 @@ log_level = "info"
 backend = "ldap"
 
 # Enabled plugins.
-plugins = ['reject_null_sender', 'ldap_maillist_access_policy', 'ldap_amavisd_block_blacklisted_senders']
+plugins = ['reject_null_sender', 'amavisd_wblist', 'ldap_maillist_access_policy']
 
 # For OpenLDAP backend. Not used by MySQL and PostgreSQL backends.
 ldap_uri = “ldap://127.0.0.1:389”

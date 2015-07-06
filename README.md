@@ -34,9 +34,7 @@ source files to understand how it works and what it does.
     this account to bypass smtp authentication, but with a null sender
     in `From:` header, throttling won't be triggered.
 
-* `amavisd_wblist`: Reject senders listed in per-user blacklists, bypass
-  senders listed in per-user whitelists stored in Amavisd database.
-  RECOMMEND to enable this plugin.
+* `amavisd_wblist`: Whitelist/blacklist for both inbound and outbound messages.
 
 * `amavisd_message_size_limit`: Check per-recipient message size limit
   stored in Amavisd database (column `policy.message_size_limit`), reject email
@@ -46,12 +44,9 @@ source files to understand how it works and what it does.
 
 * `ldap_maillist_access_policy`: restrict who can send email to mail list.
 * `ldap_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
-* Not used anymore: ~~ `ldap_amavisd_block_blacklisted_senders`: per-user sender whitelist and blacklist. ~~
-* Not used anymore: ~~ `ldap_recipient_restrictions`: per-user recipient whitelist and blacklist. ~~
 
 ## Plugins for MySQL/MariaDB and PostgreSQL backends
 
 * `sql_alias_access_policy`: restrict who can send email to mail alias.
-* `sql_user_restrictions`: per-user sender and recipient restrictions.
 * `sql_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
 
