@@ -9,11 +9,10 @@ WBLIST_BYPASS_OUTGOING_EMAIL = False
 
 # Query additional wildcard IP(v4) addresses for white/blacklists.
 # For example, for client address 'w.x.y.z', if this option is disabled (False),
-# it just query 'w.x.y.z', 'w.x.y.*' and 'w.x.*.z' (wildcarded). If enabled (True), it will
-# replace all possible fields by '*' as wildcard:
+# it just query 'w.x.y.z', 'w.x.y.*' and 'w.x.*.z' (wildcard). If enabled (True),
+# it will replace all possible fields by '*' as wildcard:
 #   w.x.y.z, w.x.y.*, w.x.*.z, w.*.y.z, *.x.y.z, w.x.*.*, w.*.*.*, ...
-# Default is disabled for better SQL query performance.
-WBLIST_ENABLE_ALL_WILDCARD_IP = False
+WBLIST_ENABLE_ALL_WILDCARD_IP = True
 
 # ---------------
 # Required by:
