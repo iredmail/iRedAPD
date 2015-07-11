@@ -108,7 +108,8 @@ def log_action(conn, action, sender, recipient, ip, plugin_name):
     # Log action
     try:
         comment = '%s (%s -> %s, %s)' % (action, sender, recipient, plugin_name)
-        sql = """INSERT INTO log (admin, ip, msg, timestamp) VALUES ('iredapd', '%s', '%s', NOW());
+        sql = """INSERT INTO log (admin, ip, msg, timestamp, event)
+                          VALUES ('iredapd', '%s', '%s', NOW(), 'iredapd')
         """ % (ip, comment)
 
         logging.debug(sql)
