@@ -58,6 +58,7 @@ from libs import SMTP_ACTIONS
 import settings
 
 
+check_forged_sender = settings.CHECK_FORGED_SENDER
 allowed_senders = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
 is_strict = settings.ALLOWED_LOGIN_MISMATCH_STRICTLY
 allow_list_member = settings.ALLOWED_LOGIN_MISMATCH_LIST_MEMBER
@@ -93,46 +94,49 @@ def restriction(**kwargs):
             logging.debug('Bypass sender from trusted/internal networks (%s).' % client_address)
             return SMTP_ACTIONS['default']
 
-        sender_is_forged = False
-        if sender_domain == recipient_domain:
-            # *) sender == recipient, sender must log in first.
-            # *) sender != recipient but under same domain, since domain is
-            #    hosted locally, sender must login first too.
-            logging.debug('Sender is forged address (sender domain == recipient domain).')
-            sender_is_forged = True
+        if check_forged_sender:
+            sender_is_forged = False
+            if sender_domain == recipient_domain:
+                # *) sender == recipient, sender must log in first.
+                # *) sender != recipient but under same domain, since domain is
+                #    hosted locally, sender must login first too.
+                logging.debug('Sender is forged address (sender domain == recipient domain).')
+                sender_is_forged = True
+            else:
+                # Check whether sender domain is hosted on localhost
+                if settings.backend == 'ldap':
+                    filter_domains = '(&(objectClass=mailDomain)'
+                    filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (sender_domain, sender_domain)
+                    filter_domains += ')'
+
+                    qr = conn.search_s(settings.ldap_basedn,
+                                       1,   # 1 == ldap.SCOPE_ONELEVEL
+                                       filter_domains,
+                                       ['dn'])
+                    if qr:
+                        logging.debug('Sender is forged address (sender domain is hosted locally).')
+                        sender_is_forged = True
+
+                elif settings.backend in ['mysql', 'pgsql']:
+                    sql = """SELECT alias_domain FROM alias_domain
+                             WHERE alias_domain='%s' OR target_domain='%s'
+                             LIMIT 1""" % (sender_domain, sender_domain)
+                    logging.debug('[SQL] query alias domains: \n%s' % sql)
+
+                    qr = conn.execute(sql)
+                    sql_record = qr.fetchone()
+                    logging.debug('SQL query result: %s' % str(sql_record))
+
+                    if sql_record:
+                        logging.debug('Sender is forged address (sender domain is hosted locally).')
+                        sender_is_forged = True
+
+            if sender_is_forged:
+                return SMTP_ACTIONS['reject'] + ' not logged in'
+            else:
+                logging.debug('Sender domain is not hosted locally.')
+                return SMTP_ACTIONS['default']
         else:
-            # Check whether sender domain is hosted on localhost
-            if settings.backend == 'ldap':
-                filter_domains = '(&(objectClass=mailDomain)'
-                filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (sender_domain, sender_domain)
-                filter_domains += ')'
-
-                qr = conn.search_s(settings.ldap_basedn,
-                                   1,   # 1 == ldap.SCOPE_ONELEVEL
-                                   filter_domains,
-                                   ['dn'])
-                if qr:
-                    logging.debug('Sender is forged address (sender domain is hosted locally).')
-                    sender_is_forged = True
-
-            elif settings.backend in ['mysql', 'pgsql']:
-                sql = """SELECT alias_domain FROM alias_domain
-                         WHERE alias_domain='%s' OR target_domain='%s'
-                         LIMIT 1""" % (sender_domain, sender_domain)
-                logging.debug('[SQL] query alias domains: \n%s' % sql)
-
-                qr = conn.execute(sql)
-                sql_record = qr.fetchone()
-                logging.debug('SQL query result: %s' % str(sql_record))
-
-                if sql_record:
-                    logging.debug('Sender is forged address (sender domain is hosted locally).')
-                    sender_is_forged = True
-
-        if sender_is_forged:
-            return SMTP_ACTIONS['reject'] + ' not logged in'
-        else:
-            logging.debug('Sender domain is not hosted locally.')
             return SMTP_ACTIONS['default']
 
     logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))

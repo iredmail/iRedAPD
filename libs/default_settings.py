@@ -34,6 +34,9 @@ CHANGE_PASSWORD_NEVER_EXPIRE_USERS = []
 # --------------
 # Required by: plugins/reject_sender_login_mismatch.py
 #
+# Check whether sender is forged on message which sent without smtp auth.
+CHECK_FORGED_SENDER = True
+
 # Allowed senders or sender domains.
 ALLOWED_LOGIN_MISMATCH_SENDERS = []
 

@@ -5,6 +5,8 @@ iRedAPD-1.7.0:
         - plugins/sql_user_restrictions.py
 
     * Improvements:
+        - plugins/reject_sender_login_mismatch.py: able to not check forged
+          sender which sent without smtp auth.
         - plugins/amavisd_wblist.py: able to check white/blacklist for
           outbound message.
         - plugins/{sql,ldap}_force_change_password_in_days.py: Allow specified
