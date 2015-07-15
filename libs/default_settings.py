@@ -37,6 +37,9 @@ CHANGE_PASSWORD_NEVER_EXPIRE_USERS = []
 # Check whether sender is forged on message which sent without smtp auth.
 CHECK_FORGED_SENDER = True
 
+# Allowed messages with below forged addresses
+ALLOWED_FORGED_SENDERS = []
+
 # Allowed senders or sender domains.
 ALLOWED_LOGIN_MISMATCH_SENDERS = []
 

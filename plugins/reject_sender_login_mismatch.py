@@ -59,6 +59,7 @@ import settings
 
 
 check_forged_sender = settings.CHECK_FORGED_SENDER
+allowed_forged_sender = settings.ALLOWED_FORGED_SENDERS
 allowed_senders = settings.ALLOWED_LOGIN_MISMATCH_SENDERS
 is_strict = settings.ALLOWED_LOGIN_MISMATCH_STRICTLY
 allow_list_member = settings.ALLOWED_LOGIN_MISMATCH_LIST_MEMBER
@@ -95,6 +96,10 @@ def restriction(**kwargs):
             return SMTP_ACTIONS['default']
 
         if check_forged_sender:
+            # Bypass allowed forged sender.
+            if sender in allowed_forged_sender or sender_domain in allowed_forged_sender:
+                return SMTP_ACTIONS['default']
+
             sender_is_forged = False
             if sender_domain == recipient_domain:
                 # *) sender == recipient, sender must log in first.
