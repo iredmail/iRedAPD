@@ -95,7 +95,9 @@ def restriction(**kwargs):
             logging.debug('Bypass sender from trusted/internal networks (%s).' % client_address)
             return SMTP_ACTIONS['default']
 
-        if check_forged_sender:
+        if not check_forged_sender:
+            return SMTP_ACTIONS['default']
+        else:
             # Bypass allowed forged sender.
             if sender in allowed_forged_sender or sender_domain in allowed_forged_sender:
                 return SMTP_ACTIONS['default']
@@ -141,8 +143,6 @@ def restriction(**kwargs):
             else:
                 logging.debug('Sender domain is not hosted locally.')
                 return SMTP_ACTIONS['default']
-        else:
-            return SMTP_ACTIONS['default']
 
     logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
 
