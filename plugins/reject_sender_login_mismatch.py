@@ -16,6 +16,25 @@
 #
 # *) Optional settings (set in iRedAPD config file /opt/iredapd/settings.py):
 #
+#   Settings applied on message sent by not-authenticated user:
+#
+#   1) Check whether sender address is forged. If sender domain is hosted
+#      locally, smtp authentication is required, so sender will be considered
+#      as forged address. Default value is True.
+#
+#       CHECK_FORGED_SENDER = True
+#
+#   2) If you want to allow someone to send email as forged address, e.g.
+#      salesforce.com, you can bypass these addresses in this setting.
+#      Default value is empty (no allowed forged sender).
+#
+#       ALLOWED_FORGED_SENDERS = ['user@local.com', 'local.com']
+#
+#      With above setting, if sender is 'user@local.com', this plugin won't
+#      reject it.
+#
+#   Settings applied on message sent by authenticated user:
+#
 #   1) List senders who are allowed to send email as different
 #      users in iRedAPD config file (/opt/iredapd/settings.py). Sample setting:
 #
@@ -104,9 +123,7 @@ def restriction(**kwargs):
 
             sender_is_forged = False
             if sender_domain == recipient_domain:
-                # *) sender == recipient, sender must log in first.
-                # *) sender != recipient but under same domain, since domain is
-                #    hosted locally, sender must login first too.
+                # domain is hosted locally, sender must login first.
                 logging.debug('Sender is forged address (sender domain == recipient domain).')
                 sender_is_forged = True
             else:
