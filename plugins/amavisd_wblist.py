@@ -43,7 +43,8 @@
 #                   /opt/iredapd/settings.py.
 
 import logging
-from libs import SMTP_ACTIONS, sqllist, utils
+from libs import SMTP_ACTIONS
+from libs.utils import is_ipv4, sqllist
 from libs.amavisd import core as amavisd_lib
 import settings
 
@@ -203,7 +204,7 @@ def restriction(**kwargs):
         client_address = kwargs['smtp_session_data']['client_address']
 
         valid_senders.append(client_address)
-        if utils.is_ipv4(client_address):
+        if is_ipv4(client_address):
             ip4 = client_address.split('.')
 
             if settings.WBLIST_ENABLE_ALL_WILDCARD_IP:

@@ -23,7 +23,7 @@ REQUIRE_AMAVISD_DB = True
 
 
 def restriction(**kwargs):
-    conn = kwargs['conn_amavisd']
+    conn = kwargs['conn_iredapd']
 
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']

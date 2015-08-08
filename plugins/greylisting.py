@@ -2,7 +2,8 @@
 # Purpose: greylisting.
 
 import logging
-from libs import SMTP_ACTIONS, sqllist
+from libs import SMTP_ACTIONS
+from libs.utils import sqllist
 import settings
 
 # Return 4xx with greylisting message to Postfix.

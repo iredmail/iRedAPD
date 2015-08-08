@@ -1,6 +1,8 @@
 import re
 import logging
+import time
 import web
+from sqlalchemy import create_engine
 from libs import SMTP_ACTIONS
 import settings
 
@@ -87,6 +89,43 @@ def is_wildcard_addr(s):
     return False
 
 
+def sqllist(values):
+    """
+        >>> sqllist([1, 2, 3])
+        <sql: '(1, 2, 3)'>
+    """
+    items = []
+    items.append('(')
+    for i, v in enumerate(values):
+        if i != 0:
+            items.append(', ')
+
+        if isinstance(v, (int, long, float)):
+            items.append("""%s""" % v)
+        else:
+            items.append("""'%s'""" % v)
+    items.append(')')
+    return ''.join(items)
+
+
+def get_db_conn(dbn, db):
+    try:
+        uri = '%s://%s:%s@%s:%d/%s' % (dbn,
+                                       settings.__dict__[db + '_db_user'],
+                                       settings.__dict__[db + '_db_password'],
+                                       settings.__dict__[db + '_db_server'],
+                                       int(settings.__dict__[db + '_db_port']),
+                                       settings.__dict__[db + '_db_name'])
+
+        conn = create_engine(uri,
+                             pool_size=20,
+                             pool_recycle=3600,
+                             max_overflow=0)
+        return conn
+    except:
+        return None
+
+
 def log_action(conn, action, sender, recipient, ip, plugin_name):
     # Don't log certain actions:
     #
@@ -120,7 +159,7 @@ def log_action(conn, action, sender, recipient, ip, plugin_name):
 
 
 def log_smtp_session(conn, smtp_session_data):
-    record = {}
+    record = {'time': int(time.time())}
     sql_columns = ['queue_id', 'helo_name',
                    'client_address', 'client_name', 'reverse_client_name',
                    'sender', 'recipient', 'recipient_count',
@@ -128,68 +167,61 @@ def log_smtp_session(conn, smtp_session_data):
                    'encryption_protocol', 'encryption_cipher']
 
     for col in sql_columns:
-        record[col] = web.sqlquote(smtp_session_data[col])
+        record[col] = web.sqlquote(smtp_session_data.get(col, ''))
 
     # TODO query sql db before inserting, make sure no record with same
     #      `instance` value.
 
-    # TODO Only insert when `protocol_state=RCPT`.
+    if smtp_session_data['protocol_state'] == 'RCPT':
+        # Create new record for new session (protocol_state == RCPT).
+        sql_new = """
+            INSERT INTO session_tracking (
+                        time,
+                        helo_name,
+                        sender,
+                        recipient,
+                        client_address,
+                        client_name,
+                        reverse_client_name,
+                        instance,
+                        sasl_username,
+                        encryption_protocol,
+                        encryption_cipher
+                        )
+                 VALUES (%(time)d,
+                         %(helo_name)s,
+                         %(sender)s,
+                         %(recipient)s,
+                         %(client_address)s,
+                         %(client_name)s,
+                         %(reverse_client_name)s,
+                         %(instance)s,
+                         %(sasl_username)s,
+                         %(encryption_protocol)s,
+                         %(encryption_cipher)s)
+        """ % record
 
-    # TODO Update queue_id, recipient_count, size when
-    #      `protocol_state=END-OF-MESSAGE` with `instance=`
+        try:
+            logging.debug('[SQL] Log smtp session: ' + sql_new)
+            conn.execute(sql_new)
+            logging.debug('Logged smtp session.')
+        except Exception, e:
+            logging.debug('Logging failed: %s' % str(e))
 
-    sql = """
-        INSERT INTO session_tracking (
-                    queue_id,
-                    helo_name,
-                    sender,
-                    recipient,
-                    recipient_count,
-                    client_address,
-                    client_name,
-                    reverse_client_name,
-                    instance,
-                    -- Postfix version 2.2 and later:
-                    -- sasl_method,
-                    sasl_username,
-                    -- sasl_sender,
-                    size,
-                    -- ccert_subject,
-                    -- ccert_issuer,
-                    -- ccert_fingerprint,
-                    -- Postfix version 2.3 and later:
-                    encryption_protocol,
-                    encryption_cipher
-                    -- encryption_keysize,
-                    -- etrn_domain,
-                    -- Postfix version 2.5 and later:
-                    -- stress,
-                    -- Postfix version 2.9 and later:
-                    -- ccert_pubkey_fingerprint,
-                    -- Postfix version 3.0 and later:
-                    -- client_port
-                    )
-             VALUES (%(queue_id)s,
-                     %(helo_name)s,
-                     %(sender)s,
-                     %(recipient)s,
-                     %(recipient_count)s,
-                     %(client_address)s,
-                     %(client_name)s,
-                     %(reverse_client_name)s,
-                     %(instance)s,
-                     %(sasl_username)s,
-                     %(size)s,
-                     %(encryption_protocol)s,
-                     %(encryption_cipher)s)
-    """ % record
+    elif smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
+        # Update attributes has non-empty value in END-OF-MESSAGE
+        sql_update = """
+            UPDATE session_tracking
+               SET queue_id=%(queue_id)s,
+                   size=%(size)s,
+                   recipient_count=%(recipient_count)s
+             WHERE instance=%(instance)s
+        """ % record
 
-    logging.debug('[SQL] Log smtp session: ' + sql)
-
-    try:
-        conn.execute(sql)
-        logging.debug('Logged smtp session.')
-    except Exception, e:
-        logging.debug('Logging failed: %s' % str(e))
+        try:
+            logging.debug('[SQL] Update smtp session: ' + sql_update)
+            conn.execute(sql_update)
+        except Exception, e:
+            logging.debug('Update failed: %s' % str(e))
 
     return True

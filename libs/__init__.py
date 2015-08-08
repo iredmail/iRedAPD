@@ -1,6 +1,3 @@
-from sqlalchemy import create_engine
-import settings
-
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
 __version__ = '1.7.0'
 
@@ -70,40 +67,3 @@ SMTP_SESSION_ATTRIBUTES = [
     # Postfix version 3.0 and later:
     'client_port',
 ]
-
-
-def get_db_conn(dbn, db):
-    try:
-        uri = '%s://%s:%s@%s:%d/%s' % (dbn,
-                                       settings.__dict__[db + '_db_user'],
-                                       settings.__dict__[db + '_db_password'],
-                                       settings.__dict__[db + '_db_server'],
-                                       int(settings.__dict__[db + '_db_port']),
-                                       settings.__dict__[db + '_db_name'])
-
-        conn = create_engine(uri,
-                             pool_size=20,
-                             pool_recycle=3600,
-                             max_overflow=0)
-        return conn
-    except:
-        return None
-
-
-def sqllist(values):
-    """
-        >>> _sqllist([1, 2, 3])
-        <sql: '(1, 2, 3)'>
-    """
-    items = []
-    items.append('(')
-    for i, v in enumerate(values):
-        if i != 0:
-            items.append(', ')
-
-        if isinstance(v, (int, long, float)):
-            items.append("""%s""" % v)
-        else:
-            items.append("""'%s'""" % v)
-    items.append(')')
-    return ''.join(items)

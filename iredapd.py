@@ -12,8 +12,7 @@ import logging
 # iRedAPD setting file and modules
 import settings
 from libs import __version__, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
-from libs import get_db_conn
-from libs.utils import log_smtp_session
+from libs.utils import get_db_conn, log_smtp_session
 
 # Plugin directory.
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
