@@ -13,6 +13,7 @@ import logging
 import settings
 from libs import __version__, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
 from libs import get_db_conn
+from libs.utils import log_smtp_session
 
 # Plugin directory.
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
@@ -65,6 +66,13 @@ class PolicyChannel(asynchat.async_chat):
                     logging.debug('Drop invalid smtp session attribute/value: %s' % line)
 
         elif len(self.smtp_session_data) != 0:
+            # Log smtp session in SQL db.
+            try:
+                conn_iredapd = self.db_conns['conn_iredapd']
+                log_smtp_session(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
+            except Exception, e:
+                pass
+
             try:
                 modeler = Modeler(conns=self.db_conns)
                 result = modeler.handle_data(

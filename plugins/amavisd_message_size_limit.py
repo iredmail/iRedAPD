@@ -46,7 +46,7 @@ def restriction(**kwargs):
 
     # message size in bytes
     msg_size = int(kwargs['smtp_session_data']['size'])
-    logging.debug('Message size: %d' % msg_size)
+    logging.debug('Message size: %d bytes' % msg_size)
 
     wanted_policy_columns = ['policy_name', 'message_size_limit']
 

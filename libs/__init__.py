@@ -42,10 +42,10 @@ SMTP_SESSION_ATTRIBUTES = [
     'protocol_state',
     'protocol_name',
     'helo_name',
-    'queue_id',
+    'queue_id',             # Empty in RCPT state
     'sender',
     'recipient',
-    'recipient_count',
+    'recipient_count',      # Empty in RCPT state
     'client_address',
     'client_name',
     'reverse_client_name',
@@ -54,7 +54,7 @@ SMTP_SESSION_ATTRIBUTES = [
     'sasl_method',
     'sasl_username',
     'sasl_sender',
-    'size',
+    'size',                 # Empty in RCPT
     'ccert_subject',
     'ccert_issuer',
     'ccert_fingerprint',

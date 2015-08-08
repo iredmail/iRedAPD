@@ -1,5 +1,6 @@
 import re
 import logging
+import web
 from libs import SMTP_ACTIONS
 import settings
 
@@ -116,3 +117,79 @@ def log_action(conn, action, sender, recipient, ip, plugin_name):
         conn.execute(sql)
     except Exception, e:
         logging.error(e)
+
+
+def log_smtp_session(conn, smtp_session_data):
+    record = {}
+    sql_columns = ['queue_id', 'helo_name',
+                   'client_address', 'client_name', 'reverse_client_name',
+                   'sender', 'recipient', 'recipient_count',
+                   'instance', 'sasl_username', 'size',
+                   'encryption_protocol', 'encryption_cipher']
+
+    for col in sql_columns:
+        record[col] = web.sqlquote(smtp_session_data[col])
+
+    # TODO query sql db before inserting, make sure no record with same
+    #      `instance` value.
+
+    # TODO Only insert when `protocol_state=RCPT`.
+
+    # TODO Update queue_id, recipient_count, size when
+    #      `protocol_state=END-OF-MESSAGE` with `instance=`
+
+    sql = """
+        INSERT INTO session_tracking (
+                    queue_id,
+                    helo_name,
+                    sender,
+                    recipient,
+                    recipient_count,
+                    client_address,
+                    client_name,
+                    reverse_client_name,
+                    instance,
+                    -- Postfix version 2.2 and later:
+                    -- sasl_method,
+                    sasl_username,
+                    -- sasl_sender,
+                    size,
+                    -- ccert_subject,
+                    -- ccert_issuer,
+                    -- ccert_fingerprint,
+                    -- Postfix version 2.3 and later:
+                    encryption_protocol,
+                    encryption_cipher
+                    -- encryption_keysize,
+                    -- etrn_domain,
+                    -- Postfix version 2.5 and later:
+                    -- stress,
+                    -- Postfix version 2.9 and later:
+                    -- ccert_pubkey_fingerprint,
+                    -- Postfix version 3.0 and later:
+                    -- client_port
+                    )
+             VALUES (%(queue_id)s,
+                     %(helo_name)s,
+                     %(sender)s,
+                     %(recipient)s,
+                     %(recipient_count)s,
+                     %(client_address)s,
+                     %(client_name)s,
+                     %(reverse_client_name)s,
+                     %(instance)s,
+                     %(sasl_username)s,
+                     %(size)s,
+                     %(encryption_protocol)s,
+                     %(encryption_cipher)s)
+    """ % record
+
+    logging.debug('[SQL] Log smtp session: ' + sql)
+
+    try:
+        conn.execute(sql)
+        logging.debug('Logged smtp session.')
+    except Exception, e:
+        logging.debug('Logging failed: %s' % str(e))
+
+    return True
