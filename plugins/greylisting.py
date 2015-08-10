@@ -3,7 +3,7 @@
 
 import logging
 from libs import SMTP_ACTIONS
-from libs.utils import sqllist
+from libs.utils import sqllist, is_trusted_client
 import settings
 
 # Return 4xx with greylisting message to Postfix.
@@ -44,10 +44,8 @@ def restriction(**kwargs):
         logging.debug('Found SASL username, bypass greylisting.')
         return SMTP_ACTIONS['default']
 
-    # Bypass mynetworks.
     client_address = kwargs['smtp_session_data']['client_address']
-    if client_address in settings.MYNETWORKS:
-        logging.debug('Trusted/internal networks detected, bypass greylisting.')
+    if is_trusted_client(client_address):
         return SMTP_ACTIONS['default']
 
     conn = kwargs['conn_iredapd']

@@ -17,11 +17,16 @@
 
 import logging
 from libs import SMTP_ACTIONS
+from libs.utils import is_trusted_client
 
 
 def restriction(**kwargs):
     sender = kwargs['sender']
     sasl_username = kwargs['sasl_username']
+    client_address = kwargs['client_address']
+
+    if is_trusted_client(client_address):
+        return SMTP_ACTIONS['default']
 
     if not (sender or sasl_username):
         logging.debug('Spam (no sender address or sasl_username).')

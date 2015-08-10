@@ -74,6 +74,7 @@
 
 import logging
 from libs import SMTP_ACTIONS
+from libs.utils import is_trusted_client
 import settings
 
 
@@ -96,7 +97,7 @@ def restriction(**kwargs):
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
     recipient_domain = kwargs['recipient_domain']
-    client_address = kwargs['smtp_session_data']['client_address']
+    client_address = kwargs['client_address']
 
     conn = kwargs['conn_vmail']
 
@@ -106,12 +107,7 @@ def restriction(**kwargs):
         # Bypass localhost.
         # NOTE: if sender sent email through SOGo, smtp session may not
         #       have sasl_username.
-        if client_address in ['127.0.0.1', '::1']:
-            logging.debug('Bypass local sender.')
-            return SMTP_ACTIONS['default']
-
-        if client_address in settings.MYNETWORKS:
-            logging.debug('Bypass sender from trusted/internal networks (%s).' % client_address)
+        if is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
         if not check_forged_sender:

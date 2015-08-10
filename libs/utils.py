@@ -126,6 +126,18 @@ def get_db_conn(dbn, db):
         return None
 
 
+def is_trusted_client(client_address):
+    if client_address in ['127.0.0.1', '::1']:
+        logging.debug('Local sender.')
+        return True
+
+    if client_address in settings.MYNETWORKS:
+        logging.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
+        return True
+
+    return False
+
+
 def log_action(conn, action, sender, recipient, ip, plugin_name):
     # Don't log certain actions:
     #
