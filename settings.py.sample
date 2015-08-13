@@ -38,8 +38,8 @@ backend = 'ldap'
 # Suggested order of plugins (if you enable them) for RCPT state:
 #
 #   1: reject_null_sender
-#   2: amavisd_wblist
-#   3: reject_sender_login_mismatch
+#   2: throttling
+#   3: amavisd_wblist
 #
 # LDAP backend:
 #

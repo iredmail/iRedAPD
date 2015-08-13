@@ -45,8 +45,9 @@ CREATE TABLE throttle_sender (
     max_quota   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Max accumulated message size in total, in bytes.
     cur_quota   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Current accumulated message size in total, in bytes.
 
-    peroid      INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Peroid, in seconds.
-    date        INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we initial the throttling.
+    period      INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Peroid, in seconds.
+    init_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we initial the throttling.
+    last_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we last track the throttling.
     priority    TINYINT(1) UNSIGNED     NOT NULL DEFAULT 0,
 
     total_msgs  MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of sent message in total.

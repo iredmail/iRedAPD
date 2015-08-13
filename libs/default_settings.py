@@ -55,3 +55,9 @@ ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = False
 #
 # Reject reason for greylisting.
 GREYLISTING_MESSAGE = 'Greylisting in effect, please try again later'
+
+# --------------
+# Required by: plugins/throttling.py
+#
+# Don't apply throttling on senders specified in `MYNETWORKS`.
+THROTTLE_BYPASS_MYNETWORKS = False
