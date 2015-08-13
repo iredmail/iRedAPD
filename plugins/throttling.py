@@ -283,6 +283,8 @@ def restriction(**kwargs):
 
             # If not rejected, update init_time, cur_msgs, cur_quota, last_time
             sql_update_sets = []
+            sql_update_sets.append('total_msgs = total_msgs + 1')
+            sql_update_sets.append('total_quota = total_quota + %d' % size)
 
             if tracking_expired:
                 # Reset init_time, cur_msgs, max_quota

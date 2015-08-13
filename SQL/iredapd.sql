@@ -51,7 +51,8 @@ CREATE TABLE throttle_sender (
     priority    TINYINT(1) UNSIGNED     NOT NULL DEFAULT 0,
 
     total_msgs  MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of sent message in total.
-    local       TINYINT(1) UNSIGNED     NOT NULL DEFAULT 0, -- 1 -> sender is a local account, 0 -> external.
+    total_quota BIGINT(20) UNSIGNED     NOT NULL DEFAULT 0, -- Number of sent message in total.
+    -- local       VARCHAR(1)              NOT NULL DEFAULT 'N', -- Sender is a local account: Y (local), N (external).
     -- rcpt_max    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0,
     -- rcpt_cur    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 1,
     -- rcpt_tot    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 1,
