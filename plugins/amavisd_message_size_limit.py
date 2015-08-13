@@ -33,7 +33,7 @@ import logging
 from libs import SMTP_ACTIONS
 from libs.amavisd import core as amavisd_lib
 
-SMTP_PROTOCOL_STATE = 'END-OF-MESSAGE'
+SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
 
 # Connect to amavisd database
 REQUIRE_AMAVISD_DB = True

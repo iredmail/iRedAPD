@@ -10,7 +10,12 @@ Plugins are applied to Postfix protocol state `RCPT` by default,
 if your plugin works in another protocol state, please explicitly set the
 protocol state with variable `SMTP_PROTOCOL_STATE` in plugin file. For example:
 
-    SMTP_PROTOCOL_STATE = 'END-OF-MESSAGE'
+    SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
+
+If the plugin works in multiple protocol states, please list them all. For
+example:
+
+    SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
 
 Although Postfix has several protocol states, but we usually use two of them:
 `RCPT`, `END-OF-MESSAGE`.

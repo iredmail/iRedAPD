@@ -12,6 +12,10 @@ SMTP_ACTIONS = {
     'reject_blacklisted': 'REJECT Blacklisted',
     'reject_not_authorized': 'REJECT Not authorized',
     'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
+    # Throttling
+    'reject_exceed_msg_size': 'REJECT Quota exceeded (size of single mail message)',
+    'reject_exceed_max_msgs': 'REJECT Quota exceeded (number of mails in total)',
+    'reject_exceed_max_quota': 'REJECT Quota exceeded (accumulated message size)',
     'greylisting': '451 4.7.1',
 }
 

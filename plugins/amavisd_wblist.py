@@ -201,7 +201,7 @@ def restriction(**kwargs):
             valid_senders.append(sender_username + '@*')
 
         # Append original IP address and all possible wildcast IP addresses
-        client_address = kwargs['smtp_session_data']['client_address']
+        client_address = kwargs['client_address']
 
         valid_senders.append(client_address)
         if is_ipv4(client_address):

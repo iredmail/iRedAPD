@@ -28,6 +28,7 @@ class Modeler:
         sasl_username = smtp_session_data['sasl_username'].lower()
         sasl_username_domain = sasl_username.split('@', 1)[-1]
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
+        client_address = smtp_session_data['client_address']
 
         conn_vmail = self.conns['conn_vmail'].connect()
 
@@ -52,7 +53,8 @@ class Modeler:
                          'recipient': recipient,
                          'recipient_domain': recipient.split('@')[-1],
                          'sasl_username': sasl_username,
-                         'sasl_username_domain': sasl_username_domain}
+                         'sasl_username_domain': sasl_username_domain,
+                         'client_address': client_address}
 
         # TODO Get SQL record of mail user or mail alias before applying plugins
         # TODO Query required sql columns instead of all
@@ -62,9 +64,9 @@ class Modeler:
             try:
                 target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
             except:
-                target_smtp_protocol_state = 'RCPT'
+                target_smtp_protocol_state = ['RCPT']
 
-            if smtp_protocol_state != target_smtp_protocol_state:
+            if not smtp_protocol_state in target_smtp_protocol_state:
                 logging.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
 
@@ -75,7 +77,7 @@ class Modeler:
                            action=action,
                            sender=sender,
                            recipient=recipient,
-                           ip=smtp_session_data['client_address'],
+                           ip=client_address,
                            plugin_name=plugin.__name__)
 
                 return action

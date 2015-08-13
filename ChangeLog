@@ -5,6 +5,7 @@ iRedAPD-1.7.0:
         - plugins/sql_user_restrictions.py
 
     * Improvements:
+        - Allow plugin to work in multiple protocol states.
         - plugins/reject_sender_login_mismatch.py: able to not check forged
           sender which sent without smtp auth, or bypass specified forged
           sender addresses.

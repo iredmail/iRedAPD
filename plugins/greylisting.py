@@ -44,7 +44,7 @@ def restriction(**kwargs):
         logging.debug('Found SASL username, bypass greylisting.')
         return SMTP_ACTIONS['default']
 
-    client_address = kwargs['smtp_session_data']['client_address']
+    client_address = kwargs['client_address']
     if is_trusted_client(client_address):
         return SMTP_ACTIONS['default']
 

@@ -1,7 +1,7 @@
 import re
 import logging
 import time
-import web
+from web import sqlquote
 from sqlalchemy import create_engine
 from libs import SMTP_ACTIONS
 import settings
@@ -179,7 +179,7 @@ def log_smtp_session(conn, smtp_session_data):
                    'encryption_protocol', 'encryption_cipher']
 
     for col in sql_columns:
-        record[col] = web.sqlquote(smtp_session_data.get(col, ''))
+        record[col] = sqlquote(smtp_session_data.get(col, ''))
 
     # TODO query sql db before inserting, make sure no record with same
     #      `instance` value.

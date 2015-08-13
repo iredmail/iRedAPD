@@ -59,6 +59,7 @@ class Modeler:
         sasl_username = smtp_session_data['sasl_username'].lower()
         sasl_username_domain = sasl_username.split('@', 1)[-1]
         smtp_protocol_state = smtp_session_data['protocol_state'].upper()
+        client_address = smtp_session_data['client_address']
 
         conn_amavisd = None
         if self.conns['conn_amavisd']:
@@ -86,7 +87,8 @@ class Modeler:
                          'sender_dn': None,
                          'sender_ldif': None,
                          'recipient_dn': None,
-                         'recipient_ldif': None}
+                         'recipient_ldif': None,
+                         'client_address': client_address}
 
         # TODO Perform addition plugins which don't require sender/recipient info
         # e.g.
@@ -97,9 +99,9 @@ class Modeler:
             try:
                 target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
             except:
-                target_smtp_protocol_state = 'RCPT'
+                target_smtp_protocol_state = ['RCPT']
 
-            if smtp_protocol_state != target_smtp_protocol_state:
+            if not smtp_protocol_state in target_smtp_protocol_state:
                 logging.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
 
@@ -141,7 +143,7 @@ class Modeler:
                            action=action,
                            sender=sender,
                            recipient=recipient,
-                           ip=smtp_session_data['client_address'],
+                           ip=client_address,
                            plugin_name=plugin.__name__)
 
                 return action
