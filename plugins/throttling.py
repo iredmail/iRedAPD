@@ -228,8 +228,8 @@ def restriction(**kwargs):
             trtl += ' msg_size: %d (bytes)\n' % msg_size
             trtl += '   period: %d (seconds)\n' % period
             trtl += ' priority: %d\n' % priority
-            trtl += ' max_msgs: %d (bytes)\n' % max_msgs
-            trtl += ' cur_msgs: %d (bytes)\n' % cur_msgs
+            trtl += ' max_msgs: %d\n' % max_msgs
+            trtl += ' cur_msgs: %d\n' % cur_msgs
             trtl += 'max_quota: %d (bytes)\n' % max_quota
             trtl += 'cur_quota: %d (bytes)\n' % cur_quota
             trtl += 'init_time: %d (seconds)\n' % init_time
