@@ -1,5 +1,5 @@
-
-Read Postfix document for more details if you want to develop plugin for iRedAPD:
+iRedAPD is a Postfix policy server, you must read Postfix document for more
+details if you want to develop plugin for iRedAPD:
 [Postfix SMTP Access Policy Delegation](http://www.postfix.org/SMTPD_POLICY_README.html#protocol)
 
 # For all plugins

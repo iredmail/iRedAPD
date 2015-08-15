@@ -26,41 +26,66 @@ CREATE INDEX session_tracking_sasl_username ON session_tracking (sasl_username);
 CREATE INDEX session_tracking_instance      ON session_tracking (instance);
 CREATE INDEX session_tracking_idx1          ON session_tracking (queue_id, client_address, sender);
 
--- Sender throttling.
--- TODO
+-- Throttling
 --
---  *) store both sender/recipient throttling setting in one SQL table?
+-- Possible value for throttle setting: msg_size, max_msgs, max_quota.
 --
---      unique column value: `(address, inout_type)`. e.g. ('user@domain.com', 1)   -- 1 -> out, 0 -> in.
+--  - -1: inherit from setting with lower priority
+--  - 0:  no limit.
+--  - XX (an integer number): explicit limit. e.g. max_msgs=100 -> up to 100 messages.
 --
+-- Sender throttling
 CREATE TABLE throttle_sender (
     id          BIGINT(20) UNSIGNED AUTO_INCREMENT,
-    sender      VARCHAR(255)            NOT NULL DEFAULT '',
+    user        VARCHAR(255)            NOT NULL DEFAULT '', -- Sender
 
-    msg_size    INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Limit of single message size, in bytes.
+    -- Throttle settings
+    priority    TINYINT(1) UNSIGNED     NOT NULL DEFAULT 0,
+    period      INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Peroid, in seconds.
+    msg_size    INT(10)                 NOT NULL DEFAULT -1, -- Limit of single message size, in bytes.
+    max_msgs    MEDIUMINT(8)            NOT NULL DEFAULT -1, -- Number of max messages in total.
+    max_quota   INT(10)                 NOT NULL DEFAULT -1, -- Max accumulated message size in total, in bytes.
 
-    max_msgs    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of max messages in total.
+    -- Track accumulated msgs/quota since init tracking.
     cur_msgs    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of current messages.
-
-    max_quota   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Max accumulated message size in total, in bytes.
     cur_quota   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Current accumulated message size in total, in bytes.
+
+    -- Track accumulated msgs/quota
+    total_msgs  MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of sent message in total.
+    total_quota BIGINT(20) UNSIGNED     NOT NULL DEFAULT 0, -- Number of sent message in total.
+
+    -- Initial and last tracking time
+    init_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we initial the throttling.
+    last_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we last track the throttling.
+
+    local       VARCHAR(1)              NOT NULL DEFAULT 'N', -- Sender is a local account: Y (local), N (external).
+
+    PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+CREATE UNIQUE INDEX user ON throttle_sender (user);
+
+-- Recipient throttling
+CREATE TABLE throttle_rcpt (
+    id          BIGINT(20) UNSIGNED AUTO_INCREMENT,
+    user        VARCHAR(255)            NOT NULL DEFAULT '', -- Recipient
+
+    msg_size    INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Limit of single (received) message size, in bytes.
+
+    max_msgs    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of max (received) messages in total.
+    cur_msgs    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of current (received) messages.
+
+    max_quota   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Max accumulated (received) message size in total, in bytes.
+    cur_quota   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Current accumulated (received) message size in total, in bytes.
 
     period      INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Peroid, in seconds.
     init_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we initial the throttling.
     last_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we last track the throttling.
     priority    TINYINT(1) UNSIGNED     NOT NULL DEFAULT 0,
 
-    total_msgs  MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of sent message in total.
-    total_quota BIGINT(20) UNSIGNED     NOT NULL DEFAULT 0, -- Number of sent message in total.
-    -- local       VARCHAR(1)              NOT NULL DEFAULT 'N', -- Sender is a local account: Y (local), N (external).
-    -- rcpt_max    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0,
-    -- rcpt_cur    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 1,
-    -- rcpt_tot    MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 1,
-    -- abuse_cur   INT(10) UNSIGNED        NOT NULL DEFAULT 0,
-    -- abuse_tot   INT(10) UNSIGNED        NOT NULL DEFAULT 0,
-    -- log_warn    INT(10) UNSIGNED        NOT NULL DEFAULT 0,
-    -- log_panic   INT(10) UNSIGNED        NOT NULL DEFAULT 0,
+    total_msgs  MEDIUMINT(8) UNSIGNED   NOT NULL DEFAULT 0, -- Number of received message in total.
+    total_quota BIGINT(20) UNSIGNED     NOT NULL DEFAULT 0, -- Number of received message in total.
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
-CREATE UNIQUE INDEX sender ON throttle_sender (sender);
+CREATE UNIQUE INDEX user ON throttle_rcpt (user);
