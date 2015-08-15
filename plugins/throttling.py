@@ -1,35 +1,42 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
-# Purpose: per-account inbound/outbound throttling.
-
+# Purpose: Throttle based on amount of mails and total mail size sent over
+#          a given period of time, or size of single message.
+#
 # Note: To keep the database compact, you should set up a daily cron job to
-#       old/inactive records.
+#       clean up old/inactive records.
 
 # Usage
+# -------------
 #
-# *) Enable iRedAPD in Postfix `smtpd_end_of_data_restrictions`.
-#    For example:
+# *) Enable iRedAPD in Postfix parameters: `smtpd_recipient_restrictions` and
+#    `smtpd_end_of_data_restrictions`. For example:
+#
+#    smtpd_recipient_restrictions =
+#           ...
+#           check_policy_service inet:[127.0.0.1]:7777
+#           permit_mynetworks
+#           ...
 #
 #    smtpd_end_of_data_restrictions =
-#           check_policy_service inet:[127.0.0.1]:7777,
+#           check_policy_service inet:[127.0.0.1]:7777
 #           ...
 #
 # *) Enable this plugin in iRedAPD config file /opt/iredapd/settings.py.
 # *) Restart both iRedAPD and Postfix services.
 
 # Technology details
-#
-# *) Sender Throttling
+# -------------
 #
 # Currently you may throttle based on amount of mails and total mail size
-# sent over a given period of time.
+# sent over a given period of time, or size of singe message.
 #
 # Eg: You can enforce that user@domain.com does not send more than 1000 mails
 # or 1GB of mail (whichever limit is hit first) in say a 5 minute period.
 #
 # Possible sender throttling methods:
 #
-# 1) Throttle by sender address (either SASL username or From: address).
-#    Valid sender addresses are:
+# 1) Throttle by sender/recipient address (either SASL username or `From:`
+#    address). Valid addresses are:
 #
 #       *) Full sender email address: user@domain.com
 #       *) Domain name (with a prefixed '@'): @domain.com
@@ -48,110 +55,68 @@
 #       *) top_level_domain: 1,
 #       *) catchall: 0,
 
+# ------------
+# Valid settings:
 #
-#   1.1) based on full sender email address (user@domain.com).
+#  *) For sender throttling:
 #
-#   INSERT INTO throttle (sender, max_msgs, max_quota, msg_size, period, date, priority)
-#                 VALUES ('user@domain.com',    # from address
-#                         50,                   # maximum messages per time unit
-#                         250000000,            # size in bytes (250 megs) (maximum is 2gig)
-#                         10240000,             # maximum message size (10 meg)
-#                         86400,                # time unit in seconds (1 day)
-#                         UNIX_TIMESTAMP(),     # current time
-#                         10);                  # priority of record
+#      * max_msgs: max number of sent messages
+#      * max_quota: max number of accumulated message size
+#      * msg_size: max size of single message
 #
-#   1.2) based on domain name (@domain.com).
+#  *) For recipient throttling:
 #
-#   INSERT INTO throttle (sender, max_msgs, max_quota, msg_size, period, date, priority)
-#                 VALUES ('@domain.com',        # domain
-#                         50,                   # maximum messages per time unit
-#                         250000000,            # size in bytes (250 megs) (maximum is 2gig)
-#                         10240000,             # maximum message size (10 meg)
-#                         86400,                # time unit in seconds (1 day)
-#                         UNIX_TIMESTAMP(),     # current time
-#                         5);                   # priority of record
+#      * rcpt_max_msgs: max number of received messages
+#      * rcpt_max_quota: max number of accumulated message size
+#      * rcpt_msg_size: max size of single message
 #
-#  Do take note of the "priority" record as this allows you to have
-#  global limits for a specific domain, but if there are specific
-#  accounts that need their own dedicated/specific/unique limit then
-#  you can add their records but with a higher priority.
+# Sample setting:
 #
-# 2) Throttle by SASL user name
+# *) Allow user 'user@domain.com' to send in 6 minutes (period_sent=360):
 #
-#INSERT INTO throttle
-#(_from,_count_max,_quota_max,_time_limit,_mail_size,_date)
-# VALUES ('SASL_username',    # from address, SASL username or ip address
-#          50,                # maximum messages per time unit
-#          250000000,         # size in bytes (250 megs)
-#          86400,             # time unit in seconds (1 day)
-#          10240000,          # maximum message size (10 meg)
-#          UNIX_TIMESTAMP()); # current time
+#      * max 100 msgs (max_msg=100;)
+#      * max 4096000000 bytes (max_quota=4096000000)
+#      * max size of single message is 10240000 bytes (msg_size=10240000)
 #
-# 3) Throttle by IP address
+#  INSERT INTO throttle (user, settings, period_sent, priority)
+#                VALUES ('user@domain.com',
+#                        'max_msgs:100;max_quota:4096000000;msg_size:10240000;',
+#                        360,
+#                        10);
 #
-#INSERT INTO throttle \
-# (_from,_count_max,_quota_max,_time_limit,_mail_size,_date,_priority)
-# VALUES ('192.168.0.1',      # from address
-#          50,                # maximum messages per time unit
-#          250000000,         # size in bytes (250 megs) (maximum is 2gig)
-#          86400,             # time unit in seconds (1 day)
-#          10240000,          # maximum message size (10 meg)
-#          UNIX_TIMESTAMP(),  # current time
-#          10);               # priority of record
+# *) Allow user 'user@domain.com' to receive in 6 minutes (period=360):
 #
-#  OR netblock:
+#      * max 100 msgs (max_msg=100;)
+#      * max 4096000000 bytes (max_quota=4096000000)
+#      * max size of single message is 10240000 bytes (msg_size=10240000)
 #
-#INSERT INTO throttle \
-# (_from,_count_max,_quota_max,_time_limit,_mail_size,_date,_priority)
-# VALUES ('192.168.0.%',      # domain
-#          50,                # maximum messages per time unit
-#          250000000,         # size in bytes (250 megs) (maximum is 2gig)
-#          86400,             # time unit in seconds (1 day)
-#          10240000,          # maximum message size (10 meg)
-#          UNIX_TIMESTAMP(),  # current time
-#          5);                # priority of record
+#  INSERT INTO throttle (user, settings, period_rcvd, priority)
+#                VALUES ('user@domain.com',
+#                        'rcpt_max_msgs:100;rcpt_max_quota:4096000000;rcpt_msg_size:10240000;',
+#                        360,
+#                        10);
 #
-#  Upon the first time a sender sends a mail through the sender
-#  throttling module, if they do not exist in the database, the
-#  module will grab the configuration defaults from policyd.conf
-#  and those values will be inserted into the database. You can
-#  at a later stage (if you wish) increase those limits by changing
-#  the values in MySQL. If you wish to create users immediately
-#  with higher values, you can do the following:
+# *) Allow user 'user@domain.com' to send and receive in 6 minutes (period=360):
 #
-#  If you enable throttling by SASL and a client connects to
-#  Postfix without SASL info, by default Policyd will automatically
-#  use the MAIL FROM: address so nothing breaks.
+#      * send max 100 msgs (max_msg=100;)
+#      * send max 4096000000 bytes (max_quota=4096000000)
+#      * send max size of single message is 10240000 bytes (msg_size=10240000)
+#      * receive max 100 msgs (max_msg=100;)
+#      * receive max 4096000000 bytes (max_quota=4096000000)
+#      * receive max size of single message is 10240000 bytes (msg_size=10240000)
 #
-#  To keep the database compact and remove inactive entries, you can
-#  set a time limit for automatic cleanup.
+#  INSERT INTO throttle (user, settings, period_sent, priority_sent, priority_rcvd, priority)
+#                VALUES ('user@domain.com',
+#                        'max_msgs:100;max_quota:4096000000;msg_size:10240000;rcpt_max_msgs:100;rcpt_max_quota:4096000000;rcpt_msg_size:10240000;',
+#                        360,
+#                        360,
+#                        10);
+# ------------
+# Possible value for throttle setting: msg_size, max_msgs, max_quota.
 #
-#
-#  *)Recipient Throttling
-#
-#  Recipient Throttling module allows quota enforcement. An example
-#  of where this module is useful are if people maintain SMS gateways
-#  and have requirements that SMS abuse does not occur. Also this is
-# useful on outgoing smtp/relays during virus outbreaks. Recent
-# virus outbreaks had a few infected machines flooding the same
-# recipients over and over.
-#
-# You can enforce that no user receives more than 1000 mails in a
-# given time period.
-
-# Upon the first delivery a recipient receives, if they do not exist
-# in the database, the module will grab the configuration defaults
-# from policyd.conf and those values will be inserted into the
-# database. You can at a later stage (if you wish) increase those
-# limits by changing the values in MySQL. If you want to create
-# users immediately with high values, you can do the following:
-#
-#INSERT INTO throttle_rcpt (_rcpt,_count_max,_time_limit)
-# VALUES ('camis@mweb.co.za', # recipient address
-#          100,               # maximum messages per time unit
-#          86400,             # time unit in seconds (1 day)
-#          UNIX_TIMESTAMP()); # current time
-#
+#  * XX (an integer number): explicit limit. e.g. 100. (max_msgs=100 means up to 100 messages)
+#  * -1: inherit from setting with lower priority
+#  * 0:  no limit.
 #
 
 import time
@@ -159,7 +124,7 @@ import logging
 from web import sqlliteral
 import settings
 from libs import SMTP_ACTIONS
-from libs.utils import sqllist, is_trusted_client
+from libs.utils import is_ipv4, wildcard_ipv4, sqllist, is_trusted_client
 from libs.amavisd.core import get_valid_addresses_from_email
 
 SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
@@ -208,6 +173,9 @@ def apply_throttle(conn,
                    is_sender_throttling=True):
     possible_addrs = get_valid_addresses_from_email(user)
     possible_addrs.append(client_address)
+
+    if is_ipv4(client_address):
+        possible_addrs += wildcard_ipv4(client_address)
 
     logging.debug('Possible addresses: %s' % str(possible_addrs))
 

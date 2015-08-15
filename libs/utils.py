@@ -126,6 +126,35 @@ def get_db_conn(dbn, db):
         return None
 
 
+def wildcard_ipv4(ip):
+    ips = []
+    if is_ipv4(ip):
+        ip4 = ip.split('.')
+
+        if settings.ENABLE_ALL_WILDCARD_IP:
+            ip4s = set()
+            counter = 0
+            for i in range(4):
+                a = ip4[:]
+                a[i] = '*'
+                ip4s.add('.'.join(a))
+
+                if counter < 4:
+                    for j in range(4 - counter):
+                        a[j+counter] = '*'
+                        ip4s.add('.'.join(a))
+
+                counter += 1
+            ips += list(ip4s)
+        else:
+            # 11.22.33.*
+            ips.append('.'.join(ip4[:3]) + '.*')
+            # 11.22.*.44
+            ips.append('.'.join(ip4[:2]) + '.*.' + ip4[3])
+
+    return ips
+
+
 def is_trusted_client(client_address):
     if client_address in ['127.0.0.1', '::1']:
         logging.debug('Local sender.')

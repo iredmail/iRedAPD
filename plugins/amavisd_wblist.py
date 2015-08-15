@@ -44,7 +44,7 @@
 
 import logging
 from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4, sqllist
+from libs.utils import is_ipv4, wildcard_ipv4, sqllist
 from libs.amavisd import core as amavisd_lib
 import settings
 
@@ -205,28 +205,7 @@ def restriction(**kwargs):
 
         valid_senders.append(client_address)
         if is_ipv4(client_address):
-            ip4 = client_address.split('.')
-
-            if settings.WBLIST_ENABLE_ALL_WILDCARD_IP:
-                ip4s = set()
-                counter = 0
-                for i in range(4):
-                    a = ip4[:]
-                    a[i] = '*'
-                    ip4s.add('.'.join(a))
-
-                    if counter < 4:
-                        for j in range(4 - counter):
-                            a[j+counter] = '*'
-                            ip4s.add('.'.join(a))
-
-                    counter += 1
-                valid_senders += list(ip4s)
-            else:
-                # 11.22.33.*
-                valid_senders.append('.'.join(ip4[:3]) + '.*')
-                # 11.22.*.44
-                valid_senders.append('.'.join(ip4[:2]) + '.*.' + ip4[3])
+            valid_senders += wildcard_ipv4(client_address)
 
     logging.debug('Possible policy senders: %s' % str(valid_senders))
     logging.debug('Possible policy recipients: %s' % str(valid_recipients))
