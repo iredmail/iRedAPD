@@ -4,6 +4,12 @@ details if you want to develop plugin for iRedAPD:
 
 # For all plugins
 
+## Define your plugin priority in `libs/__init__.py`
+
+Please define the priority of your plugin, so that iRedAPD can apply plugins
+in ideal order. Default priority is defined in `libs/__init__.py`, parameter
+`PLUGIN_PRIORITIES`.
+
 ## SMTP protocol state
 
 Plugins are applied to Postfix protocol state `RCPT` by default, 

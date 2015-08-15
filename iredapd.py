@@ -11,7 +11,7 @@ import logging
 
 # iRedAPD setting file and modules
 import settings
-from libs import __version__, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
+from libs import __version__, PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
 from libs.utils import get_db_conn, log_smtp_session
 
 # Plugin directory.
@@ -119,7 +119,22 @@ class DaemonSocket(asyncore.dispatcher):
 
         # Load plugins.
         self.loaded_plugins = []
-        for plugin in settings.plugins:
+
+        # Sort plugin order with pre-defined priorities, so that we can apply
+        # plugins in ideal order.
+        ordered_plugins = []
+
+        swapped_plugin_name_order = {}
+        for i in PLUGIN_PRIORITIES:
+            swapped_plugin_name_order[PLUGIN_PRIORITIES[i]] = i
+
+        po = {}
+        for p in settings.plugins:
+            po[PLUGIN_PRIORITIES[p]] = p
+
+        ordered_plugins = [swapped_plugin_name_order[order] for order in sorted(po)]
+
+        for plugin in ordered_plugins:
             try:
                 self.loaded_plugins.append(__import__(plugin))
                 logging.info('Loading plugin: %s' % plugin)

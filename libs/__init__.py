@@ -1,6 +1,19 @@
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
 __version__ = '1.7.0'
 
+# Plugin with lowest priority (smallest number) should be applied first.
+# With pre-defined priorities, the order defined in `plugins = []` setting
+# doesn't matter at all, so that we can apply plugins in ideal order.
+PLUGIN_PRIORITIES = {'reject_null_sender': 10,
+                     'greylisting': 20,
+                     'reject_sender_login_mismatch': 30,
+                     'ldap_force_change_password_in_days': 40,
+                     'sql_force_change_password_in_days': 50,
+                     'throttling': 60,
+                     'amavisd_wblist': 70,
+                     'ldap_maillist_access_policy': 80,
+                     'sql_alias_access_policy': 90}
+
 SMTP_ACTIONS = {
     'default': 'DUNNO',
     'accept': 'OK',
