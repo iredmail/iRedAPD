@@ -2,10 +2,6 @@
   order. This way we don't need to care about the order defined by user in
   `plugins =`.
 
-* `plugins/throttling.py`:
-
-    * Recipient throttling.
-
 * Replace `plugins/amavisd_message_size_limit.py` by `plugins/throttling.py`.
 
     * `tools/upgrade_iredapd.py`: remove this plugin in `settings.py`.

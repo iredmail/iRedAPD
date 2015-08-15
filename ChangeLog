@@ -1,8 +1,12 @@
 iRedAPD-1.7.0:
-    * Removed plugins (They're replaced by 'plugins/amavisd_wblist.py').
+    * Removed plugins:
         - plugins/ldap_amavisd_block_blacklisted_senders.py,
         - plugins/ldap_recipient_restrictions.py
         - plugins/sql_user_restrictions.py
+        - plugins/amavisd_message_size_limit.py: just use the first valid
+
+      First 3 plugins are replaced by 'plugins/amavisd_wblist.py', last one
+      is replaced by 'plugins/throttling.py'.
 
     * Improvements:
         - Allow plugin to work in multiple protocol states.

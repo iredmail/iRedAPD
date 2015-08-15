@@ -237,3 +237,5 @@ def log_smtp_session(conn, smtp_session_data):
             logging.debug('Update failed: %s' % str(e))
 
     return True
+
+
