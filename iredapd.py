@@ -181,21 +181,17 @@ def main():
                         datefmt='%Y-%m-%d %H:%M:%S',
                         filename=settings.log_file)
 
-    if settings.backend == 'pgsql':
-        sql_dbn = 'postgres'
-    else:
-        sql_dbn = 'mysql'
 
     if settings.backend in ['mysql', 'pgsql']:
-        conn_vmail = get_db_conn(sql_dbn, 'vmail')
+        conn_vmail = get_db_conn('vmail')
     else:
         # we don't have ldap connection pool, a connection object will be
         # created in libs/ldaplib/modeler.py.
         conn_vmail = None
 
-    conn_amavisd = get_db_conn(sql_dbn, 'amavisd')
-    conn_iredadmin = get_db_conn(sql_dbn, 'iredadmin')
-    conn_iredapd = get_db_conn(sql_dbn, 'iredapd')
+    conn_amavisd = get_db_conn('amavisd')
+    conn_iredadmin = get_db_conn('iredadmin')
+    conn_iredapd = get_db_conn('iredapd')
 
     db_conns = {'conn_vmail': conn_vmail,
                 'conn_amavisd': conn_amavisd,

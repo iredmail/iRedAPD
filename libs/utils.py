@@ -108,7 +108,12 @@ def sqllist(values):
     return ''.join(items)
 
 
-def get_db_conn(dbn, db):
+def get_db_conn(db):
+    if settings.backend == 'pgsql':
+        dbn = 'postgres'
+    else:
+        dbn = 'mysql'
+
     try:
         uri = '%s://%s:%s@%s:%d/%s' % (dbn,
                                        settings.__dict__[db + '_db_user'],
