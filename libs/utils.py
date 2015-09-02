@@ -4,6 +4,7 @@ import time
 from web import sqlquote
 from sqlalchemy import create_engine
 from libs import SMTP_ACTIONS
+from libs import ipaddress
 import settings
 
 # Mail address. +, = is used in SRS rewritten addresses.
@@ -18,6 +19,15 @@ regx_ipv6 = r'^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,
 
 # Wildcard sender address: 'user@*'
 regx_wildcard_addr = r'''[\w\-][\w\-\.\+\=]*@\*'''
+
+# Convert all IP address, wildcard IPs, subnet to `ipaddress` format.
+TRUSTED_IPS = []
+TRUSTED_NETWORKS = []
+for ip in settings.MYNETWORKS:
+    if '/' in ip:
+        TRUSTED_NETWORKS.append(ipaddress.ip_network(unicode(ip)))
+    else:
+        TRUSTED_IPS.append(ip)
 
 
 def apply_plugin(plugin, **kwargs):
@@ -165,13 +175,18 @@ def is_trusted_client(client_address):
         logging.debug('Local sender.')
         return True
 
-    if client_address in settings.MYNETWORKS:
+    if client_address in TRUSTED_IPS:
         logging.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
         return True
 
-    if set(wildcard_ipv4(client_address)) & set(settings.MYNETWORKS):
+    if set(wildcard_ipv4(client_address)) & set(TRUSTED_IPS):
         logging.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
         return True
+
+    ip_addr = ipaddress.ip_address(unicode(client_address))
+    for net in TRUSTED_NETWORKS:
+        if ip_addr in net:
+            return True
 
     return False
 

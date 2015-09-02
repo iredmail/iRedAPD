@@ -2,6 +2,7 @@
 # Valid formats:
 #   - Single IP address: 192.168.1.1
 #   - Wildcard IP range: 192.168.1.*, 192.168.*.*, 192.168.*.1
+#   - IP subnet: 192.168.1.0/24
 MYNETWORKS = []
 
 # ---------------

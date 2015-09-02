@@ -181,7 +181,6 @@ def main():
                         datefmt='%Y-%m-%d %H:%M:%S',
                         filename=settings.log_file)
 
-
     if settings.backend in ['mysql', 'pgsql']:
         conn_vmail = get_db_conn('vmail')
     else:
