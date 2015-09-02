@@ -169,6 +169,10 @@ def is_trusted_client(client_address):
         logging.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
         return True
 
+    if set(wildcard_ipv4(client_address)) & set(settings.MYNETWORKS):
+        logging.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
+        return True
+
     return False
 
 

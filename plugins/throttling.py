@@ -362,7 +362,6 @@ def restriction(**kwargs):
 
     if settings.THROTTLE_BYPASS_MYNETWORKS:
         if is_trusted_client(client_address):
-            logging.debug('Client is trusted (listed in MYNETWORKS).')
             return SMTP_ACTIONS['default']
 
     logging.debug('Check sender throttling.')

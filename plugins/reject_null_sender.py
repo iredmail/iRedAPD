@@ -28,10 +28,6 @@ def restriction(**kwargs):
     if is_trusted_client(client_address):
         return SMTP_ACTIONS['default']
 
-    #if not (sender or sasl_username):
-    #    logging.debug('Spam (no sender address or sasl_username).')
-    #    return SMTP_ACTIONS['reject']
-
     if sasl_username and not sender:
         logging.debug('Spam (authenticated as %s but sender is null).' % sasl_username)
         return SMTP_ACTIONS['reject']
