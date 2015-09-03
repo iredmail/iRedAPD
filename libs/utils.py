@@ -25,9 +25,15 @@ TRUSTED_IPS = []
 TRUSTED_NETWORKS = []
 for ip in settings.MYNETWORKS:
     if '/' in ip:
-        TRUSTED_NETWORKS.append(ipaddress.ip_network(unicode(ip)))
+        try:
+            TRUSTED_NETWORKS.append(ipaddress.ip_network(unicode(ip)))
+        except:
+            pass
     else:
-        TRUSTED_IPS.append(ip)
+        try:
+            TRUSTED_IPS.append(ip)
+        except:
+            pass
 
 
 def apply_plugin(plugin, **kwargs):

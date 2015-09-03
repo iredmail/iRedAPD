@@ -64,13 +64,13 @@ class PolicyChannel(asynchat.async_chat):
                 else:
                     logging.debug('Drop invalid smtp session attribute/value: %s' % line)
 
-        elif len(self.smtp_session_data) != 0:
+        elif self.smtp_session_data:
             # Log smtp session in SQL db.
-            try:
-                conn_iredapd = self.db_conns['conn_iredapd']
-                log_smtp_session(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
-            except Exception, e:
-                pass
+            #try:
+            #    conn_iredapd = self.db_conns['conn_iredapd']
+            #    log_smtp_session(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
+            #except Exception, e:
+            #    pass
 
             try:
                 modeler = Modeler(conns=self.db_conns)

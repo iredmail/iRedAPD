@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-
+# Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Upgrade iRedAPD from old release.
+
+# TODO
+#
+# * Create `iredapd` database.
+# * add `iredapd_*` in `settings.py`
 
 # USAGE:
 #
