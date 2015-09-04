@@ -116,37 +116,6 @@ SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
 REQUIRE_IREDAPD_DB = True
 
 
-def convert_throttle_setting_to_dict(s, value_is_integer=True):
-    """Convert throttle setting string to dict.
-
-    >>> convert_throttle_setting_to_dict('var:value;var2:value2;var3:vavlue3;')
-    {'var': value,
-     'var2': value2,
-     'var3': value3}
-    """
-
-    if not s:
-        return {}
-
-    sd = {}
-
-    # Get all single setting
-    setting_items = [st for st in s.split(';') if ':' in st]
-    for item in setting_items:
-        if item:
-            key, value = item.split(':')
-
-            if value_is_integer:
-                try:
-                    value = int(value)
-                except:
-                    pass
-
-            sd[key] = value
-
-    return sd
-
-
 # Apply throttle setting and return smtp action.
 def apply_throttle(conn,
                    user,
@@ -161,8 +130,10 @@ def apply_throttle(conn,
         possible_addrs += wildcard_ipv4(client_address)
 
     sql_table = 'throttle_sender'
+    throttle_type = 'sender'
     if not is_sender_throttling:
         sql_table = 'throttle_rcpt'
+        throttle_type = 'recipient'
 
     logging.debug('Possible addresses: %s' % str(possible_addrs))
 
@@ -184,7 +155,7 @@ def apply_throttle(conn,
     if not sql_records:
         logging.debug('No throttle setting.')
     else:
-        # Don't check some throttle setting with lower priority.
+        # Inherit throttle settings with lower priority.
         continue_check_msg_size = True
         continue_check_max_msgs = True
         continue_check_max_quota = True
@@ -245,26 +216,32 @@ def apply_throttle(conn,
             # state or other restrictions in Postfix.
             if protocol_state == 'RCPT' and continue_check_max_msgs:
                 if continue_check_max_msgs:
-                    if max_msgs > 0:
-                        if cur_msgs >= max_msgs:
-                            logging.debug('Exceed max messages: cur_msgs (%d) >= max_msgs (%d).' % (cur_msgs, max_msgs))
-                            return SMTP_ACTIONS['reject_exceed_max_msgs']
-                        else:
-                            logging.debug('Not exceed max messages: cur_msgs (%d) < max_msgs (%d).' % (cur_msgs, max_msgs))
-
                     # (max_msgs == -1): don't check throttl setting with lower priority
                     if max_msgs >= 0:
+                        logging.debug('%s throttle for "%s" has explict setting for max_msgs, will stop checking settings with lower priorities.' % (throttle_type, t_user))
                         continue_check_max_msgs = False
+                    else:
+                        logging.debug('No explict %s throttle for "%s" for max_msgs, will check settings with lower priorities.' % (throttle_type, t_user))
+
+                    if max_msgs > 0:
+                        logging.debug('Apply %s throttle for "%s": max_msgs=%d, current: %d' % (throttle_type, t_user, max_msgs, cur_msgs))
+                        if cur_msgs >= max_msgs:
+                            logging.info('Exceeds %s throttle for "%s": max_msgs=%d, current: %d' % (throttle_type, t_user, max_msgs, cur_msgs))
+                            return SMTP_ACTIONS['reject_exceed_max_msgs']
 
             elif protocol_state == 'END-OF-MESSAGE' and (continue_check_msg_size or continue_check_max_quota):
                 # Check message size
                 if continue_check_msg_size:
                     if msg_size >= 0:
+                        logging.debug('%s throttle for "%s" has explict setting for msg_size, will stop checking settings with lower priorities.' % (throttle_type, t_user))
                         continue_check_msg_size = False
+                    else:
+                        logging.debug('No explict %s throttle for "%s" for msg_size, will check settings with lower priorities.' % (throttle_type, t_user))
 
                     if msg_size > 0:
+                        logging.debug('Apply %s throttle for "%s": msg_size=%d (bytes), current: %d (bytes)' % (throttle_type, t_user, msg_size, size))
                         if size > msg_size:
-                            logging.debug('Exceeded message size for single mail: max=%d bytes, current=%d bytes.' % (msg_size, size))
+                            logging.info('Exceeds %s throttle for "%s": msg_size=%d (bytes), current: %d (bytes)' % (throttle_type, t_user, msg_size, size))
                             return SMTP_ACTIONS['reject_exceed_msg_size']
                         else:
                             # Update `total_msgs`
@@ -273,13 +250,18 @@ def apply_throttle(conn,
                 # Check max quota
                 if continue_check_max_quota:
                     if max_quota >= 0:
+                        logging.debug('%s throttle for "%s" has explict setting for max_quota, will stop checking settings with lower priorities.' % (throttle_type, t_user))
                         continue_check_max_quota = False
+                    else:
+                        logging.debug('No explict %s throttle for "%s" for max_quota, will check settings with lower priorities.' % (throttle_type, t_user))
 
                     if max_quota > 0:
+                        logging.debug('Apply %s throttle for "%s": max_quota=%d, current: %d' % (throttle_type, t_user, msg_size, size))
                         if cur_quota >= max_quota:
-                            logging.debug('Exceeded accumulated message size: max=%d bytes, current=%d (bytes).' % (max_quota, cur_quota))
+                            logging.info('Exceeds %s throttle for "%s": max_quota=%d, current: %d' % (throttle_type, t_user, msg_size, size))
                             return SMTP_ACTIONS['reject_exceed_max_quota']
                         else:
+                            # Update `total_quota`
                             sql_update_sets[t_id].append('total_quota = total_quota + %d' % size)
 
                 if tracking_expired:
@@ -313,6 +295,7 @@ def apply_throttle(conn,
                 logging.debug('[SQL] Update throttle tracking: %s' % sql)
                 conn.execute(sql)
 
+    logging.debug('[PASS] No %s throttle setting or passed all throttle settings.' % throttle_type)
     return SMTP_ACTIONS['default']
 
 
