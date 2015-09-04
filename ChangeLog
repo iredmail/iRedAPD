@@ -10,12 +10,13 @@ iRedAPD-1.7.0:
 
     * Improvements:
         - Allow to use IP network in MYNETWORKS. e.g. 192.168.0.0/24.
-        - Allow plugin to work in multiple protocol states.
+        - Allow plugins to work in multiple protocol states.
         - plugins/reject_sender_login_mismatch.py: able to not check forged
           sender which sent without smtp auth, or bypass specified forged
           sender addresses.
         - plugins/amavisd_wblist.py: able to check white/blacklist for
           outbound message.
+          Note: new SQL table `amavisd.outbound_wblist` is required.
         - plugins/{sql,ldap}_force_change_password_in_days.py: Allow specified
           users or domains to never change password.
         - plugins/amavisd_wblist.py: Able to not check white/blacklists on

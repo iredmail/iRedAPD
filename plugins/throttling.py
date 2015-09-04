@@ -33,27 +33,24 @@
 # Eg: You can enforce that user@domain.com does not send more than 1000 mails
 # or 1GB of mail (whichever limit is hit first) in say a 5 minute period.
 #
-# Possible sender throttling methods:
+# Possible throttling address:
 #
-# 1) Throttle by sender/recipient address (either SASL username or `From:`
-#    address). Valid addresses are:
+#   *) Full email address: user@domain.com
+#   *) Domain name (with a prefixed '@'): @domain.com
+#   *) Sub-domain name (with a prefixed '@.'): @.domain.com
+#   *) IP address:  192.168.1.1
+#   *) IP network:  192.168.1.*
 #
-#       *) Full sender email address: user@domain.com
-#       *) Domain name (with a prefixed '@'): @domain.com
-#       *) Sub-domain name (with a prefixed '@.'): @.domain.com
-#       *) IP address:  192.168.1.1
-#       *) IP network:  192.168.1.*
+# Priorities of different thorttle address (larger digital number has higher priority):
 #
-#   Priorities (larger digital number has higher priority):
-#
-#       *) ip: 10,
-#       *) email: 8,
-#       *) wildcard_addr: 6,     # r'user@*'. used in iRedAPD plugin `amavisd_wblist`
-#                                # as wildcard sender. e.g. 'user@*'
-#       *) domain: 5,
-#       *) subdomain: 3,
-#       *) top_level_domain: 1,
-#       *) catchall: 0,
+#   *) ip: 10,
+#   *) email: 8,
+#   *) wildcard_addr: 6,     # e.g. `user@*`. used in plugin `amavisd_wblist`
+#                            # as wildcard sender. e.g. 'user@*`
+#   *) domain: 5,
+#   *) subdomain: 3,
+#   *) top_level_domain: 1,
+#   *) catchall: 0,
 
 # ------------
 # Valid settings:
@@ -66,36 +63,44 @@
 #
 # *) Allow user `user@domain.com` to send in 6 minutes (period_sent=360):
 #
-#   * max 100 msgs (max_msg=100;)
-#   * max 4096000000 bytes (max_quota=4096000000)
-#   * max size of single message is 10240000 bytes (msg_size=10240000)
+#   * max size of single message is 10240000 bytes (msg_size)
+#   * max 100 messages (max_msg)
+#   * max 4096000000 bytes (max_quota)
 #
-#  INSERT INTO throttle_sender (user, settings, period_sent, priority)
+#  INSERT INTO throttle_sender (user, priority, period, msg_size, max_msgs, max_quota)
 #                       VALUES ('user@domain.com',
-#                               'max_msgs:100;max_quota:4096000000;msg_size:10240000;',
+#                               10,
 #                               360,
-#                               10);
+#                               10240000,
+#                               100,
+#                               4096000000);
 #
 # Sample recipient throttle settings:
 #
 # *) Allow user 'user@domain.com' to receive in 6 minutes (period=360):
 #
-#    * max 100 msgs (max_msg=100;)
-#    * max 4096000000 bytes (max_quota=4096000000)
-#    * max size of single message is 10240000 bytes (msg_size=10240000)
+#   * max size of single message is 10240000 bytes (msg_size)
+#   * max 100 messages (max_msg)
+#   * max 4096000000 bytes (max_quota)
 #
-#  INSERT INTO throttle_rcpt (user, settings, period_rcvd, priority)
+#  INSERT INTO throttle_rcpt (user, priority, period, msg_size, max_msgs, max_quota)
 #                     VALUES ('user@domain.com',
-#                             'rcpt_max_msgs:100;rcpt_max_quota:4096000000;rcpt_msg_size:10240000;',
+#                             10,
 #                             360,
-#                             10);
+#                             10240000,
+#                             100,
+#                             4096000000);
 #
 # ------------
 # Possible value for throttle setting: msg_size, max_msgs, max_quota.
 #
-#  * XX (an integer number): explicit limit. e.g. 100. (max_msgs=100 means up to 100 messages)
+#  * XX (an integer number): explicit limit. e.g. 100. for example, set
+#       `max_msgs=100` means user can send/receive up to 100 messages.
 #  * 0:  unlimited.
-#  * -1: inherit setting which has lower priority
+#  * -1: inherit setting which has lower priority. for example, set
+#       `msg_size=-1` for user `user@domain.com` will force iRedADP to check
+#       `msg_size` setting in per-domain (`@domain.com`) and/or global (`@.`)
+#       throttle settings.
 
 import time
 import logging
