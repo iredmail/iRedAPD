@@ -1,3 +1,6 @@
+* `plugins/throttling.py`: able to throttle all users together with per-domain
+  or global setting, not just per-user.
+
 * Replace `plugins/amavisd_message_size_limit.py` by `plugins/throttling.py`.
 
     * `tools/upgrade_iredapd.py`: remove this plugin in `settings.py`.
