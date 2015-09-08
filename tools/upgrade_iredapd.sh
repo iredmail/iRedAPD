@@ -257,6 +257,12 @@ if grep '^sql_server' ${IREDAPD_CONF_PY} &>/dev/null; then
     perl -pi -e 's#^(sql_)#vmail_db_#g' ${IREDAPD_CONF_PY}
 fi
 
+echo "* Remove deprecated plugins."
+rm -f ${IREDAPD_ROOT_DIR}/plugins/ldap_amavisd_block_blacklisted_senders.py &>/dev/null
+rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/ldap_recipient_restrictions.py &>/dev/null
+rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/sql_user_restrictions.py &>/dev/null
+rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/amavisd_message_size_limit.py &>/dev/null
+
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     service ${RC_SCRIPT_NAME} restart

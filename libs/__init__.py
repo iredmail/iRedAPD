@@ -1,9 +1,12 @@
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
 __version__ = '1.7.0'
 
-# Plugin with lowest priority (smallest number) should be applied first.
+# Plugin priorities.
+#
 # With pre-defined priorities, the order defined in `plugins = []` setting
 # doesn't matter at all, so that we can apply plugins in ideal order.
+#
+# Plugin with smaller number has higher priority and will be applied first.
 PLUGIN_PRIORITIES = {'reject_null_sender': 10,
                      'greylisting': 20,
                      'reject_sender_login_mismatch': 30,

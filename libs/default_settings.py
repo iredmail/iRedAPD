@@ -1,3 +1,13 @@
+# Priority for third-party plugins, or override pre-defined priorities in
+# libs/__init__.py.
+#
+# Plugin with smaller number has higher priority and will be applied first.
+# Sample setting:
+#
+#   PLUGIN_PRIORITIES = {'plugin_name_1', 100,
+#                        'plugin_name_2', 200}
+PLUGIN_PRIORITIES = {}
+
 # Trusted IP address or networks.
 # Valid formats:
 #   - Single IP address: 192.168.1.1

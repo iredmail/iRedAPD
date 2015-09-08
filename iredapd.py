@@ -15,7 +15,8 @@ from libs import __version__, PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTR
 from libs.utils import get_db_conn, log_smtp_session
 
 # Plugin directory.
-sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/plugins')
+plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
+sys.path.append(plugin_dir)
 
 if not settings.backend in ['ldap', 'mysql', 'pgsql']:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
@@ -125,12 +126,19 @@ class DaemonSocket(asyncore.dispatcher):
         ordered_plugins = []
 
         swapped_plugin_name_order = {}
-        for i in PLUGIN_PRIORITIES:
-            swapped_plugin_name_order[PLUGIN_PRIORITIES[i]] = i
+        _plugin_priorities = PLUGIN_PRIORITIES
+        _plugin_priorities.update(settings.PLUGIN_PRIORITIES)
+        for i in _plugin_priorities:
+            swapped_plugin_name_order[_plugin_priorities[i]] = i
 
         po = {}
         for p in settings.plugins:
-            po[PLUGIN_PRIORITIES[p]] = p
+            plugin_file = os.path.join(plugin_dir, p + '.py')
+            if not os.path.isfile(plugin_file):
+                logging.info('Plugin %s (%s) does not exist.' % (p, plugin_file))
+                continue
+
+            po[_plugin_priorities[p]] = p
 
         ordered_plugins = [swapped_plugin_name_order[order] for order in sorted(po)]
 

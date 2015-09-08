@@ -28,29 +28,6 @@ log_level = 'info'
 backend = 'ldap'
 
 # Enabled plugins.
-#
-# - Plugin name is file name which placed under 'plugins/' directory,
-#   without file extension '.py'.
-# - Plugins are applied in specified order. It's better to list plugins which
-#   doesn't require SQL/LDAP query first (e.g. reject_null_sender), then
-#   white/blacklist related plugins, e.g. amavisd_wblist.
-#
-# Suggested order of plugins (if you enable them) for RCPT state:
-#
-#   1: reject_null_sender
-#   2: throttling
-#   3: amavisd_wblist
-#
-# LDAP backend:
-#
-#   4: ldap_force_change_password_in_days
-#   5: ldap_maillist_access_policy
-#
-# SQL backends:
-#
-#   4: sql_force_change_password_in_days
-#   5: sql_alias_access_policy
-#
 plugins = ['reject_null_sender', 'amavisd_wblist', 'ldap_maillist_access_policy']
 
 # For LDAP backend.
