@@ -1,4 +1,4 @@
-* `plugins/throttling.py`: able to throttle all users together with per-domain
+* `plugins/throttle.py`: able to throttle all users together with per-domain
   or global setting, not just per-user.
 
 * Cron job to clean up `throttle` sql table (remove non-existing user?).

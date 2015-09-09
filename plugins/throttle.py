@@ -135,19 +135,19 @@ def apply_throttle(conn,
         possible_addrs += wildcard_ipv4(client_address)
 
     throttle_type = 'sender'
-    throttle_kind = 1       # throttle.kind
+    throttle_kind = 'outbound'       # throttle.kind
     if not is_sender_throttling:
         throttle_type = 'recipient'
-        throttle_kind = 0
+        throttle_kind = 'inbound'
 
     logging.debug('Possible addresses:\n%s' % str(possible_addrs))
 
     sql = """
         SELECT id, account, priority, period, max_msgs, max_quota, msg_size
           FROM throttle
-         WHERE kind=%d AND account IN %s
+         WHERE kind=%s AND account IN %s
          ORDER BY priority DESC
-         """ % (throttle_kind, sqllist(possible_addrs))
+         """ % (sqlquote(throttle_kind), sqllist(possible_addrs))
 
     logging.debug('[SQL] Query throttle setting:\n%s' % sql)
     qr = conn.execute(sql)
@@ -410,9 +410,9 @@ def restriction(**kwargs):
     else:
         size = 0
 
-    #if sender_domain == recipient_domain:
-    #    logging.debug('Sender domain (@%s) is same as recipient domain, skip throttling.' % sender_domain)
-    #    return SMTP_ACTIONS['default']
+    if sender_domain == recipient_domain:
+        logging.debug('Sender domain (@%s) is same as recipient domain, skip throttling.' % sender_domain)
+        return SMTP_ACTIONS['default']
 
     if settings.THROTTLE_BYPASS_MYNETWORKS:
         if is_trusted_client(client_address):

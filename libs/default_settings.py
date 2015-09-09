@@ -18,9 +18,9 @@ MYNETWORKS = []
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
-#   - plugins/throttling.py
+#   - plugins/throttle.py
 #
-# Query additional wildcard IP(v4) addresses for white/blacklists, throttling.
+# Query additional wildcard IP(v4) addresses for white/blacklists, throttle.
 # For example, for client address 'w.x.y.z', if this option is disabled (False),
 # it just query 'w.x.y.z', 'w.x.y.*' and 'w.x.*.z' (wildcard). If enabled (True),
 # it will replace all possible fields by '*' as wildcard:
@@ -76,7 +76,7 @@ ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = False
 GREYLISTING_MESSAGE = 'Greylisting in effect, please try again later'
 
 # --------------
-# Required by: plugins/throttling.py
+# Required by: plugins/throttle.py
 #
-# Don't apply throttling on senders specified in `MYNETWORKS`.
+# Don't apply throttle settings on senders specified in `MYNETWORKS`.
 THROTTLE_BYPASS_MYNETWORKS = False

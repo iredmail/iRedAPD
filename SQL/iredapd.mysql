@@ -29,14 +29,14 @@ CREATE INDEX session_tracking_idx1          ON session_tracking (queue_id, clien
 */
 
 -- Throttling.
--- Please check iRedAPD plugin `throttling` for more details.
+-- Please check iRedAPD plugin `throttle` for more details.
 CREATE TABLE throttle (
     id          BIGINT(20) UNSIGNED AUTO_INCREMENT,
     account     VARCHAR(255)            NOT NULL,
 
-    -- 1: sender throttling
-    -- 0: recipient throttling
-    kind        TINYINT(1)              NOT NULL DEFAULT 1,
+    -- outbound: sender throttling
+    -- inbound: recipient throttling
+    kind        VARCHAR(10)             NOT NULL DEFAULT 'outbound',
 
     priority    TINYINT(1) UNSIGNED     NOT NULL DEFAULT 0,
     period      INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- Peroid, in seconds.
@@ -48,10 +48,9 @@ CREATE TABLE throttle (
     max_msgs    MEDIUMINT(8)            NOT NULL DEFAULT -1, -- Number of max (received) messages in total.
     max_quota   MEDIUMINT(8)            NOT NULL DEFAULT -1, -- Number of current (received) messages.
 
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE INDEX account (account)
 ) ENGINE=InnoDB;
-
-CREATE UNIQUE INDEX account ON throttle (account);
 
 -- *) how to track per-user throttle:
 --
@@ -88,7 +87,6 @@ CREATE TABLE throttle_tracking (
     last_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we last track the throttling.
 
     PRIMARY KEY (id),
-    FOREIGN KEY (tid) REFERENCES throttle (id)
+    FOREIGN KEY (tid) REFERENCES throttle (id),
+    UNIQUE INDEX tid_account (tid, account)
 ) ENGINE=InnoDB;
-
-CREATE UNIQUE INDEX tid_account ON throttle_tracking (tid, account);

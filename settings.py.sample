@@ -64,7 +64,7 @@ iredadmin_db_name = 'iredadmin'
 iredadmin_db_user = 'iredadmin'
 iredadmin_db_password = 'password'
 
-# iRedAPD database, used for greylisting, throttling.
+# iRedAPD database, used for greylisting, throttle.
 iredapd_db_server = '127.0.0.1'
 iredapd_db_port = '3306'
 iredapd_db_name = 'iredapd'

@@ -12,7 +12,7 @@ PLUGIN_PRIORITIES = {'reject_null_sender': 10,
                      'reject_sender_login_mismatch': 30,
                      'ldap_force_change_password_in_days': 40,
                      'sql_force_change_password_in_days': 50,
-                     'throttling': 60,
+                     'throttle': 60,
                      'amavisd_wblist': 70,
                      'ldap_maillist_access_policy': 80,
                      'sql_alias_access_policy': 90}

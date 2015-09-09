@@ -1,5 +1,5 @@
 iRedAPD-1.7.0:
-    * New plugin: plugins/throttling.py. Used to throttle inbound/outbound
+    * New plugin: plugins/throttle.py. Used to throttle inbound/outbound
       emails based on amount of mails, total mail size sent over a given period
       of time, or size of single message.
 
@@ -10,7 +10,7 @@ iRedAPD-1.7.0:
         - plugins/amavisd_message_size_limit.py
 
       First 3 plugins are replaced by 'plugins/amavisd_wblist.py', last one
-      is replaced by new plugin 'plugins/throttling.py'.
+      is replaced by new plugin 'plugins/throttle.py'.
 
     * Improvements:
         - Allow to use IP network in MYNETWORKS. e.g. 192.168.0.0/24.
