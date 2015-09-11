@@ -112,7 +112,8 @@ import logging
 from web import sqlquote
 import settings
 from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4, is_strict_ip, wildcard_ipv4, sqllist, is_trusted_client
+from libs.utils import is_ipv4, wildcard_ipv4, sqllist, is_trusted_client
+from libs.utils import is_valid_amavisd_address
 from libs.amavisd.core import get_valid_addresses_from_email
 
 SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
@@ -130,6 +131,8 @@ def apply_throttle(conn,
                    is_sender_throttling=True):
     possible_addrs = get_valid_addresses_from_email(user)
     possible_addrs.append(client_address)
+
+    sql_user = sqlquote(user)
 
     if is_ipv4(client_address):
         possible_addrs += wildcard_ipv4(client_address)
@@ -174,6 +177,10 @@ def apply_throttle(conn,
     # print detailed throttle setting
     throttle_info = ''
 
+    # sql where statements used to track throttle.
+    # (tid = tid AND account = `user`)
+    tracking_sql_where = set()
+
     for rcd in throttle_records:
         (_id, _account, _priority, _period, _max_msgs, _max_quota, _msg_size) = rcd
 
@@ -187,12 +194,13 @@ def apply_throttle(conn,
                                      'period': _period,
                                      'tid': _id,
                                      'account': _account,
-                                     'track_key': [_account],
+                                     'track_key': [],
                                      'expired': False,
                                      'cur_msgs': 0,
                                      'cur_quota': 0,
                                      'init_time': 0}
             t_setting_keys[(_id, _account)] = 'msg_size'
+            tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'msg_size=%(value)d (bytes)/id=%(tid)d/account=%(account)s' % t_setting['msg_size']
 
         if continue_check_max_msgs and _max_msgs >= 0:
@@ -201,12 +209,13 @@ def apply_throttle(conn,
                                      'period': _period,
                                      'tid': _id,
                                      'account': _account,
-                                     'track_key': [_account],
+                                     'track_key': [],
                                      'expired': False,
                                      'cur_msgs': 0,
                                      'cur_quota': 0,
                                      'init_time': 0}
             t_setting_keys[(_id, _account)] = 'max_msgs'
+            tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'max_msgs=%(value)d/id=%(tid)d/account=%(account)s; ' % t_setting['max_msgs']
 
         if continue_check_max_quota and _max_quota >= 0:
@@ -215,31 +224,29 @@ def apply_throttle(conn,
                                       'period': _period,
                                       'tid': _id,
                                       'account': _account,
-                                      'track_key': [_account],
+                                      'track_key': [],
                                       'expired': False,
                                       'cur_msgs': 0,
                                       'cur_quota': 0,
                                       'init_time': 0}
             t_setting_keys[(_id, _account)] = 'max_quota'
+            tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'max_quota=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_setting['max_quota']
 
     if not t_setting:
         logging.debug('No valid %s throttle setting.' % throttle_type)
         return SMTP_ACTIONS['default']
 
-    # If it's not per-user, per-IP, per-network throttle (e.g. `@domain.com`),
-    # we should also create/update throttle tracking for this user.
-    #
-    # (tid = tid AND account = track_key)
-    sql_where = set()
-    for (t_name, v) in t_setting.items():
-        sql_where.add('(tid = %d AND account=%s)' % (v['tid'], sqlquote(v['account'])))
+    # Update track_key.
+    for (t_name, v) in t_setting:
+        t_account = v['account']
+        addr_type = is_valid_amavisd_address(t_account)
 
-        t_account = t_setting[t_name]['account']
-        if not (t_account == user or is_strict_ip(t_account) or wildcard_ipv4(t_account)):
-            t_setting[t_name]['track_key'].append(user)
-            t_setting_keys[(v['tid'], user)] = t_name
-            sql_where.add('(tid=%d AND account=%s)' % (v['tid'], sqlquote(user)))
+        if addr_type in ['ip', 'wildcard_ip', 'wildcard_addr']:
+            # Track based on IP, wildcard IP, wildcard address
+            v['track_key'].append(t_account)
+        else:
+            v['track_key'].append(user)
 
     # Get throttle tracking data.
     # Construct SQL query WHERE statement
@@ -247,7 +254,7 @@ def apply_throttle(conn,
         SELECT id, tid, account, cur_msgs, cur_quota, init_time, last_time
           FROM throttle_tracking
          WHERE %s
-         """ % ' OR '.join(sql_where)
+         """ % ' OR '.join(tracking_sql_where)
 
     logging.debug('[SQL] Query throttle tracking data:\n%s' % sql)
     qr = conn.execute(sql)

@@ -2,37 +2,6 @@ import logging
 from libs import utils
 
 
-def is_valid_amavisd_address(addr):
-    # Valid address format:
-    #   - email: single address. e.g. user@domain.ltd
-    #   - domain: @domain.ltd
-    #   - subdomain: entire domain and all sub-domains. e.g. @.domain.ltd
-    #   - catch-all: catch all address. @.
-    if addr.startswith(r'@.'):
-        if addr == r'@.':
-            # catch all
-            return 'catchall'
-        else:
-            # sub-domains
-            domain = addr.split(r'@.', 1)[-1]
-            if utils.is_domain(domain):
-                return 'subdomain'
-    elif addr.startswith(r'@'):
-        # entire domain
-        domain = addr.split(r'@', 1)[-1]
-        if utils.is_domain(domain):
-            return 'domain'
-    elif utils.is_email(addr):
-        # single email address
-        return 'email'
-    elif utils.is_wildcard_addr(addr):
-        return 'wildcard_addr'
-    elif utils.is_strict_ip(addr):
-        return 'ip'
-
-    return False
-
-
 def get_valid_addresses_from_email(email):
     # Return list valid Amavisd senders/recipients from an email address
     # - Sample user: user@sub2.sub1.com.cn
@@ -69,7 +38,7 @@ def get_applicable_policy(db_cursor,
     logging.debug('Getting applicable policies')
     account = str(account).lower()
 
-    if is_valid_amavisd_address(account) != 'email':
+    if utils.is_valid_amavisd_address(account) != 'email':
         # Postfix should use full email address as recipient.
         logging.debug('Policy account is not an email address.')
         return (True, {})
