@@ -49,7 +49,7 @@ CREATE TABLE throttle (
     max_quota   MEDIUMINT(8)            NOT NULL DEFAULT -1, -- Number of current (received) messages.
 
     PRIMARY KEY (id),
-    UNIQUE INDEX account (account)
+    UNIQUE INDEX account_kind (account, kind)
 ) ENGINE=InnoDB;
 
 -- *) how to track per-user throttle:

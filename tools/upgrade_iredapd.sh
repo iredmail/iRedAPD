@@ -2,11 +2,6 @@
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Upgrade iRedAPD from old release.
 
-# TODO
-#
-# * Create `iredapd` database.
-# * add `iredapd_*` in `settings.py`
-
 # USAGE:
 #
 #   * Download the latest iRedAPD from iRedMail web site.
@@ -249,6 +244,16 @@ if ! grep '^amavisd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
         add_missing_parameter 'amavisd_db_user' 'amavisd'
         add_missing_parameter 'amavisd_db_password' 'password'
     fi
+fi
+
+# iRedAPD related settings.
+if ! grep '^iredapd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
+    # Add sample setting.
+    add_missing_parameter 'iredapd_db_server' '127.0.0.1'
+    add_missing_parameter 'iredapd_db_port' '3306'
+    add_missing_parameter 'iredapd_db_name' 'iredapd'
+    add_missing_parameter 'iredapd_db_user' 'iredapd'
+    add_missing_parameter 'iredapd_db_password' 'password'
 fi
 
 # replace old parameter names: sql_[XX] -> vmail_db_[XX]
