@@ -8,8 +8,8 @@ CREATE TABLE throttle (
     -- inbound: recipient throttling
     kind        VARCHAR(10)             NOT NULL DEFAULT 'outbound',
 
-    priority    SMALLINT                NOT NULL DEFAULT 0,
-    period      SMALLINT                NOT NULL DEFAULT 0, -- Peroid, in seconds.
+    priority    BIGINT                NOT NULL DEFAULT 0,
+    period      BIGINT                NOT NULL DEFAULT 0, -- Peroid, in seconds.
 
     -- throttle settings.
     --  * set value to `-1` to force check setting with lower priority
