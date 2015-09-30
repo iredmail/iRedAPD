@@ -143,8 +143,6 @@ def apply_throttle(conn,
         throttle_type = 'recipient'
         throttle_kind = 'inbound'
 
-    logging.debug('Possible addresses:\n%s' % str(possible_addrs))
-
     sql = """
         SELECT id, account, priority, period, max_msgs, max_quota, msg_size
           FROM throttle
@@ -167,6 +165,7 @@ def apply_throttle(conn,
 
     # construct the throttle setting
     t_settings = {}
+    t_setting_ids = {}
     t_setting_keys = {}
 
     # Inherit throttle settings with lower priority.
@@ -188,39 +187,11 @@ def apply_throttle(conn,
         if not _period:
             continue
 
+        t_setting_ids[_id] = _account
+
         if continue_check_msg_size and _msg_size >= 0:
             continue_check_msg_size = False
             t_settings['msg_size'] = {'value': _msg_size,
-                                     'period': _period,
-                                     'tid': _id,
-                                     'account': _account,
-                                     'track_key': [],
-                                     'expired': False,
-                                     'cur_msgs': 0,
-                                     'cur_quota': 0,
-                                     'init_time': 0}
-            t_setting_keys[(_id, _account)] = 'msg_size'
-            tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
-            throttle_info += 'msg_size=%(value)d (bytes)/id=%(tid)d/account=%(account)s' % t_settings['msg_size']
-
-        if continue_check_max_msgs and _max_msgs >= 0:
-            continue_check_max_msgs = False
-            t_settings['max_msgs'] = {'value': _max_msgs,
-                                     'period': _period,
-                                     'tid': _id,
-                                     'account': _account,
-                                     'track_key': [],
-                                     'expired': False,
-                                     'cur_msgs': 0,
-                                     'cur_quota': 0,
-                                     'init_time': 0}
-            t_setting_keys[(_id, _account)] = 'max_msgs'
-            tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
-            throttle_info += 'max_msgs=%(value)d/id=%(tid)d/account=%(account)s; ' % t_settings['max_msgs']
-
-        if continue_check_max_quota and _max_quota >= 0:
-            continue_check_max_quota = False
-            t_settings['max_quota'] = {'value': _max_quota,
                                       'period': _period,
                                       'tid': _id,
                                       'account': _account,
@@ -229,6 +200,36 @@ def apply_throttle(conn,
                                       'cur_msgs': 0,
                                       'cur_quota': 0,
                                       'init_time': 0}
+            t_setting_keys[(_id, _account)] = 'msg_size'
+            tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
+            throttle_info += 'msg_size=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['msg_size']
+
+        if continue_check_max_msgs and _max_msgs >= 0:
+            continue_check_max_msgs = False
+            t_settings['max_msgs'] = {'value': _max_msgs,
+                                      'period': _period,
+                                      'tid': _id,
+                                      'account': _account,
+                                      'track_key': [],
+                                      'expired': False,
+                                      'cur_msgs': 0,
+                                      'cur_quota': 0,
+                                      'init_time': 0}
+            t_setting_keys[(_id, _account)] = 'max_msgs'
+            tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
+            throttle_info += 'max_msgs=%(value)d/id=%(tid)d/account=%(account)s; ' % t_settings['max_msgs']
+
+        if continue_check_max_quota and _max_quota >= 0:
+            continue_check_max_quota = False
+            t_settings['max_quota'] = {'value': _max_quota,
+                                       'period': _period,
+                                       'tid': _id,
+                                       'account': _account,
+                                       'track_key': [],
+                                       'expired': False,
+                                       'cur_msgs': 0,
+                                       'cur_quota': 0,
+                                       'init_time': 0}
             t_setting_keys[(_id, _account)] = 'max_quota'
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'max_quota=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['max_quota']
@@ -236,6 +237,8 @@ def apply_throttle(conn,
     if not t_settings:
         logging.debug('No valid %s throttle setting.' % throttle_type)
         return SMTP_ACTIONS['default']
+    else:
+        logging.debug('%s throttle setting: %s' % (throttle_type, throttle_info))
 
     # Update track_key.
     for (_, v) in t_settings.items():
@@ -274,12 +277,15 @@ def apply_throttle(conn,
             _init_time = now
 
         # Get special throttle setting name: msg_size, max_msgs, max_quota
-        t_name = t_setting_keys.get((_tid, _account))
+        t_setting_account = t_setting_ids[_tid]
+        t_name = t_setting_keys.get((_tid, t_setting_account))
         if t_name in t_settings:
             t_settings[t_name]['cur_msgs'] = _cur_msgs
             t_settings[t_name]['cur_quota'] = _cur_quota
             t_settings[t_name]['init_time'] = _init_time
             t_settings[t_name]['last_time'] = _last_time
+
+    logging.debug('Tracking IDs: %s' % str(tracking_ids))
 
     # Apply throttle setting on different protocol_state:
     #
@@ -293,6 +299,7 @@ def apply_throttle(conn,
         max_msgs_cur_msgs = t_settings['max_msgs']['cur_msgs']
 
         if max_msgs_period and now > (max_msgs_init_time + max_msgs_period):
+            logging.debug('Period of max_msgs expired, reset.')
             t_settings['max_msgs']['expired'] = True
             max_msgs_cur_msgs = 0
 
@@ -301,12 +308,15 @@ def apply_throttle(conn,
     # Note: Don't update any tracking data in 'RCPT' state, because
     # current mail may be rejected by other plugins in 'END-OF-MESSAGE'
     # state or other restrictions in Postfix.
-    if protocol_state == 'RCPT' and 'max_msgs' in t_settings:
-        max_msgs = t_settings['max_msgs']['value']
+    if protocol_state == 'RCPT':
+        if 'max_msgs' in t_settings:
+            max_msgs = t_settings['max_msgs']['value']
 
-        if max_msgs_cur_msgs >= max_msgs > 0:
-            logging.info('Exceeds %s throttle for max_msgs, current: %d. (%s)' % (throttle_type, max_msgs_cur_msgs, throttle_info))
-            return SMTP_ACTIONS['reject_exceed_max_msgs']
+            if max_msgs_cur_msgs >= max_msgs > 0:
+                logging.info('Exceeds %s throttle for max_msgs, current: %d. (%s)' % (throttle_type, max_msgs_cur_msgs, throttle_info))
+                return SMTP_ACTIONS['reject_exceed_max_msgs']
+            else:
+                logging.debug('Not exceed %s throttle for max_msgs (%d/%d)' % (throttle_type, max_msgs_cur_msgs, max_msgs))
 
     elif protocol_state == 'END-OF-MESSAGE':
         # Check `msg_size`
@@ -317,23 +327,28 @@ def apply_throttle(conn,
             if size > msg_size > 0:
                 logging.info('Exceeds %s throttle for msg_size, current: %d (bytes). (%s)' % (throttle_type, size, throttle_info))
                 return SMTP_ACTIONS['reject_exceed_msg_size']
+            else:
+                logging.debug('Not exceed %s throttle for msg_size (%d/%d)' % (throttle_type, size, msg_size))
 
         # Check `max_quota`
         if 'max_quota' in t_settings:
             max_quota = t_settings['max_quota']['value']
-            period = t_settings['max_quota']['period']
+            max_quota_period = t_settings['max_quota']['period']
 
             cur_quota = t_settings['max_quota']['cur_quota']
-            init_time = t_settings['max_quota']['init_time']
+            max_quota_init_time = t_settings['max_quota']['init_time']
 
-            if now > (init_time + period):
+            if max_quota_period and now > (max_quota_init_time + max_quota_period):
                 # tracking record expired
+                logging.debug('Period of max_quota expired, reset.')
                 t_settings['max_quota']['expired'] = True
                 cur_quota = 0
 
             if cur_quota > max_quota > 0:
                 logging.info('Exceeds %s throttle for max_quota, current: %d. (%s)' % (throttle_type, cur_quota, throttle_info))
                 return SMTP_ACTIONS['reject_exceed_max_quota']
+            else:
+                logging.debug('Not exceed %s throttle for max_quota (%d/%d)' % (throttle_type, cur_quota, max_quota))
 
         # Update tracking record.
         #
