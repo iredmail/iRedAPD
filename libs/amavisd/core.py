@@ -1,4 +1,4 @@
-import logging
+from libs.logger import logger
 from libs import utils
 
 
@@ -35,12 +35,12 @@ def get_applicable_policy(db_cursor,
                           account,
                           policy_columns=['policy_name', 'message_size_limit'],
                           **kwargs):
-    logging.debug('Getting applicable policies')
+    logger.debug('Getting applicable policies')
     account = str(account).lower()
 
     if utils.is_valid_amavisd_address(account) != 'email':
         # Postfix should use full email address as recipient.
-        logging.debug('Policy account is not an email address.')
+        logger.debug('Policy account is not an email address.')
         return (True, {})
 
     sql_valid_rcpts = """'%s', '%s', '%s', '%s'""" % (
@@ -49,7 +49,7 @@ def get_applicable_policy(db_cursor,
         '@.' + kwargs['recipient_domain'],  # sub-domain
         '@.')                               # catch-all
 
-    logging.debug('Valid policy accounts for recipient %s: %s' % (account, sql_valid_rcpts))
+    logger.debug('Valid policy accounts for recipient %s: %s' % (account, sql_valid_rcpts))
     try:
         sql = """SELECT %s
                  FROM users, policy
@@ -58,7 +58,7 @@ def get_applicable_policy(db_cursor,
                     AND (users.email IN (%s))
                  ORDER BY users.priority DESC
                  """ % (','.join(policy_columns), sql_valid_rcpts)
-        logging.debug(sql)
+        logger.debug(sql)
 
         qr = db_cursor.execute(sql)
         records = qr.fetchmany(4)
@@ -68,5 +68,5 @@ def get_applicable_policy(db_cursor,
         else:
             return (True, {})
     except Exception, e:
-        logging.debug('Error while quering Amavisd policy (%s): %s' % (account, str(e)))
+        logger.debug('Error while quering Amavisd policy (%s): %s' % (account, str(e)))
         return (False, str(e))

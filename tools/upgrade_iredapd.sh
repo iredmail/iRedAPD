@@ -18,6 +18,8 @@ export SYS_ROOT_USER='root'
 export SYS_ROOT_GROUP='root'
 export IREDAPD_DAEMON_USER='iredapd'
 export IREDAPD_DAEMON_GROUP='iredapd'
+export IREDAPD_LOG_DIR='/var/log/iredapd'
+export IREDAPD_LOG_FILE="${IREDAPD_LOG_DIR}/iredapd.log"
 
 # Check OS to detect some necessary info.
 export KERNEL_NAME="$(uname -s | tr '[a-z]' '[A-Z]')"
@@ -213,7 +215,9 @@ rm -f ${IREDAPD_ROOT_DIR}
 echo "* Creating symbol link ${IREDAPD_ROOT_DIR} to ${NEW_IREDAPD_ROOT_DIR}"
 cd /opt && ln -s ${name_new_version} iredapd
 
+#-----------------------------
 # Always copy init rc script.
+#
 echo "* Copy new SysV init script."
 if [ X"${DISTRO}" == X'RHEL' ]; then
     cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.rhel ${DIR_RC_SCRIPTS}/iredapd
@@ -262,11 +266,40 @@ if grep '^sql_server' ${IREDAPD_CONF_PY} &>/dev/null; then
     perl -pi -e 's#^(sql_)#vmail_db_#g' ${IREDAPD_CONF_PY}
 fi
 
+#------------------------------
+# Remove old plugins
+#
 echo "* Remove deprecated plugins."
 rm -f ${IREDAPD_ROOT_DIR}/plugins/ldap_amavisd_block_blacklisted_senders.py &>/dev/null
 rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/ldap_recipient_restrictions.py &>/dev/null
 rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/sql_user_restrictions.py &>/dev/null
 rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/amavisd_message_size_limit.py &>/dev/null
+
+#------------------------------
+# Log rotate
+#
+# Create directory to store log files.
+if [ ! -d ${IREDAPD_LOG_DIR} ]; then
+    echo "* Create directory to store log files: ${IREDAPD_LOG_DIR}."
+    mkdir -p ${IREDAPD_LOG_DIR} 2>/dev/null
+fi
+
+# Move old log files to log directory.
+[ -f /var/log/iredapd.log ] && mv /var/log/iredapd.log* ${IREDAPD_LOG_DIR}
+
+# Always set correct owner and permission, so that we can rotate the log files.
+chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${IREDAPD_LOG_DIR}
+chmod -R 0700 ${IREDAPD_LOG_DIR}
+
+# Always reset log file.
+perl -pi -e 's#^(log_file).*#${1} = $ENV{IREDAPD_LOG_FILE}#' ${IREDADMIN_CONF_PY}
+
+# Remove old logrotate config file.
+# Linux
+[ -f /etc/logrotate.d/iredapd ] && rm -f /etc/logrotate.d/iredapd
+# FreeBSD & OpenBSD
+[ -f /etc/newsyslog.conf ] && perl -pi -e 's|^(/var/log/iredapd.log.)|#${1}|' /etc/newsyslog.conf
+
 
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then

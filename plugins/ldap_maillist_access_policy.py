@@ -2,7 +2,7 @@
 # Purpose: Restrict who can send email to mail list.
 # Note: Access policy is defined in libs/__init__.py.
 
-import logging
+from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.ldaplib import conn_utils
 
@@ -24,7 +24,7 @@ def restriction(**kwargs):
     policy = recipient_ldif.get('accessPolicy', ['public'])[0].lower()
 
     # Log access policy and description
-    logging.debug('Access policy of mailing list (%s): %s' % (recipient, policy))
+    logger.debug('Access policy of mailing list (%s): %s' % (recipient, policy))
     if policy == 'public':
         return SMTP_ACTIONS['default'] + ' (Access policy: public, no restriction)'
 
@@ -49,9 +49,9 @@ def restriction(**kwargs):
                 dn, entries = qr[0]
                 recipient_alias_domains = entries.get('domainName', []) + entries.get('domainAliasName', [])
         except Exception, e:
-            logging.error('Error while fetching alias domains of recipient domain %s: %s' % (recipient_domain, str(e)))
+            logger.error('Error while fetching alias domains of recipient domain %s: %s' % (recipient_domain, str(e)))
 
-        logging.debug('Recipient domain and alias domains: %s' % ','.join(recipient_alias_domains))
+        logger.debug('Recipient domain and alias domains: %s' % ','.join(recipient_alias_domains))
 
     # Verify access policy
     if policy == "domain":
@@ -75,7 +75,7 @@ def restriction(**kwargs):
                or '*@' + sender_domain in allowed_senders:
                 return SMTP_ACTIONS['default'] + '  (Allowed explicitly)'
 
-            logging.debug('Sender is not explicitly allowed, query user aliases and alias domains.')
+            logger.debug('Sender is not explicitly allowed, query user aliases and alias domains.')
 
         # Remove '*@domain.com'
         qr_allowed_senders = [s for s in allowed_senders if not s.startswith('*@')]
@@ -97,7 +97,7 @@ def restriction(**kwargs):
                 all_possible_sender_domains += ['.' + '.'.join(domain_parts)]
                 domain_parts.pop(0)
 
-            logging.debug('Possible sender domains: %s' % ', '.join(all_possible_sender_domains))
+            logger.debug('Possible sender domains: %s' % ', '.join(all_possible_sender_domains))
             if set(all_possible_sender_domains) & set(allowedSenders):
                 return SMTP_ACTIONS['default'] + ' (Sender domain or its sub-domain is allowed)'
 

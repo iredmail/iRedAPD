@@ -1,3 +1,25 @@
+# Rotate log file based on file size or time: size, time.
+LOGROTATE_TYPE = 'size'
+
+# Save how many copies of rotated log files. Default is 10.
+LOGROTATE_COPIES = 10
+
+# Rotate when log file reaches specified file size. Default is 100MB (104857600)
+# Used when rotate type is 'size'.
+LOGROTATE_SIZE = 104857600
+
+# Rotate interval. Reference:
+# https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler
+# Used when rotate type is 'time'.
+# Samples:
+#   - 30 minutes: 30-M
+#   - 1 hour: 1-H
+#   - 1 day: 1-D
+#   - every Sunday: 1-W6.   (W0=Monday, W6=Sunday)
+#   - every midnight: 1-midnight
+#   - every 3 midnight: 3-midnight
+LOGROTATE_INTERVAL = '3-midnight'
+
 # Priority for third-party plugins, or override pre-defined priorities in
 # libs/__init__.py.
 #

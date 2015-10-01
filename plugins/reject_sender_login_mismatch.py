@@ -72,7 +72,7 @@
 #
 # *) Restart iRedAPD service.
 
-import logging
+from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_trusted_client
 import settings
@@ -102,7 +102,7 @@ def restriction(**kwargs):
     conn = kwargs['conn_vmail']
 
     if not sasl_username:
-        logging.debug('Not an authenticated sender (no sasl_username).')
+        logger.debug('Not an authenticated sender (no sasl_username).')
 
         # Bypass localhost.
         # NOTE: if sender sent email through SOGo, smtp session may not
@@ -120,7 +120,7 @@ def restriction(**kwargs):
             sender_is_forged = False
             if sender_domain == recipient_domain:
                 # domain is hosted locally, sender must login first.
-                logging.debug('Sender is forged address (sender domain == recipient domain).')
+                logger.debug('Sender is forged address (sender domain == recipient domain).')
                 sender_is_forged = True
             else:
                 # Check whether sender domain is hosted on localhost
@@ -134,56 +134,56 @@ def restriction(**kwargs):
                                        filter_domains,
                                        ['dn'])
                     if qr:
-                        logging.debug('Sender is forged address (sender domain is hosted locally).')
+                        logger.debug('Sender is forged address (sender domain is hosted locally).')
                         sender_is_forged = True
 
                 elif settings.backend in ['mysql', 'pgsql']:
                     sql = """SELECT alias_domain FROM alias_domain
                              WHERE alias_domain='%s' OR target_domain='%s'
                              LIMIT 1""" % (sender_domain, sender_domain)
-                    logging.debug('[SQL] query alias domains: \n%s' % sql)
+                    logger.debug('[SQL] query alias domains: \n%s' % sql)
 
                     qr = conn.execute(sql)
                     sql_record = qr.fetchone()
-                    logging.debug('SQL query result: %s' % str(sql_record))
+                    logger.debug('SQL query result: %s' % str(sql_record))
 
                     if sql_record:
-                        logging.debug('Sender is forged address (sender domain is hosted locally).')
+                        logger.debug('Sender is forged address (sender domain is hosted locally).')
                         sender_is_forged = True
 
             if sender_is_forged:
                 return SMTP_ACTIONS['reject'] + ' not logged in'
             else:
-                logging.debug('Sender domain is not hosted locally.')
+                logger.debug('Sender domain is not hosted locally.')
                 return SMTP_ACTIONS['default']
 
-    logging.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
+    logger.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
 
     if sender == sasl_username:
-        logging.debug('SKIP: sender = sasl username.')
+        logger.debug('SKIP: sender = sasl username.')
         return SMTP_ACTIONS['default']
     else:
         if not (allowed_senders or is_strict or allow_list_member):
-            logging.debug('No allowed senders in config file.')
+            logger.debug('No allowed senders in config file.')
             return reject
 
     (sasl_username_user, _) = sasl_username.split('@', 1)
     (sender_name, sender_domain) = sender.split('@', 1)
 
     if allowed_senders:
-        logging.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
+        logger.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
         if sasl_username in allowed_senders or sasl_username_domain in allowed_senders:
             return SMTP_ACTIONS['default']
         else:
-            logging.debug('Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
+            logger.debug('Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
 
     # Check alias domains and user alias addresses
     if is_strict or allow_list_member:
         if is_strict:
-            logging.debug('Apply strict restriction (ALLOWED_LOGIN_MISMATCH_STRICTLY=True).')
+            logger.debug('Apply strict restriction (ALLOWED_LOGIN_MISMATCH_STRICTLY=True).')
 
         if allow_list_member:
-            logging.debug('Apply list/alias member restriction (ALLOWED_LOGIN_MISMATCH_LIST_MEMBER=True).')
+            logger.debug('Apply list/alias member restriction (ALLOWED_LOGIN_MISMATCH_LIST_MEMBER=True).')
 
         if settings.backend == 'ldap':
             filter_user_alias = '(&(objectClass=mailUser)(mail=%s)(shadowAddress=%s))' % (sasl_username, sender)
@@ -211,10 +211,10 @@ def restriction(**kwargs):
             )
             (dn, entry) = qr
             if dn:
-                logging.debug(success_msg)
+                logger.debug(success_msg)
                 return SMTP_ACTIONS['default']
             else:
-                logging.debug('Sender is either an user alias address or list/alias member.')
+                logger.debug('Sender is either an user alias address or list/alias member.')
                 return reject
 
         elif settings.backend in ['mysql', 'pgsql']:
@@ -223,21 +223,21 @@ def restriction(**kwargs):
                 sql = """SELECT alias_domain FROM alias_domain
                          WHERE alias_domain='%s' AND target_domain='%s'
                          LIMIT 1""" % (sender_domain, sasl_username_domain)
-                logging.debug('[SQL] query alias domains: \n%s' % sql)
+                logger.debug('[SQL] query alias domains: \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
-                logging.debug('SQL query result: %s' % str(sql_record))
+                logger.debug('SQL query result: %s' % str(sql_record))
 
                 if not sql_record:
-                    logging.debug('No alias domain found.')
+                    logger.debug('No alias domain found.')
                 else:
-                    logging.debug('Sender domain %s is alias domain of %s.' % (sender_domain, sasl_username_domain))
+                    logger.debug('Sender domain %s is alias domain of %s.' % (sender_domain, sasl_username_domain))
                     # sender_domain is one of alias domains
                     if sender_name != sasl_username_user:
-                        logging.debug('Sender is not an user alias address.')
+                        logger.debug('Sender is not an user alias address.')
                     else:
-                        logging.debug('Sender is an alias address of sasl username.')
+                        logger.debug('Sender is an alias address of sasl username.')
                         return SMTP_ACTIONS['default']
 
             if allow_list_member:
@@ -245,18 +245,18 @@ def restriction(**kwargs):
                 sql = """SELECT goto FROM alias
                          WHERE address='%s'
                          LIMIT 1""" % (sender)
-                logging.debug('[SQL] query members of alias account (sender): \n%s' % sql)
+                logger.debug('[SQL] query members of alias account (sender): \n%s' % sql)
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
-                logging.debug('SQL query result: %s' % str(sql_record))
+                logger.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
                     members = sql_record[0].split(',')
                     if sasl_username in members:
-                        logging.debug('SASL username (%s) is a member of mail alias (%s).' % (sasl_username, sender))
+                        logger.debug('SASL username (%s) is a member of mail alias (%s).' % (sasl_username, sender))
                         return SMTP_ACTIONS['default']
                 else:
-                    logging.debug('No such mail alias account.')
+                    logger.debug('No such mail alias account.')
 
     return reject

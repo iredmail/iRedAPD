@@ -9,7 +9,7 @@
 #   - moderatorsOnly:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
-import logging
+from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import MAILLIST_POLICY_PUBLIC
 from libs import MAILLIST_POLICY_DOMAIN
@@ -31,7 +31,7 @@ def is_allowed_alias_domain_user(sender,
 
         matched_senders = set(policy_senders) & set(restricted_members)
         if matched_senders:
-            logging.debug('Matched alias domain user: %s' % str(matched_senders))
+            logger.debug('Matched alias domain user: %s' % str(matched_senders))
             return True
 
     return False
@@ -53,11 +53,11 @@ def restriction(**kwargs):
                 AND active=1
             LIMIT 1
     ''' % (recipient)
-    logging.debug('[SQL] query access policy: \n%s' % sql)
+    logger.debug('[SQL] query access policy: \n%s' % sql)
 
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
-    logging.debug('SQL query result: %s' % str(sql_record))
+    logger.debug('SQL query result: %s' % str(sql_record))
 
     # Recipient account doesn't exist.
     if not sql_record:
@@ -68,7 +68,7 @@ def restriction(**kwargs):
         policy = 'public'
 
     # Log access policy and description
-    logging.debug('Access policy: %s' % policy)
+    logger.debug('Access policy: %s' % policy)
 
     if policy == MAILLIST_POLICY_PUBLIC:
         return SMTP_ACTIONS['default']
@@ -76,8 +76,8 @@ def restriction(**kwargs):
     members = [str(v.lower()) for v in str(sql_record[1]).split(',')]
     moderators = [str(v.lower()) for v in str(sql_record[2]).split(',')]
 
-    logging.debug('members: %s' % ', '.join(members))
-    logging.debug('moderators: %s' % ', '.join(moderators))
+    logger.debug('members: %s' % ', '.join(members))
+    logger.debug('moderators: %s' % ', '.join(moderators))
 
     rcpt_alias_domains = []
     # Get alias domains.
@@ -85,16 +85,16 @@ def restriction(**kwargs):
              FROM alias_domain
              WHERE alias_domain='%s' AND target_domain='%s'
              LIMIT 1""" % (sender_domain, recipient_domain)
-    logging.debug('[SQL] query alias domains: \n%s' % sql)
+    logger.debug('[SQL] query alias domains: \n%s' % sql)
 
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
 
     if sql_record:
-        logging.debug('SQL query result: %s' % str(sql_record))
+        logger.debug('SQL query result: %s' % str(sql_record))
         rcpt_alias_domains.append(str(sql_record[0]))
     else:
-        logging.debug('No alias domain.')
+        logger.debug('No alias domain.')
 
     if policy == MAILLIST_POLICY_DOMAIN:
         # Bypass all users under the same domain.
@@ -110,7 +110,7 @@ def restriction(**kwargs):
         if rcpt_alias_domains:
             for d in rcpt_alias_domains:
                 if sender_domain == d or sender.endswith('.' + d):
-                    logging.debug('Matched: %s or .%s' % (d, d))
+                    logger.debug('Matched: %s or .%s' % (d, d))
                     return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']

@@ -15,7 +15,7 @@
 #
 # *) Restart iRedAPD service.
 
-import logging
+from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_trusted_client
 
@@ -29,7 +29,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     if sasl_username and not sender:
-        logging.debug('Spam (authenticated as %s but sender is null).' % sasl_username)
+        logger.debug('Spam (authenticated as %s but sender is null).' % sasl_username)
         return SMTP_ACTIONS['reject']
 
     return SMTP_ACTIONS['default']

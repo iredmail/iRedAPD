@@ -6,12 +6,12 @@ import pwd
 import socket
 import asyncore
 import asynchat
-import logging
 
 
 # iRedAPD setting file and modules
 import settings
 from libs import __version__, PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
+from libs.logger import logger
 from libs.utils import get_db_conn, log_smtp_session
 
 # Plugin directory.
@@ -56,14 +56,14 @@ class PolicyChannel(asynchat.async_chat):
         if self.buffer:
             # Format received data
             line = self.buffer.pop()
-            logging.debug("smtp session: " + line)
+            logger.debug("smtp session: " + line)
             if '=' in line:
                 (key, value) = line.split('=', 1)
 
                 if key in SMTP_SESSION_ATTRIBUTES:
                     self.smtp_session_data[key] = value
                 else:
-                    logging.debug('Drop invalid smtp session attribute/value: %s' % line)
+                    logger.debug('Drop invalid smtp session attribute/value: %s' % line)
 
         elif self.smtp_session_data:
             # Log smtp session in SQL db.
@@ -87,22 +87,22 @@ class PolicyChannel(asynchat.async_chat):
                     action = SMTP_ACTIONS['default']
             except Exception, e:
                 action = SMTP_ACTIONS['default']
-                logging.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
+                logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
             # Log final action.
-            logging.info('[%s] %s, %s -> %s, %s' % (self.smtp_session_data['client_address'],
+            logger.info('[%s] %s, %s -> %s, %s' % (self.smtp_session_data['client_address'],
                                                     self.smtp_session_data['protocol_state'],
                                                     self.smtp_session_data['sender'],
                                                     self.smtp_session_data['recipient'],
                                                     action))
 
             self.push('action=' + action + '\n')
-            logging.debug("Session ended")
+            logger.debug("Session ended")
         else:
             action = SMTP_ACTIONS['default']
-            logging.debug("replying: " + action)
+            logger.debug("replying: " + action)
             self.push('action=' + action + '\n')
-            logging.debug("Session ended")
+            logger.debug("Session ended")
 
 
 class DaemonSocket(asyncore.dispatcher):
@@ -116,7 +116,7 @@ class DaemonSocket(asyncore.dispatcher):
         ip, port = local_addr
         self.db_conns = db_conns
 
-        logging.info("Starting iRedAPD (version: %s, backend: %s), listening on %s:%d." % (__version__, settings.backend, ip, port))
+        logger.info("Starting iRedAPD (version: %s, backend: %s), listening on %s:%d." % (__version__, settings.backend, ip, port))
 
         # Load plugins.
         self.loaded_plugins = []
@@ -135,7 +135,7 @@ class DaemonSocket(asyncore.dispatcher):
         for p in settings.plugins:
             plugin_file = os.path.join(plugin_dir, p + '.py')
             if not os.path.isfile(plugin_file):
-                logging.info('Plugin %s (%s) does not exist.' % (p, plugin_file))
+                logger.info('Plugin %s (%s) does not exist.' % (p, plugin_file))
                 continue
 
             po[_plugin_priorities[p]] = p
@@ -145,9 +145,9 @@ class DaemonSocket(asyncore.dispatcher):
         for plugin in ordered_plugins:
             try:
                 self.loaded_plugins.append(__import__(plugin))
-                logging.info('Loading plugin: %s' % plugin)
+                logger.info('Loading plugin: %s' % plugin)
             except Exception, e:
-                logging.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
+                logger.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
 
         self.sender_search_attrlist = []
         self.recipient_search_attrlist = []
@@ -167,7 +167,7 @@ class DaemonSocket(asyncore.dispatcher):
 
     def handle_accept(self):
         sock, remote_addr = self.accept()
-        logging.debug("Connect from %s, port %s." % remote_addr)
+        logger.debug("Connect from %s, port %s." % remote_addr)
 
         PolicyChannel(sock,
                       db_conns=self.db_conns,
@@ -179,15 +179,6 @@ class DaemonSocket(asyncore.dispatcher):
 def main():
     # Set umask.
     os.umask(0077)
-
-    # Get log level.
-    log_level = getattr(logging, str(settings.log_level).upper())
-
-    # Initialize file based logger.
-    logging.basicConfig(level=log_level,
-                        format='%(asctime)s %(levelname)s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S',
-                        filename=settings.log_file)
 
     if settings.backend in ['mysql', 'pgsql']:
         conn_vmail = get_db_conn('vmail')
@@ -213,17 +204,23 @@ def main():
     try:
         daemon.daemonize(noClose=True)
     except Exception, e:
-        logging.error('Error in daemon.daemonize: ' + str(e))
-
-    # Run as a low privileged user.
-    uid = pwd.getpwnam(settings.run_as_user)[2]
+        logger.error('Error in daemon.daemonize: ' + str(e))
 
     # Write pid number into pid file.
     f = open(settings.pid_file, 'w')
     f.write(str(os.getpid()))
     f.close()
 
-    # Set uid.
+    # Get uid/gid of daemon user.
+    p = pwd.getpwnam(settings.run_as_user)
+    uid = p.pw_uid
+    gid = p.pw_gid
+
+    # Set log file owner
+    os.chown(settings.log_file, uid, gid)
+    os.chmod(settings.log_file, 0o700)
+
+    # Run as daemon user
     os.setuid(uid)
 
     # Starting loop.
@@ -241,7 +238,7 @@ def main():
     except KeyboardInterrupt:
         pass
     except Exception, e:
-        logging.error('Error in asyncore.loop: ' + str(e))
+        logger.error('Error in asyncore.loop: ' + str(e))
 
 if __name__ == '__main__':
     main()

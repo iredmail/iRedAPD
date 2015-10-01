@@ -42,7 +42,7 @@
 #                   set 'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
 #                   /opt/iredapd/settings.py.
 
-import logging
+from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_ipv4, wildcard_ipv4, sqllist
 from libs.amavisd import core as amavisd_lib
@@ -56,7 +56,7 @@ def query_external_addresses(conn, addresses):
 
     # Get 'mailaddr.id' of external addresses, ordered by priority
     sql = """SELECT id, email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(addresses)
-    logging.debug('[SQL] Query external addresses: \n%s' % sql)
+    logger.debug('[SQL] Query external addresses: \n%s' % sql)
 
     qr = conn.execute(sql)
     qr_addresses = qr.fetchall()
@@ -66,10 +66,10 @@ def query_external_addresses(conn, addresses):
 
     if not ids:
         # don't waste time if we don't even have senders stored in sql db.
-        logging.debug('No record found in SQL database.')
+        logger.debug('No record found in SQL database.')
         return []
     else:
-        logging.debug('Addresses (in `mailaddr`): %s' % str(qr_addresses))
+        logger.debug('Addresses (in `mailaddr`): %s' % str(qr_addresses))
         return ids
 
 
@@ -78,7 +78,7 @@ def query_local_addresses(conn, addresses):
 
     # Get 'users.id' of local addresses
     sql = """SELECT id, email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(addresses)
-    logging.debug('[SQL] Query local addresses: \n%s' % sql)
+    logger.debug('[SQL] Query local addresses: \n%s' % sql)
 
     qr = conn.execute(sql)
     qr_addresses = qr.fetchall()
@@ -88,32 +88,32 @@ def query_local_addresses(conn, addresses):
 
     if not ids:
         # don't waste time if we don't have any per-recipient wblist.
-        logging.debug('No record found in SQL database.')
+        logger.debug('No record found in SQL database.')
         return []
     else:
-        logging.debug('Local addresses (in `users`): %s' % str(qr_addresses))
+        logger.debug('Local addresses (in `users`): %s' % str(qr_addresses))
         return ids
 
 
 def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
-        logging.debug('No valid sender id or recipient id.')
+        logger.debug('No valid sender id or recipient id.')
         return SMTP_ACTIONS['default']
 
     # Get wblist
     sql = """SELECT rid, sid, wb FROM wblist
              WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
-    logging.debug('[SQL] Query inbound wblist (in `wblist`): \n%s' % sql)
+    logger.debug('[SQL] Query inbound wblist (in `wblist`): \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
     if not wblists:
         # no wblist
-        logging.debug('No wblist found.')
+        logger.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logging.debug('Found wblist: %s' % str(wblists))
+    logger.debug('Found wblist: %s' % str(wblists))
 
     # Check sender addresses
     # rids/recipients are orded by priority
@@ -124,7 +124,7 @@ def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
                 return SMTP_ACTIONS['accept'] + " wblist=(%d, %d, 'W')" % (rid, sid)
 
             if (rid, sid, 'B') in wblists:
-                logging.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
+                logger.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
                 return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']
@@ -133,27 +133,27 @@ def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
 def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
-        logging.debug('No valid sender id or recipient id.')
+        logger.debug('No valid sender id or recipient id.')
         return SMTP_ACTIONS['default']
 
     # Bypass outgoing emails.
     if settings.WBLIST_BYPASS_OUTGOING_EMAIL:
-        logging.debug('Bypass outgoing email as defined in WBLIST_BYPASS_OUTGOING_EMAIL.')
+        logger.debug('Bypass outgoing email as defined in WBLIST_BYPASS_OUTGOING_EMAIL.')
         return SMTP_ACTIONS['default']
 
     # Get wblist
     sql = """SELECT rid, sid, wb
              FROM outbound_wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
-    logging.debug('[SQL] Get outbound wblist: \n%s' % sql)
+    logger.debug('[SQL] Get outbound wblist: \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
     if not wblists:
         # no wblist
-        logging.debug('No wblist found.')
+        logger.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logging.debug('Found wblist: %s' % str(wblists))
+    logger.debug('Found wblist: %s' % str(wblists))
 
     # Check sender addresses
     # rids/recipients are orded by priority
@@ -164,7 +164,7 @@ def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
                 return SMTP_ACTIONS['accept'] + " wblist=(%d, %d, 'W')" % (rid, sid)
 
             if (rid, sid, 'B') in wblists:
-                logging.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
+                logger.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
                 return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']
@@ -174,7 +174,7 @@ def restriction(**kwargs):
     conn = kwargs['conn_amavisd']
 
     if not conn:
-        logging.error('Error, no valid Amavisd database connection.')
+        logger.error('Error, no valid Amavisd database connection.')
         return SMTP_ACTIONS['default']
 
     # Get sender
@@ -186,7 +186,7 @@ def restriction(**kwargs):
     recipient = kwargs['recipient']
 
     if sender == recipient:
-        logging.debug('Sender is same as recipient, bypassed.')
+        logger.debug('Sender is same as recipient, bypassed.')
         return SMTP_ACTIONS['default']
 
     valid_senders = amavisd_lib.get_valid_addresses_from_email(sender)
@@ -207,11 +207,11 @@ def restriction(**kwargs):
         if is_ipv4(client_address):
             valid_senders += wildcard_ipv4(client_address)
 
-    logging.debug('Possible policy senders: %s' % str(valid_senders))
-    logging.debug('Possible policy recipients: %s' % str(valid_recipients))
+    logger.debug('Possible policy senders: %s' % str(valid_senders))
+    logger.debug('Possible policy recipients: %s' % str(valid_recipients))
 
     if kwargs['sasl_username']:
-        logging.debug('Apply wblist for outbound message.')
+        logger.debug('Apply wblist for outbound message.')
 
         id_of_ext_addresses = []
         id_of_local_addresses = query_local_addresses(conn, valid_senders)
@@ -222,7 +222,7 @@ def restriction(**kwargs):
                                         sender_ids=id_of_local_addresses,
                                         recipient_ids=id_of_ext_addresses)
     else:
-        logging.debug('Apply wblist for inbound message.')
+        logger.debug('Apply wblist for inbound message.')
 
         id_of_ext_addresses = []
         id_of_local_addresses = query_local_addresses(conn, valid_recipients)

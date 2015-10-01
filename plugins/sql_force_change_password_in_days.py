@@ -24,7 +24,7 @@
 #     message.
 
 import datetime
-import logging
+from libs.logger import logger
 import settings
 from libs import SMTP_ACTIONS
 
@@ -45,30 +45,30 @@ def restriction(**kwargs):
 
     # Get `mailbox.passwordlastchange`.
     sql = """SELECT passwordlastchange FROM mailbox WHERE username='%s' LIMIT 1""" % sasl_username
-    logging.debug('SQL to get mailbox.passwordlastchange of sender (%s): %s' % (sasl_username, sql))
+    logger.debug('SQL to get mailbox.passwordlastchange of sender (%s): %s' % (sasl_username, sql))
 
     conn = kwargs['conn_vmail']
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
-    logging.debug('Returned SQL Record: %s' % str(sql_record))
+    logger.debug('Returned SQL Record: %s' % str(sql_record))
 
     if sql_record:
         pwchdate = sql_record[0]
-        logging.debug('Date of password last change: %s' % str(pwchdate))
+        logger.debug('Date of password last change: %s' % str(pwchdate))
         if not pwchdate:
             pwchdate = datetime.datetime(1970, 1, 1, 0, 0, 0)
     else:
-        logging.debug('No SQL record of this user.')
+        logger.debug('No SQL record of this user.')
         return SMTP_ACTIONS['default']
 
     # Compare date to make sure it's less than CHANGE_PASSWORD_DAYS.
     shift = datetime.datetime.now() - pwchdate
     if shift < datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS):
-        logging.debug("Current password was changed in %d days." % settings.CHANGE_PASSWORD_DAYS)
+        logger.debug("Current password was changed in %d days." % settings.CHANGE_PASSWORD_DAYS)
         return SMTP_ACTIONS['default']
     else:
-        logging.debug("Sender didn't change password in last %d days." % settings.CHANGE_PASSWORD_DAYS)
+        logger.debug("Sender didn't change password in last %d days." % settings.CHANGE_PASSWORD_DAYS)
         return reject_action
 
-    logging.debug("Sender will be forced to change password on %s." % str(pwchdate + datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS)))
+    logger.debug("Sender will be forced to change password on %s." % str(pwchdate + datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS)))
     return SMTP_ACTIONS['default']

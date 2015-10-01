@@ -1,5 +1,5 @@
 import re
-import logging
+from libs.logger import logger
 import time
 from web import sqlquote
 from sqlalchemy import create_engine
@@ -41,12 +41,12 @@ for ip in settings.MYNETWORKS:
 def apply_plugin(plugin, **kwargs):
     action = SMTP_ACTIONS['default']
 
-    logging.debug('--> Apply plugin: %s' % plugin.__name__)
+    logger.debug('--> Apply plugin: %s' % plugin.__name__)
     try:
         action = plugin.restriction(**kwargs)
-        logging.debug('<-- Result: %s' % action)
+        logger.debug('<-- Result: %s' % action)
     except Exception, e:
-        logging.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, str(e)))
+        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, str(e)))
 
     return action
 
@@ -243,15 +243,15 @@ def wildcard_ipv4(ip):
 
 def is_trusted_client(client_address):
     if client_address in ['127.0.0.1', '::1']:
-        logging.debug('Local sender.')
+        logger.debug('Local sender.')
         return True
 
     if client_address in TRUSTED_IPS:
-        logging.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
+        logger.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
         return True
 
     if set(wildcard_ipv4(client_address)) & set(TRUSTED_IPS):
-        logging.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
+        logger.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
         return True
 
     ip_addr = ipaddress.ip_address(unicode(client_address))
@@ -288,10 +288,10 @@ def log_action(conn, action, sender, recipient, ip, plugin_name):
                           VALUES ('iredapd', '%s', '%s', NOW(), 'iredapd')
         """ % (ip, comment)
 
-        logging.debug(sql)
+        logger.debug(sql)
         conn.execute(sql)
     except Exception, e:
-        logging.error(e)
+        logger.error(e)
 
 
 def log_smtp_session(conn, smtp_session_data):
@@ -338,11 +338,11 @@ def log_smtp_session(conn, smtp_session_data):
         """ % record
 
         try:
-            logging.debug('[SQL] Log smtp session: ' + sql_new)
+            logger.debug('[SQL] Log smtp session: ' + sql_new)
             conn.execute(sql_new)
-            logging.debug('Logged smtp session.')
+            logger.debug('Logged smtp session.')
         except Exception, e:
-            logging.debug('Logging failed: %s' % str(e))
+            logger.debug('Logging failed: %s' % str(e))
 
     elif smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
         # Update attributes has non-empty value in END-OF-MESSAGE
@@ -355,10 +355,10 @@ def log_smtp_session(conn, smtp_session_data):
         """ % record
 
         try:
-            logging.debug('[SQL] Update smtp session: ' + sql_update)
+            logger.debug('[SQL] Update smtp session: ' + sql_update)
             conn.execute(sql_update)
         except Exception, e:
-            logging.debug('Update failed: %s' % str(e))
+            logger.debug('Update failed: %s' % str(e))
 
     return True
 

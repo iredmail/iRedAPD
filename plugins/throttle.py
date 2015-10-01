@@ -108,7 +108,7 @@
 #       throttle settings.
 
 import time
-import logging
+from libs.logger import logger
 from web import sqlquote
 import settings
 from libs import SMTP_ACTIONS
@@ -150,14 +150,14 @@ def apply_throttle(conn,
          ORDER BY priority DESC
          """ % (sqlquote(throttle_kind), sqllist(possible_addrs))
 
-    logging.debug('[SQL] Query throttle setting:\n%s' % sql)
+    logger.debug('[SQL] Query throttle setting:\n%s' % sql)
     qr = conn.execute(sql)
     throttle_records = qr.fetchall()
 
-    logging.debug('[SQL] Query result:\n%s' % str(throttle_records))
+    logger.debug('[SQL] Query result:\n%s' % str(throttle_records))
 
     if not throttle_records:
-        logging.debug('No %s throttle setting.' % throttle_type)
+        logger.debug('No %s throttle setting.' % throttle_type)
         return SMTP_ACTIONS['default']
 
     # Time of now. used for init_time and last_time.
@@ -235,10 +235,10 @@ def apply_throttle(conn,
             throttle_info += 'max_quota=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['max_quota']
 
     if not t_settings:
-        logging.debug('No valid %s throttle setting.' % throttle_type)
+        logger.debug('No valid %s throttle setting.' % throttle_type)
         return SMTP_ACTIONS['default']
     else:
-        logging.debug('%s throttle setting: %s' % (throttle_type, throttle_info))
+        logger.debug('%s throttle setting: %s' % (throttle_type, throttle_info))
 
     # Update track_key.
     for (_, v) in t_settings.items():
@@ -259,11 +259,11 @@ def apply_throttle(conn,
          WHERE %s
          """ % ' OR '.join(tracking_sql_where)
 
-    logging.debug('[SQL] Query throttle tracking data:\n%s' % sql)
+    logger.debug('[SQL] Query throttle tracking data:\n%s' % sql)
     qr = conn.execute(sql)
     tracking_records = qr.fetchall()
 
-    logging.debug('[SQL] Query result:\n%s' % str(tracking_records))
+    logger.debug('[SQL] Query result:\n%s' % str(tracking_records))
 
     # `throttle.id`. syntax: {(tid, account): id}
     tracking_ids = {}
@@ -285,7 +285,7 @@ def apply_throttle(conn,
             t_settings[t_name]['init_time'] = _init_time
             t_settings[t_name]['last_time'] = _last_time
 
-    logging.debug('Tracking IDs: %s' % str(tracking_ids))
+    logger.debug('Tracking IDs: %s' % str(tracking_ids))
 
     # Apply throttle setting on different protocol_state:
     #
@@ -299,7 +299,7 @@ def apply_throttle(conn,
         max_msgs_cur_msgs = t_settings['max_msgs']['cur_msgs']
 
         if max_msgs_period and now > (max_msgs_init_time + max_msgs_period):
-            logging.debug('Period of max_msgs expired, reset.')
+            logger.debug('Period of max_msgs expired, reset.')
             t_settings['max_msgs']['expired'] = True
             max_msgs_cur_msgs = 0
 
@@ -313,10 +313,10 @@ def apply_throttle(conn,
             max_msgs = t_settings['max_msgs']['value']
 
             if max_msgs_cur_msgs >= max_msgs > 0:
-                logging.info('Exceeds %s throttle for max_msgs, current: %d. (%s)' % (throttle_type, max_msgs_cur_msgs, throttle_info))
+                logger.info('Exceeds %s throttle for max_msgs, current: %d. (%s)' % (throttle_type, max_msgs_cur_msgs, throttle_info))
                 return SMTP_ACTIONS['reject_exceed_max_msgs']
             else:
-                logging.debug('Not exceed %s throttle for max_msgs (%d/%d)' % (throttle_type, max_msgs_cur_msgs, max_msgs))
+                logger.debug('Not exceed %s throttle for max_msgs (%d/%d)' % (throttle_type, max_msgs_cur_msgs, max_msgs))
 
     elif protocol_state == 'END-OF-MESSAGE':
         # Check `msg_size`
@@ -325,10 +325,10 @@ def apply_throttle(conn,
 
             # Check message size
             if size > msg_size > 0:
-                logging.info('Exceeds %s throttle for msg_size, current: %d (bytes). (%s)' % (throttle_type, size, throttle_info))
+                logger.info('Exceeds %s throttle for msg_size, current: %d (bytes). (%s)' % (throttle_type, size, throttle_info))
                 return SMTP_ACTIONS['reject_exceed_msg_size']
             else:
-                logging.debug('Not exceed %s throttle for msg_size (%d/%d)' % (throttle_type, size, msg_size))
+                logger.debug('Not exceed %s throttle for msg_size (%d/%d)' % (throttle_type, size, msg_size))
 
         # Check `max_quota`
         if 'max_quota' in t_settings:
@@ -340,15 +340,15 @@ def apply_throttle(conn,
 
             if max_quota_period and now > (max_quota_init_time + max_quota_period):
                 # tracking record expired
-                logging.debug('Period of max_quota expired, reset.')
+                logger.debug('Period of max_quota expired, reset.')
                 t_settings['max_quota']['expired'] = True
                 cur_quota = 0
 
             if cur_quota > max_quota > 0:
-                logging.info('Exceeds %s throttle for max_quota, current: %d. (%s)' % (throttle_type, cur_quota, throttle_info))
+                logger.info('Exceeds %s throttle for max_quota, current: %d. (%s)' % (throttle_type, cur_quota, throttle_info))
                 return SMTP_ACTIONS['reject_exceed_max_quota']
             else:
-                logging.debug('Not exceed %s throttle for max_quota (%d/%d)' % (throttle_type, cur_quota, max_quota))
+                logger.debug('Not exceed %s throttle for max_quota (%d/%d)' % (throttle_type, cur_quota, max_quota))
 
         # Update tracking record.
         #
@@ -396,7 +396,7 @@ def apply_throttle(conn,
                           VALUES """
             sql += ','.join(set(sql_inserts))
 
-            logging.debug('[SQL] Insert new tracking record(s):\n%s' % sql)
+            logger.debug('[SQL] Insert new tracking record(s):\n%s' % sql)
             conn.execute(sql)
 
         if sql_updates:
@@ -409,10 +409,10 @@ def apply_throttle(conn,
                      """ % (','.join(v), k)
                 sql += _sql
 
-            logging.debug('[SQL] Update tracking record(s):\n%s' % sql)
+            logger.debug('[SQL] Update tracking record(s):\n%s' % sql)
             conn.execute(sql)
 
-    logging.debug('[OK] Passed all %s throttle settings.' % throttle_type)
+    logger.debug('[OK] Passed all %s throttle settings.' % throttle_type)
     return SMTP_ACTIONS['default']
 
 
@@ -434,14 +434,14 @@ def restriction(**kwargs):
         size = 0
 
     if sender_domain == recipient_domain:
-        logging.debug('Sender domain (@%s) is same as recipient domain, skip throttling.' % sender_domain)
+        logger.debug('Sender domain (@%s) is same as recipient domain, skip throttling.' % sender_domain)
         return SMTP_ACTIONS['default']
 
     if settings.THROTTLE_BYPASS_MYNETWORKS:
         if is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
-    logging.debug('Check sender throttling.')
+    logger.debug('Check sender throttling.')
     action = apply_throttle(conn=conn,
                             user=sender,
                             client_address=client_address,
@@ -452,7 +452,7 @@ def restriction(**kwargs):
     if not action.startswith('DUNNO'):
         return action
 
-    logging.debug('Check recipient throttling.')
+    logger.debug('Check recipient throttling.')
     action = apply_throttle(conn=conn,
                             user=recipient,
                             client_address=client_address,

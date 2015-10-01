@@ -1,6 +1,6 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
-import logging
+from libs.logger import logger
 from libs import SMTP_ACTIONS, utils
 from libs.utils import log_action
 
@@ -67,7 +67,7 @@ class Modeler:
                 target_smtp_protocol_state = ['RCPT']
 
             if not smtp_protocol_state in target_smtp_protocol_state:
-                logging.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
+                logger.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
 
             action = utils.apply_plugin(plugin, **plugin_kwargs)

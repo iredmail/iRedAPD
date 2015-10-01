@@ -2,7 +2,7 @@
 
 import sys
 import ldap
-import logging
+from libs.logger import logger
 import settings
 from libs import SMTP_ACTIONS, utils
 from libs.ldaplib import conn_utils
@@ -14,20 +14,20 @@ class Modeler:
         # Initialize ldap connection.
         try:
             self.conn = ldap.initialize(settings.ldap_uri)
-            logging.debug('LDAP connection initialied success.')
+            logger.debug('LDAP connection initialied success.')
         except Exception, e:
-            logging.error('LDAP initialized failed: %s.' % str(e))
+            logger.error('LDAP initialized failed: %s.' % str(e))
             sys.exit()
 
         # Bind to ldap server.
         try:
             self.conn.bind_s(settings.ldap_binddn, settings.ldap_bindpw)
-            logging.debug('LDAP bind success.')
+            logger.debug('LDAP bind success.')
         except ldap.INVALID_CREDENTIALS:
-            logging.error('LDAP bind failed: incorrect bind dn or password.')
+            logger.error('LDAP bind failed: incorrect bind dn or password.')
             sys.exit()
         except Exception, e:
-            logging.error('LDAP bind failed: %s.' % str(e))
+            logger.error('LDAP bind failed: %s.' % str(e))
             sys.exit()
 
         self.conns = conns
@@ -36,9 +36,9 @@ class Modeler:
     def __del__(self):
         try:
             self.conn.unbind_s()
-            logging.debug('Close LDAP connection.')
+            logger.debug('Close LDAP connection.')
         except Exception, e:
-            logging.error('Error while closing connection: %s' % str(e))
+            logger.error('Error while closing connection: %s' % str(e))
 
     def handle_data(self,
                     smtp_session_data,
@@ -102,7 +102,7 @@ class Modeler:
                 target_smtp_protocol_state = ['RCPT']
 
             if not smtp_protocol_state in target_smtp_protocol_state:
-                logging.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
+                logger.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
 
             # Get LDIF data of sender if required

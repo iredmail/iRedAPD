@@ -1,7 +1,7 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose: greylisting.
 
-import logging
+from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import sqllist, is_trusted_client
 import settings
@@ -23,16 +23,16 @@ def should_be_greylisted(conn, recipient, senders):
     sql = """SELECT sender, enable, priority FROM greylisting
              WHERE sender IN %s
              ORDER BY priority DESC""" % sqllist(senders)
-    logging.debug('[SQL] query policy senders: \n%s' % sql)
+    logger.debug('[SQL] query policy senders: \n%s' % sql)
 
     qr = conn.execute(sql)
     records = qr.fetchall()
-    logging.debug('[SQL] query result: %s' % str(records))
+    logger.debug('[SQL] query result: %s' % str(records))
 
     for r in records:
         (_, enable, _) = r
         if enable == 1:
-            logging.debug('Greylisting should be applied due to SQL record: %s' % str(r))
+            logger.debug('Greylisting should be applied due to SQL record: %s' % str(r))
             return True
 
     return False
@@ -41,7 +41,7 @@ def should_be_greylisted(conn, recipient, senders):
 def restriction(**kwargs):
     # Bypass outgoing emails.
     if kwargs['smtp_session_data']['sasl_username']:
-        logging.debug('Found SASL username, bypass greylisting.')
+        logger.debug('Found SASL username, bypass greylisting.')
         return SMTP_ACTIONS['default']
 
     client_address = kwargs['client_address']
@@ -51,7 +51,7 @@ def restriction(**kwargs):
     conn = kwargs['conn_iredapd']
 
     if not conn:
-        logging.error('No valid database connection, fallback to default action.')
+        logger.error('No valid database connection, fallback to default action.')
         return SMTP_ACTIONS['default']
 
     sender = kwargs['sender']

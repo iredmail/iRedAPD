@@ -24,7 +24,7 @@
 #     message.
 
 import datetime
-import logging
+from libs.logger import logger
 import settings
 from libs import SMTP_ACTIONS
 
@@ -68,11 +68,11 @@ def restriction(**kwargs):
     # Days since password last change
     passed_days = days_of_today - shadow_last_change
 
-    logging.debug('Days of password last change: %d (today: %d)' % (shadow_last_change, days_of_today))
+    logger.debug('Days of password last change: %d (today: %d)' % (shadow_last_change, days_of_today))
 
     if passed_days >= settings.CHANGE_PASSWORD_DAYS:
-        logging.debug("Password last change date is older than %d days." % settings.CHANGE_PASSWORD_DAYS)
+        logger.debug("Password last change date is older than %d days." % settings.CHANGE_PASSWORD_DAYS)
         return reject_action
 
-    logging.debug("Sender will be forced to change password in %d day(s)." % (settings.CHANGE_PASSWORD_DAYS - passed_days))
+    logger.debug("Sender will be forced to change password in %d day(s)." % (settings.CHANGE_PASSWORD_DAYS - passed_days))
     return SMTP_ACTIONS['default']
