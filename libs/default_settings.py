@@ -8,17 +8,26 @@ LOGROTATE_COPIES = 10
 # Used when rotate type is 'size'.
 LOGROTATE_SIZE = 104857600
 
-# Rotate interval. Reference:
+# Rotate interval. Used when rotate type is 'time'.
+# Reference:
 # https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler
-# Used when rotate type is 'time'.
-# Samples:
-#   - 30 minutes: 30-M
-#   - 1 hour: 1-H
-#   - 1 day: 1-D
-#   - every Sunday: 1-W6.   (W0=Monday, W6=Sunday)
-#   - every midnight: 1-midnight
-#   - every 3 midnight: 3-midnight
-LOGROTATE_INTERVAL = '3-midnight'
+#
+#   Value	Type of interval
+#   'S'         Seconds
+#   'M'         Minutes
+#   'H'         Hours
+#   'D'         Days
+#   'W0'-'W6'	Weekday (0=Monday)
+#   'midnight'	Roll over at midnight
+#
+# Format: [interval]-[type_of_internval]. Samples:
+#   - 30 minutes:       '30-M'
+#   - 1 hour:           '1-H'
+#   - 1 day:            '1-D'
+#   - every Sunday:     '1-W6'
+#   - every midnight:   '1-midnight'
+#   - every 3 midnight: '3-midnight'
+LOGROTATE_INTERVAL = 'W6'
 
 # Priority for third-party plugins, or override pre-defined priorities in
 # libs/__init__.py.

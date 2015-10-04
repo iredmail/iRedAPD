@@ -17,7 +17,13 @@ if settings.LOGROTATE_TYPE == 'size':
                                   backupCount=settings.LOGROTATE_COPIES)
 else:
     # settings.LOGROTATE_TYPE == 'time'
-    (when, interval) = settings.LOGROTATE_INTERVAL.split('-', 1)
+    (interval, when) = settings.LOGROTATE_INTERVAL.split('-', 1)
+
+    if interval.isdigit():
+        interval = int(interval)
+    else:
+        interval = 1
+
     handler = TimedRotatingFileHandler(filename=settings.log_file,
                                        when=when,
                                        interval=interval,
