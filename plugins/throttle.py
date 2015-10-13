@@ -369,6 +369,10 @@ def apply_throttle(conn,
                         sql_updates[tracking_id] = []
 
                     _sql = []
+
+                    # Store period, used while cleaning up old tracking records.
+                    _sql += ['period = %d' % v['period']]
+
                     _sql += ['last_time = %d' % now]
 
                     if v['expired']:

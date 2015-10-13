@@ -29,6 +29,9 @@ CREATE TABLE throttle_tracking (
     -- tracking account. e.g. user@domain, @domain, '@.'.
     account     VARCHAR(255)            NOT NULL DEFAULT '',    -- Sender or recipient
 
+    -- Used while cleaning up old tracking records
+    period      BIGINT                NOT NULL DEFAULT 0, -- Peroid, in seconds.
+
     -- Track accumulated msgs/quota since init tracking.
     cur_msgs    BIGINT   NOT NULL DEFAULT 0, -- Number of current messages.
     cur_quota   BIGINT        NOT NULL DEFAULT 0, -- Current accumulated message size in total, in bytes.
