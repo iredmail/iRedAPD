@@ -33,6 +33,8 @@ iRedAPD-1.7.0:
         - Drop invalid smtp session attributes.
 
     * Fixed issues:
+        * plugins/sql_access_policy.py: not check alias domain.
+          Thanks <mlocati _at_ gmail.com> for the report in forum.
         * plugins/sql_force_change_password_in_days.py: Not correctly compare
           password last change date.
         * Not correctly return value in libs/amavisd/core.py, function
