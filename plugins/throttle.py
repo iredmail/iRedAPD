@@ -72,13 +72,14 @@
 #   * max 100 messages (max_msgs)
 #   * max 4096000000 bytes (max_quota)
 #
-#  INSERT INTO throttle_sender (user, priority, period, msg_size, max_msgs, max_quota)
-#                       VALUES ('user@domain.com',
-#                               10,
-#                               360,
-#                               10240000,
-#                               100,
-#                               4096000000);
+#  INSERT INTO throttle (account, kind, priority, period, msg_size, max_msgs, max_quota)
+#                VALUES ('user@domain.com',
+#                        'outbound',
+#                        10,
+#                        360,
+#                        10240000,
+#                        100,
+#                        4096000000);
 #
 # Sample recipient throttle settings:
 #
@@ -88,13 +89,14 @@
 #   * max 100 messages (max_msgs)
 #   * max 4096000000 bytes (max_quota)
 #
-#  INSERT INTO throttle_rcpt (user, priority, period, msg_size, max_msgs, max_quota)
-#                     VALUES ('user@domain.com',
-#                             10,
-#                             360,
-#                             10240000,
-#                             100,
-#                             4096000000);
+#  INSERT INTO throttle (account, kind, priority, period, msg_size, max_msgs, max_quota)
+#                VALUES ('user@domain.com',
+#                        'inbound',
+#                        10,
+#                        360,
+#                        10240000,
+#                        100,
+#                        4096000000);
 #
 # ------------
 # Possible value for throttle setting: msg_size, max_msgs, max_quota.
