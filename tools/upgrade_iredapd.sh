@@ -25,12 +25,16 @@ export IREDAPD_LOG_FILE="${IREDAPD_LOG_DIR}/iredapd.log"
 export KERNEL_NAME="$(uname -s | tr '[a-z]' '[A-Z]')"
 export RC_SCRIPT_NAME='iredapd'
 
-if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
+# Path to some programs.
+export PYTHON_BIN='/usr/bin/python'
+
+if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     export DIR_RC_SCRIPTS='/etc/init.d'
     if [ -f /etc/redhat-release ]; then
         # RHEL/CentOS
         export DISTRO='RHEL'
         export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
+        export CRON_SPOOL_DIR='/var/spool/cron'
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
@@ -39,6 +43,7 @@ if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
         elif [ -f '/opt/www/iredadmin/settings.py' ]; then
             export IREDADMIN_CONF_PY='/opt/www/iredadmin/settings.py'
         fi
+        export CRON_SPOOL_DIR='/var/spool/cron/crontabs'
     elif [ -f /etc/debian_version ]; then
         # Debian
         export DISTRO='DEBIAN'
@@ -47,10 +52,12 @@ if [ X"${KERNEL_NAME}" == X"LINUX" ]; then
         elif [ -f '/opt/www/iredadmin/settings.py' ]; then
             export IREDADMIN_CONF_PY='/opt/www/iredadmin/settings.py'
         fi
+        export CRON_SPOOL_DIR='/var/spool/cron/crontabs'
     elif [ -f /etc/SuSE-release ]; then
         # openSUSE
         export DISTRO='SUSE'
         export IREDADMIN_CONF_PY='/srv/www/iredadmin/settings.py'
+        export CRON_SPOOL_DIR='/var/spool/cron'
     else
         echo "<<< ERROR >>> Cannot detect Linux distribution name. Exit."
         echo "Please contact support@iredmail.org to solve it."
@@ -61,11 +68,15 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export SYS_ROOT_GROUP='wheel'
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
+    export CRON_SPOOL_DIR='/var/cron/tabs'
+    export PYTHON_BIN='/usr/local/bin/python'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
     export SYS_ROOT_GROUP='wheel'
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
+    export CRON_SPOOL_DIR='/var/cron/tabs'
+    export PYTHON_BIN='/usr/local/bin/python'
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
@@ -233,6 +244,9 @@ systemctl daemon-reload &>/dev/null
 
 chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 
+#-----------------------------
+# Add missing parameters or rename old parameter names."
+#
 echo "* Add missing parameters or rename old parameter names."
 
 # Get Amavisd related settings from iRedAdmin config file.
@@ -300,7 +314,34 @@ perl -pi -e 's#^(log_file).*#${1} = $ENV{IREDAPD_LOG_FILE}#' ${IREDADMIN_CONF_PY
 # FreeBSD & OpenBSD
 [ -f /etc/newsyslog.conf ] && perl -pi -e 's|^(/var/log/iredapd.log.)|#${1}|' /etc/newsyslog.conf
 
+#------------------------------
+# Cron job.
+#
+CRON_FILE="${CRON_SPOOL_DIR}/${IREDAPD_DAEMON_USER}"
 
+add_iredapd_cron_job='NO'
+if [ -f ${CRON_FILE} ]; then
+    if ! grep 'tools/cleanup_db.py' ${CRON_FILE} &>/dev/null; then
+        # No cron file, add required cron jobs.
+        add_iredapd_cron_job='YES'
+    fi
+else
+    add_iredapd_cron_job='YES'
+fi
+
+# No cron file, add required cron jobs.
+if [ X"${add_iredapd_cron_job}" == X'YES' ]; then
+    [ -d ${CRON_SPOOL_DIR} ] || mkdir -p ${CRON_SPOOL_DIR}
+    cat > ${CRON_FILE} <<EOF
+# Clean up expired throttle tracking records.
+1   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/cleanup_db.py >/dev/null
+EOF
+fi
+
+
+#------------------------------
+# Post-upgrade, clean up.
+#
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     service ${RC_SCRIPT_NAME} restart
