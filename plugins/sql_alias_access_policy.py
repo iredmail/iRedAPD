@@ -64,9 +64,6 @@ def restriction(**kwargs):
     recipient = kwargs['recipient']
     recipient_domain = kwargs['recipient_domain']
 
-    # All alias domains of recipient domain
-    rcpt_alias_domains = []
-
     policy_record = get_access_policy_and_more(conn, recipient)
 
     # Recipient account doesn't exist.
@@ -112,7 +109,9 @@ def restriction(**kwargs):
     logger.debug('members: %s' % ', '.join(members))
     logger.debug('moderators: %s' % ', '.join(moderators))
 
+    # All alias domains of recipient domain
     rcpt_alias_domains = []
+
     # Get alias domains.
     sql = """SELECT alias_domain
                FROM alias_domain
