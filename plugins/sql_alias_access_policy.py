@@ -64,6 +64,9 @@ def restriction(**kwargs):
     recipient = kwargs['recipient']
     recipient_domain = kwargs['recipient_domain']
 
+    # used when recipient_domain is an alias domain
+    real_recipient_domain = recipient_domain
+
     policy_record = get_access_policy_and_more(conn, recipient)
 
     # Recipient account doesn't exist.
@@ -119,7 +122,7 @@ def restriction(**kwargs):
                     alias_domain='%s'
                     AND target_domain='%s'
               LIMIT 1
-              """ % (sender_domain, recipient_domain)
+              """ % (sender_domain, real_recipient_domain)
     logger.debug('[SQL] query alias domains: \n%s' % sql)
 
     qr = conn.execute(sql)
