@@ -390,9 +390,9 @@ def apply_throttle(conn,
 
                 else:
                     # no tracking record. insert new one.
-                    # (tid, account, cur_msgs, cur_quota, init_time, last_time)
+                    # (tid, account, cur_msgs, period, cur_quota, init_time, last_time)
                     if not (tid, k) in sql_inserts:
-                        _sql = '(%d, %s, 1, %d, %d, %d)' % (tid, sqlquote(k), size, now, now)
+                        _sql = '(%d, %s, 1, %d, %d, %d, %d)' % (tid, sqlquote(k), v['period'], size, now, now)
 
                         sql_inserts.append(_sql)
 
