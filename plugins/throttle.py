@@ -2,8 +2,8 @@
 # Purpose: Throttle based on amount of mails and total mail size sent over
 #          a given period of time, or size of single message.
 #
-# Note: To keep the database compact, you should set up a daily cron job to
-#       clean up old/inactive records.
+# Note: To keep the database compact, you should set up a daily cron job with
+#       'tools/cleanup_db.py' to clean up expired throttle tracking records.
 
 # Usage
 # -------------
