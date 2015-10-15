@@ -58,15 +58,26 @@
 #   *) catchall: 0,
 
 # ------------
-# Valid settings:
+# Valid throttle settings:
 #
 #   * msg_size: max size of single message
 #   * max_msgs: max number of sent messages
 #   * max_quota: max number of accumulated message size
 #
+# Valid values for throttle settings:
+#
+#  * XX (an integer number): explicit limit. e.g. 100. for example, set
+#       `max_msgs=100` means user can send/receive up to 100 messages.
+#  * 0: (explicit) unlimited.
+#  * -1: inherit setting which has lower priority. for example, set
+#       `msg_size=-1` for user `user@domain.com` will force iRedADP to check
+#       `msg_size` setting in per-domain (`@domain.com`) and/or global (`@.`)
+#       throttle settings.
+#
+# ------------
 # Sample sender throttle settings:
 #
-# *) Allow user `user@domain.com` to send in 6 minutes (period_sent=360):
+# *) Allow user `user@domain.com` to send in 6 minutes (period=360):
 #
 #   * max size of single message is 10240000 bytes (msg_size)
 #   * max 100 messages (max_msgs)
@@ -98,16 +109,7 @@
 #                        100,
 #                        4096000000);
 #
-# ------------
-# Possible value for throttle setting: msg_size, max_msgs, max_quota.
-#
-#  * XX (an integer number): explicit limit. e.g. 100. for example, set
-#       `max_msgs=100` means user can send/receive up to 100 messages.
-#  * 0:  unlimited.
-#  * -1: inherit setting which has lower priority. for example, set
-#       `msg_size=-1` for user `user@domain.com` will force iRedADP to check
-#       `msg_size` setting in per-domain (`@domain.com`) and/or global (`@.`)
-#       throttle settings.
+#-------------
 
 import time
 from libs.logger import logger
