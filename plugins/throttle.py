@@ -400,7 +400,7 @@ def apply_throttle(conn,
 
         if sql_inserts:
             sql = """INSERT INTO throttle_tracking
-                                 (tid, account, cur_msgs, cur_quota, init_time, last_time)
+                                 (tid, account, cur_msgs, period, cur_quota, init_time, last_time)
                           VALUES """
             sql += ','.join(set(sql_inserts))
 

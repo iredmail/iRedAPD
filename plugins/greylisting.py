@@ -13,16 +13,17 @@ action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_ME
 def should_be_greylisted(conn, recipient, senders):
     """Check if greylisting should be applied to specified senders.
 
-    conn - sql connection cursor
-    recipient - full email address of recipient
-    senders - list of senders we should check greylisting
+    conn -- sql connection cursor
+    recipient -- full email address of recipient
+    senders -- list of senders we should check greylisting
     """
     # TODO check specified enable time. e.g. 9PM-6AM. (global, per-domain, per-user)
     # TODO check greylisting history of this client
     # TODO check whitelists (not same as whitelists used by plugin `amavisd_wblist`.
-    sql = """SELECT sender, enable, priority FROM greylisting
-             WHERE sender IN %s
-             ORDER BY priority DESC""" % sqllist(senders)
+    sql = """SELECT sender, enable, priority
+               FROM greylisting
+              WHERE sender IN %s
+              ORDER BY priority DESC""" % sqllist(senders)
     logger.debug('[SQL] query policy senders: \n%s' % sql)
 
     qr = conn.execute(sql)
