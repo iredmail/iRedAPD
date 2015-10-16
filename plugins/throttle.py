@@ -45,6 +45,8 @@
 #   *) Sub-domain name (with a prefixed '@.'): @.domain.com
 #   *) IP address:  192.168.1.1
 #   *) IP network:  192.168.1.*
+#   *) Catch-all for email address: '@.' (note, the dot is required)
+#   *) Catch-all for IP address: '@ip'
 #
 # Priorities of different thorttle address (larger digital number has higher priority):
 #
@@ -54,8 +56,9 @@
 #                            # as wildcard sender. e.g. 'user@*`
 #   *) domain: 5,
 #   *) subdomain: 3,
-#   *) top_level_domain: 1,
-#   *) catchall: 0,
+#   *) top_level_domain: 2,
+#   *) catchall for IP address: 1
+#   *) catchall for email address: 0
 
 # ------------
 # Valid throttle settings:
@@ -133,7 +136,7 @@ def apply_throttle(conn,
                    protocol_state,
                    size,
                    is_sender_throttling=True):
-    possible_addrs = [client_address]
+    possible_addrs = [client_address, '@ip']
 
     if user:
         possible_addrs = get_valid_addresses_from_email(user)
@@ -251,10 +254,14 @@ def apply_throttle(conn,
         t_account = v['account']
         addr_type = is_valid_amavisd_address(t_account)
 
-        if addr_type in ['ip', 'wildcard_ip', 'wildcard_addr']:
-            # Track based on IP, wildcard IP, wildcard address
+        if addr_type in ['ip', 'catchall_ip']:
+            # Track based on IP address
+            v['track_key'].append(client_address)
+        elif addr_type in ['wildcard_ip', 'wildcard_addr']:
+            # Track based on wildcard IP or sender address
             v['track_key'].append(t_account)
         else:
+            # Track based on sender email address
             v['track_key'].append(user)
 
     # Get throttle tracking data.
