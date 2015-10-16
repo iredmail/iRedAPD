@@ -139,7 +139,7 @@ def apply_throttle(conn,
     possible_addrs = [client_address, '@ip']
 
     if user:
-        possible_addrs = get_valid_addresses_from_email(user)
+        possible_addrs += get_valid_addresses_from_email(user)
 
     sql_user = sqlquote(user)
 

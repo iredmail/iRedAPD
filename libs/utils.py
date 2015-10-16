@@ -151,9 +151,12 @@ def is_valid_amavisd_address(addr):
 
     elif addr.startswith(r'@'):
         # entire domain
-        domain = addr.split(r'@', 1)[-1]
-        if is_domain(domain):
-            return 'domain'
+        if addr == '@ip':
+            return 'catchall_ip'
+        else:
+            domain = addr.split(r'@', 1)[-1]
+            if is_domain(domain):
+                return 'domain'
 
     elif is_email(addr):
         # single email address
