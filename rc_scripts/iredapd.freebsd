@@ -36,7 +36,7 @@ start() {
         fi
     fi
 
-    echo "Starting ${name} ..."
+    echo "Starting ${name}."
     /usr/local/bin/python2 ${BINPATH}
     unset s
 }
@@ -47,7 +47,7 @@ stop() {
         s="$(check_status ${PID})"
 
         if [ X"$s" == X"running" ]; then
-            echo "Stopping ${name} ..."
+            echo "Stopping ${name}."
             kill -9 ${PID}
             if [ X"$?" == X"0" ]; then
                 rm -f ${pidfile} >/dev/null 2>&1
