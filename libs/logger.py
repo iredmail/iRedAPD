@@ -30,7 +30,10 @@ class CompressedRotatingFileHandler(RotatingFileHandler):
             # Issue 18940: A file may not have been created if delay is True.
             if os.path.exists(self.baseFilename):
                 os.rename(self.baseFilename, dfn)
-        if not self.delay:
+        try:
+            if not self.delay:
+                self.stream = self._open()
+        except:
             self.stream = self._open()
 
         # Compress rotated log file.
@@ -80,7 +83,11 @@ class CompressedTimedRotatingFileHandler(TimedRotatingFileHandler):
         if self.backupCount > 0:
             for s in self.getFilesToDelete():
                 os.remove(s)
-        if not self.delay:
+
+        try:
+            if not self.delay:
+                self.stream = self._open()
+        except:
             self.stream = self._open()
         newRolloverAt = self.computeRollover(currentTime)
         while newRolloverAt <= currentTime:
