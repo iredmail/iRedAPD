@@ -118,6 +118,15 @@ class DaemonSocket(asyncore.dispatcher):
 
         logger.info("Starting iRedAPD (version: %s, backend: %s), listening on %s:%d." % (__version__, settings.backend, ip, port))
 
+        if settings.LOGROTATE_TYPE == 'size':
+            logger.info("Log rotate type: %s (%d MB), backup copies: %d." % (settings.LOGROTATE_TYPE,
+                                                                             (settings.LOGROTATE_SIZE / 1024 / 1024),
+                                                                             settings.LOGROTATE_COPIES))
+        elif settings.LOGROTATE_TYPE == 'time':
+            logger.info("Log rotate type: time, interval: %s, backup copies: %d." % (settings.LOGROTATE_TYPE,
+                                                                                     settings.LOGROTATE_INTERVAL,
+                                                                                     settings.LOGROTATE_COPIES))
+
         # Load plugins.
         self.loaded_plugins = []
 
