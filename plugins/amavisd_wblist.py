@@ -55,7 +55,10 @@ def query_external_addresses(conn, addresses):
     '''Return list of `mailaddr.id` of external addresses.'''
 
     # Get 'mailaddr.id' of external addresses, ordered by priority
-    sql = """SELECT id, email FROM mailaddr WHERE email IN %s ORDER BY priority DESC""" % sqllist(addresses)
+    sql = """SELECT id, email
+               FROM mailaddr
+              WHERE email IN %s
+           ORDER BY priority DESC""" % sqllist(addresses)
     logger.debug('[SQL] Query external addresses: \n%s' % sql)
 
     qr = conn.execute(sql)
@@ -77,7 +80,10 @@ def query_local_addresses(conn, addresses):
     '''Return list of `users.id` of local addresses.'''
 
     # Get 'users.id' of local addresses
-    sql = """SELECT id, email FROM users WHERE email IN %s ORDER BY priority DESC""" % sqllist(addresses)
+    sql = """SELECT id, email
+               FROM users
+              WHERE email IN %s
+           ORDER BY priority DESC""" % sqllist(addresses)
     logger.debug('[SQL] Query local addresses: \n%s' % sql)
 
     qr = conn.execute(sql)
@@ -102,8 +108,9 @@ def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
         return SMTP_ACTIONS['default']
 
     # Get wblist
-    sql = """SELECT rid, sid, wb FROM wblist
-             WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
+    sql = """SELECT rid, sid, wb
+               FROM wblist
+              WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
     logger.debug('[SQL] Query inbound wblist (in `wblist`): \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
@@ -143,7 +150,8 @@ def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
 
     # Get wblist
     sql = """SELECT rid, sid, wb
-             FROM outbound_wblist WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
+               FROM outbound_wblist
+              WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
     logger.debug('[SQL] Get outbound wblist: \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()

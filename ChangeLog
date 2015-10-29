@@ -20,7 +20,7 @@ iRedAPD-1.7.0:
     * Improvements:
         - Auto rotate log files (under /var/log/iredapd/). Supports rotating
           based on file size or time interval (e.g. everyday, every week,
-          every 3 midnight).
+          every 3 midnight), rotated log file will be compressed with zip.
         - Allow to use IP network in MYNETWORKS. e.g. 192.168.0.0/24.
         - Allow plugins to work in multiple protocol states.
         - plugins/reject_sender_login_mismatch.py: able to not check forged

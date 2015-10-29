@@ -1,5 +1,6 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose: greylisting.
+# Reference: http://greylisting.org/
 
 from libs.logger import logger
 from libs import SMTP_ACTIONS
@@ -31,8 +32,8 @@ def should_be_greylisted(conn, recipient, senders):
     logger.debug('[SQL] query result: %s' % str(records))
 
     for r in records:
-        (_, enable, _) = r
-        if enable == 1:
+        (_, _enable, _) = r
+        if _enable == 1:
             logger.debug('Greylisting should be applied due to SQL record: %s' % str(r))
             return True
 
