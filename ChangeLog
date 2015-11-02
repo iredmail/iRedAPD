@@ -23,9 +23,11 @@ iRedAPD-1.7.0:
           every 3 midnight), rotated log file will be compressed with zip.
         - Allow to use IP network in MYNETWORKS. e.g. 192.168.0.0/24.
         - Allow plugins to work in multiple protocol states.
-        - plugins/reject_sender_login_mismatch.py: able to not check forged
-          sender which sent without smtp auth, or bypass specified forged
-          sender addresses.
+        - plugins/reject_sender_login_mismatch.py:
+            + able to allow certain user/domain to send email as sender
+              address under the same domain.
+            + able to not check forged sender which sent without smtp auth, or
+              bypass specified forged sender addresses.
         - plugins/amavisd_wblist.py: able to check white/blacklist for
           outbound message.
           Note: new SQL table `amavisd.outbound_wblist` is required.

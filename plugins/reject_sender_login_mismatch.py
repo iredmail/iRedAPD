@@ -36,7 +36,28 @@
 #   Settings applied on message sent by authenticated user:
 #
 #   1) List senders who are allowed to send email as different
-#      users in iRedAPD config file (/opt/iredapd/settings.py). Sample setting:
+#      users in iRedAPD config file (/opt/iredapd/settings.py).
+#      Valid sender format:
+#
+#       - full email address. e.g. `user@domain.ltd`.
+#
+#           Allow this sender to send email as ANY sender address.
+#
+#       - domain name. e.g. `domain.ltd`.
+#
+#           Allow all users under this domain to send email as ANY sender address.
+#
+#       - @ + domain name. e.g. `@domain.ltd`.
+#
+#           Allow all users under this domain to send email as sender address
+#           under the same domain.
+#
+#       - catch-all address: '@.'
+#
+#           All all users hosted on this server to send email as sender address
+#           under the same domain.
+#
+#      Sample setting:
 #
 #       ALLOWED_LOGIN_MISMATCH_SENDERS = ['domain.com', 'user2@here.com']
 #
@@ -175,8 +196,12 @@ def restriction(**kwargs):
 
     if allowed_senders:
         logger.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
-        if sasl_username in allowed_senders or sasl_username_domain in allowed_senders:
+        if (sasl_username in allowed_senders) or (sasl_username_domain in allowed_senders):
             return SMTP_ACTIONS['default']
+        elif ('@' + sasl_username_domain in allowed_senders) or ('@.' in allowed_senders):
+            # Restrict to send as users under SAME domain
+            if sasl_username_domain == sender_domain:
+                return SMTP_ACTIONS['default']
         else:
             logger.debug('Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
 
