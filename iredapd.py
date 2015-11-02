@@ -90,11 +90,20 @@ class PolicyChannel(asynchat.async_chat):
                 logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
             # Log final action.
-            logger.info('[%s] %s, %s -> %s, %s' % (self.smtp_session_data['client_address'],
-                                                    self.smtp_session_data['protocol_state'],
-                                                    self.smtp_session_data['sender'],
-                                                    self.smtp_session_data['recipient'],
-                                                    action))
+            if self.smtp_session_data['sasl_username']:
+                # log sasl username
+                logger.info('[%s] %s, %s (%s) -> %s, %s' % (self.smtp_session_data['client_address'],
+                                                            self.smtp_session_data['protocol_state'],
+                                                            self.smtp_session_data['sender'],
+                                                            self.smtp_session_data['sasl_username'],
+                                                            self.smtp_session_data['recipient'],
+                                                            action))
+            else:
+                logger.info('[%s] %s, %s -> %s, %s' % (self.smtp_session_data['client_address'],
+                                                       self.smtp_session_data['protocol_state'],
+                                                       self.smtp_session_data['sender'],
+                                                       self.smtp_session_data['recipient'],
+                                                       action))
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended")

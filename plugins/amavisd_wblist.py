@@ -152,7 +152,7 @@ def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
     sql = """SELECT rid, sid, wb
                FROM outbound_wblist
               WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
-    logger.debug('[SQL] Get outbound wblist: \n%s' % sql)
+    logger.debug('[SQL] Query outbound wblist: \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 

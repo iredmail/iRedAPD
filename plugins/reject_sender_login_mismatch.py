@@ -93,11 +93,17 @@ reject = 'REJECT Sender login mismatch'
 
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
+    sasl_username_user = sasl_username.split('@', 1)[0]
     sasl_username_domain = kwargs['sasl_username_domain']
+
     sender = kwargs['sender']
-    sender_domain = kwargs['sender_domain']
+    (sender_name, sender_domain) = sender.split('@', 1)
+
     recipient_domain = kwargs['recipient_domain']
     client_address = kwargs['client_address']
+
+    real_sasl_username = sasl_username
+    real_sender = sender
 
     conn = kwargs['conn_vmail']
 
@@ -167,9 +173,6 @@ def restriction(**kwargs):
             logger.debug('No allowed senders in config file.')
             return reject
 
-    (sasl_username_user, _) = sasl_username.split('@', 1)
-    (sender_name, sender_domain) = sender.split('@', 1)
-
     if allowed_senders:
         logger.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
         if sasl_username in allowed_senders or sasl_username_domain in allowed_senders:
@@ -232,7 +235,9 @@ def restriction(**kwargs):
                 if not sql_record:
                     logger.debug('No alias domain found.')
                 else:
-                    logger.debug('Sender domain %s is alias domain of %s.' % (sender_domain, sasl_username_domain))
+                    logger.debug('Sender domain %s is an alias domain of %s.' % (sender_domain, sasl_username_domain))
+                    real_sasl_username = sasl_username_user + '@' + sasl_username_domain
+                    real_sender = sender_name + '@' + sasl_username_domain
                     # sender_domain is one of alias domains
                     if sender_name != sasl_username_user:
                         logger.debug('Sender is not an user alias address.')
@@ -244,8 +249,8 @@ def restriction(**kwargs):
                 # Get alias members
                 sql = """SELECT goto FROM alias
                          WHERE address='%s'
-                         LIMIT 1""" % (sender)
-                logger.debug('[SQL] query members of alias account (sender): \n%s' % sql)
+                         LIMIT 1""" % (real_sender)
+                logger.debug('[SQL] query members of alias account (%s): \n%s' % (real_sender, sql))
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
@@ -253,7 +258,7 @@ def restriction(**kwargs):
 
                 if sql_record:
                     members = sql_record[0].split(',')
-                    if sasl_username in members:
+                    if (sasl_username in members) or (real_sasl_username in members):
                         logger.debug('SASL username (%s) is a member of mail alias (%s).' % (sasl_username, sender))
                         return SMTP_ACTIONS['default']
                 else:
