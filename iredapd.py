@@ -94,7 +94,7 @@ class PolicyChannel(asynchat.async_chat):
             if self.smtp_session_data['sasl_username']:
                 _log_sasl_username = self.smtp_session_data['sasl_username'] + ' => '
                 if self.smtp_session_data['sasl_username'] == self.smtp_session_data['sender']:
-                    _log_sasl_username = '<=> '
+                    _log_sasl_username = '=> '
 
             # Log final action
             logger.info('[%s] %s, %s%s -> %s, %s' % (self.smtp_session_data['client_address'],

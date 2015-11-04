@@ -165,9 +165,10 @@ def restriction(**kwargs):
                         sender_is_forged = True
 
                 elif settings.backend in ['mysql', 'pgsql']:
-                    sql = """SELECT alias_domain FROM alias_domain
-                             WHERE alias_domain='%s' OR target_domain='%s'
-                             LIMIT 1""" % (sender_domain, sender_domain)
+                    sql = """SELECT alias_domain
+                               FROM alias_domain
+                              WHERE alias_domain='%s' OR target_domain='%s'
+                              LIMIT 1""" % (sender_domain, sender_domain)
                     logger.debug('[SQL] query alias domains: \n%s' % sql)
 
                     qr = conn.execute(sql)
@@ -187,7 +188,7 @@ def restriction(**kwargs):
     logger.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
 
     if sender == sasl_username:
-        logger.debug('SKIP: sender = sasl username.')
+        logger.debug('SKIP: sender == sasl username.')
         return SMTP_ACTIONS['default']
     else:
         if not (allowed_senders or is_strict or allow_list_member):
@@ -248,9 +249,10 @@ def restriction(**kwargs):
         elif settings.backend in ['mysql', 'pgsql']:
             if is_strict:
                 # Get alias domains
-                sql = """SELECT alias_domain FROM alias_domain
-                         WHERE alias_domain='%s' AND target_domain='%s'
-                         LIMIT 1""" % (sender_domain, sasl_username_domain)
+                sql = """SELECT alias_domain
+                           FROM alias_domain
+                          WHERE alias_domain='%s' AND target_domain='%s'
+                          LIMIT 1""" % (sender_domain, sasl_username_domain)
                 logger.debug('[SQL] query alias domains: \n%s' % sql)
 
                 qr = conn.execute(sql)
@@ -261,8 +263,10 @@ def restriction(**kwargs):
                     logger.debug('No alias domain found.')
                 else:
                     logger.debug('Sender domain %s is an alias domain of %s.' % (sender_domain, sasl_username_domain))
+
                     real_sasl_username = sasl_username_user + '@' + sasl_username_domain
                     real_sender = sender_name + '@' + sasl_username_domain
+
                     # sender_domain is one of alias domains
                     if sender_name != sasl_username_user:
                         logger.debug('Sender is not an user alias address.')
@@ -272,9 +276,10 @@ def restriction(**kwargs):
 
             if allow_list_member:
                 # Get alias members
-                sql = """SELECT goto FROM alias
-                         WHERE address='%s'
-                         LIMIT 1""" % (real_sender)
+                sql = """SELECT goto
+                           FROM alias
+                          WHERE address='%s'
+                          LIMIT 1""" % (real_sender)
                 logger.debug('[SQL] query members of alias account (%s): \n%s' % (real_sender, sql))
 
                 qr = conn.execute(sql)

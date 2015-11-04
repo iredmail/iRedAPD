@@ -11,6 +11,11 @@ import settings
 action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
 
 
+def is_whitelisted(conn, senders):
+    # Check greylisting whitelists.
+    pass
+
+
 def should_be_greylisted(conn, recipient, senders):
     """Check if greylisting should be applied to specified senders.
 
@@ -18,6 +23,7 @@ def should_be_greylisted(conn, recipient, senders):
     recipient -- full email address of recipient
     senders -- list of senders we should check greylisting
     """
+    # TODO check time period
     # TODO check specified enable time. e.g. 9PM-6AM. (global, per-domain, per-user)
     # TODO check greylisting history of this client
     # TODO check whitelists (not same as whitelists used by plugin `amavisd_wblist`.
@@ -25,7 +31,7 @@ def should_be_greylisted(conn, recipient, senders):
                FROM greylisting
               WHERE sender IN %s
               ORDER BY priority DESC""" % sqllist(senders)
-    logger.debug('[SQL] query policy senders: \n%s' % sql)
+    logger.debug('[SQL] query greylisting setting: \n%s' % sql)
 
     qr = conn.execute(sql)
     records = qr.fetchall()
@@ -42,7 +48,7 @@ def should_be_greylisted(conn, recipient, senders):
 
 def restriction(**kwargs):
     # Bypass outgoing emails.
-    if kwargs['smtp_session_data']['sasl_username']:
+    if kwargs['sasl_username']:
         logger.debug('Found SASL username, bypass greylisting.')
         return SMTP_ACTIONS['default']
 
@@ -68,8 +74,6 @@ def restriction(**kwargs):
                       client_address]
 
     if should_be_greylisted(conn=conn, recipient=recipient, senders=policy_senders):
-        # TODO check time period
-
         # Apply greylisting
         return action_greylisting
 

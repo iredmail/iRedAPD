@@ -26,27 +26,39 @@
 --  - Global setting: ('@.', '', 0)
 
 CREATE TABLE IF NOT EXISTS `greylisting` (
-    `sender` VARCHAR(255) NOT NULL DEFAULT '',
-    `domain` VARCHAR(255) NOT NULL DEFAULT '',
-    `priority` TINYINT(2) NOT NULL DEFAULT 0,
-    `enable` TINYINT(1) NOT NULL DEFAULT 1,
-    `comment` TEXT,
-    PRIMARY KEY  (`sender`, `enable`),
+    `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
+    `sender`    VARCHAR(255) NOT NULL DEFAULT '',
+    `domain`    VARCHAR(255) NOT NULL DEFAULT '',
+    `priority`  TINYINT(2) NOT NULL DEFAULT 0,
+    `enable`    TINYINT(1) NOT NULL DEFAULT 1,
+    `comment`   TEXT,
+
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX (`sender`, `enable`),
     INDEX (domain),
     INDEX (priority)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB;
 
+
+CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
+    `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
+    `source`    VARCHAR(255) NOT NULL DEFAULT '',
+    `comment`   TEXT,
+
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX (`source`)
+) ENGINE=InnoDB;
 
 -- Stores all smtp sessions. old records should be removed with a cron job.
 /*
-CREATE TABLE IF NOT EXISTS `greylisting_sessions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `date` datetime NOT NULL default '0000-00-00 00:00:00',
-  -- Timestamp
-  `mailto` varchar(255) NOT NULL default '',
-  `mailfrom` varchar(255) NOT NULL default '',
-  `host` varchar(255) NOT NULL default '',
-  `result` varchar(255) NOT NULL default '',
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1311220 ;
+CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
+    `id`        BIGINT(20)  UNSIGNED AUTO_INCREMENT,
+    `date`      DATETIME    NOT NULL,
+    -- Timestamp
+    `mailto`    VARCHAR(255) NOT NULL DEFAULT '',
+    `mailfrom`  VARCHAR(255) NOT NULL DEFAULT '',
+    `host`      VARCHAR(255) NOT NULL DEFAULT '',
+    `result`    VARCHAR(255) NOT NULL DEFAULT '',
+    PRIMARY KEY  (`id`)
+) ENGINE=InnoDB;
 */

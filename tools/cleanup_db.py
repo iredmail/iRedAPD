@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Author: Zhang Huangbin <zhb@iredmail.org>
-# Purpose: Cleanup expired throttle tracking records.
+# Purpose: Cleanup expired throttle and greylisting tracking records.
 
 import os
 import sys
@@ -39,3 +39,7 @@ conn_iredapd.delete('throttle_tracking',
 total_after = sql_count_id(conn_iredapd, 'throttle_tracking')
 
 logger.info('  - %d removed, %d left.' % (total_before - total_after, total_after))
+
+#
+# TODO Remove expired greylisting tracking records.
+#
