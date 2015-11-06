@@ -1,52 +1,85 @@
 -- greylisting settings.
 --
--- `period`: TODO
--- `priority`: large number has higher priority. Default priorities:
+--             ----------------------------------
+-- `priority`: larger number has higher priority. Default priorities:
+--             ----------------------------------
 --
 --      email       -> 50   # <- e.g. 'user@domain.com'. Highest priority
 --      ip          -> 40   # <- e.g. 173.254.22.21
---      network     -> 30   # <- e.g. 173.254.22/24
+--      cidr        -> 30   # <- e.g. 173.254.22.0/24
 --      domain      -> 20   # <- e.g. @domain.com
 --      subdomain   -> 10   # <- e.g. @.domain.com
 --      catchall    ->  0   # <- '@.'. Lowest priority
 --
--- `enable`: enable or disable greylisting
+-- `account`: local recipient address. Valid account formats:
 --
--- Query greylisting setting with sorted priority:
+--      `user@domain.com`: full email address
+--      `@domain.com`: full domain name (with a '@' prefix)
+--      `@.`: catchall
 --
---  sql> SELECT enable FROM greylisting
---          WHERE sender IN (email, ip, domain, subdomain, catchall)
---          ORDER BY priority DESC;
+-- `active`: greylisting is enabled or disabled.
 --
--- Sample settings (`sender`, `domain`, `priority`):
+-- Sample settings:
 --
---  - per-sender-email setting: ('user@domain.com', 'domain.com', 50)
---  - per-sender-domain setting: ('domain.com', 'domain.com', 20)
---  - per-sender-subdomain setting: ('@.domain.com', 'domain.com', 10)
---  - Global setting: ('@.', '', 0)
-
+--  *) enable server-wide greylisting:
+--
+--      INSERT INTO greylisting (account, sender, priority, sender_type, active)
+--                       VALUES ('@.', '@.', 0, 'catchall', 1);
+--
+--     to disable server-wide greylisting, just set active=0.
+--
+--  *) disable greylisting for one domain:
+--
+--      INSERT INTO greylisting (account, sender, priority, sender_type, active)
+--                       VALUES ('@mydomain.com', '@.', 20, 'catchall', 0);
+--
+--  *) disable greylisting for one user:
+--
+--      INSERT INTO greylisting (account, sender, priority, sender_type, active)
+--                       VALUES ('user@mydomain.com', '@.', 50, 'catchall', 0);
+--
+--  *) Additional per-domain or per-user greylisting setting:
+--
+--      *) Don't apply greylisting on sender '8.8.8.8':
+--
+--          INSERT INTO greylisting (account, sender, priority, sender_type, active)
+--                           VALUES ('@mydomain.com', '8.8.8.8', 20, 'ip', 0);
+--
+--          INSERT INTO greylisting (account, sender, priority, sender_type, active)
+--                           VALUES ('user@mydomain.com', '8.8.8.8', 50, 'ip', 0);
+--
 CREATE TABLE IF NOT EXISTS `greylisting` (
     `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
+    `account`   VARCHAR(255) NOT NULL DEFAULT '',
     `sender`    VARCHAR(255) NOT NULL DEFAULT '',
-    `domain`    VARCHAR(255) NOT NULL DEFAULT '',
     `priority`  TINYINT(2) NOT NULL DEFAULT 0,
-    `enable`    TINYINT(1) NOT NULL DEFAULT 1,
+
+    -- Type of sender: email, ip, cidr, domain, subdomain, catchall
+    `sender_type`   VARCHAR(20) NOT NULL DEFAULT '',
+
     `comment`   TEXT,
 
+    -- enable or disable greylisting
+    `active` TINYINT(1) NOT NULL DEFAULT 1,
+
     PRIMARY KEY (`id`),
-    UNIQUE INDEX (`sender`, `enable`),
-    INDEX (domain),
-    INDEX (priority)
+    INDEX (`account`),
+    INDEX (`sender`),
+    UNIQUE INDEX (`account`, `sender`),
+    INDEX (`priority`),
+    INDEX (`active`)
 ) ENGINE=InnoDB;
 
 
 CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
-    `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
-    `source`    VARCHAR(255) NOT NULL DEFAULT '',
+    `id`        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
+    `account`   VARCHAR(255)    NOT NULL DEFAULT '',
+    `sender`    VARCHAR(255)    NOT NULL DEFAULT '',
     `comment`   TEXT,
 
     PRIMARY KEY (`id`),
-    UNIQUE INDEX (`source`)
+    INDEX (`account`),
+    INDEX (`sender`)
 ) ENGINE=InnoDB;
 
 -- Stores all smtp sessions. old records should be removed with a cron job.
