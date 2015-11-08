@@ -1,5 +1,5 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
-# Purpose: greylisting.
+# Purpose: Greylisting.
 # Reference: http://greylisting.org/
 
 import time
@@ -126,19 +126,23 @@ def _should_be_greylisted_by_tracking(conn, sender, recipient, client_address):
     client_address = sqlquote(client_address)
 
     # Check current record
-    conn.execute("""SELECT init_time, last_time, expired
+    conn.execute("""SELECT init_time, last_time
                       FROM greylisting_tracking
                      WHERE sender=%s AND recipient=%s AND client_address=%s""", (sender, recipient, client_address))
     qr = conn.fetchone()
 
     if not qr:
         # Not record found, insert a new one.
-        conn.execute("""INSERT INTO greylisting_tracking (sender, recipient, client_address
-                                                          init_time, last_time, blocked_count)
-                             VALUES (%s, %s, %s, %d, %d, 1)""" % (client_address, sender, recipient, now, now))
+        expired = now + settings.GREYLISTING_UNAUTH_TRIPLET_TIMEOUT * 24 * 60
+
+        sql = """INSERT INTO greylisting_tracking (sender, recipient, client_address,
+                                                   init_time, last_time, expired,
+                                                   blocked_count)
+                      VALUES (%s, %s, %s, %d, %d, %d, 1)""" % (sender, recipient, client_address, now, now, expired)
+        conn.execute(sql)
         return True
 
-    (_init_time, _last_time, _expired) = qr
+    (_init_time, _last_time) = qr
 
     # Check whether client retries too soon.
     if _init_time + settings.GREYLISTING_INITIAL_RETRY_TIMEOUT * 60 < now:
@@ -152,7 +156,7 @@ def _should_be_greylisted_by_tracking(conn, sender, recipient, client_address):
         # Host is clear to send mail. log PASS and update expire date (days from now on)
         expired = now + settings.GREYLISTING_AUTH_TRIPLET_TIMEOUT * 24 * 60
         conn.execute("""UPDATE greylisting_tracking
-                           SET passed_count=passed_count+1, record_expires=%d
+                           SET passed_count=passed_count+1, expired=%d
                          WHERE sender=%s AND recipient=%s AND client_address=%s""", (expired, sender, recipient, client_address))
 
         return False

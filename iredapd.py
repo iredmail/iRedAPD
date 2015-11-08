@@ -141,8 +141,8 @@ class DaemonSocket(asyncore.dispatcher):
         ordered_plugins = []
 
         swapped_plugin_name_order = {}
-        _plugin_priorities = PLUGIN_PRIORITIES
-        _plugin_priorities.update(settings.PLUGIN_PRIORITIES)
+        _plugin_priorities = PLUGIN_PRIORITIES      # built-in plugins
+        _plugin_priorities.update(settings.PLUGIN_PRIORITIES)   # third-party plugins
         for i in _plugin_priorities:
             swapped_plugin_name_order[_plugin_priorities[i]] = i
 

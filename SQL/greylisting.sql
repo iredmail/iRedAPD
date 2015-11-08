@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     `client_address`    VARCHAR(40) NOT NULL,
     `init_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
     `last_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
-    `expired`           DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+    `expired`           INT(10) UNSIGNED NOT NULL DEFAULT 0,
     `blocked_count`     BIGINT(20) NOT NULL DEFAULT 0,
     `passed_count`      BIGINT(20) NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),

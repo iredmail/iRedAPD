@@ -332,8 +332,8 @@ fi
 # No cron file, add required cron jobs.
 if [ X"${add_iredapd_cron_job}" == X'YES' ]; then
     [ -d ${CRON_SPOOL_DIR} ] || mkdir -p ${CRON_SPOOL_DIR}
-    cat > ${CRON_FILE} <<EOF
-# Clean up expired throttle tracking records.
+    cat >> ${CRON_FILE} <<EOF
+# Clean up expired tracking records.
 1   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/cleanup_db.py >/dev/null
 EOF
 fi
