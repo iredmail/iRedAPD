@@ -106,6 +106,27 @@ ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = False
 # Reject reason for greylisting.
 GREYLISTING_MESSAGE = 'Greylisting in effect, please try again later'
 
+# Number of minutes to wait before client retrying.
+GREYLISTING_INITIAL_RETRY_TIMEOUT = 15
+
+# Disable greylisting in days for clients which successfully passed
+# greylisting (retried and delivered). It's also used to clean up old
+# greylisting tracking records.
+#
+# If a triplet has been successfully updated (retried and delivered), this is
+# what is considered an 'authenticated' triplet. this options allows some
+# sanity so you do not keep these triplets forever. Specify the amount of days
+# that we keep authenticated triplets since it was last updated.
+GREYLISTING_AUTH_TRIPLET_TIMEOUT = 30
+
+# Keep unauth triplet in days.
+#
+# if a triplet has NOT been successfully updated (no retry attempt), this is
+# what is considered as an 'unathenticated' triplet. this option allows some
+# sanity so you do not keep these triplets forever. specify the amount of days
+# that we keep unauthenticated triplets since being inserted into the database.
+GREYLISTING_UNAUTH_TRIPLET_TIMEOUT = 2
+
 # --------------
 # Required by: plugins/throttle.py
 #

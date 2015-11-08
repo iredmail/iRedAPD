@@ -2,6 +2,8 @@
 # Purpose: greylisting.
 # Reference: http://greylisting.org/
 
+import time
+from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, utils, ipaddress
 from libs.utils import sqllist, is_trusted_client
@@ -55,7 +57,7 @@ def _is_whitelisted(conn, recipients, senders):
     return False
 
 
-def _should_be_greylisted(conn, recipients, senders, client_address):
+def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
     """Check if greylisting should be applied to specified senders: True, False.
 
     conn -- sql connection cursor
@@ -78,6 +80,7 @@ def _should_be_greylisted(conn, recipients, senders, client_address):
 
     _ip = ipaddress.ip_address(unicode(client_address))
 
+    # Found enabled/disabled greylisting setting
     for r in records:
         (_id, _account, _sender, _sender_type, _active) = r
 
@@ -91,6 +94,7 @@ def _should_be_greylisted(conn, recipients, senders, client_address):
             if _sender in senders:
                 _matched = True
         elif _sender_type in ['cidr']:
+            # Compare client address with ip network
             _net = ()
             try:
                 _net = ipaddress.ip_network(_sender)
@@ -105,11 +109,53 @@ def _should_be_greylisted(conn, recipients, senders, client_address):
                 return True
             else:
                 logger.debug('Greylisting should NOT be applied due to SQL record: #%d, account=%s, sender=%s' % (_id, _account, _sender))
+                # return directly
                 return False
 
-    # Turn off greylisting if no valid setting.
+    # No valid setting, turn off greylisting
     logger.debug('No valid settings, fallback to turn off greylisting.')
     return False
+
+
+def _should_be_greylisted_by_tracking(conn, sender, recipient, client_address):
+    # Time of now. used for `init_time` and `last_time`.
+    now = int(time.time())
+
+    sender = sqlquote(sender)
+    recipient = sqlquote(recipient)
+    client_address = sqlquote(client_address)
+
+    # Check current record
+    conn.execute("""SELECT init_time, last_time, expired
+                      FROM greylisting_tracking
+                     WHERE sender=%s AND recipient=%s AND client_address=%s""", (sender, recipient, client_address))
+    qr = conn.fetchone()
+
+    if not qr:
+        # Not record found, insert a new one.
+        conn.execute("""INSERT INTO greylisting_tracking (sender, recipient, client_address
+                                                          init_time, last_time, blocked_count)
+                             VALUES (%s, %s, %s, %d, %d, 1)""" % (client_address, sender, recipient, now, now))
+        return True
+
+    (_init_time, _last_time, _expired) = qr
+
+    # Check whether client retries too soon.
+    if _init_time + settings.GREYLISTING_INITIAL_RETRY_TIMEOUT * 60 < now:
+        # retries too soon, greylisted again and log block.
+        conn.execute("""UPDATE greylisting_tracking
+                           SET blocked_count=blocked_count + 1
+                         WHERE sender=%s AND recipient=%s AND client_address=%s""" % (sender, recipient, client_address))
+
+        return True
+    else:
+        # Host is clear to send mail. log PASS and update expire date (days from now on)
+        expired = now + settings.GREYLISTING_AUTH_TRIPLET_TIMEOUT * 24 * 60
+        conn.execute("""UPDATE greylisting_tracking
+                           SET passed_count=passed_count+1, record_expires=%d
+                         WHERE sender=%s AND recipient=%s AND client_address=%s""", (expired, sender, recipient, client_address))
+
+        return False
 
 
 def restriction(**kwargs):
@@ -144,12 +190,16 @@ def restriction(**kwargs):
     if _is_whitelisted(conn, recipients=policy_recipients, senders=policy_senders):
         return SMTP_ACTIONS['default']
 
-    # Check and apply greylisting settings
-    if _should_be_greylisted(conn=conn,
-                             recipients=policy_recipients,
-                             senders=policy_senders,
-                             client_address=client_address):
-        # TODO check greylisting tracking.
-        return action_greylisting
+    # Check greylisting settings
+    if _should_be_greylisted_by_setting(conn=conn,
+                                        recipients=policy_recipients,
+                                        senders=policy_senders,
+                                        client_address=client_address):
+        # check greylisting tracking.
+        if _should_be_greylisted_by_tracking(conn=conn,
+                                             sender=sender,
+                                             recipient=recipient,
+                                             client_address=client_address):
+            return action_greylisting
 
     return SMTP_ACTIONS['default']

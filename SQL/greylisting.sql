@@ -82,16 +82,18 @@ CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     INDEX (`sender`)
 ) ENGINE=InnoDB;
 
--- Stores all smtp sessions. old records should be removed with a cron job.
-/*
+-- Track smtp session for greylisting.
+-- Old records should be removed with a cron job.
 CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
-    `id`        BIGINT(20)  UNSIGNED AUTO_INCREMENT,
-    `date`      DATETIME    NOT NULL,
-    -- Timestamp
-    `mailto`    VARCHAR(255) NOT NULL DEFAULT '',
-    `mailfrom`  VARCHAR(255) NOT NULL DEFAULT '',
-    `host`      VARCHAR(255) NOT NULL DEFAULT '',
-    `result`    VARCHAR(255) NOT NULL DEFAULT '',
-    PRIMARY KEY  (`id`)
+    `id`                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `sender`            VARCHAR(255) NOT NULL,
+    `recipient`         VARCHAR(255) NOT NULL,
+    `client_address`    VARCHAR(40) NOT NULL,
+    `init_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
+    `last_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
+    `expired`           DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+    `blocked_count`     BIGINT(20) NOT NULL DEFAULT 0,
+    `passed_count`      BIGINT(20) NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    INDEX (`sender`, `recipient`, `client_address`)
 ) ENGINE=InnoDB;
-*/
