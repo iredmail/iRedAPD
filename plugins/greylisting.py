@@ -64,10 +64,10 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
     recipient -- full email address of recipient
     senders -- list of senders we should check greylisting
     """
-    sql = """SELECT id, account, sender, sender_type, active
+    sql = """SELECT id, account, sender, sender_priority, active
                FROM greylisting
               WHERE account IN %s
-              ORDER BY priority DESC""" % sqllist(recipients)
+              ORDER BY priority DESC, sender_priority DESC""" % sqllist(recipients)
     logger.debug('[SQL] query greylisting settings: \n%s' % sql)
 
     qr = conn.execute(sql)
@@ -82,38 +82,35 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
 
     # Found enabled/disabled greylisting setting
     for r in records:
-        (_id, _account, _sender, _sender_type, _active) = r
-
-        # Get valid sender_type
-        if not _sender_type:
-            _sender_type = _check_sender_type(_sender)
+        (_id, _account, _sender, _sender_priority, _active) = r
 
         _matched = False
-        if _sender_type in ['email', 'ipv4', 'ipv6', 'domain', 'catchall', 'unknown']:
-            # direct match
-            if _sender in senders:
-                _matched = True
-        elif _sender_type in ['cidr']:
-            # Compare client address with ip network
-            _net = ()
-            try:
-                _net = ipaddress.ip_network(_sender)
-                if _ip in _net:
-                    _matched = True
-            except Exception, e:
-                logger.debug('Not an valid IP network: %s (error: %s)' % (_sender, str(e)))
+        if _sender in senders:
+            _matched = True
+        else:
+            # Compare client address with CIDR ip network.
+            # CIDR has priority 30, please check SQL/iredapd.{mysql,pgsql} to
+            # get list of priorities.
+            if _sender_priority == 30:
+                _net = ()
+                try:
+                    _net = ipaddress.ip_network(_sender)
+                    if _ip in _net:
+                        _matched = True
+                except Exception, e:
+                    logger.debug('Not an valid IP network: %s (error: %s)' % (_sender, str(e)))
 
         if _matched:
             if _active == 1:
-                logger.debug('Greylisting should be applied due to SQL record: #%d, account=%s, sender=%s' % (_id, _account, _sender))
+                logger.debug("Greylisting should be applied according to SQL record: id=%d, account='%s', sender='%s'" % (_id, _account, _sender))
                 return True
             else:
-                logger.debug('Greylisting should NOT be applied due to SQL record: #%d, account=%s, sender=%s' % (_id, _account, _sender))
+                logger.debug("Greylisting should NOT be applied according to SQL record: id=%d, account='%s', sender='%s'" % (_id, _account, _sender))
                 # return directly
                 return False
 
-    # No valid setting, turn off greylisting
-    logger.debug('No valid settings, fallback to turn off greylisting.')
+    # No matched setting, turn off greylisting
+    logger.debug('No matched setting, fallback to turn off greylisting.')
     return False
 
 
@@ -121,44 +118,61 @@ def _should_be_greylisted_by_tracking(conn, sender, recipient, client_address):
     # Time of now. used for `init_time` and `last_time`.
     now = int(time.time())
 
+    # timeout in seconds
+    init_retry_timeout = settings.GREYLISTING_INITIAL_RETRY_TIMEOUT * 60
+    auth_triplet_timeout = settings.GREYLISTING_AUTH_TRIPLET_TIMEOUT * 24 * 60
+
     sender = sqlquote(sender)
     recipient = sqlquote(recipient)
     client_address = sqlquote(client_address)
 
     # Check current record
-    conn.execute("""SELECT init_time, last_time
-                      FROM greylisting_tracking
-                     WHERE sender=%s AND recipient=%s AND client_address=%s""", (sender, recipient, client_address))
-    qr = conn.fetchone()
+    sql = """SELECT init_time, last_time, expired
+               FROM greylisting_tracking
+              WHERE sender=%s AND recipient=%s AND client_address=%s""" % (sender, recipient, client_address)
 
-    if not qr:
+    logger.debug('[SQL] query greylisting tracking: \n%s' % sql)
+
+    qr = conn.execute(sql)
+    sql_record = qr.fetchone()
+
+    if not sql_record:
         # Not record found, insert a new one.
-        expired = now + settings.GREYLISTING_UNAUTH_TRIPLET_TIMEOUT * 24 * 60
+        expired = now + init_retry_timeout
 
         sql = """INSERT INTO greylisting_tracking (sender, recipient, client_address,
                                                    init_time, last_time, expired,
                                                    blocked_count)
                       VALUES (%s, %s, %s, %d, %d, %d, 1)""" % (sender, recipient, client_address, now, now, expired)
+        logger.debug('[SQL] No tracking record found, insert a new one: \n%s' % sql)
         conn.execute(sql)
         return True
 
-    (_init_time, _last_time) = qr
+    (_init_time, _last_time, _expired) = sql_record
 
     # Check whether client retries too soon.
-    if _init_time + settings.GREYLISTING_INITIAL_RETRY_TIMEOUT * 60 < now:
-        # retries too soon, greylisted again and log block.
-        conn.execute("""UPDATE greylisting_tracking
-                           SET blocked_count=blocked_count + 1
-                         WHERE sender=%s AND recipient=%s AND client_address=%s""" % (sender, recipient, client_address))
+    if now - _init_time < init_retry_timeout:
+        logger.debug('Client retries too soon, greylisted again.')
+        sql = """UPDATE greylisting_tracking
+                    SET blocked_count=blocked_count + 1
+                  WHERE sender=%s AND recipient=%s AND client_address=%s""" % (sender, recipient, client_address)
 
+        logger.debug('[SQL] Update tracking record: \n%s' % sql)
+        conn.execute(sql)
         return True
     else:
-        # Host is clear to send mail. log PASS and update expire date (days from now on)
-        expired = now + settings.GREYLISTING_AUTH_TRIPLET_TIMEOUT * 24 * 60
-        conn.execute("""UPDATE greylisting_tracking
-                           SET passed_count=passed_count+1, expired=%d
-                         WHERE sender=%s AND recipient=%s AND client_address=%s""", (expired, sender, recipient, client_address))
+        logger.debug('Host is clear to send mail.')
+        if _expired - auth_triplet_timeout < 0:
+            # Already updated expired date.
+            pass
+        else:
+            expired = now + auth_triplet_timeout
+            sql = """UPDATE greylisting_tracking
+                        SET expired=%d
+                      WHERE sender=%s AND recipient=%s AND client_address=%s""" % (expired, sender, recipient, client_address)
 
+            logger.debug('[SQL] Update expired date (%d days from now on): \n%s' % (settings.GREYLISTING_AUTH_TRIPLET_TIMEOUT, sql))
+            conn.execute(sql)
         return False
 
 
@@ -183,7 +197,7 @@ def restriction(**kwargs):
     recipient = kwargs['recipient']
     recipient_domain = kwargs['recipient_domain']
 
-    policy_recipients = [recipient, recipient_domain, '@.']
+    policy_recipients = [recipient, '@' + recipient_domain, '@.']
     policy_senders = [sender,
                       '@' + sender_domain,      # per-domain
                       '@.' + sender_domain,     # sub-domains

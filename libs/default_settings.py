@@ -17,14 +17,14 @@ LOGROTATE_SIZE = 104857600
 #   'M'         Minutes
 #   'H'         Hours
 #   'D'         Days
-#   'W0'-'W6'	Weekday (0=Monday)
+#   'W0', 'W1', ... 'W6'    Weekday (W0 is Monday)
 #   'midnight'	Roll over at midnight
 #
 # Format: [interval]-[type_of_internval]. Samples:
 #   - 30 minutes:       '30-M'
 #   - 1 hour:           '1-H'
 #   - 1 day:            '1-D'
-#   - every Sunday:     '1-W6'
+#   - every Sunday:     'W6'    # (W0 is Monday)
 #   - every midnight:   '1-midnight'
 #   - every 3 midnight: '3-midnight'
 LOGROTATE_INTERVAL = 'W6'
@@ -104,9 +104,9 @@ ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = False
 # Required by: plugins/greylisting.py
 #
 # Reject reason for greylisting.
-GREYLISTING_MESSAGE = 'Greylisting in effect, please try again later'
+GREYLISTING_MESSAGE = 'Intended policy rejection, please try again later'
 
-# Number of minutes to wait before client retrying.
+# Number of MINUTES to wait before client retrying.
 GREYLISTING_INITIAL_RETRY_TIMEOUT = 15
 
 # Disable greylisting in days for clients which successfully passed

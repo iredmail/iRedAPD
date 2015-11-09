@@ -1,10 +1,10 @@
-iRedAPD is a Postfix policy server, you must read Postfix document for more
-details if you want to develop plugin for iRedAPD:
+iRedAPD is a Postfix policy server, please read Postfix document to understand
+how it works:
 [Postfix SMTP Access Policy Delegation](http://www.postfix.org/SMTPD_POLICY_README.html#protocol)
 
 # For all plugins
 
-## Define your plugin priority in `libs/__init__.py`
+## Define your plugin priority in iRedAPD config file `settings.py`
 
 Please define the priority of your plugin, so that iRedAPD can apply plugins
 in ideal order. Default priority is defined in `libs/__init__.py`, parameter
@@ -31,7 +31,7 @@ Although Postfix has several protocol states, but we usually use two of them:
 
 * `END-OF-MESSAGE` is used in Postfix setting `smtpd_end_of_data_restrictions`.
 
-# For plugins applied to LDAP backend
+# For plugins applied to OpenLDAP backend
 
 ## If plugin requires sender or recipient to be local account
 
