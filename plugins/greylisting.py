@@ -148,7 +148,7 @@ def _should_be_greylisted_by_tracking(conn,
     if not sql_record:
         # Not record found, insert a new one.
         sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
-                                                   recipient, recipient_domain,
+                                                   recipient, rcpt_domain,
                                                    client_address,
                                                    init_time, block_expired, record_expired,
                                                    blocked_count)
