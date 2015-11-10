@@ -131,6 +131,7 @@ def _should_be_greylisted_by_tracking(conn,
     sender = sqlquote(sender)
     sender_domain = sqlquote(sender_domain)
     recipient = sqlquote(recipient)
+    recipient_domain = sqlquote(recipient_domain)
     client_address = sqlquote(client_address)
 
     # Get existing tracking record
