@@ -118,6 +118,7 @@ def _should_be_greylisted_by_tracking(conn,
                                       sender,
                                       sender_domain,
                                       recipient,
+                                      recipient_domain,
                                       client_address):
     # Time of now.
     now = int(time.time())
@@ -147,12 +148,14 @@ def _should_be_greylisted_by_tracking(conn,
     if not sql_record:
         # Not record found, insert a new one.
         sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
-                                                   recipient, client_address,
+                                                   recipient, recipient_domain,
+                                                   client_address,
                                                    init_time, block_expired, record_expired,
                                                    blocked_count)
-                      VALUES (%s, %s, %s, %s, %d, %d, %d, 1)""" % (sender, sender_domain,
-                                                                   recipient, client_address,
-                                                                   now, block_expired, unauth_triplet_expire)
+                      VALUES (%s, %s, %s, %s, %s, %d, %d, %d, 1)""" % (sender, sender_domain,
+                                                                       recipient, recipient_domain,
+                                                                       client_address,
+                                                                       now, block_expired, unauth_triplet_expire)
         logger.debug('[SQL] No tracking record found, insert a new one: \n%s' % sql)
         conn.execute(sql)
         return True
@@ -250,6 +253,7 @@ def restriction(**kwargs):
                                              sender=sender,
                                              sender_domain=sender_domain,
                                              recipient=recipient,
+                                             recipient_domain=recipient_domain,
                                              client_address=client_address):
             return action_greylisting
 

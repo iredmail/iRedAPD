@@ -186,7 +186,8 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     `recipient`         VARCHAR(255) NOT NULL,
     `client_address`    VARCHAR(40) NOT NULL,
 
-    `sender_domain`     VARCHAR(255) NOT NULL,
+    `sender_domain`     VARCHAR(255) NOT NULL DEFAULT '',
+    `rcpt_domain`     VARCHAR(255) NOT NULL DEFAULT '',
 
     -- The time that the triplet was first seen (record create time)
     `init_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
