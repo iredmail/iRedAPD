@@ -167,7 +167,6 @@ CREATE TABLE IF NOT EXISTS `greylisting` (
     INDEX (`active`)
 ) ENGINE=InnoDB;
 
-
 CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     `id`        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
     `account`   VARCHAR(255)    NOT NULL DEFAULT '',
@@ -186,12 +185,26 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     `sender`            VARCHAR(255) NOT NULL,
     `recipient`         VARCHAR(255) NOT NULL,
     `client_address`    VARCHAR(40) NOT NULL,
+
+    `sender_domain`     VARCHAR(255) NOT NULL,
+
+    -- The time that the triplet was first seen (record create time)
     `init_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
-    `last_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
-    `expired`           INT(10) UNSIGNED NOT NULL DEFAULT 0,
-    `record_expired`           INT(10) UNSIGNED NOT NULL DEFAULT 0,
+    -- `last_time`         INT(10) UNSIGNED NOT NULL DEFAULT 0,
+
+    -- The time that the blocking of this triplet will expire
+    `block_expired`     INT(10) UNSIGNED NOT NULL DEFAULT 0,
+
+    -- The time that the record itself will expire (for aging old records)
+    `record_expired`    INT(10) UNSIGNED NOT NULL DEFAULT 0,
+
+    -- The number of delivery attempts that have been blocked
     `blocked_count`     BIGINT(20) NOT NULL DEFAULT 0,
-    `passed_count`     BIGINT(20) NOT NULL DEFAULT 0,
+
+    -- The number of emails we have sucessfully passed
+    -- `passed_count`      BIGINT(20) NOT NULL DEFAULT 0,
+
     PRIMARY KEY (`id`),
-    INDEX (`sender`, `recipient`, `client_address`)
+    INDEX (`sender`, `recipient`, `client_address`),
+    INDEX (`sender_domain`)
 ) ENGINE=InnoDB;

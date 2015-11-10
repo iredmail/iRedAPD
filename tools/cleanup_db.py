@@ -33,6 +33,7 @@ logger.info('* Remove expired throttle tracking records.')
 # count existing records
 total_before = sql_count_id(conn_iredapd, 'throttle_tracking')
 
+# Delete
 conn_iredapd.delete('throttle_tracking',
                     where='init_time + period < %d' % now)
 
@@ -41,18 +42,21 @@ total_after = sql_count_id(conn_iredapd, 'throttle_tracking')
 
 logger.info('  - %d removed, %d left.' % (total_before - total_after, total_after))
 
+
 #
-# Greylisting
+# Greylisting tracking records.
 #
 logger.info('* Remove expired greylisting tracking records.')
 
 # count existing records
 total_before = sql_count_id(conn_iredapd, 'greylisting_tracking')
 
-conn_iredapd.delete('greylisting_tracking', where='expired < %d' % now)
+# Delete
+conn_iredapd.delete('greylisting_tracking', where='record_expired < %d' % now)
 
 # count left records
 total_after = sql_count_id(conn_iredapd, 'greylisting_tracking')
 
 logger.info('  - %d removed, %d left.' % (total_before - total_after, total_after))
 
+# TODO Count passed sender domain and whitelist its IP address with comment (domain name).

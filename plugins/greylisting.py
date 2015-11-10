@@ -102,10 +102,10 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
 
         if _matched:
             if _active == 1:
-                logger.debug("Greylisting should be applied according to SQL record: id=%d, account='%s', sender='%s'" % (_id, _account, _sender))
+                logger.debug("Greylisting should be applied according to SQL record: (id=%d, account='%s', sender='%s')" % (_id, _account, _sender))
                 return True
             else:
-                logger.debug("Greylisting should NOT be applied according to SQL record: id=%d, account='%s', sender='%s'" % (_id, _account, _sender))
+                logger.debug("Greylisting should NOT be applied according to SQL record: (id=%d, account='%s', sender='%s')" % (_id, _account, _sender))
                 # return directly
                 return False
 
@@ -114,69 +114,101 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
     return False
 
 
-def _should_be_greylisted_by_tracking(conn, sender, recipient, client_address):
-    # Time of now. used for `init_time` and `last_time`.
+def _should_be_greylisted_by_tracking(conn,
+                                      sender,
+                                      sender_domain,
+                                      recipient,
+                                      client_address):
+    # Time of now.
     now = int(time.time())
 
     # timeout in seconds
-    init_retry_timeout = settings.GREYLISTING_INITIAL_RETRY_TIMEOUT * 60
-    auth_triplet_timeout = settings.GREYLISTING_AUTH_TRIPLET_TIMEOUT * 24 * 60
+    block_expired = now + settings.GREYLISTING_BLOCK_EXPIRE * 60
+    unauth_triplet_expire = now + settings.GREYLISTING_UNAUTH_TRIPLET_EXPIRE * 24 * 60
+    auth_triplet_expire = now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60
 
     sender = sqlquote(sender)
+    sender_domain = sqlquote(sender_domain)
     recipient = sqlquote(recipient)
     client_address = sqlquote(client_address)
 
-    # Check current record
-    sql = """SELECT init_time, last_time, expired
+    # Get existing tracking record
+    sql = """SELECT init_time, block_expired, record_expired
                FROM greylisting_tracking
-              WHERE sender=%s AND recipient=%s AND client_address=%s""" % (sender, recipient, client_address)
+              WHERE     sender=%s
+                    AND recipient=%s
+                    AND client_address=%s
+              LIMIT 1""" % (sender, recipient, client_address)
 
     logger.debug('[SQL] query greylisting tracking: \n%s' % sql)
-
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
 
     if not sql_record:
         # Not record found, insert a new one.
-        expired = now + init_retry_timeout
-
-        sql = """INSERT INTO greylisting_tracking (sender, recipient, client_address,
-                                                   init_time, last_time, expired,
+        sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
+                                                   recipient, client_address,
+                                                   init_time, block_expired, record_expired,
                                                    blocked_count)
-                      VALUES (%s, %s, %s, %d, %d, %d, 1)""" % (sender, recipient, client_address, now, now, expired)
+                      VALUES (%s, %s, %s, %s, %d, %d, %d, 1)""" % (sender, sender_domain,
+                                                                   recipient, client_address,
+                                                                   now, block_expired, unauth_triplet_expire)
         logger.debug('[SQL] No tracking record found, insert a new one: \n%s' % sql)
         conn.execute(sql)
         return True
 
-    (_init_time, _last_time, _expired) = sql_record
+    (_init_time, _block_expired, _record_expired) = sql_record
 
-    # Check whether client retries too soon.
-    if now - _init_time < init_retry_timeout:
+    # Check whether tracking record expired (if cron job didn't clean up them)
+    if now > _record_expired:
+        # Expired, reset the tracking data.
+        sql = """UPDATE greylisting_tracking
+                    SET blocked_count=1, init_time=%d, block_expired=%d, record_expired=%d
+                  WHERE     sender=%s
+                        AND recipient=%s
+                        AND client_address=%s""" % (now, block_expired, unauth_triplet_expire,
+                                                    sender, recipient, client_address)
+        logger.debug('[SQL] Tracking record expired, delete existing record: \n%s' % sql)
+        conn.execute(sql)
+        return True
+
+    # Tracking record doesn't expire, check whether client retries too soon.
+    if now < _block_expired:
+        # blocking not expired
         logger.debug('Client retries too soon, greylisted again.')
         sql = """UPDATE greylisting_tracking
                     SET blocked_count=blocked_count + 1
-                  WHERE sender=%s AND recipient=%s AND client_address=%s""" % (sender, recipient, client_address)
+                  WHERE     sender=%s
+                        AND recipient=%s
+                        AND client_address=%s""" % (sender, recipient, client_address)
 
         logger.debug('[SQL] Update tracking record: \n%s' % sql)
         conn.execute(sql)
         return True
     else:
         logger.debug('Host is clear to send mail.')
-        if _expired - auth_triplet_timeout < 0:
+        if _record_expired > auth_triplet_expire:
             # Already updated expired date.
             pass
         else:
-            expired = now + auth_triplet_timeout
             sql = """UPDATE greylisting_tracking
-                        SET expired=%d
-                      WHERE sender=%s AND recipient=%s AND client_address=%s""" % (expired, sender, recipient, client_address)
+                        SET record_expired=%d
+                      WHERE     sender=%s
+                            AND recipient=%s
+                            AND client_address=%s""" % (auth_triplet_expire,
+                                                        sender, recipient, client_address)
 
-            logger.debug('[SQL] Update expired date (%d days from now on): \n%s' % (settings.GREYLISTING_AUTH_TRIPLET_TIMEOUT, sql))
+            logger.debug('[SQL] Update expired date (%d days from now on): \n%s' % (settings.GREYLISTING_AUTH_TRIPLET_EXPIRE, sql))
             conn.execute(sql)
         return False
 
 
 def restriction(**kwargs):
+    # Bypass null sender (in case we don't have `reject_null_sender` plugin enabled)
+    if not kwargs['sender']:
+        logger.debug('Bypass greylisting for null sender.')
+        return SMTP_ACTIONS['default']
+
     # Bypass outgoing emails.
     if kwargs['sasl_username']:
         logger.debug('Found SASL username, bypass greylisting for outbound email.')
@@ -216,6 +248,7 @@ def restriction(**kwargs):
         # check greylisting tracking.
         if _should_be_greylisted_by_tracking(conn=conn,
                                              sender=sender,
+                                             sender_domain=sender_domain,
                                              recipient=recipient,
                                              client_address=client_address):
             return action_greylisting
