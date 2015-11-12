@@ -1,12 +1,14 @@
 iRedAPD-1.7.0:
-    * New plugin: plugins/throttle.py, used to throttle inbound/outbound
-      emails based on amount of mails, total mail size sent over a given period
-      of time, or size of single message.
+    * New plugins:
+        + plugins/greylisting.py.
+        + plugins/throttle.py. used to throttle inbound/outbound emails based
+          on amount of mails, total mail size sent over a given period of time,
+          or size of single message.
 
-      - New script tools/cleanup_db.py, used to clean up expired throttle
-        tracking records, it's supposed to be run every hour as a cron job.
-      - New script tools/migrate_cluebringer_throttle.py, used to migrate
-        Cluebringer throttle settings.
+          - New script tools/cleanup_db.py, used to clean up expired throttle
+            tracking records, it's supposed to be run every hour as a cron job.
+          - New script tools/migrate_cluebringer_throttle.py, used to migrate
+            Cluebringer throttle settings.
 
     * Removed plugins:
         - plugins/ldap_amavisd_block_blacklisted_senders.py

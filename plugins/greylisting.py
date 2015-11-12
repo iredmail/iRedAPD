@@ -1,6 +1,34 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose: Greylisting.
-# Reference: http://greylisting.org/
+# Reference: http://greylisting.org/articles/whitepaper.shtml
+
+"""
+Quote from http://greylisting.org/articles/whitepaper.shtml
+-----------------------------------------------------------
+
+The specific methodology for a fairly basic Greylisting implementation is as
+follows:
+
+* Check if we have seen this email triplet before.
+
+    * If we have not seen it, create a record describing it and return a
+      tempfail to the sending MTA.
+    * If we have seen it, and the block is not expired, return a tempfail to
+      the sending MTA.
+    * If we have seen it, and the block has expired, then pass the email.
+
+* If the delivery attempt should be passed and the delivery is successful:
+
+    * Increment the passed count on the matching row.
+    * Reset the expiration time of the record to be the standard lifetime past
+      the current time.
+
+* If the delivery attempt has been temporarily failed:
+
+    * Increment the failed count on the matching row.
+    * If the sender is the special case of the null sender, do not return a
+      failure after RCPT, instead wait until after the DATA phase.
+"""
 
 import time
 from web import sqlquote
@@ -37,7 +65,7 @@ def _check_sender_type(sender):
     return 'unknown'
 
 
-def _is_whitelisted(conn, recipients, senders):
+def _is_whitelisted(conn, senders, recipients, client_address):
     """Check greylisting whitelists stored in table `greylisting_whitelists`,
     returns True if is whitelisted, otherwise returns False.
 
@@ -47,13 +75,42 @@ def _is_whitelisted(conn, recipients, senders):
     """
 
     # query whitelists based on recipient
-    sql = """SELECT id, source
+    sql = """SELECT id, sender
                FROM greylisting_whitelists
-              WHERE account IN %s
-              ORDER BY priority DESC""" % sqllist(senders)
+              WHERE account IN %s""" % sqllist(senders)
+
+    logger.debug('[SQL] Query greylisting whitelists: \n%s' % sql)
+    qr = conn.execute(sql)
+    records = qr.fetchall()
 
     # check whitelisted senders
+    whitelists = [str(v).lower() for (_, v) in records]
+    wl = set(senders) & set(whitelists)
+    if wl:
+        logger.debug('Sender is whitelisted: %s' % str(wl))
+        return True
+
     # check whitelisted cidr
+    _ip = ipaddress.ip_address(unicode(client_address))
+
+    # Check IPv4.
+    if _ip.version == 4:
+        _cidr_start = '.'.join(client_address.split('.', 2)[:2])
+        for r in records:
+            (_id, _cidr) = r
+
+            # Make sure _cidr is IPv4 network and in 'same' IP range.
+            if '/' in _cidr and _cidr.startswith(_cidr_start + '.'):
+                _net = ()
+                try:
+                    _net = ipaddress.ip_network(unicode(_cidr))
+                    if _ip in _net:
+                        logger.debug('Client address is whitelisted: (id=%d, sender=%s)' % (_id, _cidr))
+                        return True
+                except Exception, e:
+                    logger.debug('Not an valid IP network: (id=%d, sender=%s), error: %s' % (_id, _cidr, str(e)))
+
+    logger.debug('No whitelist found.')
     return False
 
 
@@ -80,6 +137,9 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
 
     _ip = ipaddress.ip_address(unicode(client_address))
 
+    if _ip.version == 4:
+        _cidr_start = '.'.join(client_address.split('.', 2)[:2])
+
     # Found enabled/disabled greylisting setting
     for r in records:
         (_id, _account, _sender, _sender_priority, _active) = r
@@ -92,13 +152,17 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
             # CIDR has priority 30, please check SQL/iredapd.{mysql,pgsql} to
             # get list of priorities.
             if _sender_priority == 30:
-                _net = ()
-                try:
-                    _net = ipaddress.ip_network(_sender)
-                    if _ip in _net:
-                        _matched = True
-                except Exception, e:
-                    logger.debug('Not an valid IP network: %s (error: %s)' % (_sender, str(e)))
+                # IPv4
+                if _ip.version == 4 \
+                   and '/' in _sender \
+                   and _sender.startswith(_cidr_start + '.'):
+                    _net = ()
+                    try:
+                        _net = ipaddress.ip_network(_sender)
+                        if _ip in _net:
+                            _matched = True
+                    except Exception, e:
+                        logger.debug('Not an valid IP network: %s (error: %s)' % (_sender, str(e)))
 
         if _matched:
             if _active == 1:
@@ -243,7 +307,10 @@ def restriction(**kwargs):
                       client_address]
 
     # Check greylisting whitelists
-    if _is_whitelisted(conn, recipients=policy_recipients, senders=policy_senders):
+    if _is_whitelisted(conn,
+                       senders=policy_senders,
+                       recipients=policy_recipients,
+                       client_address=client_address):
         return SMTP_ACTIONS['default']
 
     # Check greylisting settings

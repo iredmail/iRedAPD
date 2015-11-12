@@ -172,7 +172,6 @@ CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     `account`   VARCHAR(255)    NOT NULL DEFAULT '',
     `sender`    VARCHAR(255)    NOT NULL DEFAULT '',
     `comment`   TEXT,
-
     PRIMARY KEY (`id`),
     INDEX (`account`),
     INDEX (`sender`)
