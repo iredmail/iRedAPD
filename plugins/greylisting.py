@@ -125,8 +125,8 @@ def _should_be_greylisted_by_tracking(conn,
 
     # timeout in seconds
     block_expired = now + settings.GREYLISTING_BLOCK_EXPIRE * 60
-    unauth_triplet_expire = now + settings.GREYLISTING_UNAUTH_TRIPLET_EXPIRE * 24 * 60
-    auth_triplet_expire = now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60
+    unauth_triplet_expire = now + settings.GREYLISTING_UNAUTH_TRIPLET_EXPIRE * 24 * 60 * 60
+    auth_triplet_expire = now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60 * 60
 
     sender = sqlquote(sender)
     sender_domain = sqlquote(sender_domain)
@@ -151,12 +151,14 @@ def _should_be_greylisted_by_tracking(conn,
         sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
                                                    recipient, rcpt_domain,
                                                    client_address,
-                                                   init_time, block_expired, record_expired,
+                                                   init_time,
+                                                   block_expired, record_expired,
                                                    blocked_count)
                       VALUES (%s, %s, %s, %s, %s, %d, %d, %d, 1)""" % (sender, sender_domain,
                                                                        recipient, recipient_domain,
                                                                        client_address,
-                                                                       now, block_expired, unauth_triplet_expire)
+                                                                       now,
+                                                                       block_expired, unauth_triplet_expire)
         logger.debug('[SQL] No tracking record found, insert a new one: \n%s' % sql)
         conn.execute(sql)
         return True

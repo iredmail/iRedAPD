@@ -18,7 +18,7 @@ def restriction(**kwargs):
     if not recipient_ldif:
         return SMTP_ACTIONS['default'] + ' (No recipient LDIF data)'
 
-    if not 'mailList' in recipient_ldif.get('objectClass', []):
+    if not ('mailList' in recipient_ldif['objectClass']):
         return SMTP_ACTIONS['default'] + ' (Not a mail list account)'
 
     policy = recipient_ldif.get('accessPolicy', ['public'])[0].lower()
