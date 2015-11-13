@@ -202,7 +202,10 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     `blocked_count`     BIGINT(20) NOT NULL DEFAULT 0,
 
     -- The number of emails we have sucessfully passed
-    -- `passed_count`      BIGINT(20) NOT NULL DEFAULT 0,
+    -- `blocked_count`     BIGINT(20) NOT NULL DEFAULT 0,
+
+    -- Mark this triplet passes greylisting.
+    `passed`            TINYINT(1) NOT NULL DEFAULT 0,
 
     PRIMARY KEY (`id`),
     INDEX (`sender`, `recipient`, `client_address`),

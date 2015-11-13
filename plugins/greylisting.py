@@ -262,7 +262,7 @@ def _should_be_greylisted_by_tracking(conn,
             pass
         else:
             sql = """UPDATE greylisting_tracking
-                        SET record_expired=%d
+                        SET record_expired=%d, passed=1
                       WHERE     sender=%s
                             AND recipient=%s
                             AND client_address=%s""" % (auth_triplet_expire,
@@ -270,6 +270,7 @@ def _should_be_greylisted_by_tracking(conn,
 
             logger.debug('[SQL] Update expired date (%d days from now on): \n%s' % (settings.GREYLISTING_AUTH_TRIPLET_EXPIRE, sql))
             conn.execute(sql)
+
         return False
 
 
