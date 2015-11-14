@@ -28,6 +28,7 @@ conn_iredapd = get_db_conn('iredapd')
 #
 # Throttling
 #
+logger.info('-' * 40)
 logger.info('* Remove expired throttle tracking records.')
 
 # count existing records, delete, count left records
@@ -40,6 +41,7 @@ logger.info('  - %d removed, %d left.' % (total_before - total_after, total_afte
 #
 # Greylisting tracking records.
 #
+logger.info('-' * 40)
 logger.info('* Remove expired greylisting tracking records.')
 
 # count existing records, delete, count left records
@@ -47,5 +49,19 @@ total_before = sql_count_id(conn_iredapd, 'greylisting_tracking')
 conn_iredapd.delete('greylisting_tracking', where='record_expired < %d' % now)
 total_after = sql_count_id(conn_iredapd, 'greylisting_tracking')
 logger.info('  - %d removed, %d left.' % (total_before - total_after, total_after))
+
+if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
+    top_num = settings.CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS
+    qr = conn_iredapd.select('greylisting_tracking',
+                             what='count(id) as count, sender_domain',
+                             group='sender_domain',
+                             order='count DESC',
+                             limit=top_num)
+    if qr:
+        logger.info('-' * 40)
+        logger.info('* Top %d greylisted sender domains:' % top_num)
+        logger.info('-' * 10)
+        for r in qr:
+            logger.info('%5d %s' % (r.count, r.sender_domain))
 
 # TODO Count passed sender domain and whitelist its IP address with comment (domain name).

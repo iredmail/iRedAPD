@@ -124,3 +124,9 @@ GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 2
 #
 # Don't apply throttle settings on senders specified in `MYNETWORKS`.
 THROTTLE_BYPASS_MYNETWORKS = False
+
+# --------------
+# Required by: tools/cleanup_db.py
+#
+CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = True
+CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS = 30
