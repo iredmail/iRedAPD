@@ -97,8 +97,9 @@ CREATE TABLE throttle_tracking (
 -- greylisting settings.
 --
 --             ----------------------------------
--- `priority`: larger number has higher priority. Default priorities:
+-- `priority`: larger number has higher priority. Default priorities are
 --             ----------------------------------
+--             defined in libs/__init__.py.
 --
 --      email       -> 50   # <- e.g. 'user@domain.com'. Highest priority
 --      ip          -> 40   # <- e.g. 173.254.22.21

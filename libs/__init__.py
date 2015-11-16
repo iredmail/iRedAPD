@@ -1,21 +1,6 @@
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
 __version__ = '1.7.0'
 
-# Plugin priorities.
-#
-# With pre-defined priorities, the order defined in `plugins = []` setting
-# doesn't matter at all, so that we can apply plugins in ideal order.
-#
-# Plugin with smaller number has higher priority and will be applied first.
-PLUGIN_PRIORITIES = {'reject_null_sender': 10,
-                     'greylisting': 20,
-                     'reject_sender_login_mismatch': 30,
-                     'ldap_force_change_password_in_days': 40,
-                     'sql_force_change_password_in_days': 50,
-                     'amavisd_wblist': 60,
-                     'throttle': 70,
-                     'ldap_maillist_access_policy': 80,
-                     'sql_alias_access_policy': 90}
 
 SMTP_ACTIONS = {
     'default': 'DUNNO',
@@ -33,6 +18,34 @@ SMTP_ACTIONS = {
     'reject_exceed_max_msgs': 'REJECT Quota exceeded (number of mails in total)',
     'reject_exceed_max_quota': 'REJECT Quota exceeded (accumulated message size)',
     'greylisting': '451 4.7.1',
+}
+
+# Plugin priorities.
+#
+# With pre-defined priorities, the order defined in `plugins = []` setting
+# doesn't matter at all, so that we can apply plugins in ideal order.
+#
+# Plugin with smaller number has higher priority and will be applied first.
+PLUGIN_PRIORITIES = {'reject_null_sender': 10,
+                     'greylisting': 20,
+                     'reject_sender_login_mismatch': 30,
+                     'ldap_force_change_password_in_days': 40,
+                     'sql_force_change_password_in_days': 50,
+                     'amavisd_wblist': 60,
+                     'throttle': 70,
+                     'ldap_maillist_access_policy': 80,
+                     'sql_alias_access_policy': 90}
+
+# Account proiroties.
+# Used in plugins:
+#   - greylisting.py
+ACCOUNT_PRIORITIES = {
+    'email': 50,        # e.g. 'user@domain.com'. Highest priority
+    'ip': 40,           # e.g. 173.254.22.21
+    'cidr': 30,         # e.g. 173.254.22.0/24
+    'domain': 20,       # e.g. @domain.com
+    'subdomain': 10,    # e.g. @.domain.com
+    'catchall': 0,      # '@.'. Lowest priority
 }
 
 # Mail list access policies.

@@ -9,9 +9,9 @@
 #
 #   2) Run command:
 #
-#       # python migrate_cluebringer_throttle.py
+#       # python migrate_cluebringer_throttle.py /path/to/iredadmin/settings.py
 #
-# Note: it must be config file of iRedAdmin, not iRedAPD. because iRedAPD
+# Note: it must be iRedAdmin config file, not iRedAPD. because iRedAPD
 #       config file doesn't contain SQL credential of cluebringer SQL database.
 
 cluebringer_db_host = '127.0.0.1'

@@ -33,7 +33,7 @@ follows:
 import time
 from web import sqlquote
 from libs.logger import logger
-from libs import SMTP_ACTIONS, utils, ipaddress
+from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES, utils, ipaddress
 from libs.utils import sqllist, is_trusted_client
 import settings
 
@@ -149,9 +149,7 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
             _matched = True
         else:
             # Compare client address with CIDR ip network.
-            # CIDR has priority 30, please check SQL/iredapd.{mysql,pgsql} to
-            # get list of priorities.
-            if _sender_priority == 30:
+            if _sender_priority == ACCOUNT_PRIORITIES['cidr']:
                 # IPv4
                 if _ip.version == 4 \
                    and '/' in _sender \
