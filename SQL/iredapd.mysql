@@ -101,13 +101,6 @@ CREATE TABLE throttle_tracking (
 --             ----------------------------------
 --             defined in libs/__init__.py.
 --
---      email       -> 50   # <- e.g. 'user@domain.com'. Highest priority
---      ip          -> 40   # <- e.g. 173.254.22.21
---      cidr        -> 30   # <- e.g. 173.254.22.0/24
---      domain      -> 20   # <- e.g. @domain.com
---      subdomain   -> 10   # <- e.g. @.domain.com
---      catchall    ->  0   # <- '@.'. Lowest priority
---
 -- `sender_priority` has same syntax/value as `priority`.
 --
 -- `account`: local recipient address. Valid account formats:
@@ -161,11 +154,7 @@ CREATE TABLE IF NOT EXISTS `greylisting` (
     `active` TINYINT(1) NOT NULL DEFAULT 1,
 
     PRIMARY KEY (`id`),
-    INDEX (`account`),
-    INDEX (`sender`),
-    UNIQUE INDEX (`account`, `sender`),
-    INDEX (`priority`),
-    INDEX (`active`)
+    UNIQUE INDEX (`account`, `sender`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
@@ -174,8 +163,7 @@ CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     `sender`    VARCHAR(255)    NOT NULL DEFAULT '',
     `comment`   TEXT,
     PRIMARY KEY (`id`),
-    INDEX (`account`),
-    INDEX (`sender`)
+    UNIQUE INDEX (`account`, `sender`)
 ) ENGINE=InnoDB;
 
 -- Track smtp session for greylisting.
@@ -210,5 +198,6 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
 
     PRIMARY KEY (`id`),
     INDEX (`sender`, `recipient`, `client_address`),
-    INDEX (`sender_domain`)
+    INDEX (`sender_domain`),
+    INDEX (`rcpt_domain`)
 ) ENGINE=InnoDB;

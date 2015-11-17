@@ -25,27 +25,34 @@ SMTP_ACTIONS = {
 # With pre-defined priorities, the order defined in `plugins = []` setting
 # doesn't matter at all, so that we can apply plugins in ideal order.
 #
-# Plugin with smaller number has higher priority and will be applied first.
-PLUGIN_PRIORITIES = {'reject_null_sender': 10,
-                     'greylisting': 20,
-                     'reject_sender_login_mismatch': 30,
-                     'ldap_force_change_password_in_days': 40,
-                     'sql_force_change_password_in_days': 50,
-                     'amavisd_wblist': 60,
-                     'throttle': 70,
-                     'ldap_maillist_access_policy': 80,
-                     'sql_alias_access_policy': 90}
+# Plugin with larger number has higher priority and will be applied first.
+#             ---------------------------------
+PLUGIN_PRIORITIES = {
+    'reject_null_sender': 100,
+    'greylisting': 90,
+    'reject_sender_login_mismatch': 80,
+    'ldap_force_change_password_in_days': 70,
+    'sql_force_change_password_in_days': 70,
+    'amavisd_wblist': 60,
+    'throttle': 50,
+    'ldap_maillist_access_policy': 40,
+    'sql_alias_access_policy': 40,
+}
 
 # Account proiroties.
 # Used in plugins:
 #   - greylisting.py
 ACCOUNT_PRIORITIES = {
-    'email': 50,        # e.g. 'user@domain.com'. Highest priority
-    'ip': 40,           # e.g. 173.254.22.21
-    'cidr': 30,         # e.g. 173.254.22.0/24
-    'domain': 20,       # e.g. @domain.com
-    'subdomain': 10,    # e.g. @.domain.com
-    'catchall': 0,      # '@.'. Lowest priority
+    'email': 100,           # e.g. 'user@domain.com'. Highest priority
+    'wildcard_addr': 90,    # e.g. `user@*`. used in plugin `amavisd_wblist`
+                            # as wildcard sender. e.g. 'user@*`
+    'ip': 80,               # e.g. 173.254.22.21
+    'wildcard_ip': 70,      # e.g. 173.254.22.*
+    'cidr': 70,             # e.g. 173.254.22.0/24
+    'domain': 60,           # e.g. @domain.com
+    'subdomain': 50,        # e.g. @.domain.com
+    'top_level_domain': 40, # e.g. @com, @org
+    'catchall': 0,          # '@.'. Lowest priority
 }
 
 # Mail list access policies.

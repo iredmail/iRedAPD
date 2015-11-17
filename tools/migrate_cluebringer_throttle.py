@@ -9,16 +9,13 @@
 #
 #   2) Run command:
 #
-#       # python migrate_cluebringer_throttle.py /path/to/iredadmin/settings.py
-#
-# Note: it must be iRedAdmin config file, not iRedAPD. because iRedAPD
-#       config file doesn't contain SQL credential of cluebringer SQL database.
+#       # python migrate_cluebringer_throttle.py
 
 cluebringer_db_host = '127.0.0.1'
 cluebringer_db_port = 3306
 cluebringer_db_name = 'cluebringer'
 cluebringer_db_user = 'root'
-cluebringer_db_password = 'nu9HAcyl4XRezuxQxs7VSvUeXyCF2RVa'
+cluebringer_db_password = ''
 
 import os
 import sys
@@ -29,6 +26,7 @@ os.environ['LC_ALL'] = 'C'
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 import settings
+from libs import ACCOUNT_PRIORITIES
 from libs.utils import is_email, is_domain
 from tools import debug, logger, get_db_conn
 
@@ -63,17 +61,6 @@ logger.info('* Backend: %s' % backend)
 #--------------------------
 # Get throttle settings.
 #
-# Priorities of different thorttle address (larger digital number has higher priority):
-#
-#   *) ip: 10,
-#   *) email: 8,
-#   *) wildcard_addr: 6,     # e.g. `user@*`. used in plugin `amavisd_wblist`
-#                            # as wildcard sender. e.g. 'user@*`
-#   *) domain: 5,
-#   *) subdomain: 3,
-#   *) top_level_domain: 1,
-#   *) catchall: 0,
-
 
 # Construct iRedAPD throttle setting.
 t_settings = {}
@@ -101,7 +88,7 @@ if qr:
         t_settings[_id] = {'account': '@.',
                            'inout_type': inout_type,
                            'period': _period,
-                           'priority': 0}
+                           'priority': ACCOUNT_PRIORITIES['catchall']}
 
 # Get enabled throttle account and period.
 qr = conn.select('quotas',
@@ -123,11 +110,11 @@ if qr:
             _account = _name.split('outbound_', 1)[-1]
             inout_type = 'outbound'
 
-        priority = 0
+        priority = ACCOUNT_PRIORITIES['catchall']
         if is_email(_account):
-            priority = 8
+            priority = ACCOUNT_PRIORITIES['email']
         elif is_domain(_account):
-            priority = 5
+            priority = ACCOUNT_PRIORITIES['domain']
 
         t_settings[_id] = {'account': _account,
                            'inout_type': inout_type,

@@ -77,7 +77,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     # query whitelists based on recipient
     sql = """SELECT id, sender
                FROM greylisting_whitelists
-              WHERE account IN %s""" % sqllist(senders)
+              WHERE account IN %s""" % sqllist(recipients)
 
     logger.debug('[SQL] Query greylisting whitelists: \n%s' % sql)
     qr = conn.execute(sql)

@@ -155,7 +155,7 @@ class DaemonSocket(asyncore.dispatcher):
 
             po[_plugin_priorities[p]] = p
 
-        ordered_plugins = [swapped_plugin_name_order[order] for order in sorted(po)]
+        ordered_plugins = [swapped_plugin_name_order[order] for order in sorted(po, reverse=True)]
 
         for plugin in ordered_plugins:
             try:
