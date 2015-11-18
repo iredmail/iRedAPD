@@ -27,16 +27,17 @@ SMTP_ACTIONS = {
 #
 # Plugin with larger number has higher priority and will be applied first.
 #             ---------------------------------
+# WARNING: Do not set the same priority for different plugins.
 PLUGIN_PRIORITIES = {
     'reject_null_sender': 100,
     'greylisting': 90,
     'reject_sender_login_mismatch': 80,
     'ldap_force_change_password_in_days': 70,
-    'sql_force_change_password_in_days': 70,
+    'sql_force_change_password_in_days': 71,
     'amavisd_wblist': 60,
     'throttle': 50,
     'ldap_maillist_access_policy': 40,
-    'sql_alias_access_policy': 40,
+    'sql_alias_access_policy': 41,
 }
 
 # Account proiroties.
