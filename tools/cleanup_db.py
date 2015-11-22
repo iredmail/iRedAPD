@@ -50,6 +50,17 @@ conn_iredapd.delete('greylisting_tracking', where='record_expired < %d' % now)
 total_after = sql_count_id(conn_iredapd, 'greylisting_tracking')
 logger.info('  - %d removed, %d left.' % (total_before - total_after, total_after))
 
+#
+# Some basic analyzation
+#
+# Count how many records are passed greylisting
+qr = conn_iredapd.select('greylisting_tracking',
+                         what='count(id) as total',
+                         where='passed=1')
+if qr:
+    total_passed = qr[0].total
+    logger.info('  - %d passed greylisting.' % (total_passed))
+
 if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
     top_num = settings.CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS
     qr = conn_iredapd.select('greylisting_tracking',
