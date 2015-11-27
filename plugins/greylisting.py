@@ -320,6 +320,10 @@ def restriction(**kwargs):
                       '@.',                     # catch-all
                       client_address]
 
+    if utils.is_ipv4(client_address):
+        # Add wildcard ip address: xx.xx.xx.*.
+        policy_senders += client_address.rsplit('.', 1)[0] + '.*'
+
     # Check greylisting whitelists
     if _is_whitelisted(conn,
                        senders=policy_senders,
