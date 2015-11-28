@@ -148,22 +148,24 @@ CREATE TABLE IF NOT EXISTS `greylisting` (
     `sender`    VARCHAR(255) NOT NULL DEFAULT '',
     `sender_priority`  TINYINT(2) NOT NULL DEFAULT 0,
 
-    `comment`   TEXT,
+    `comment`   VARCHAR(255) NOT NULL DEFAULT '',
 
     -- enable or disable greylisting
     `active` TINYINT(1) NOT NULL DEFAULT 1,
 
     PRIMARY KEY (`id`),
-    UNIQUE INDEX (`account`, `sender`)
+    UNIQUE INDEX (`account`, `sender`),
+    INDEX (`comment`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     `id`        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
     `account`   VARCHAR(255)    NOT NULL DEFAULT '',
     `sender`    VARCHAR(255)    NOT NULL DEFAULT '',
-    `comment`   TEXT,
+    `comment`   VARCHAR(255) NOT NULL DEFAULT '',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX (`account`, `sender`)
+    UNIQUE INDEX (`account`, `sender`),
+    INDEX (`comment`)
 ) ENGINE=InnoDB;
 
 -- Track smtp session for greylisting.
