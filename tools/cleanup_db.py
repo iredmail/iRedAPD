@@ -37,10 +37,10 @@ def print_top_greylisting_domains(conn, limit=30, passed=False):
     if qr:
         logger.info('-' * 40)
         logger.info(banner)
-        logger.info('-' * 10)
+        logger.info('%50s' % ('-' * 10))
 
         for r in qr:
-            logger.info('%5d %30s [%s]' % (r.count, r.sender_domain, r.client_address))
+            logger.info('%5d %s  [%s]' % (r.count, r.sender_domain, r.client_address))
 
 
 web.config.debug = debug
