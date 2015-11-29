@@ -130,7 +130,7 @@ else:
     if settings.LOGROTATE_INTERVAL.startswith('W'):
         # week days
         when = settings.LOGROTATE_INTERVAL
-        interval = None
+        interval = 1
     else:
         (interval, when) = settings.LOGROTATE_INTERVAL.split('-', 1)
 

@@ -9,6 +9,8 @@ iRedAPD-1.7.0:
             tracking records, it's supposed to be run every hour as a cron job.
           - New script tools/migrate_cluebringer_throttle.py, used to migrate
             Cluebringer throttle settings.
+          - New script tools/migrate_cluebringer_greylisting.py, used to
+            migrate Cluebringer greylisting settings, including whitelists.
 
     * Removed plugins:
         - plugins/ldap_amavisd_block_blacklisted_senders.py
