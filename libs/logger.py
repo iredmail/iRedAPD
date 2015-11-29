@@ -134,10 +134,10 @@ else:
     else:
         (interval, when) = settings.LOGROTATE_INTERVAL.split('-', 1)
 
-    if interval.isdigit():
-        interval = int(interval)
-    else:
-        interval = 1
+        if interval.isdigit():
+            interval = int(interval)
+        else:
+            interval = 1
 
     handler = CompressedTimedRotatingFileHandler(filename=settings.log_file,
                                                  when=when,
