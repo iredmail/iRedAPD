@@ -87,7 +87,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     whitelists = [str(v).lower() for (_, v) in records]
     wl = set(senders) & set(whitelists)
     if wl:
-        logger.debug('Sender is whitelisted: %s' % str(wl))
+        logger.debug('Sender is whitelisted: %s' % ', '.join(wl))
         return True
 
     # check whitelisted cidr

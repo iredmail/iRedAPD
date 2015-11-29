@@ -30,8 +30,8 @@ else:
 
 # Config logging
 logging.basicConfig(level=logging.INFO,
-                    format='* [%(asctime)s] %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
+                    format='* %(message)s',
+                    datefmt='')
 
 logger = logging.getLogger('iRedAPD')
 

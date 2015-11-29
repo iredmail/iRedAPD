@@ -115,9 +115,8 @@ class CompressedTimedRotatingFileHandler(TimedRotatingFileHandler):
 
 logger = logging.getLogger('iRedAPD')
 
-# Get log level.
+# Set log level.
 log_level = getattr(logging, str(settings.log_level).upper())
-
 logger.setLevel(log_level)
 
 if settings.LOGROTATE_TYPE == 'size':
