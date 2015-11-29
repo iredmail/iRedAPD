@@ -1,8 +1,8 @@
-# Rotate log file based on file size or time: size, time.
-LOGROTATE_TYPE = 'size'
+# Rotate log file based on file size or time: size, time. Default is 'time'.
+LOGROTATE_TYPE = 'time'
 
-# Save how many copies of rotated log files. Default is 10.
-LOGROTATE_COPIES = 10
+# Save how many copies of rotated log files. Default is 12.
+LOGROTATE_COPIES = 12
 
 # Rotate when log file reaches specified file size. Default is 100MB (104857600)
 # Used when rotate type is 'size'.
@@ -17,7 +17,7 @@ LOGROTATE_SIZE = 104857600
 #   'M'         Minutes
 #   'H'         Hours
 #   'D'         Days
-#   'W0', 'W1', ... 'W6'    Weekday (W0 is Monday)
+#   'W0', 'W1', ... 'W6'    Weekday (W0 is Monday, W6 is Sunday)
 #   'midnight'	Roll over at midnight
 #
 # Format: [interval]-[type_of_internval]. Samples:

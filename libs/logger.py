@@ -127,7 +127,12 @@ if settings.LOGROTATE_TYPE == 'size':
                                             backupCount=settings.LOGROTATE_COPIES)
 else:
     # settings.LOGROTATE_TYPE == 'time'
-    (interval, when) = settings.LOGROTATE_INTERVAL.split('-', 1)
+    if settings.LOGROTATE_INTERVAL.startswith('W'):
+        # week days
+        when = settings.LOGROTATE_INTERVAL
+        interval = None
+    else:
+        (interval, when) = settings.LOGROTATE_INTERVAL.split('-', 1)
 
     if interval.isdigit():
         interval = int(interval)
