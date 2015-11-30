@@ -105,7 +105,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
                     if _ip in _net:
-                        logger.debug('Client address (IPv4) is whitelisted: (id=%d, sender=%s)' % (_id, _cidr))
+                        logger.debug('Client address (%s) is whitelisted: (id=%d, sender=%s)' % (client_address, _id, _cidr))
                         return True
                 except Exception, e:
                     logger.debug('Not an valid IP network: (id=%d, sender=%s), error: %s' % (_id, _cidr, str(e)))
@@ -120,7 +120,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
                     if _ip in _net:
-                        logger.debug('Client address (IPv6) is whitelisted: (id=%d, sender=%s)' % (_id, _cidr))
+                        logger.debug('Client address (%s) is whitelisted: (id=%d, sender=%s)' % (client_address, _id, _cidr))
                         return True
                 except Exception, e:
                     logger.debug('Not an valid IP network: (id=%d, sender=%s), error: %s' % (_id, _cidr, str(e)))
