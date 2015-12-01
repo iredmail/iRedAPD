@@ -37,7 +37,7 @@ logger = logging.getLogger('iRedAPD')
 
 
 def print_error(msg):
-    print '< ERROR > ' + msg
+    print '< ERROR >', msg
 
 
 def get_gmttime():

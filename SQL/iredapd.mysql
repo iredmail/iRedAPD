@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     `passed`            TINYINT(1) NOT NULL DEFAULT 0,
 
     PRIMARY KEY (`id`),
-    INDEX (`sender`, `recipient`, `client_address`),
+    UNIQUE INDEX (`sender`, `recipient`, `client_address`),
     INDEX (`sender_domain`),
     INDEX (`rcpt_domain`)
 ) ENGINE=InnoDB;

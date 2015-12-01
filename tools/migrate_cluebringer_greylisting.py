@@ -11,10 +11,10 @@
 #       # python migrate_cluebringer_throttle.py
 
 cluebringer_db_host = '127.0.0.1'
-cluebringer_db_port = 3306
+cluebringer_db_port = 5432
 cluebringer_db_name = 'cluebringer'
 cluebringer_db_user = 'cluebringer'
-cluebringer_db_password = '3aUBn3OBYUgJ2Ddbmwyh8OHQ3Dcz50'
+cluebringer_db_password = '0T2JIsDuX7yHWAakgIcSJt2i6LZk2I'
 
 import os
 import sys
@@ -26,7 +26,7 @@ rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 import settings
 from libs import ACCOUNT_PRIORITIES
-from libs.utils import is_email, is_domain
+from libs.utils import is_valid_amavisd_address
 from tools import debug, logger, get_db_conn
 
 backend = settings.backend
@@ -58,17 +58,67 @@ conn_cb.supports_multiple_insert = True
 
 logger.info('* Backend: %s' % backend)
 
-# Get enabled GLOBAL/SERVER-WIDE greylisting setting.
+#
+# Global greylisting setting
+#
+logger.info('* Migrate global greylisting setting.')
+logger.info('\t- Query enabled global greylisting setting.')
 qr = conn_cb.select('greylisting',
                     what='id',
-                    where="name='Greylisting Inbound Emails'",
+                    where="name='Greylisting Inbound Emails' AND usegreylisting=1",
                     limit=1)
 
 if qr:
-    id_default = qr[0].id
-    # TODO Migrate default greylisting setting
+    logger.info('\t- Cluebringer has greylisting enabled globally.')
+    # Check existing global greylisting setting
+    qr = conn_iredapd.select('greylisting',
+                             what='id',
+                             where="account='@.' AND sender='@.'",
+                             limit=1)
 
-# Migrate whitelists
+    if qr:
+        logger.info('\t- iRedAPD already has global greylisting setting, not migrate Cluebringer global setting.')
+    else:
+        logger.info("\t- iRedAPD doesn't have global greylisting setting, migrating ...")
+        conn_iredapd.insert('greylisting',
+                            account='@.',
+                            priority=0,
+                            sender='@.',
+                            sender_priority=0,
+                            active=1)
+
+#
+# no_greylisting settings
+#
+logger.info('* Migrate per-domain and per-user no-greylisting settings.')
+
+logger.info('\t- Query no-greylisting settings')
+qr = conn_cb.select(['policy_groups', 'policy_group_members'],
+                    what='policy_group_members.member AS member',
+                    where="policy_groups.name='no_greylisting_for_internal' AND policy_group_members.policygroupid=policy_groups.id")
+
+for r in qr:
+    _account = str(r.member)
+    _account_type = is_valid_amavisd_address(_account)
+    if _account_type:
+        _priority = ACCOUNT_PRIORITIES[_account_type]
+    else:
+        continue
+
+    try:
+        conn_iredapd.insert('greylisting',
+                            account=r.member,
+                            priority=_priority,
+                            sender='@.',
+                            sender_priority=0,
+                            active=1)
+        logger.info('\t+ Migrated account setting: %s' % _account)
+    except Exception, e:
+        logger.info('\t+ Failed migrating account setting: %s' % _account)
+
+#
+# Greylisting whitelists
+#
 qr = conn_cb.select('greylisting_whitelist',
                     what='id, source, comment',
                     where='disabled=0')

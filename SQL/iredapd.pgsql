@@ -103,18 +103,18 @@ CREATE TABLE IF NOT EXISTS greylisting (
     active      SMALLINT NOT NULL DEFAULT 1
 );
 
-CREATE INDEX idx_greylisting_account_sender ON greylisting (account, sender);
+CREATE UNIQUE INDEX idx_greylisting_account_sender ON greylisting (account, sender);
 CREATE INDEX idx_greylisting_comment ON greylisting (comment);
 
 CREATE TABLE IF NOT EXISTS greylisting_whitelists (
     id      SERIAL PRIMARY KEY,
     account VARCHAR(255)    NOT NULL DEFAULT '',
     sender  VARCHAR(255)    NOT NULL DEFAULT '',
-    comment VARCHAR(255) NOT NULL DEFAULT '',
+    comment VARCHAR(255) NOT NULL DEFAULT ''
 );
 
 CREATE UNIQUE INDEX idx_greylisting_whitelists_account_sender ON greylisting_whitelists (account, sender);
-CREATE UNIQUE INDEX idx_greylisting_whitelists_comment ON greylisting_whitelists (comment);
+CREATE INDEX idx_greylisting_whitelists_comment ON greylisting_whitelists (comment);
 
 -- Track smtp session for greylisting.
 -- Old records should be removed with a cron job.
@@ -147,6 +147,6 @@ CREATE TABLE IF NOT EXISTS greylisting_tracking (
     passed          SMALLINT NOT NULL DEFAULT 0
 );
 
-CREATE INDEX idx_greylisting_tracking_key ON greylisting_tracking (sender, recipient, client_address);
+CREATE UNIQUE INDEX idx_greylisting_tracking_key ON greylisting_tracking (sender, recipient, client_address);
 CREATE INDEX idx_greylisting_tracking_sender_domain ON greylisting_tracking (sender_domain);
 CREATE INDEX idx_greylisting_tracking_rcpt_domain ON greylisting_tracking (rcpt_domain);
