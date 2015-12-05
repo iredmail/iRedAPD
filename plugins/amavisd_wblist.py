@@ -42,6 +42,7 @@
 #                   set 'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
 #                   /opt/iredapd/settings.py.
 
+import re
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_ipv4, wildcard_ipv4, sqllist
@@ -231,6 +232,16 @@ def restriction(**kwargs):
                                         recipient_ids=id_of_ext_addresses)
     else:
         logger.debug('Apply wblist for inbound message.')
+
+        # Check sender addresses with regular expressions.
+        if settings.WBLIST_BLOCKED_REGX_SENDERS:
+            for regx in settings.WBLIST_BLOCKED_REGX_SENDERS:
+                try:
+                    if re.compile(regx, re.IGNORECASE | re.DOTALL).match(sender):
+                        logger.info('Sender is blocked due to setting WBLIST_BLOCKED_REGX_SENDERS, rule: %s' % regx)
+                        return SMTP_ACTIONS['reject']
+                except:
+                    pass
 
         id_of_ext_addresses = []
         id_of_local_addresses = query_local_addresses(conn, valid_recipients)

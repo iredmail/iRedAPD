@@ -28,31 +28,38 @@ iRedAPD-1.7.0:
           Default is rotating every Sunday, keeping 12 copies (3 months).
         - Allow to use IP network in MYNETWORKS. e.g. 192.168.0.0/24.
         - Allow plugins to work in multiple protocol states.
+        - Drop invalid smtp session attributes.
         - plugins/reject_sender_login_mismatch.py:
             + able to allow certain user/domain to send email as sender
               address under the same domain.
             + able to not check forged sender which sent without smtp auth, or
               bypass specified forged sender addresses.
-        - plugins/amavisd_wblist.py: able to check white/blacklist for
-          outbound message.
-          Note: new SQL table `amavisd.outbound_wblist` is required.
-        - plugins/{sql,ldap}_force_change_password_in_days.py: Allow specified
-          users or domains to never change password.
-        - plugins/amavisd_wblist.py: Able to not check white/blacklists on
-          outgoing emails sent by authenticated user. Default is not bypassed.
-          Controlled by new setting: `WBLIST_BYPASS_OUTGOING_EMAIL`,
-          default value is False (not bypassed).
-        - Drop invalid smtp session attributes.
+
+        - plugins/amavisd_wblist.py:
+            + Able to block sender addresses based on regular expression.
+              Note: this is controlled by new setting:
+              `WBLIST_BLOCKED_REGX_SENDERS`.
+            + Able to check white/blacklist for outbound message.
+              Note: new SQL table `amavisd.outbound_wblist` is required.
+            + Able to not check white/blacklists on outgoing emails sent by
+              authenticated user. Default is not bypassed.
+              Note: Controlled by new setting: `WBLIST_BYPASS_OUTGOING_EMAIL`,
+              default value is False (not bypassed).
+
+        - plugins/{sql,ldap}_force_change_password_in_days.py:
+            + Allow specified users or domains to never change password.
 
     * Fixed issues:
-        * plugins/sql_access_policy.py: not check alias domain.
-          Thanks <mlocati _at_ gmail.com> for the report in forum.
-        * plugins/sql_force_change_password_in_days.py: Not correctly compare
-          password last change date.
+        * plugins/sql_access_policy.py:
+            - not check alias domain.
+              Thanks <mlocati _at_ gmail.com> for the report in forum.
+        * plugins/sql_force_change_password_in_days.py:
+            - Not correctly compare password last change date.
+        * plugins/amavisd_wblist.py:
+            - sender 'user@*' doesn't work.
+              Thanks <kmihalj _at_ efzg.hr> for the report in forum.
         * Not correctly return value in libs/amavisd/core.py, function
           get_applicable_policy().
-          Thanks <kmihalj _at_ efzg.hr> for the report in forum.
-        * plugins/amavisd_wblist.py: sender 'user@*' doesn't work.
           Thanks <kmihalj _at_ efzg.hr> for the report in forum.
 
 iRedAPD-1.6.0:
