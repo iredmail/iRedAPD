@@ -161,5 +161,5 @@ THROTTLE_BYPASS_MYNETWORKS = False
 # Required by: tools/cleanup_db.py
 #
 # Show senders which not yet passed greylisting.
-CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = True
+CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = False
 CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS = 30
