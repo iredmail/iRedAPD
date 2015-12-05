@@ -91,6 +91,16 @@ CHECK_FORGED_SENDER = True
 ALLOWED_FORGED_SENDERS = []
 
 # Allowed senders or sender domains.
+#
+# If you want to allow someone to send email as forged address, e.g.
+# salesforce.com, you can bypass these addresses in this setting.
+# Default value is empty (no allowed forged sender).
+#
+# Sample setting: allow local user `user@local_domain_1.com` and all users
+# under `local_domain_2.com` to send email as other users.
+#
+#   ALLOWED_FORGED_SENDERS = ['user@local_domain_1.com', 'local_domain_2.com']
+#
 ALLOWED_LOGIN_MISMATCH_SENDERS = []
 
 # Strictly allow sender to send as one of user alias addresses. Default is True.

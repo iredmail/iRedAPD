@@ -114,7 +114,10 @@ for r in qr:
                             active=1)
         logger.info('\t+ Migrated account setting: %s' % _account)
     except Exception, e:
-        logger.info('\t+ Failed migrating account setting: %s' % _account)
+        if str(e).startswith('duplicate key value'):
+            logger.info('\t[SKIP] Setting for account %s already exists.' % _account)
+        else:
+            logger.info('\t<<< ERROR >>> Error while migrating setting for account %s: %s' % (_account, str(e)))
 
 #
 # Greylisting whitelists

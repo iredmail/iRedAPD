@@ -28,7 +28,7 @@
 #      salesforce.com, you can bypass these addresses in this setting.
 #      Default value is empty (no allowed forged sender).
 #
-#       ALLOWED_FORGED_SENDERS = ['user@local.com', 'local.com']
+#       ALLOWED_FORGED_SENDERS = ['user@local_domain1.com', 'local_domain2.com']
 #
 #      With above setting, if sender is 'user@local.com', this plugin won't
 #      reject it.
