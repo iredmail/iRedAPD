@@ -64,7 +64,7 @@ ENABLE_ALL_WILDCARD_IP = True
 # Don't check white/blacklists for outgoing emails sent by sasl authenticated user.
 WBLIST_BYPASS_OUTGOING_EMAIL = False
 
-# Define a list of sender addresses with (Python) regular expressions.
+# Define a list of blocked sender addresses with (Python) regular expressions.
 #
 # For example, spammer may frenqently change the domain names, e.g.
 # @spam_a.com, @spam_b.com, @spam_3.com, this way you can define a sender
@@ -72,6 +72,19 @@ WBLIST_BYPASS_OUTGOING_EMAIL = False
 #
 # Sample setting:
 #   WBLIST_BLOCKED_REGX_SENDERS = ['.*@spam_.*\.com', '.*sometext.*']
+#
+# You can verify the regular expression with Python interactive shell:
+#
+#   $ python
+#   >>> import re
+#   >>> re.compile('Your Regular Expression', re.IGNORECASE | re.DOTALL).match('the_sender_address')
+#
+# For example:
+#
+#   >>> re.compile('.*@spam_.*\.com', re.IGNORECASE | re.DOTALL).match('user@spam_a.com')
+#
+# If it returns message like "<_sre.SRE_Match object at ...>", that means the
+# regular expression ('.*@spam_.*\.com') matches the string (sender address).
 WBLIST_BLOCKED_REGX_SENDERS = []
 
 # ---------------
@@ -110,7 +123,6 @@ ALLOWED_FORGED_SENDERS = []
 # under `local_domain_2.com` to send email as other users.
 #
 #   ALLOWED_FORGED_SENDERS = ['user@local_domain_1.com', 'local_domain_2.com']
-#
 ALLOWED_LOGIN_MISMATCH_SENDERS = []
 
 # Strictly allow sender to send as one of user alias addresses. Default is True.
