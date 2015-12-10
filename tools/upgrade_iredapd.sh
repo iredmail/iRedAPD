@@ -16,10 +16,15 @@
 
 export SYS_ROOT_USER='root'
 export SYS_ROOT_GROUP='root'
+
 export IREDAPD_DAEMON_USER='iredapd'
 export IREDAPD_DAEMON_GROUP='iredapd'
 export IREDAPD_LOG_DIR='/var/log/iredapd'
 export IREDAPD_LOG_FILE="${IREDAPD_LOG_DIR}/iredapd.log"
+
+# PostgreSQL system user.
+export PGSQL_SYS_USER='postgres'
+export PGSQL_SYS_GROUP='postgres'
 
 # Check OS to detect some necessary info.
 export KERNEL_NAME="$(uname -s | tr '[a-z]' '[A-Z]')"
@@ -27,6 +32,7 @@ export RC_SCRIPT_NAME='iredapd'
 
 # Path to some programs.
 export PYTHON_BIN='/usr/bin/python'
+export MD5_BIN='md5sum'
 
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     export DIR_RC_SCRIPTS='/etc/init.d'
@@ -66,17 +72,21 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DISTRO='FREEBSD'
     export SYS_ROOT_GROUP='wheel'
+    export PGSQL_SYS_USER='pgsql'
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
     export PYTHON_BIN='/usr/local/bin/python'
+    export MD5_BIN='md5'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
     export SYS_ROOT_GROUP='wheel'
+    export PGSQL_SYS_USER='_postgresql'
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
     export PYTHON_BIN='/usr/local/bin/python'
+    export MD5_BIN='md5'
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
@@ -165,10 +175,85 @@ else
 fi
 
 # Check whether current directory is iRedAPD
-PWD="$(pwd)"
+export PWD="$(pwd)"
 if ! echo ${PWD} | grep 'iRedAPD.*/tools' >/dev/null; then
     echo "<<< ERROR >>> Cannot find new version of iRedAPD in current directory. Exit."
     exit 255
+fi
+
+#
+# Require SQL root password to create `iredapd` database.
+#
+export IREDAPD_DB_SERVER='127.0.0.1'
+export IREDAPD_DB_USER='iredapd'
+export IREDAPD_DB_NAME='iredapd'
+export IREDAPD_DB_PASSWD="$(echo $RANDOM | ${MD5_BIN} | awk '{print $1}')"
+if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
+
+    # Check backend.
+    if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
+        export IREDAPD_DB_PORT='3306'
+
+        echo "Looks like you don't have 'iredapd' SQL database, please type root"
+        echo "username and password of your SQL server to create it now."
+        while :; do
+            echo -n "MySQL root username: "
+            read _sql_root_username
+
+            echo -n "MySQL root password: "
+            read _sql_root_password
+
+            # Verify username and password
+            mysql -u${_sql_root_username} -p${_sql_root_password} -e "show databases" >/dev/null
+            if [ X"$?" == X'0' ]; then
+                export _sql_root_username _sql_root_password
+                break
+            else
+                echo "Username or password is wrong, please try again."
+            fi
+        done
+
+        cp -f ${PWD}/../SQL/{iredapd.mysql,greylisting_whitelists.sql} /tmp/
+        chmod 0555 /tmp/{iredapd.mysql,greylisting_whitelists.sql}
+
+        # Create database and tables.
+        mysql -u${_sql_root_username} -p${_sql_root_password} <<EOF
+CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE ${IREDAPD_DB_NAME};
+SOURCE /tmp/iredapd.mysql;
+GRANT ALL ON ${IREDAPD_DB_NAME}.* TO "${IREDAPD_DB_USER}"@"localhost" IDENTIFIED BY "${IREDAPD_DB_PASSWD}";
+SOURCE /tmp/greylisting_whitelists.sql;
+FLUSH PRIVILEGES;
+EOF
+
+        rm -f /tmp/{iredapd.mysql,greylisting_whitelists.sql}
+
+    elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
+        export IREDAPD_DB_PORT='5432'
+
+        # Create database directly.
+        cp -f ${PWD}/../SQL/{iredapd.pgsql,greylisting_whitelists.sql} /tmp/
+        chmod 0555 /tmp/{iredapd.pgsql,greylisting_whitelists.sql}
+
+        su - ${PGSQL_SYS_USER} -c "psql -d template1" <<EOF
+-- Create user, database, change owner
+CREATE USER ${IREDAPD_DB_USER} WITH ENCRYPTED PASSWORD '${IREDAPD_DB_PASSWD}' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+CREATE DATABASE ${IREDAPD_DB_NAME} WITH TEMPLATE template0 ENCODING 'UTF8';
+ALTER DATABASE ${IREDAPD_DB_NAME} OWNER TO ${IREDAPD_DB_USER};
+EOF
+
+        su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
+
+        # Connect to PGSQL as iredapd user.
+        su - ${PGSQL_SYS_USER} -c "psql -U ${IREDAPD_DB_USER} -d ${IREDAPD_DB_NAME}" <<EOF
+-- Import SQL template, enable greylisting by default, import greylisting whitelists.
+\i /tmp/iredapd.pgsql;
+INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
+\i /tmp/greylisting_whitelists.sql;
+EOF
+
+        rm -f /tmp/{iredapd.pgsql,greylisting_whitelists.sql}
+    fi
 fi
 
 
@@ -176,11 +261,11 @@ fi
 echo "* Checking dependent Python modules:"
 echo "  + [required] python-sqlalchemy"
 if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
-    [ X"${DISTRO}" == X'RHEL' ] && install_pkg python-sqlalchemy
-    [ X"${DISTRO}" == X'DEBIAN' ] && install_pkg python-sqlalchemy
-    [ X"${DISTRO}" == X'UBUNTU' ] && install_pkg python-sqlalchemy
-    [ X"${DISTRO}" == X'FREEBSD' ] && install_pkg databases/py-sqlalchemy
-    [ X"${DISTRO}" == X'UBUNTU' ] && install_pkg py-sqlalchemy
+    [ X"${DISTRO}" == X'RHEL' ]     && install_pkg python-sqlalchemy
+    [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-sqlalchemy
+    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-sqlalchemy
+    [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg databases/py-sqlalchemy
+    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg py-sqlalchemy
 fi
 
 
@@ -266,12 +351,12 @@ fi
 
 # iRedAPD related settings.
 if ! grep '^iredapd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
-    # Add sample setting.
-    add_missing_parameter 'iredapd_db_server' '127.0.0.1'
-    add_missing_parameter 'iredapd_db_port' '3306'
-    add_missing_parameter 'iredapd_db_name' 'iredapd'
-    add_missing_parameter 'iredapd_db_user' 'iredapd'
-    add_missing_parameter 'iredapd_db_password' 'password'
+    # Add required settings.
+    add_missing_parameter 'iredapd_db_server' "${IREDAPD_DB_SERVER}"
+    add_missing_parameter 'iredapd_db_port' "${IREDAPD_DB_PORT}"
+    add_missing_parameter 'iredapd_db_name' "${IREDAPD_DB_NAME}"
+    add_missing_parameter 'iredapd_db_user' "${IREDAPD_DB_USER}"
+    add_missing_parameter 'iredapd_db_password' "${IREDAPD_DB_PASSWD}"
 fi
 
 # replace old parameter names: sql_[XX] -> vmail_db_[XX]
