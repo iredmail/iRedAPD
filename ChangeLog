@@ -36,9 +36,6 @@ iRedAPD-1.7.0:
               bypass specified forged sender addresses.
 
         - plugins/amavisd_wblist.py:
-            + Able to block sender addresses based on regular expression.
-              Note: this is controlled by new setting:
-              `WBLIST_BLOCKED_REGX_SENDERS`.
             + Able to check white/blacklist for outbound message.
               Note: new SQL table `amavisd.outbound_wblist` is required.
             + Able to not check white/blacklists on outgoing emails sent by

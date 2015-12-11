@@ -64,29 +64,6 @@ ENABLE_ALL_WILDCARD_IP = True
 # Don't check white/blacklists for outgoing emails sent by sasl authenticated user.
 WBLIST_BYPASS_OUTGOING_EMAIL = False
 
-# Define a list of blocked sender addresses with (Python) regular expressions.
-#
-# For example, spammer may frenqently change the domain names, e.g.
-# @spam_a.com, @spam_b.com, @spam_3.com, this way you can define a sender
-# address with regular expression like this: '.*@spam_.*\.com'.
-#
-# Sample setting:
-#   WBLIST_BLOCKED_REGX_SENDERS = ['.*@spam_.*\.com', '.*sometext.*']
-#
-# You can verify the regular expression with Python interactive shell:
-#
-#   $ python
-#   >>> import re
-#   >>> re.compile('Your Regular Expression', re.IGNORECASE | re.DOTALL).match('the_sender_address')
-#
-# For example:
-#
-#   >>> re.compile('.*@spam_.*\.com', re.IGNORECASE | re.DOTALL).match('user@spam_a.com')
-#
-# If it returns message like "<_sre.SRE_Match object at ...>", that means the
-# regular expression ('.*@spam_.*\.com') matches the string (sender address).
-WBLIST_BLOCKED_REGX_SENDERS = []
-
 # ---------------
 # Required by:
 #   - plugins/sql_force_change_password_in_days.py
