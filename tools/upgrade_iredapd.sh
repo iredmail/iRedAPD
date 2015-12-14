@@ -402,11 +402,13 @@ perl -pi -e 's#^(log_file).*#${1} = $ENV{IREDAPD_LOG_FILE}#' ${IREDADMIN_CONF_PY
 #------------------------------
 # Cron job.
 #
-CRON_FILE="${CRON_SPOOL_DIR}/${IREDAPD_DAEMON_USER}"
+# /opt/iRedAPD-* will be owned by root user, so we have to add cron job for
+# root user instead of iredapd daemon user.
+CRON_FILE="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
 
 add_iredapd_cron_job='NO'
 if [ -f ${CRON_FILE} ]; then
-    if ! grep 'tools/cleanup_db.py' ${CRON_FILE} &>/dev/null; then
+    if ! grep '/opt/iredapd/tools/cleanup_db.py' ${CRON_FILE} &>/dev/null; then
         # No cron file, add required cron jobs.
         add_iredapd_cron_job='YES'
     fi
