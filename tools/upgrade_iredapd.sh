@@ -240,17 +240,27 @@ EOF
 CREATE USER ${IREDAPD_DB_USER} WITH ENCRYPTED PASSWORD '${IREDAPD_DB_PASSWD}' NOSUPERUSER NOCREATEDB NOCREATEROLE;
 CREATE DATABASE ${IREDAPD_DB_NAME} WITH TEMPLATE template0 ENCODING 'UTF8';
 ALTER DATABASE ${IREDAPD_DB_NAME} OWNER TO ${IREDAPD_DB_USER};
+
+\c ${IREDAPD_DB_NAME};
+
+-- Import SQL template
+\i /tmp/iredapd.pgsql;
+
+-- Enable greylisting by default
+INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
+
+-- Import greylisting whitelists.
+\i /tmp/greylisting_whitelists.sql;
+
+-- Grant permissions
+GRANT ALL on greylisting, greylisting_tracking, greylisting_whitelists to ${IREDAPD_DB_USER};
+GRANT ALL on greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitelists_id_seq to ${IREDAPD_DB_USER};
+
+GRANT ALL on throttle, throttle_tracking to ${IREDAPD_DB_USER};
+GRANT ALL on throttle_id_seq, throttle_tracking_id_seq to ${IREDAPD_DB_USER};
 EOF
 
         su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
-
-        # Connect to PGSQL as iredapd user.
-        su - ${PGSQL_SYS_USER} -c "psql -U ${IREDAPD_DB_USER} -d ${IREDAPD_DB_NAME}" <<EOF
--- Import SQL template, enable greylisting by default, import greylisting whitelists.
-\i /tmp/iredapd.pgsql;
-INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
-\i /tmp/greylisting_whitelists.sql;
-EOF
 
         rm -f /tmp/{iredapd.pgsql,greylisting_whitelists.sql}
     fi
@@ -420,7 +430,7 @@ fi
 if [ X"${add_iredapd_cron_job}" == X'YES' ]; then
     [ -d ${CRON_SPOOL_DIR} ] || mkdir -p ${CRON_SPOOL_DIR}
     cat >> ${CRON_FILE} <<EOF
-# Clean up expired tracking records.
+# iRedAPD: Clean up expired tracking records hourly.
 1   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/cleanup_db.py &>/dev/null
 EOF
 fi
