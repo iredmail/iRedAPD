@@ -121,6 +121,9 @@ if qr:
                            'period': _period,
                            'priority': priority}
 
+if not quotas_ids:
+    sys.exit('No throttle settings found. Exit.')
+
 # Get detailed throttle settings.
 qr = conn.select('quotas_limits',
                  vars={'quotas_ids': quotas_ids},
