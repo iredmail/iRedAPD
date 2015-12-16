@@ -36,10 +36,6 @@ source files to understand how it works and what it does.
 
 * `amavisd_wblist`: Whitelist/blacklist for both inbound and outbound messages.
 
-* `amavisd_message_size_limit`: Check per-recipient message size limit
-  stored in Amavisd database (column `policy.message_size_limit`), reject email
-  if message size exceeded.
-
 ## Plugins for OpenLDAP backend
 
 * `ldap_maillist_access_policy`: restrict who can send email to mail list.

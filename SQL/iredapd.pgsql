@@ -106,6 +106,9 @@ CREATE TABLE IF NOT EXISTS greylisting (
 CREATE UNIQUE INDEX idx_greylisting_account_sender ON greylisting (account, sender);
 CREATE INDEX idx_greylisting_comment ON greylisting (comment);
 
+-- Enable greylisting by default.
+INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
+
 CREATE TABLE IF NOT EXISTS greylisting_whitelists (
     id      SERIAL PRIMARY KEY,
     account VARCHAR(255)    NOT NULL DEFAULT '',
