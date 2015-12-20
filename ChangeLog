@@ -1,5 +1,6 @@
 iRedAPD-1.7.1:
     * Fixed issues:
+        - Not correctly update log file path in tools/upgrade_iredapd.sh.
         - Not enable greylisting by default.
 
 iRedAPD-1.7.0:

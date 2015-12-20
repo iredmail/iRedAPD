@@ -401,7 +401,7 @@ chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${IREDAPD_LOG_DIR}
 chmod -R 0700 ${IREDAPD_LOG_DIR}
 
 # Always reset log file.
-perl -pi -e 's#^(log_file).*#${1} = $ENV{IREDAPD_LOG_FILE}#' ${IREDADMIN_CONF_PY}
+perl -pi -e 's#^(log_file).*#${1} = $ENV{IREDAPD_LOG_FILE}#' ${IREDAPD_CONF_PY}
 
 # Remove old logrotate config file.
 # Linux

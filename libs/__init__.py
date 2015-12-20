@@ -1,5 +1,5 @@
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
-__version__ = '1.7.0'
+__version__ = '1.7.1'
 
 
 SMTP_ACTIONS = {
@@ -44,16 +44,16 @@ PLUGIN_PRIORITIES = {
 # Used in plugins:
 #   - greylisting.py
 ACCOUNT_PRIORITIES = {
-    'email': 100,           # e.g. 'user@domain.com'. Highest priority
-    'wildcard_addr': 90,    # e.g. `user@*`. used in plugin `amavisd_wblist`
-                            # as wildcard sender. e.g. 'user@*`
-    'ip': 80,               # e.g. 173.254.22.21
-    'wildcard_ip': 70,      # e.g. 173.254.22.*
-    'cidr': 70,             # e.g. 173.254.22.0/24
-    'domain': 60,           # e.g. @domain.com
-    'subdomain': 50,        # e.g. @.domain.com
-    'top_level_domain': 40, # e.g. @com, @org
-    'catchall': 0,          # '@.'. Lowest priority
+    'email': 100,               # e.g. 'user@domain.com'. Highest priority
+    'wildcard_addr': 90,        # e.g. `user@*`. used in plugin `amavisd_wblist`
+                                # as wildcard sender. e.g. 'user@*`
+    'ip': 80,                   # e.g. 173.254.22.21
+    'wildcard_ip': 70,          # e.g. 173.254.22.*
+    'cidr': 70,                 # e.g. 173.254.22.0/24
+    'domain': 60,               # e.g. @domain.com
+    'subdomain': 50,            # e.g. @.domain.com
+    'top_level_domain': 40,     # e.g. @com, @org
+    'catchall': 0,              # '@.'. Lowest priority
 }
 
 # Mail list access policies.
