@@ -113,7 +113,7 @@ ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = False
 # Required by: plugins/greylisting.py
 #
 # Reject reason for greylisting.
-GREYLISTING_MESSAGE = 'Intended policy rejection, please try again later'
+GREYLISTING_MESSAGE = 'Intentional policy rejection, please try again later'
 
 # Number of MINUTES to wait before client retrying.
 # Temporarily reject if client retries in specified time.
