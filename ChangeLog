@@ -1,4 +1,5 @@
 iRedAPD-1.7.1:
+    * Add greylisting whitelists for Amazon (amazon.com, amazonses.com).
     * Fixed issues:
         - Not correctly update log file path in tools/upgrade_iredapd.sh.
         - Not enable greylisting by default.
