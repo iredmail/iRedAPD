@@ -266,6 +266,8 @@ EOF
     fi
 fi
 
+echo "* Disable Policyd/Cluebringer integration."
+perl -pi -e 's#^(policyd_enabled.*=.*)#policyd_enable = False#g' ${IREDAPD_CONF_PY}
 
 # Check dependent packages. Prompt to install missed ones manually.
 echo "* Checking dependent Python modules:"
