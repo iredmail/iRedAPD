@@ -1,10 +1,7 @@
-* `plugins/throttle.py`: able to throttle all users together with per-domain
-  or global setting, not just per-user.
+* Scripts required:
 
-* Cron job to clean up `throttle` sql table (remove non-existing user?).
-* plugins/greylisting.py:
-
-    * server-wide, per-domain and per-user.
+    * manage global, per-domain and per-user white/blacklists for inbound msgs
+    * manage global, per-domain and per-user white/blacklists for outbound msgs
 
 * [?] HELO restrictions.
 
