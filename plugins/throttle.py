@@ -50,15 +50,16 @@
 #
 # Priorities of different thorttle address (larger digital number has higher priority):
 #
-#   *) ip: 10,
-#   *) email: 8,
-#   *) wildcard_addr: 6,     # e.g. `user@*`. used in plugin `amavisd_wblist`
-#                            # as wildcard sender. e.g. 'user@*`
-#   *) domain: 5,
-#   *) subdomain: 3,
-#   *) top_level_domain: 2,
-#   *) catchall for IP address: 1
-#   *) catchall for email address: 0
+#   *) email: 100           # e.g. 'user@domain.com'. Highest priority
+#   *) wildcard_addr: 90    # e.g. `user@*`. used in plugin `amavisd_wblist`
+#                           # as wildcard sender. e.g. 'user@*`
+#   *) ip: 80               # e.g. 173.254.22.21
+#   *) wildcard_ip: 70      # e.g. 173.254.22.*
+#   *) cidr: 70             # e.g. 173.254.22.0/24
+#   *) domain: 60           # e.g. @domain.com
+#   *) subdomain: 50        # e.g. @.domain.com
+#   *) top_level_domain: 40 # e.g. @com, @org
+#   *) catchall: 0          # '@.'. Lowest priority
 
 # ------------
 # Valid throttle settings:
