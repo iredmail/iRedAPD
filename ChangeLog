@@ -1,6 +1,10 @@
 iRedAPD-1.7.1:
     * Add greylisting whitelists for Amazon (amazon.com, amazonses.com).
     * Fixed issues:
+        - plugins/reject_sender_login_mismatch.py: not bypass email which is
+          not sent by authenticated user.
+        - plugins/amavisd_wblist.py: not bypass email which doesn't contain a
+          sender or sasl_username address.
         - Not correctly update log file path in tools/upgrade_iredapd.sh.
         - Not enable greylisting by default.
 

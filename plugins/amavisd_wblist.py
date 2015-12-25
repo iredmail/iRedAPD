@@ -192,6 +192,10 @@ def restriction(**kwargs):
         # Use sasl_username as sender for outgoing email
         sender = kwargs['sasl_username']
 
+    if not sender:
+        logger.debug('Bypass: both sender and sasl_username are empty.')
+        return SMTP_ACTIONS['default']
+
     recipient = kwargs['recipient']
 
     if sender == recipient:
