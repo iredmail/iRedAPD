@@ -22,6 +22,35 @@ regx_wildcard_ipv4 = r'(?:[\d\*]{1,3})\.(?:[\d\*]{1,3})\.(?:[\d\*]{1,3})\.(?:[\d
 # Wildcard sender address: 'user@*'
 regx_wildcard_addr = r'''[\w\-][\w\-\.\+\=]*@\*'''
 
+# Priority used in SQL table `amavisd.mailaddr` and iRedAPD plugin `throttle`.
+# 0 is the lowest priority.
+# Reference: http://www.amavis.org/README.lookups.txt
+#
+# The following order (implemented by sorting on the 'priority' field
+# in DESCending order, zero is low priority) is recommended, to follow
+# the same specific-to-general principle as in other lookup tables;
+#   9 - lookup for user+foo@sub.example.com
+#   8 - lookup for user@sub.example.com (only if $recipient_delimiter is '+')
+#   7 - lookup for user+foo (only if domain part is local)
+#   6 - lookup for user     (only local; only if $recipient_delimiter is '+')
+#   5 - lookup for @sub.example.com
+#   3 - lookup for @.sub.example.com
+#   2 - lookup for @.example.com
+#   1 - lookup for @.com
+#   0 - lookup for @.       (catchall)
+MAILADDR_PRIORITIES = {
+    'email': 10,
+    'ip': 9,
+    'wildcard_ip': 8,
+    'wildcard_addr': 7,     # r'user@*'. used in iRedAPD plugin `amavisd_wblist`
+                            # as wildcard sender. e.g. 'user@*'
+    'domain': 5,
+    'subdomain': 3,
+    'tld_domain': 2,
+    'catchall_ip': 1,       # used in iRedAPD plugin `throttle`
+    'catchall': 0,
+}
+
 # Convert all IP address, wildcard IPs, subnet to `ipaddress` format.
 TRUSTED_IPS = []
 TRUSTED_NETWORKS = []
@@ -364,5 +393,3 @@ def log_smtp_session(conn, smtp_session_data):
             logger.debug('Update failed: %s' % str(e))
 
     return True
-
-

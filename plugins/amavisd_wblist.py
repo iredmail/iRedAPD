@@ -42,7 +42,6 @@
 #                   set 'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
 #                   /opt/iredapd/settings.py.
 
-import re
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_ipv4, wildcard_ipv4, sqllist
