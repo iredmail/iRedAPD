@@ -50,7 +50,7 @@ USAGE = """Usage:
 
     WARNING: Do not use --list, --add-whitelist, --add-blacklist at the same time.
 
-    --silent
+    --noninteractive
         Don't ask to confirm.
 
 Sample usage:
@@ -135,9 +135,9 @@ else:
     sys.exit('No --add, --delete or --list specified. Exit.')
 
 require_confirm = True
-if '--silent' in args:
+if '--noninteractive' in args:
     require_confirm = False
-    args.remove('--silent')
+    args.remove('--noninteractive')
 elif action == 'list':
     require_confirm = False
 
