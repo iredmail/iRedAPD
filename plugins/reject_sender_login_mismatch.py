@@ -136,6 +136,7 @@ def restriction(**kwargs):
 
     conn = kwargs['conn_vmail']
 
+    # Check emails sent from external network.
     if not sasl_username:
         logger.debug('Not an authenticated sender (no sasl_username).')
 
@@ -193,25 +194,36 @@ def restriction(**kwargs):
                 logger.debug('Sender domain is not hosted locally.')
                 return SMTP_ACTIONS['default']
 
+    # Check emails sent by authenticated users.
     logger.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
 
     if sender == sasl_username:
         logger.debug('SKIP: sender == sasl username.')
         return SMTP_ACTIONS['default']
-    else:
-        if not (allowed_senders or is_strict or allow_list_member):
-            logger.debug('No allowed senders in config file.')
-            return reject
 
+    #
+    # sender != sasl_username
+    #
+    # If no access settings available, reject directly.
+    if not (allowed_senders or is_strict or allow_list_member):
+        logger.debug('No allowed senders in config file.')
+        return reject
+
+    # Check explicitly allowed senders
     if allowed_senders:
         logger.debug('Allowed SASL senders: %s' % ', '.join(allowed_senders))
-        if (sasl_username in allowed_senders) or (sasl_username_domain in allowed_senders):
+        if sasl_username in allowed_senders:
+            logger.debug('Sender SASL username is explicitly allowed.')
+            return SMTP_ACTIONS['default']
+        elif sasl_username_domain in allowed_senders:
+            logger.debug('Sender domain name is explicitly allowed.')
             return SMTP_ACTIONS['default']
         elif ('@' + sasl_username_domain in allowed_senders) or ('@.' in allowed_senders):
             # Restrict to send as users under SAME domain
             if sasl_username_domain == sender_domain:
                 return SMTP_ACTIONS['default']
         else:
+            # Note: not reject email here, still need to check other access settings.
             logger.debug('Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
 
     # Check alias domains and user alias addresses
@@ -227,18 +239,17 @@ def restriction(**kwargs):
             filter_list_member = '(&(objectClass=mailUser)(|(mail=%s)(shadowAddress=%s))(memberOfGroup=%s))' % (sasl_username, sasl_username, sender)
             filter_alias_member = '(&(objectClass=mailAlias)(|(mail=%s)(shadowAddress=%s))(mailForwardingAddress=%s))' % (sender, sender, sasl_username)
 
-            if allowed_senders and allow_list_member:
-                query_filter = '(|' + filter_user_alias + filter_list_member + filter_alias_member + ')'
-                success_msg = 'Sender (%s) is an user alias address or list/alias member (%s).' % (sasl_username, sender)
-            elif is_strict and not allow_list_member:
+            if is_strict and (not allow_list_member):
                 # Query mail account directly
                 query_filter = filter_user_alias
                 success_msg = 'Sender is an user alias address.'
-            elif not is_strict and allow_list_member:
+            elif (not is_strict) and allow_list_member:
                 query_filter = '(|' + filter_list_member + filter_alias_member + ')'
                 success_msg = 'Sender (%s) is member of mail list/alias (%s).' % (sasl_username, sender)
             else:
-                success_msg = 'unknown error'
+                # (is_strict and allow_list_member)
+                query_filter = '(|' + filter_user_alias + filter_list_member + filter_alias_member + ')'
+                success_msg = 'Sender (%s) is an user alias address or list/alias member (%s).' % (sasl_username, sender)
 
             qr = conn_utils.get_account_ldif(
                 conn=conn,

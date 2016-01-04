@@ -24,6 +24,7 @@ USAGE = """Usage:
 
     --account account
         Add white/blacklists for specified (local) account. Valid formats:
+
             - a single user: username@domain.com
             - a single domain: domain.com
 
