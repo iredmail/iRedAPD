@@ -1,4 +1,4 @@
-iRedAPD-1.7.1:
+iRedAPD-1.8.0:
     * Add greylisting whitelists for Amazon (amazon.com, amazonses.com).
 
     * New script:
@@ -12,9 +12,11 @@ iRedAPD-1.7.1:
             * raise error if we have both ALLOWED_LOGIN_MISMATCH_STRICTLY and
               ALLOWED_LOGIN_MISMATCH_LIST_MEMBER enabled.
               Thanks rk <rk _at_ redb.cz> for the report in forum.
-        - plugins/amavisd_wblist.py: not bypass email which doesn't contain a
-          sender or sasl_username address. Note: it won't cause incorrect mail
-          rejection.
+        - plugins/amavisd_wblist.py:
+            * incorrect priority for outbound wblist.
+              Thanks bigman <jenri.tan _at_ gmail> fot the report in forum.
+            * not bypass email which doesn't contain a sender or sasl_username
+              address. Note: it won't cause incorrect mail rejection.
         - Not correctly update log file path in tools/upgrade_iredapd.sh.
         - Not enable greylisting by default.
 
