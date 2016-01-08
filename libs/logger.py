@@ -113,7 +113,7 @@ class CompressedTimedRotatingFileHandler(TimedRotatingFileHandler):
         os.remove(dfn)
 
 
-logger = logging.getLogger('iRedAPD')
+logger = logging.getLogger('iredapd')
 
 # Set log level.
 log_level = getattr(logging, str(settings.log_level).upper())
