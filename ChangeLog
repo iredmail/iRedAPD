@@ -13,6 +13,7 @@ iRedAPD-1.8.0:
               ALLOWED_LOGIN_MISMATCH_LIST_MEMBER enabled.
               Thanks rk <rk _at_ redb.cz> for the report in forum.
         - plugins/amavisd_wblist.py:
+            * fix improper high priority, it should be run after other plugins.
             * incorrect priority for outbound wblist.
               Thanks bigman <jenri.tan _at_ gmail> fot the report in forum.
             * not bypass email which doesn't contain a sender or sasl_username

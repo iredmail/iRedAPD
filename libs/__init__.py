@@ -35,10 +35,10 @@ PLUGIN_PRIORITIES = {
     'reject_sender_login_mismatch': 80,
     'ldap_force_change_password_in_days': 70,
     'sql_force_change_password_in_days': 71,
-    'amavisd_wblist': 60,
-    'throttle': 50,
-    'ldap_maillist_access_policy': 40,
-    'sql_alias_access_policy': 41,
+    'throttle': 60,
+    'ldap_maillist_access_policy': 50,
+    'sql_alias_access_policy': 51,
+    'amavisd_wblist': 40,
 }
 
 # Account proiroties.
