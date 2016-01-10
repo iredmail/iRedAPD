@@ -49,12 +49,12 @@
 #
 # TODO
 #
-#   - avoid loop
-#   - avoid
 #   - support spf syntax: ptr ptr:<domain>
+#   - import generated SQL file directly.
 
-#export DNS_SERVER='8.8.8.8'
-export DNS_SERVER='223.5.5.5'
+# Specify your preferred DNS server. A local DNS server is better.
+# 8.8.8.8 and 8.8.4.4 are Google DNS servers.
+export DNS_SERVER='8.8.8.8'
 
 # Temporary files
 # used to store queried domain names
@@ -80,6 +80,7 @@ query_ns()
     if [[ -z ${DNS_SERVER} ]]; then
         domain="${1}"
 
+        # Use local DNS server to query authorized NS server for further query
         NS="$(dig -t NS ${domain} |grep "^${domain}\." | grep 'NS' | awk '{print $NF}' | sed 's/\.$//g' | head -1)"
 
         if [[ -n ${NS} ]]; then
@@ -239,8 +240,10 @@ for domain in ${domains}; do
     # Parse returned SPF record
     ips="$(parse_spf ${domain} ${spf})"
 
-    # Delete old records.
-    echo "DELETE FROM greylisting_whitelists WHERE comment='AUTO-UPDATE: ${domain}';" >> ${TMP_SQL}
+    # Delete old records if the query returned new IP addresses.
+    if echo ${ips} | grep '\.' &>/dev/null; then
+        echo "DELETE FROM greylisting_whitelists WHERE comment='AUTO-UPDATE: ${domain}';" >> ${TMP_SQL}
+    fi
 
     for ip in ${ips}; do
         # Avoid duplicate IP/network
