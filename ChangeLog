@@ -2,6 +2,9 @@ iRedAPD-1.8.0:
     * Add greylisting whitelists for Amazon (amazon.com, amazonses.com).
 
     * New script:
+        - tools/spf_to_greylist_whitelists.sh: it will query SPF DNS record of
+          specified domains and generate SQL file which is used to insert IP
+          addresses of SPF records as whitelisted greylisting senders.
         - tools/wblist_admin.py: used to manage inbound/outbound whitelists
           and blacklists.
 
