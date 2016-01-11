@@ -316,7 +316,10 @@ if [ X"${IMPORT_SQL}" == X'YES' ]; then
         # PostgreSQL: Import with `psql`
         export PGPASSWORD="${iredapd_db_password}"
 
-        psql -U ${iredapd_db_user} -d ${iredapd_db_name} -c "\i ${TMP_SQL}" >/dev/null
+        # Execute one SQL command each time to avoid interrupt caused by duplicate records.
+        while read line; do
+            psql -U ${iredapd_db_user} -d ${iredapd_db_name} -c "${line}" >/dev/null
+        done < ${TMP_SQL}
 
         if [ X"$?" == X'0' ]; then
             echo "* [DONE] Imported."
@@ -325,12 +328,14 @@ if [ X"${IMPORT_SQL}" == X'YES' ]; then
         fi
     else
         # MySQL: Import with `mysql`
-        mysql -h${iredapd_db_server} \
-              -p${iredapd_db_port} \
-              -u${iredapd_db_user} \
-              -p${iredapd_db_password} \
-              ${iredapd_db_name} \
-              -e "SOURCE ${TMP_SQL}"
+        while read line; do
+            mysql -h${iredapd_db_server} \
+                  -p${iredapd_db_port} \
+                  -u${iredapd_db_user} \
+                  -p${iredapd_db_password} \
+                  ${iredapd_db_name} \
+                  -e "${line}"
+        done < ${TMP_SQL}
 
         if [ X"$?" == X'0' ]; then
             echo "* [DONE] Imported."
