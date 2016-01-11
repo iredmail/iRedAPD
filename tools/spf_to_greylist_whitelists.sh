@@ -94,7 +94,7 @@ strip_quotes()
     # Read input from stdin
     str="$(cat <&0)"
 
-    value="$(echo ${str} | sed 's/\"//g' | sed "s/\'//g")"
+    value="$(echo ${str} | tr -d '"' | tr -d "'")"
 
     echo "${value}"
 }
