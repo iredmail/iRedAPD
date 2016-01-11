@@ -318,7 +318,7 @@ if [ X"${IMPORT_SQL}" == X'YES' ]; then
 
         # Execute one SQL command each time to avoid interrupt caused by duplicate records.
         while read line; do
-            psql -U ${iredapd_db_user} -d ${iredapd_db_name} -c "${line}" >/dev/null
+            psql -U ${iredapd_db_user} -d ${iredapd_db_name} -c "${line}" 2>/dev/null
         done < ${TMP_SQL}
 
         if [ X"$?" == X'0' ]; then
@@ -334,7 +334,7 @@ if [ X"${IMPORT_SQL}" == X'YES' ]; then
                   -u${iredapd_db_user} \
                   -p${iredapd_db_password} \
                   ${iredapd_db_name} \
-                  -e "${line}"
+                  -e "${line}" 2>/dev/null
         done < ${TMP_SQL}
 
         if [ X"$?" == X'0' ]; then
