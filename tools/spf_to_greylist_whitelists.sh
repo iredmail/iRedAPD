@@ -14,13 +14,19 @@
 #
 #   For example:
 #
-#       $ bash spf_to_greylist_whitelists.sh google.com aol.com hotmail.com
+#       $ bash spf_to_greylist_whitelists.sh google.com aol.com
 #
 #   it will create file:
 #
 #       /tmp/iredapd-greylisting-whitelist-auto-update.sql
 #
 #   You'd better review it before importing it to iRedAPD SQL database.
+#   If you prefer to import generated SQL file directly, please run it with
+#   argument '--import' (it must be FIRST argument). It will read iRedAPD
+#   config file (defaults to /opt/iredapd/settings.py) to extract SQL
+#   credential and import generated SQL file. e.g.
+#
+#       $ bash spf_to_greylist_whitelists.sh --import google.com aol.com
 
 #
 # Required commands:
@@ -54,7 +60,16 @@
 
 # Specify your preferred DNS server. A local DNS server is better.
 # 8.8.8.8 and 8.8.4.4 are Google DNS servers.
-export DNS_SERVER='8.8.8.8'
+#export DNS_SERVER='8.8.8.8'
+export DNS_SERVER='223.5.5.5'
+
+# Import generated SQL file directly.
+export IREDAPD_CONF='/opt/iredapd/settings.py'
+export IMPORT_SQL='NO'
+if [ X"${1}" == X'--import' ] ; then
+    export IMPORT_SQL='YES'
+    shift 1
+fi
 
 # Temporary files
 # used to store queried domain names
@@ -69,6 +84,17 @@ get_value_after_colon()
 {
     str="${1}"
     value="$(echo ${str} | awk -F':' '{print $2}')"
+
+    echo "${value}"
+}
+
+# Remove all single quote and double quotes in string.
+strip_quotes()
+{
+    # Read input from stdin
+    str="$(cat <&0)"
+
+    value="$(echo ${str} | sed 's/\"//g' | sed "s/\'//g")"
 
     echo "${value}"
 }
@@ -123,7 +149,7 @@ query_mx()
     echo "${a}"
 }
 
-# Query and parse SPF record.
+# Query SPF record.
 query_spf()
 {
     domain="${1}"
@@ -160,6 +186,12 @@ parse_spf()
     domain="${1}"
     shift 1
     spf="$@"
+
+    # Return if no spf record
+    if [[ -z ${spf} ]]; then
+        echo ''
+        return
+    fi
 
     # Collect final IP addresses of SPF records
     ip=''
@@ -263,4 +295,41 @@ done
 # Remove temporary files.
 rm -f ${TMP_QUERIED_DOMAINS} ${TMP_RETURNED_IPS} &>/dev/null
 
-echo "* [DONE] Please review file ${TMP_SQL} before importing it to iredapd database."
+# Extract SQL username/password from iRedAPD config file to import SQL file
+if [ X"${IMPORT_SQL}" == X'YES' ]; then
+    if [[ ! -f ${IREDAPD_CONF} ]]; then
+        echo "* <<< ERROR >>> iRedAPD config file ${IREDAPD_CONF} doesn't exist, not importing SQL file. Abort."
+        exit 255
+    fi
+
+    iredapd_db_server="$(grep '^iredapd_db_server' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+    iredapd_db_port="$(grep '^iredapd_db_port' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+    iredapd_db_name="$(grep '^iredapd_db_name' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+    iredapd_db_user="$(grep '^iredapd_db_user' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+    iredapd_db_password="$(grep '^iredapd_db_password' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+
+    # Get backend
+    backend="$(grep '^backend' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+
+    if [ X"${backend}" == X'pgsql' ]; then
+        # PostgreSQL: Import with `psql`
+        :
+    else
+        # MySQL: Import with `mysql`
+        set -x
+        echo "* Importing SQL file ..."
+        mysql -h${iredapd_db_server} \
+              -p${iredapd_db_port} \
+              -u${iredapd_db_user} \
+              -p${iredapd_db_password} \
+              ${iredapd_db_name} \
+              -e "SOURCE ${TMP_SQL}"
+        echo "* [DONE] Imported."
+
+        echo "* Removing SQL file ..."
+        rm -f ${TMP_SQL} &>/dev/null
+        set +x
+    fi
+else
+    echo "* Please review file ${TMP_SQL} before importing it to iRedAPD database."
+fi
