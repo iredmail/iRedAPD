@@ -60,8 +60,7 @@
 
 # Specify your preferred DNS server. A local DNS server is better.
 # 8.8.8.8 and 8.8.4.4 are Google DNS servers.
-#export DNS_SERVER='8.8.8.8'
-export DNS_SERVER='223.5.5.5'
+export DNS_SERVER='8.8.8.8'
 
 # Import generated SQL file directly.
 export IREDAPD_CONF='/opt/iredapd/settings.py'
