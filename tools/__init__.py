@@ -33,7 +33,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(message)s',
                     datefmt='')
 
-logger = logging.getLogger('iRedAPD')
+logger = logging.getLogger('iredapd')
 
 
 def print_error(msg):

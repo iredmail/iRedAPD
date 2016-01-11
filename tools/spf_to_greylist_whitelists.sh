@@ -99,6 +99,14 @@ strip_quotes()
     echo "${value}"
 }
 
+get_value_of_iredapd_setting()
+{
+    var="${1}"
+    value="$(grep "^${var}" ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+
+    echo "${value}"
+}
+
 # Use default dns server (DNS_SERVER) or query to find authorized NS servers
 # for specified domain (only first one will be used).
 query_ns()
@@ -302,14 +310,14 @@ if [ X"${IMPORT_SQL}" == X'YES' ]; then
         exit 255
     fi
 
-    iredapd_db_server="$(grep '^iredapd_db_server' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
-    iredapd_db_port="$(grep '^iredapd_db_port' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
-    iredapd_db_name="$(grep '^iredapd_db_name' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
-    iredapd_db_user="$(grep '^iredapd_db_user' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
-    iredapd_db_password="$(grep '^iredapd_db_password' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+    iredapd_db_server="$(get_value_of_iredapd_setting 'iredapd_db_server')"
+    iredapd_db_port="$(get_value_of_iredapd_setting 'iredapd_db_port')"
+    iredapd_db_name="$(get_value_of_iredapd_setting 'iredapd_db_name')"
+    iredapd_db_user="$(get_value_of_iredapd_setting 'iredapd_db_user')"
+    iredapd_db_password="$(get_value_of_iredapd_setting 'iredapd_db_password')"
 
     # Get backend
-    backend="$(grep '^backend' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
+    backend="$(get_value_of_iredapd_setting 'backend')"
 
     echo "* Importing SQL file ..."
     if [ X"${backend}" == X'pgsql' ]; then
@@ -318,13 +326,13 @@ if [ X"${IMPORT_SQL}" == X'YES' ]; then
 
         # Execute one SQL command each time to avoid interrupt caused by duplicate records.
         while read line; do
-            psql -U ${iredapd_db_user} -d ${iredapd_db_name} -c "${line}" 2>/dev/null
+            psql -U ${iredapd_db_user} -d ${iredapd_db_name} -c "${line}" #2>/dev/null
         done < ${TMP_SQL}
 
         if [ X"$?" == X'0' ]; then
             echo "* [DONE] Imported."
         else
-            echo "* Importing failed."
+            echo "* <<< ERROR >>> Importing failed."
         fi
     else
         # MySQL: Import with `mysql`

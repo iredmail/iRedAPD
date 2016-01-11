@@ -108,6 +108,25 @@ else
     exit 255
 fi
 
+# Remove all single quote and double quotes in string.
+strip_quotes()
+{
+    # Read input from stdin
+    str="$(cat <&0)"
+
+    value="$(echo ${str} | tr -d '"' | tr -d "'")"
+
+    echo "${value}"
+}
+
+get_value_of_iredapd_setting()
+{
+    var="${1}"
+    value="$(grep "^${var}" ${IREDAPD_CONF_PY} | awk '{print $NF}' | strip_quotes)"
+
+    echo "${value}"
+}
+
 install_pkg()
 {
     echo "Install package: $@"
@@ -266,7 +285,57 @@ EOF
     fi
 fi
 
+#
+# Add missing/new SQL columns
+#
+export iredapd_db_server="$(get_value_of_iredapd_setting 'iredapd_db_server')"
+export iredapd_db_port="$(get_value_of_iredapd_setting 'iredapd_db_port')"
+export iredapd_db_name="$(get_value_of_iredapd_setting 'iredapd_db_name')"
+export iredapd_db_user="$(get_value_of_iredapd_setting 'iredapd_db_user')"
+export iredapd_db_password="$(get_value_of_iredapd_setting 'iredapd_db_password')"
+
+# Add sql table `greylisting_whitelist_domains`
+if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
+    mysql -h${iredapd_db_server} \
+          -p${iredapd_db_port} \
+          -u${iredapd_db_user} \
+          -p${iredapd_db_password} \
+          ${iredapd_db_name} <<EOF
+CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
+    id        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
+    domain    VARCHAR(255)    NOT NULL DEFAULT '',
+    PRIMARY KEY (id),
+    UNIQUE INDEX (domain)
+) ENGINE=InnoDB;
+EOF
+elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
+    export PGPASSWORD="${iredapd_db_password}"
+
+    psql -h ${iredapd_db_server} \
+         -p ${iredapd_db_port} \
+         -U ${iredapd_db_user} \
+         -d ${iredapd_db_name} \
+         -c "SELECT id FROM greylisting_whitelist_domains LIMIT 1" &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        psql -h ${iredapd_db_server} \
+             -p ${iredapd_db_port} \
+             -U ${iredapd_db_user} \
+             -d ${iredapd_db_name} \
+             -c "
+CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
+    id      SERIAL PRIMARY KEY,
+    domain  VARCHAR(255) NOT NULL DEFAULT ''
+);
+
+CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whitelist_domains (domain);
+"
+    fi
+fi
+
+#
 # Check dependent packages. Prompt to install missed ones manually.
+#
 echo "* Checking dependent Python modules:"
 echo "  + [required] python-sqlalchemy"
 if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
@@ -274,7 +343,16 @@ if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
     [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-sqlalchemy
     [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-sqlalchemy
     [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg databases/py-sqlalchemy
-    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg py-sqlalchemy
+    [ X"${DISTRO}" == X'OPENBSD' ]  && install_pkg py-sqlalchemy
+fi
+
+echo "  + [required] dnspython"
+if [ X"$(has_python_module dns)" == X'NO' ]; then
+    [ X"${DISTRO}" == X'RHEL' ]     && install_pkg python-dns
+    [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-dnspython
+    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-dnspython
+    [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg dns/py-dnspython
+    [ X"${DISTRO}" == X'OPENBSD' ]  && install_pkg py-dnspython
 fi
 
 
@@ -400,7 +478,7 @@ chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${IREDAPD_LOG_DIR}
 chmod -R 0700 ${IREDAPD_LOG_DIR}
 
 # Always reset log file.
-perl -pi -e 's#^(log_file).*#${1} = $ENV{IREDAPD_LOG_FILE}#' ${IREDAPD_CONF_PY}
+perl -pi -e 's#^(log_file).*#${1} = "$ENV{IREDAPD_LOG_FILE}"#' ${IREDAPD_CONF_PY}
 
 # Remove old logrotate config file.
 # Linux
@@ -415,22 +493,25 @@ perl -pi -e 's#^(log_file).*#${1} = $ENV{IREDAPD_LOG_FILE}#' ${IREDAPD_CONF_PY}
 # root user instead of iredapd daemon user.
 CRON_FILE="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
 
-add_iredapd_cron_job='NO'
-if [ -f ${CRON_FILE} ]; then
-    if ! grep '/opt/iredapd/tools/cleanup_db.py' ${CRON_FILE} &>/dev/null; then
-        # No cron file, add required cron jobs.
-        add_iredapd_cron_job='YES'
-    fi
-else
-    add_iredapd_cron_job='YES'
+[[ -d ${CRON_SPOOL_DIR} ]] || mkdir -p ${CRON_SPOOL_DIR} &>/dev/null
+if [[ ! -f ${CRON_FILE} ]]; then
+    touch ${CRON_FILE} &>/dev/null
+    chmod 0600 ${CRON_FILE} &>/dev/null
 fi
 
-# No cron file, add required cron jobs.
-if [ X"${add_iredapd_cron_job}" == X'YES' ]; then
-    [ -d ${CRON_SPOOL_DIR} ] || mkdir -p ${CRON_SPOOL_DIR}
+# cron job for cleaning up database.
+if ! grep '/opt/iredapd/tools/cleanup_db.py' ${CRON_FILE} &>/dev/null; then
     cat >> ${CRON_FILE} <<EOF
 # iRedAPD: Clean up expired tracking records hourly.
 1   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/cleanup_db.py &>/dev/null
+EOF
+fi
+
+# cron job for cleaning up database.
+if ! grep '/opt/iredapd/tools/spf_to_greylisting_whitelists.py' ${CRON_FILE} &>/dev/null; then
+    cat >> ${CRON_FILE} <<EOF
+# iRedAPD: Update IP addresses/networks of greylisting whitelist domains.
+1   3   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylisting_whitelists.py &>/dev/null
 EOF
 fi
 

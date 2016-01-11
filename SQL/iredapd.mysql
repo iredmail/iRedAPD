@@ -171,6 +171,19 @@ CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     INDEX (`comment`)
 ) ENGINE=InnoDB;
 
+-- Store mail domain names which you want to disable greylisting for their
+-- mail servers.
+--
+-- Note: these domain names are not used by iRedAPD directly, you need to setup
+--       a daily cron job to run 'tools/spf_to_greylisting_whitelists.py' to
+--       whitelist IP addresses or networks of their mail servers.
+CREATE TABLE IF NOT EXISTS `greylisting_whitelist_domains` (
+    `id`        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
+    `domain`    VARCHAR(255)    NOT NULL DEFAULT '',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX (`domain`)
+) ENGINE=InnoDB;
+
 -- Track smtp session for greylisting.
 -- Old records should be removed with a cron job.
 CREATE TABLE IF NOT EXISTS `greylisting_tracking` (

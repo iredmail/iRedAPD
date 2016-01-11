@@ -119,6 +119,18 @@ CREATE TABLE IF NOT EXISTS greylisting_whitelists (
 CREATE UNIQUE INDEX idx_greylisting_whitelists_account_sender ON greylisting_whitelists (account, sender);
 CREATE INDEX idx_greylisting_whitelists_comment ON greylisting_whitelists (comment);
 
+-- Store mail domain names which you want to disable greylisting for their
+-- mail servers.
+--
+-- Note: these domain names are not used by iRedAPD directly, you need to setup
+--       a daily cron job to run 'tools/spf_to_greylisting_whitelists.sh' to
+CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
+    id      SERIAL PRIMARY KEY,
+    domain  VARCHAR(255) NOT NULL DEFAULT ''
+);
+
+CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whitelist_domains (domain);
+
 -- Track smtp session for greylisting.
 -- Old records should be removed with a cron job.
 CREATE TABLE IF NOT EXISTS greylisting_tracking (
