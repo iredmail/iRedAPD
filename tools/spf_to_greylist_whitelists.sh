@@ -43,8 +43,9 @@
 #
 #   * not supported spf syntax:
 #
-#       - a/24 a:offsite.example.com/24
-#       - mx/24 mx:offsite.example.com/24
+#       - ptr ptr:<domain>
+#       - a/24 a:<domain>/24
+#       - mx/24 mx:<domain>/24
 #       - exists:<domain>
 
 #
@@ -60,7 +61,7 @@
 
 # Specify your preferred DNS server. A local DNS server is better.
 # 8.8.8.8 and 8.8.4.4 are Google DNS servers.
-export DNS_SERVER='8.8.8.8'
+export DNS_SERVER="${DNS_SERVER:=8.8.8.8}"
 
 # Import generated SQL file directly.
 export IREDAPD_CONF='/opt/iredapd/settings.py'
@@ -310,25 +311,36 @@ if [ X"${IMPORT_SQL}" == X'YES' ]; then
     # Get backend
     backend="$(grep '^backend' ${IREDAPD_CONF} | awk '{print $NF}' | strip_quotes)"
 
+    echo "* Importing SQL file ..."
     if [ X"${backend}" == X'pgsql' ]; then
         # PostgreSQL: Import with `psql`
-        :
+        export PGPASSWORD="${iredapd_db_password}"
+
+        psql -U ${iredapd_db_user} -d ${iredapd_db_name} -c "\i ${TMP_SQL}" >/dev/null
+
+        if [ X"$?" == X'0' ]; then
+            echo "* [DONE] Imported."
+        else
+            echo "* Importing failed."
+        fi
     else
         # MySQL: Import with `mysql`
-        set -x
-        echo "* Importing SQL file ..."
         mysql -h${iredapd_db_server} \
               -p${iredapd_db_port} \
               -u${iredapd_db_user} \
               -p${iredapd_db_password} \
               ${iredapd_db_name} \
               -e "SOURCE ${TMP_SQL}"
-        echo "* [DONE] Imported."
 
-        echo "* Removing SQL file ..."
-        rm -f ${TMP_SQL} &>/dev/null
-        set +x
+        if [ X"$?" == X'0' ]; then
+            echo "* [DONE] Imported."
+        else
+            echo "* Importing failed."
+        fi
     fi
+
+    echo "* Removing SQL file ..."
+    rm -f ${TMP_SQL} &>/dev/null
 else
     echo "* Please review file ${TMP_SQL} before importing it to iRedAPD database."
 fi
