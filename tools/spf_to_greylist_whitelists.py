@@ -57,7 +57,11 @@
 import os
 import sys
 import web
-from dns import resolver
+
+try:
+    from dns import resolver
+except ImportError:
+    print "<<< ERROR >>> Please install Python module 'dnspython' first."
 
 os.environ['LC_ALL'] = 'C'
 

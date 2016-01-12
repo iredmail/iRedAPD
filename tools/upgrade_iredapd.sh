@@ -507,7 +507,7 @@ if ! grep '/opt/iredapd/tools/cleanup_db.py' ${CRON_FILE} &>/dev/null; then
 EOF
 fi
 
-# cron job for cleaning up database.
+# cron job for updating IP addresses/networks of greylisting whitelist domains.
 if ! grep '/opt/iredapd/tools/spf_to_greylisting_whitelists.py' ${CRON_FILE} &>/dev/null; then
     cat >> ${CRON_FILE} <<EOF
 # iRedAPD: Update IP addresses/networks of greylisting whitelist domains.
