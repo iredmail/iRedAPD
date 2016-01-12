@@ -68,8 +68,7 @@ os.environ['LC_ALL'] = 'C'
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 
-import settings
-from tools import debug, logger, get_db_conn
+from tools import logger, get_db_conn
 from libs import utils
 
 
@@ -275,7 +274,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
             'returned_ips': returned_ips}
 
 
-web.config.debug = debug
+web.config.debug = False
 conn = get_db_conn('iredapd')
 
 if len(sys.argv) == 1:

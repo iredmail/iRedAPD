@@ -8,10 +8,8 @@ import time
 import logging
 import web
 
-debug = False
-
 # Set True to print SQL queries.
-web.config.debug = debug
+web.config.debug = False
 
 os.environ['LC_ALL'] = 'C'
 
