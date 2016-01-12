@@ -537,5 +537,5 @@ echo "* Upgrade completed."
 cat <<EOF
 <<< NOTE >>> If iRedAPD doesn't work as expected, please post your issue in
 <<< NOTE >>> our online support forum: http://www.iredmail.org/forum/
-<<< NOTE >>> iRedAPD log file is /var/log/iredapd.log.
+<<< NOTE >>> iRedAPD log file is ${IREDAPD_LOG_FILE}.
 EOF

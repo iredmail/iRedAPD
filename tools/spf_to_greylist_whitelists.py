@@ -233,7 +233,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if included_domains:
         included_domains = [i for i in included_domains if 'spf:' + i not in queried_domains]
 
-        logger.info('\t+ [%s] include: -> %s' % (domain, ', '.join(included_domains)))
+        logger.debug('\t+ [%s] include: -> %s' % (domain, ', '.join(included_domains)))
         qr = query_spf_of_included_domains(included_domains,
                                            queried_domains=queried_domains,
                                            returned_ips=returned_ips)
@@ -247,7 +247,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if a:
         a = [i for i in a if 'a:' + i not in queried_domains]
 
-        logger.info('\t+ [%s] A -> %s' % (domain, ', '.join(a)))
+        logger.debug('\t+ [%s] A -> %s' % (domain, ', '.join(a)))
         qr = query_a(a, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_a = qr['ips']
@@ -259,7 +259,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if mx:
         mx = [i for i in mx if 'mx:' + i not in queried_domains]
 
-        logger.info('\t+ [%s] MX -> %s' % (domain, ', '.join(mx)))
+        logger.debug('\t+ [%s] MX -> %s' % (domain, ', '.join(mx)))
         qr = query_mx(mx, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_mx = qr['ips']
@@ -276,10 +276,6 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
 
 
 web.config.debug = debug
-
-backend = settings.backend
-logger.info('* Backend: %s' % backend)
-
 conn = get_db_conn('iredapd')
 
 if len(sys.argv) == 1:
@@ -360,8 +356,8 @@ for domain in domain_ips:
                         sender=ip,
                         comment=comment)
         except Exception, e:
-            error = str(e)
-            if error.startswith('duplicate key'):
+            error = str(e).lower()
+            if 'duplicate key' in error or 'duplicate entry' in error:
                 pass
             else:
                 logger.info('* <<< ERROR >>> Cannot insert new record for domain %s: %s' % (domain, error))
