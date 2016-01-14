@@ -43,7 +43,6 @@
 #
 #   * not supported spf syntax:
 #
-#       - ptr ptr:<domain>
 #       - a/24 a:<domain>/24
 #       - mx/24 mx:<domain>/24
 #       - exists:<domain>
@@ -56,7 +55,6 @@
 #
 # TODO
 #
-#   - support spf syntax: ptr ptr:<domain>
 #   - import generated SQL file directly.
 
 # Specify your preferred DNS server. A local DNS server is better.
@@ -231,12 +229,18 @@ parse_spf()
         elif echo ${r} | grep '^mx:' &>/dev/null; then
             # 'mx:xxx'
             mx="${mx} ${colon_value}"
+        elif echo ${r} | grep '^ptr:' &>/dev/null; then
+            # 'ptr:xxx'
+            ip="${ip} @${colon_value}"
         elif [ X"${r}" == X'a' ]; then
             # Add A record of domain
             a="${a} ${domain}"
         elif [ X"${r}" == X'mx' ]; then
             # Add MX record of domain
             mx="${mx} ${domain}"
+        elif [ X"${r}" == X'ptr' ]; then
+            # Add whole domain
+            ip="${mx} @${domain}"
         fi
     done
 

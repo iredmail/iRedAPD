@@ -215,14 +215,19 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     for tag in tags:
         v = tag.split(':', 1)[-1]
 
-        if tag.startswith('include:') or tag.startswith('redirect:'):
+        if tag.startswith('include:'):
             included_domains.add(v)
+        elif tag.startswith('redirect='):
+            d = tag.split('=', 1)[-1]
+            included_domains.add(d)
         elif tag.startswith('ip4:') or tag.startswith('ip6:'):
             ips.add(v)
         elif tag.startswith('a:'):
             a.add(v)
         elif tag.startswith('mx:'):
             mx.add(v)
+        elif tag.startswith('ptr:'):
+            ips.add('@' + v)
         elif tag == 'a':
             a.add(domain)
         elif tag == 'mx':
