@@ -10,8 +10,13 @@ iRedAPD-1.8.0:
     * New script:
         - tools/spf_to_greylist_whitelists.py: it queries SPF DNS records of
           given domains and imports converted IP addresses/networks as
-          greylisting whitelists. if no domain name, it queries from NEW sql
-          table "iredapd.greylisting_whitelist_domains".
+          greylisting whitelists.
+          
+          if no domain name specified, it queries from NEW sql table
+          "iredapd.greylisting_whitelist_domains".
+
+          if no SPF record for specified domain name, MX records will be used.
+
         - tools/spf_to_greylist_whitelists.sh: it will query SPF DNS record of
           specified domains and generate SQL file which is used to insert IP
           addresses of SPF records as whitelisted greylisting senders.

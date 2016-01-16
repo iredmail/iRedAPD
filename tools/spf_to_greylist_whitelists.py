@@ -317,21 +317,28 @@ for domain in domains:
     spf = qr['spf']
     queried_domains = qr['queried_domains']
 
-    if not spf:
-        # TODO whitelist mx records
-        continue
+    if spf:
+        logger.info('\t+ [%s] SPF -> %s' % (domain, spf))
 
-    logger.info('\t+ [%s] SPF -> %s' % (domain, spf))
+        # Parse returned SPF record
+        qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
 
-    # Parse returned SPF record
-    qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
+        ips = qr['ips']
+        queried_domains = qr['queried_domains']
+        returned_ips = qr['returned_ips']
 
-    ips = qr['ips']
-    queried_domains = qr['queried_domains']
-    returned_ips = qr['returned_ips']
+        domain_ips[domain] = ips
+        all_ips.update(ips)
+    else:
+        # Whitelist hosts listed in MX records.
+        qr = query_mx([domain], queried_domains=queried_domains, returned_ips=returned_ips)
 
-    domain_ips[domain] = ips
-    all_ips.update(ips)
+        ips = qr['ips']
+        queried_domains = qr['queried_domains']
+        returned_ips = qr['returned_ips']
+
+        domain_ips[domain] = ips
+        all_ips.update(ips)
 
 if not all_ips:
     logger.info('* No IP address/network found. Exit.')
