@@ -36,7 +36,6 @@
 #
 #   * not supported spf syntax:
 #
-#       - ptr ptr:<domain>
 #       - a/24 a:<domain>/24
 #       - mx/24 mx:<domain>/24
 #       - exists:<domain>
@@ -51,7 +50,6 @@
 #
 # TODO
 #
-#   - support spf syntax: ptr ptr:<domain>
 #   - import generated SQL file directly.
 
 import os
@@ -232,6 +230,8 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
             a.add(domain)
         elif tag == 'mx':
             mx.add(domain)
+        elif tag == 'ptr':
+            ips.add('@' + domain)
 
     # Find IP in included_domains
     if included_domains:

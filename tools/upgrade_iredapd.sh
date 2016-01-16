@@ -510,8 +510,9 @@ fi
 # cron job for updating IP addresses/networks of greylisting whitelist domains.
 if ! grep '/opt/iredapd/tools/spf_to_greylisting_whitelists.py' ${CRON_FILE} &>/dev/null; then
     cat >> ${CRON_FILE} <<EOF
-# iRedAPD: Update IP addresses/networks of greylisting whitelist domains.
-1   3   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylisting_whitelists.py &>/dev/null
+# iRedAPD: Convert specified SPF DNS record of specified domain names to IP
+#          addresses/networks hourly.
+1   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylisting_whitelists.py &>/dev/null
 EOF
 fi
 
