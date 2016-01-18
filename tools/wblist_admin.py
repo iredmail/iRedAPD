@@ -26,9 +26,11 @@ USAGE = """Usage:
         Add white/blacklists for specified (local) account. Valid formats:
 
             - a single user: username@domain.com
-            - a single domain: domain.com
+            - a single domain: @domain.com
+            - entire domain and all its sub-domains: @.domain.com
+            - anyone: @. (the ending dot is required)
 
-        if no '--account' argument, defaults to manage server-wide white/blacklists.
+        if no '--account' argument, defaults to '@.' (anyone).
 
     --add
         Add white/blacklists for specified (local) account.
@@ -101,19 +103,15 @@ if '--account' in args:
     args.pop(index)
 
     wb_account = account
-    if utils.is_email(account):
-        # email
-        wb_account = account
-    elif utils.is_domain(account):
-        # domain
-        wb_account = '@' + account
-
     wb_account_type = utils.is_valid_amavisd_address(wb_account)
-    logger.info('* Manage (%s) wblist for account: %s' % (inout_type, account))
 else:
     # server-wide
     wb_account = '@.'
-    logger.info('* Manage server-wide (%s) wblist (no --account).' % inout_type)
+
+if not '@' in account:
+    sys.exit('<<< ERROR >>> Invalid account format.')
+
+logger.info('* Manage (%s) wblist for account: %s' % (inout_type, account))
 
 # Get action.
 if '--add' in args:

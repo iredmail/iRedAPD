@@ -8,6 +8,9 @@ iRedAPD-1.8.0:
             and networks of their mail servers.
 
     * New script:
+        - tools/greylisting_admin.py: used to manage greylisting settings.
+        - tools/wblist_admin.py: used to manage inbound/outbound whitelists
+          and blacklists.
         - tools/spf_to_greylist_whitelists.py: it queries SPF DNS records of
           given domains and imports converted IP addresses/networks as
           greylisting whitelists.
@@ -16,12 +19,6 @@ iRedAPD-1.8.0:
           "iredapd.greylisting_whitelist_domains".
 
           if no SPF record for specified domain name, MX records will be used.
-
-        - tools/spf_to_greylist_whitelists.sh: it will query SPF DNS record of
-          specified domains and generate SQL file which is used to insert IP
-          addresses of SPF records as whitelisted greylisting senders.
-        - tools/wblist_admin.py: used to manage inbound/outbound whitelists
-          and blacklists.
 
     * Fixed issues:
         - plugins/reject_sender_login_mismatch.py:
