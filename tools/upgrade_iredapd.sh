@@ -232,8 +232,8 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
             fi
         done
 
-        cp -f ${PWD}/../SQL/{iredapd.mysql,greylisting_whitelists.sql} /tmp/
-        chmod 0555 /tmp/{iredapd.mysql,greylisting_whitelists.sql}
+        cp -f ${PWD}/../SQL/iredapd.mysql /tmp/
+        chmod 0555 /tmp/iredapd.mysql
 
         # Create database and tables.
         mysql -u${_sql_root_username} -p${_sql_root_password} <<EOF
@@ -251,8 +251,8 @@ EOF
         export IREDAPD_DB_PORT='5432'
 
         # Create database directly.
-        cp -f ${PWD}/../SQL/{iredapd.pgsql,greylisting_whitelists.sql} /tmp/
-        chmod 0555 /tmp/{iredapd.pgsql,greylisting_whitelists.sql}
+        cp -f ${PWD}/../SQL/iredapd.pgsql /tmp/
+        chmod 0555 /tmp/iredapd.pgsql
 
         su - ${PGSQL_SYS_USER} -c "psql -d template1" <<EOF
 -- Create user, database, change owner
@@ -272,11 +272,11 @@ INSERT INTO greylisting (account, priority, sender, sender_priority, active) VAL
 \i /tmp/greylisting_whitelists.sql;
 
 -- Grant permissions
-GRANT ALL on greylisting, greylisting_tracking, greylisting_whitelists to ${IREDAPD_DB_USER};
-GRANT ALL on greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitelists_id_seq to ${IREDAPD_DB_USER};
+GRANT ALL ON greylisting, greylisting_tracking, greylisting_whitelists TO ${IREDAPD_DB_USER};
+GRANT ALL ON greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitelists_id_seq TO ${IREDAPD_DB_USER};
 
-GRANT ALL on throttle, throttle_tracking to ${IREDAPD_DB_USER};
-GRANT ALL on throttle_id_seq, throttle_tracking_id_seq to ${IREDAPD_DB_USER};
+GRANT ALL ON throttle, throttle_tracking TO ${IREDAPD_DB_USER};
+GRANT ALL ON throttle_id_seq, throttle_tracking_id_seq TO ${IREDAPD_DB_USER};
 EOF
 
         su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
@@ -307,6 +307,7 @@ CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
     PRIMARY KEY (id),
     UNIQUE INDEX (domain)
 ) ENGINE=InnoDB;
+SOURCE ${IREDAPD_ROOT_DIR}/SQL/greylisting_whitelist_domains.sql;
 EOF
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
@@ -318,6 +319,9 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
          -c "SELECT id FROM greylisting_whitelist_domains LIMIT 1" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
+        cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
+        chmod 0555 /tmp/greylisting_whitelist_domains.sql
+
         psql -h ${iredapd_db_server} \
              -p ${iredapd_db_port} \
              -U ${iredapd_db_user} \
@@ -329,6 +333,7 @@ CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
 );
 
 CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whitelist_domains (domain);
+\i /tmp/greylisting_whitelist_domains.sql;
 "
     fi
 fi
