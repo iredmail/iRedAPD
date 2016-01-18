@@ -180,7 +180,7 @@ else:
     try:
         qr = conn.select('greylisting', order='priority DESC, sender_priority DESC')
         if qr:
-            output_format = '%-36s -> %-36s %-8s'
+            output_format = '%-34s -> %-30s %-8s'
             print output_format % ('Sender', 'Local Account', 'Status')
             print '-' * 78
 
