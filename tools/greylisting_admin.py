@@ -38,8 +38,7 @@ USAGE = """Usage:
         Explicitly disable greylisting for specified account.
 
     --delete
-        Delete ID of greylisting setting. You can get the value of ID by
-        running this script with '--list' argument.
+        Delete specified greylisting setting.
 
     --list
         Show ALL existing greylisting settings.
