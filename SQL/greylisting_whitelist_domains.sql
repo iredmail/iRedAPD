@@ -31,5 +31,6 @@ INSERT INTO greylisting_whitelist_domains (domain) VALUES ('sendgrid.net');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('tumblr.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('twitter.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('yahoo.com');
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('yandex.ru');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('zendesk.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('zoho.com');

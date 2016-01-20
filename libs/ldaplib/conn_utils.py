@@ -47,7 +47,6 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
 
 
 def get_allowed_senders_of_mail_list(conn,
-                                     dn_of_mail_list,
                                      sender,
                                      recipient,
                                      policy,
@@ -56,8 +55,9 @@ def get_allowed_senders_of_mail_list(conn,
 
     logger.debug('[+] Getting allowed senders of mail list: %s' % recipient)
 
-    # Get domain dn
-    domaindn = dn_of_mail_list.split('ou=Groups,')[-1]
+    # Get domain dn.
+    rcpt_domain = recipient.split('@', 1)[-1]
+    domaindn = 'domainName=' + rcpt_domain + ',' + settings.ldap_basedn
 
     # Default base dn and search scope (2==ldap.SCOPE_SUBTREE)
     basedn = domaindn

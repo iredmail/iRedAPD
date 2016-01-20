@@ -81,7 +81,6 @@ def restriction(**kwargs):
         qr_allowed_senders = [s for s in allowed_senders if not s.startswith('*@')]
         allowedSenders = conn_utils.get_allowed_senders_of_mail_list(
             conn=conn,
-            dn_of_mail_list=recipient_dn,
             sender=sender,
             recipient=recipient,
             policy=policy,
