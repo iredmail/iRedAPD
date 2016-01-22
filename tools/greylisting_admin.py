@@ -17,6 +17,9 @@ web.config.debug = False
 
 USAGE = """Usage:
 
+    --list
+        Show ALL existing greylisting settings.
+
     --from <from_address>
     --to <to_address>
         Manage greylisting setting from email which is sent from <from_address>
@@ -40,34 +43,31 @@ USAGE = """Usage:
     --delete
         Delete specified greylisting setting.
 
-    --list
-        Show ALL existing greylisting settings.
-
 Sample usages:
+
+    * List all existing greylisting settings
+
+        # python greylisting_admin.py --list
 
     * Enable greylisting for emails which are sent
       from anyone to local mail domain 'example.com'
 
-        $ python greylisting_admin.py --enable --to '@example.com'
+        # python greylisting_admin.py --enable --to '@example.com'
 
     * Disable greylisting for emails which are sent
       from anyone to local mail user 'user@example.com'
 
-        $ python greylisting_admin.py --disable --to 'user@example.com'
+        # python greylisting_admin.py --disable --to 'user@example.com'
 
     * Disable greylisting for emails which are sent
       from 'gmail.com' to local mail user 'user@example.com'
 
-        $ python greylisting_admin.py --disable --from '@gmail.com' --to 'user@example.com'
+        # python greylisting_admin.py --disable --from '@gmail.com' --to 'user@example.com'
 
     * Delete greylisting setting for emails which are sent
       from anyone to local domain 'test.com
 
-        $ python greylisting_admin.py --delete --to '@test.com'
-
-    * List all existing greylisting settings
-
-        $ python greylisting_admin.py --list
+        # python greylisting_admin.py --delete --to '@test.com'
 """
 
 if len(sys.argv) == 1:

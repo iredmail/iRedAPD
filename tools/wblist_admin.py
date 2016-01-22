@@ -58,19 +58,20 @@ USAGE = """Usage:
 
 Sample usage:
 
-    * Add server-wide whitelists or blacklists, and show existing ones:
+    * Show and add server-wide whitelists or blacklists:
 
-        $ python wblist_admin.py --add --whitelist 192.168.1.10 zhb@iredmail.org
-        $ python wblist_admin.py --add --blacklist 172.16.1.10 bad@iredmail.org
-        $ python wblist_admin.py --list --whitelist
-        $ python wblist_admin.py --list --blacklist
+        # python wblist_admin.py --add --whitelist 192.168.1.10 user@example.com
+        # python wblist_admin.py --add --blacklist 172.16.1.10 baduser@example.com
+        # python wblist_admin.py --list --whitelist
+        # python wblist_admin.py --list --blacklist
 
-    * Add per-user whitelists or blacklists, and show existing ones:
+    * For per-user or per-domain whitelists and blacklists, please use option
+      `--account`. for example:
 
-        $ python wblist_admin.py --account user@domain.com --add --whitelist 192.168.1.10 zhb@iredmail.org
-        $ python wblist_admin.py --account user@domain.com --add --blacklist 172.16.1.10 bad@iredmail.org
-        $ python wblist_admin.py --account user@domain.com --list --whitelist
-        $ python wblist_admin.py --account user@domain.com --list --blacklist
+        # python wblist_admin.py --account user@mydomain.com --add --whitelist 192.168.1.10 user@example.com
+        # python wblist_admin.py --account user@mydomain.com --add --blacklist 172.16.1.10 baduser@example.com
+        # python wblist_admin.py --account user@mydomain.com --list --whitelist
+        # python wblist_admin.py --account user@mydomain.com --list --blacklist
 """
 
 if len(sys.argv) == 1:
