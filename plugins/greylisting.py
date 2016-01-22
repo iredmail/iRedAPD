@@ -87,7 +87,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     whitelists = [str(v).lower() for (_, v) in records]
     wl = set(senders) & set(whitelists)
     if wl:
-        logger.debug('Sender is whitelisted: %s' % ', '.join(wl))
+        logger.info('Sender is whitelisted: %s' % ', '.join(wl))
         return True
 
     # check whitelisted cidr
@@ -105,7 +105,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
                     if _ip in _net:
-                        logger.debug('Client address (%s) is whitelisted: (id=%d, sender=%s)' % (client_address, _id, _cidr))
+                        logger.info('Client address (%s) is whitelisted (greylisting): (id=%d, sender=%s)' % (client_address, _id, _cidr))
                         return True
                 except Exception, e:
                     logger.debug('Not an valid IP network: (id=%d, sender=%s), error: %s' % (_id, _cidr, str(e)))
@@ -120,7 +120,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
                     if _ip in _net:
-                        logger.debug('Client address (%s) is whitelisted: (id=%d, sender=%s)' % (client_address, _id, _cidr))
+                        logger.info('Client address (%s) is whitelisted (greylisting): (id=%d, sender=%s)' % (client_address, _id, _cidr))
                         return True
                 except Exception, e:
                     logger.debug('Not an valid IP network: (id=%d, sender=%s), error: %s' % (_id, _cidr, str(e)))
@@ -212,7 +212,7 @@ def _should_be_greylisted_by_tracking(conn,
     client_address = sqlquote(client_address)
 
     # Get existing tracking record
-    sql = """SELECT init_time, block_expired, record_expired
+    sql = """SELECT init_time, blocked_count, block_expired, record_expired
                FROM greylisting_tracking
               WHERE     sender=%s
                     AND recipient=%s
@@ -225,6 +225,8 @@ def _should_be_greylisted_by_tracking(conn,
 
     if not sql_record:
         # Not record found, insert a new one.
+        logger.info('Client has not been seen before, greylisted.')
+
         sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
                                                    recipient, rcpt_domain,
                                                    client_address,
@@ -236,29 +238,31 @@ def _should_be_greylisted_by_tracking(conn,
                                                                        client_address,
                                                                        now,
                                                                        block_expired, unauth_triplet_expire)
-        logger.debug('[SQL] No tracking record found, insert a new one: \n%s' % sql)
+        logger.debug('[SQL] New tracking: \n%s' % sql)
         conn.execute(sql)
         return True
 
-    (_init_time, _block_expired, _record_expired) = sql_record
+    (_init_time, _blocked_count, _block_expired, _record_expired) = sql_record
 
     # Check whether tracking record expired (if cron job didn't clean up them)
     if now > _record_expired:
         # Expired, reset the tracking data.
+        logger.info('Greylisting tracking expired, update as first seen.')
+
         sql = """UPDATE greylisting_tracking
                     SET blocked_count=1, init_time=%d, block_expired=%d, record_expired=%d
                   WHERE     sender=%s
                         AND recipient=%s
                         AND client_address=%s""" % (now, block_expired, unauth_triplet_expire,
                                                     sender, recipient, client_address)
-        logger.debug('[SQL] Tracking record expired, delete existing record: \n%s' % sql)
+        logger.debug('[SQL] Update expired tracking as first seen: \n%s' % sql)
         conn.execute(sql)
         return True
 
     # Tracking record doesn't expire, check whether client retries too soon.
     if now < _block_expired:
         # blocking not expired
-        logger.debug('Client retries too soon, greylisted again.')
+        logger.info('Client retries too soon, greylisted again.')
         sql = """UPDATE greylisting_tracking
                     SET blocked_count=blocked_count + 1
                   WHERE     sender=%s
@@ -269,7 +273,7 @@ def _should_be_greylisted_by_tracking(conn,
         conn.execute(sql)
         return True
     else:
-        logger.debug('Host is clear to send mail.')
+        logger.info('Client has passed the greylisting, accept this email.')
         if _record_expired > auth_triplet_expire:
             # Already updated expired date.
             pass
