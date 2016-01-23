@@ -283,12 +283,11 @@ web.config.debug = False
 conn = get_db_conn('iredapd')
 
 if len(sys.argv) == 1:
-    logger.error('* Query SQL server to get mail domain names.')
+    logger.info('* Query SQL server to get mail domain names.')
 
     domains = []
 
-    qr = conn.select('greylisting_whitelist_domains',
-                     what='domain')
+    qr = conn.select('greylisting_whitelist_domains', what='domain')
     for r in qr:
         domains.append(r.domain)
 else:
