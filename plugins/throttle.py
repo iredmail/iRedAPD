@@ -334,11 +334,11 @@ def apply_throttle(conn,
                                                                                                throttle_info))
                 return SMTP_ACTIONS['reject_exceed_max_msgs']
             else:
-                logger.info('[%s] [%s] %s throttle for max_msgs (%d/%d)' % (client_address,
-                                                                            user,
-                                                                            throttle_type,
-                                                                            max_msgs_cur_msgs,
-                                                                            max_msgs))
+                logger.info('[%s] %s throttle, %s -> max_msgs (%d/%d)' % (client_address,
+                                                                          throttle_type,
+                                                                          user,
+                                                                          max_msgs_cur_msgs,
+                                                                          max_msgs))
 
     elif protocol_state == 'END-OF-MESSAGE':
         # Check `msg_size`
@@ -354,11 +354,11 @@ def apply_throttle(conn,
                                                                                                        throttle_info))
                 return SMTP_ACTIONS['reject_exceed_msg_size']
             else:
-                logger.info('[%s] [%s] %s throttle for msg_size (%d/%d)' % (client_address,
-                                                                            user,
-                                                                            throttle_type,
-                                                                            size,
-                                                                            msg_size))
+                logger.info('[%s] %s throttle, %s -> msg_size (%d/%d)' % (client_address,
+                                                                          throttle_type,
+                                                                          user,
+                                                                          size,
+                                                                          msg_size))
 
         # Check `max_quota`
         if 'max_quota' in t_settings:
@@ -382,11 +382,11 @@ def apply_throttle(conn,
                                                                                                 throttle_info))
                 return SMTP_ACTIONS['reject_exceed_max_quota']
             else:
-                logger.info('[%s] [%s] %s throttle for max_quota (%d/%d)' % (client_address,
-                                                                             user,
-                                                                             throttle_type,
-                                                                             cur_quota,
-                                                                             max_quota))
+                logger.info('[%s] %s throttle, %s -> max_quota (%d/%d)' % (client_address,
+                                                                           throttle_type,
+                                                                           user,
+                                                                           cur_quota,
+                                                                           max_quota))
 
         # Update tracking record.
         #

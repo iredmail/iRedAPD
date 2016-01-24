@@ -158,6 +158,6 @@ for t in t_settings:
           """ % (v['account'], v['inout_type'], v['priority'], v['period'], v['max_msgs'], v['max_quota'])
 
     try:
-        conn.execute(sql)
-    except:
-        pass
+        conn.query(sql)
+    except Exception, e:
+        logger.error("<<< Error >>> %s" % str(e))
