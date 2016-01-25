@@ -21,6 +21,10 @@ iRedAPD-1.8.0:
           if no SPF record for specified domain name, MX records will be used.
 
     * Fixed issues:
+        - plugins/throttle.py:
+            * Cannot apply throttle setting correctly if `max_quota` is set to
+              unlimited.
+              Thanks Tu Ngoc Tan <tantn3 _at_ fpt.com.vn> for the report.
         - plugins/reject_sender_login_mismatch.py:
             * not bypass email which is not sent by authenticated user.
               Note: it won't cause incorrect email rejection.

@@ -197,6 +197,7 @@ def apply_throttle(conn,
         if not _period:
             continue
 
+        t_setting_keys[(_id, _account)] = []
         t_setting_ids[_id] = _account
 
         if continue_check_msg_size and _msg_size >= 0:
@@ -210,7 +211,7 @@ def apply_throttle(conn,
                                       'cur_msgs': 0,
                                       'cur_quota': 0,
                                       'init_time': 0}
-            t_setting_keys[(_id, _account)] = 'msg_size'
+            t_setting_keys[(_id, _account)].append('msg_size')
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'msg_size=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['msg_size']
 
@@ -225,7 +226,7 @@ def apply_throttle(conn,
                                       'cur_msgs': 0,
                                       'cur_quota': 0,
                                       'init_time': 0}
-            t_setting_keys[(_id, _account)] = 'max_msgs'
+            t_setting_keys[(_id, _account)].append('max_msgs')
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'max_msgs=%(value)d/id=%(tid)d/account=%(account)s; ' % t_settings['max_msgs']
 
@@ -240,7 +241,7 @@ def apply_throttle(conn,
                                        'cur_msgs': 0,
                                        'cur_quota': 0,
                                        'init_time': 0}
-            t_setting_keys[(_id, _account)] = 'max_quota'
+            t_setting_keys[(_id, _account)].append('max_quota')
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'max_quota=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['max_quota']
 
@@ -292,12 +293,12 @@ def apply_throttle(conn,
 
         # Get special throttle setting name: msg_size, max_msgs, max_quota
         t_setting_account = t_setting_ids[_tid]
-        t_name = t_setting_keys.get((_tid, t_setting_account))
-        if t_name in t_settings:
-            t_settings[t_name]['cur_msgs'] = _cur_msgs
-            t_settings[t_name]['cur_quota'] = _cur_quota
-            t_settings[t_name]['init_time'] = _init_time
-            t_settings[t_name]['last_time'] = _last_time
+        for t_name in t_setting_keys.get((_tid, t_setting_account)):
+            if t_name in t_settings:
+                t_settings[t_name]['cur_msgs'] = _cur_msgs
+                t_settings[t_name]['cur_quota'] = _cur_quota
+                t_settings[t_name]['init_time'] = _init_time
+                t_settings[t_name]['last_time'] = _last_time
 
     logger.debug('Tracking IDs: %s' % str(tracking_ids))
 
