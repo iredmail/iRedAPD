@@ -241,11 +241,10 @@ CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLL
 USE ${IREDAPD_DB_NAME};
 SOURCE /tmp/iredapd.mysql;
 GRANT ALL ON ${IREDAPD_DB_NAME}.* TO "${IREDAPD_DB_USER}"@"localhost" IDENTIFIED BY "${IREDAPD_DB_PASSWD}";
-SOURCE /tmp/greylisting_whitelists.sql;
 FLUSH PRIVILEGES;
 EOF
 
-        rm -f /tmp/{iredapd.mysql,greylisting_whitelists.sql}
+        rm -f /tmp/{iredapd.mysql}
 
     elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
         export IREDAPD_DB_PORT='5432'
@@ -268,9 +267,6 @@ ALTER DATABASE ${IREDAPD_DB_NAME} OWNER TO ${IREDAPD_DB_USER};
 -- Enable greylisting by default
 INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
 
--- Import greylisting whitelists.
-\i /tmp/greylisting_whitelists.sql;
-
 -- Grant permissions
 GRANT ALL ON greylisting, greylisting_tracking, greylisting_whitelists TO ${IREDAPD_DB_USER};
 GRANT ALL ON greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitelists_id_seq TO ${IREDAPD_DB_USER};
@@ -281,7 +277,7 @@ EOF
 
         su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
 
-        rm -f /tmp/{iredapd.pgsql,greylisting_whitelists.sql}
+        rm -f /tmp/{iredapd.pgsql}
     fi
 fi
 
