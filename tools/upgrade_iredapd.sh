@@ -292,6 +292,9 @@ export iredapd_db_password="$(get_value_of_iredapd_setting 'iredapd_db_password'
 
 # Add sql table `greylisting_whitelist_domains`
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
+    cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
+    chmod 0555 /tmp/greylisting_whitelist_domains.sql
+
     mysql -h${iredapd_db_server} \
           -p${iredapd_db_port} \
           -u${iredapd_db_user} \
@@ -303,8 +306,9 @@ CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
     PRIMARY KEY (id),
     UNIQUE INDEX (domain)
 ) ENGINE=InnoDB;
-SOURCE ${IREDAPD_ROOT_DIR}/SQL/greylisting_whitelist_domains.sql;
+SOURCE /tmp/greylisting_whitelist_domains.sql;
 EOF
+
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
 
@@ -333,6 +337,7 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
 "
     fi
 fi
+rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
 
 #
 # Check dependent packages. Prompt to install missed ones manually.
