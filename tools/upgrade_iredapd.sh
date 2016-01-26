@@ -518,7 +518,7 @@ if ! grep '/opt/iredapd/tools/spf_to_greylisting_whitelists.py' ${CRON_FILE} &>/
     cat >> ${CRON_FILE} <<EOF
 # iRedAPD: Convert specified SPF DNS record of specified domain names to IP
 #          addresses/networks every 10 minutes.
-*/10   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylisting_whitelists.py &>/dev/null
+*/10   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylist_whitelists.py &>/dev/null
 EOF
 fi
 
