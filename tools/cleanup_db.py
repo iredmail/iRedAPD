@@ -14,7 +14,7 @@ rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 
 import settings
-from tools import debug, logger, get_db_conn, sql_count_id
+from tools import logger, get_db_conn, sql_count_id
 
 
 def print_top_greylisting_domains(conn, limit=30, passed=False):
@@ -41,7 +41,7 @@ def print_top_greylisting_domains(conn, limit=30, passed=False):
             logger.info('\t%5d %s  [%s]' % (r.count, r.sender_domain, r.client_address))
 
 
-web.config.debug = debug
+web.config.debug = False
 
 backend = settings.backend
 logger.info('* Backend: %s' % backend)
