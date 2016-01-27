@@ -27,7 +27,7 @@ sys.path.insert(0, rootdir)
 import settings
 from libs import ACCOUNT_PRIORITIES
 from libs.utils import is_valid_amavisd_address
-from tools import debug, logger, get_db_conn
+from tools import logger, get_db_conn
 
 backend = settings.backend
 if backend in ['ldap', 'mysql']:
@@ -43,7 +43,7 @@ if not (cluebringer_db_host \
     # Not run cluebringer
     sys.exit("Incorrect database info, please update cluebringer_db_* parameters.")
 
-web.config.debug = debug
+web.config.debug = False
 backend = settings.backend
 conn_iredapd = get_db_conn('iredapd')
 
