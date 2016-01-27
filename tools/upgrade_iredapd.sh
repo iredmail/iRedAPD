@@ -378,6 +378,9 @@ cp -rf ${dir_new_version}/* ${NEW_IREDAPD_ROOT_DIR}
 # able to import default settings from libs/default_settings.py
 cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_CONF}
 
+echo "* Remove all *.pyc files."
+cd ${dir_new_version} && find . -name '*.pyc' | xargs rm -f {} &>/dev/null
+
 if ! grep '^from libs.default_settings import' ${IREDAPD_CONF_PY} &>/dev/null; then
     cat > ${NEW_IREDAPD_CONF}_tmp <<EOF
 ############################################################
