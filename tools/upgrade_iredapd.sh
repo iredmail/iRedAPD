@@ -296,7 +296,7 @@ if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     chmod 0555 /tmp/greylisting_whitelist_domains.sql
 
     mysql -h${iredapd_db_server} \
-          -p${iredapd_db_port} \
+          -P${iredapd_db_port} \
           -u${iredapd_db_user} \
           -p${iredapd_db_password} \
           ${iredapd_db_name} <<EOF
@@ -327,7 +327,7 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
              -U ${iredapd_db_user} \
              -d ${iredapd_db_name} \
              -c "
-CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
+CREATE TABLE greylisting_whitelist_domains (
     id      SERIAL PRIMARY KEY,
     domain  VARCHAR(255) NOT NULL DEFAULT ''
 );
