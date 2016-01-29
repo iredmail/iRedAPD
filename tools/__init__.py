@@ -27,10 +27,6 @@ else:
     sys.exit('Error: Unsupported backend (%s).' % backend)
 
 # Config logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(message)s',
-                    datefmt='')
-
 logger = logging.getLogger('iredapd')
 _ch = logging.StreamHandler(sys.stdout)
 _formatter = logging.Formatter('%(message)s')
