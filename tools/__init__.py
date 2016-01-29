@@ -32,6 +32,10 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='')
 
 logger = logging.getLogger('iredapd')
+_ch = logging.StreamHandler(sys.stdout)
+_formatter = logging.Formatter('%(message)s')
+_ch.setFormatter(_formatter)
+logger.addHandler(_ch)
 
 
 def print_error(msg):
