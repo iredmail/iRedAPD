@@ -89,7 +89,7 @@ CREATE INDEX idx_tid_account ON throttle_tracking (tid, account);
 --          INSERT INTO greylisting (account, sender, priority, sender_priority, active)
 --                           VALUES ('user@mydomain.com', '8.8.8.8', 50, 40, 0);
 --
-CREATE TABLE IF NOT EXISTS greylisting (
+CREATE TABLE greylisting (
     id          SERIAL PRIMARY KEY,
     account     VARCHAR(255) NOT NULL DEFAULT '',
     priority    SMALLINT NOT NULL DEFAULT 0,
@@ -109,7 +109,7 @@ CREATE INDEX idx_greylisting_comment ON greylisting (comment);
 -- Enable greylisting by default.
 INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
 
-CREATE TABLE IF NOT EXISTS greylisting_whitelists (
+CREATE TABLE greylisting_whitelists (
     id      SERIAL PRIMARY KEY,
     account VARCHAR(255)    NOT NULL DEFAULT '',
     sender  VARCHAR(255)    NOT NULL DEFAULT '',
@@ -124,7 +124,7 @@ CREATE INDEX idx_greylisting_whitelists_comment ON greylisting_whitelists (comme
 --
 -- Note: these domain names are not used by iRedAPD directly, you need to setup
 --       a daily cron job to run 'tools/spf_to_greylisting_whitelists.sh' to
-CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
+CREATE TABLE greylisting_whitelist_domains (
     id      SERIAL PRIMARY KEY,
     domain  VARCHAR(255) NOT NULL DEFAULT ''
 );
@@ -133,7 +133,7 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
 
 -- Track smtp session for greylisting.
 -- Old records should be removed with a cron job.
-CREATE TABLE IF NOT EXISTS greylisting_tracking (
+CREATE TABLE greylisting_tracking (
     id              SERIAL PRIMARY KEY,
     sender          VARCHAR(255) NOT NULL,
     recipient       VARCHAR(255) NOT NULL,

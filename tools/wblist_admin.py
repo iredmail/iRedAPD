@@ -94,6 +94,7 @@ if '--outbound' in args:
     args.remove('--outbound')
 
 # Get wblist account, verify whether it's hosted locally.
+account = '@.'
 if '--account' in args:
     # per-domain or per-user account
     index = args.index('--account')
@@ -103,11 +104,8 @@ if '--account' in args:
     args.pop(index)
     args.pop(index)
 
-    wb_account = account
-    wb_account_type = utils.is_valid_amavisd_address(wb_account)
-else:
-    # server-wide
-    wb_account = '@.'
+wb_account = account
+wb_account_type = utils.is_valid_amavisd_address(wb_account)
 
 if not '@' in account:
     sys.exit('<<< ERROR >>> Invalid account format.')
