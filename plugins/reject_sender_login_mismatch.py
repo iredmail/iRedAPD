@@ -115,10 +115,6 @@ reject = 'REJECT Sender login mismatch'
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
 
-    if not sasl_username:
-        logger.debug('Bypass: Not sent by hosted user (no sasl_username).')
-        return SMTP_ACTIONS['default']
-
     sasl_username_user = sasl_username.split('@', 1)[0]
     sasl_username_domain = kwargs['sasl_username_domain']
 
