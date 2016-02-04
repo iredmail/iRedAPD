@@ -114,6 +114,7 @@ if qr:
         if is_email(_account):
             priority = ACCOUNT_PRIORITIES['email']
         elif is_domain(_account):
+            _account = '@' + _account
             priority = ACCOUNT_PRIORITIES['domain']
 
         t_settings[_id] = {'account': _account,
