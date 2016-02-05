@@ -16,6 +16,7 @@ INSERT INTO greylisting_whitelist_domains (domain) VALUES ('icloud.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('icontact.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('inbox.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('instagram.com');
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('iredmail.org');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('linkedin.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('mail.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('mailchimp.com');

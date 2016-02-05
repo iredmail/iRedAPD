@@ -28,8 +28,8 @@
 #
 # Required third-party Python modules:
 #
-#   - dnspython
-#   - web.py
+#   - dnspython: https://pypi.python.org/pypi/dnspython
+#   - web.py: http://webpy.org/
 
 #
 # KNOWN ISSUES
