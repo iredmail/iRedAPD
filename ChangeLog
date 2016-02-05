@@ -1,5 +1,7 @@
 iRedAPD-1.8.1:
     * Fixed issues:
+        - tools/spf_to_greylisting_whitelists.py: combine splited IP address
+          in SPF record.
         - plugins/reject_sender_login_mismatch.py: not correctly handle email
           sent by external user.
 
