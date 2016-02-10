@@ -32,6 +32,7 @@ _ch = logging.StreamHandler(sys.stdout)
 _formatter = logging.Formatter('%(message)s')
 _ch.setFormatter(_formatter)
 logger.addHandler(_ch)
+logger.setLevel(logging.INFO)
 
 
 def print_error(msg):
