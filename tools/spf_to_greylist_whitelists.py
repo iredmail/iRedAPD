@@ -165,36 +165,6 @@ def query_spf(domain, queried_domains=None):
             'queried_domains': queried_domains}
 
 
-def query_spf_of_included_domains(domains, queried_domains=None, returned_ips=None):
-    """Return set of IP addresses and/or networks defined in SPF record of
-    given mail domain names."""
-    ips = set()
-
-    queried_domains = queried_domains or set()
-    returned_ips = returned_ips or set()
-
-    domains = [d for d in domains if 'spf:' + d not in queried_domains]
-    for domain in domains:
-        qr = query_spf(domain, queried_domains=queried_domains)
-        spf = qr['spf']
-        queried_domains = qr['queried_domains']
-
-        qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
-
-        ips_spf = qr['ips']
-        queried_domains = qr['queried_domains']
-        returned_ips = qr['returned_ips']
-
-        ips.update(ips_spf)
-
-        queried_domains.add('spf:' + domain)
-        returned_ips.update(ips_spf)
-
-    return {'ips': ips,
-            'queried_domains': queried_domains,
-            'returned_ips': returned_ips}
-
-
 def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     """Parse spf record."""
     ips = set()
@@ -212,7 +182,9 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
                 'returned_ips': returned_ips}
 
     if not spf:
-        return ips
+        return {'ips': ips,
+                'queried_domains': queried_domains,
+                'returned_ips': returned_ips}
 
     tags = spf.split()
 
@@ -279,6 +251,36 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
         ips.update(ips_mx)
 
     queried_domains.add('spf:' + domain)
+
+    return {'ips': ips,
+            'queried_domains': queried_domains,
+            'returned_ips': returned_ips}
+
+
+def query_spf_of_included_domains(domains, queried_domains=None, returned_ips=None):
+    """Return set of IP addresses and/or networks defined in SPF record of
+    given mail domain names."""
+    ips = set()
+
+    queried_domains = queried_domains or set()
+    returned_ips = returned_ips or set()
+
+    domains = [d for d in domains if 'spf:' + d not in queried_domains]
+    for domain in domains:
+        qr = query_spf(domain, queried_domains=queried_domains)
+        spf = qr['spf']
+        queried_domains = qr['queried_domains']
+
+        qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
+
+        ips_spf = qr['ips']
+        queried_domains = qr['queried_domains']
+        returned_ips = qr['returned_ips']
+
+        ips.update(ips_spf)
+
+        queried_domains.add('spf:' + domain)
+        returned_ips.update(ips_spf)
 
     return {'ips': ips,
             'queried_domains': queried_domains,

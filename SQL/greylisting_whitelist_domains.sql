@@ -1,11 +1,13 @@
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('amazon.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('aol.com');
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('cloudfiltering.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('constantcontact.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('craigslist.org');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('cust-spf.exacttarget.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('ebay.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('exacttarget.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('facebook.com');
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('facebookmail.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('fbmta.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('fishbowl.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('github.com');
