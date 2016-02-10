@@ -196,17 +196,20 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
         elif tag.startswith('redirect='):
             d = tag.split('=', 1)[-1]
             included_domains.add(d)
-        elif tag.startswith('ip4:') or tag.startswith('ip6:'):
+        elif tag.startswith('ip4:') \
+                or tag.startswith('+ip4:') \
+                or tag.startswith('ip6:') \
+                or tag.startswith('+ip6:'):
             ips.add(v)
-        elif tag.startswith('a:'):
+        elif tag.startswith('a:') or tag.startswith('+a:'):
             a.add(v)
-        elif tag.startswith('mx:'):
+        elif tag.startswith('mx:') or tag.startswith('+mx:'):
             mx.add(v)
         elif tag.startswith('ptr:'):
             ips.add('@' + v)
-        elif tag == 'a':
+        elif tag == 'a' or tag == '+a':
             a.add(domain)
-        elif tag == 'mx':
+        elif tag == 'mx' or tag == '+mx':
             mx.add(domain)
         elif tag == 'ptr':
             ips.add('@' + domain)
