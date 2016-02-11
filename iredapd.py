@@ -82,20 +82,28 @@ class PolicyChannel(asynchat.async_chat):
                 action = SMTP_ACTIONS['default']
                 logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
-            # Log sasl username
-            _log_sasl_username = ''
+            # Log sasl username, sender, recipient
+            #   `sender -> recipient`: sender not authenticated
+            #   `sender => recipient`: sasl username is same as sender address (From:)
+            #   `sasl_username => sender -> recipient`: user send as different sender address
+            _log_sender_to_rcpt = ''
             if self.smtp_session_data['sasl_username']:
-                _log_sasl_username = self.smtp_session_data['sasl_username'] + ' => '
                 if self.smtp_session_data['sasl_username'] == self.smtp_session_data['sender']:
-                    _log_sasl_username = '=> '
+                    _log_sender_to_rcpt = '%s => %s' % (self.smtp_session_data['sasl_username'],
+                                                        self.smtp_session_data['recipient'])
+                else:
+                    _log_sender_to_rcpt = '%s => %s -> %s' % (self.smtp_session_data['sasl_username'],
+                                                              self.smtp_session_data['sender'],
+                                                              self.smtp_session_data['recipient'])
+            else:
+                _log_sender_to_rcpt = '%s -> %s' % (self.smtp_session_data['sender'],
+                                                    self.smtp_session_data['recipient'])
 
             # Log final action
-            logger.info('[%s] %s, %s%s -> %s, %s' % (self.smtp_session_data['client_address'],
-                                                     self.smtp_session_data['protocol_state'],
-                                                     _log_sasl_username,
-                                                     self.smtp_session_data['sender'],
-                                                     self.smtp_session_data['recipient'],
-                                                     action))
+            logger.info('[%s] %s, %s, %s' % (self.smtp_session_data['client_address'],
+                                             self.smtp_session_data['protocol_state'],
+                                             _log_sender_to_rcpt,
+                                             action))
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended")
