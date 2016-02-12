@@ -75,7 +75,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     """
 
     # query whitelists based on recipient
-    sql = """SELECT id, sender
+    sql = """SELECT id, sender, comment
                FROM greylisting_whitelists
               WHERE account IN %s""" % sqllist(recipients)
 
@@ -84,7 +84,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     records = qr.fetchall()
 
     # check whitelisted senders
-    whitelists = [str(v).lower() for (_, v) in records]
+    whitelists = [str(v).lower() for (_, v, _) in records]
     wl = set(senders) & set(whitelists)
     if wl:
         logger.info('[%s] Sender is whitelisted for greylisting service: %s' % (client_address, ', '.join(wl)))
@@ -97,7 +97,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     if _ip.version == 4:
         _cidr_start = '.'.join(client_address.split('.', 2)[:2])
         for r in records:
-            (_id, _cidr) = r
+            (_id, _cidr, _comment) = r
 
             # Make sure _cidr is IPv4 network and in 'same' IP range.
             if '/' in _cidr and _cidr.startswith(_cidr_start + '.'):
@@ -105,14 +105,14 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
                     if _ip in _net:
-                        logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s)' % (client_address, _id, _cidr))
+                        logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
                         return True
                 except Exception, e:
-                    logger.debug('Not an valid IP network: (id=%d, sender=%s), error: %s' % (_id, _cidr, str(e)))
+                    logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
     elif _ip.version == 6:
         # Check IPv6.
         for r in records:
-            (_id, _cidr) = r
+            (_id, _cidr, _comment) = r
 
             # Make sure _cidr is IPv6 network
             if ':' in _cidr and '/' in _cidr:
@@ -120,10 +120,10 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
                     if _ip in _net:
-                        logger.info('[%s] Client address is whitelisted (greylisting): (id=%d, sender=%s)' % (client_address, _id, _cidr))
+                        logger.info('[%s] Client address is whitelisted (greylisting): (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
                         return True
                 except Exception, e:
-                    logger.debug('Not an valid IP network: (id=%d, sender=%s), error: %s' % (_id, _cidr, str(e)))
+                    logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
 
     logger.debug('No whitelist found.')
     return False

@@ -49,6 +49,7 @@
 
 import os
 import sys
+import logging
 import web
 
 try:
@@ -64,6 +65,9 @@ sys.path.insert(0, rootdir)
 from tools import logger, get_db_conn
 from libs import utils
 
+if '--debug' in sys.argv:
+    logger.setLevel(logging.DEBUG)
+    sys.argv.remove('--debug')
 
 def query_a(domains, queried_domains=None, returned_ips=None):
     "Return list of IP addresses/networks defined in A record of domain name."
@@ -309,8 +313,9 @@ else:
 domains = [d for d in domains if utils.is_domain(d)]
 if not domains:
     logger.info('* No valid domain names, exit.')
+    sys.exit()
 
-logger.info('* Parsing domains, %d in total.' % len(domains))
+logger.info('* Parsing %d domains.' % len(domains))
 
 all_ips = set()
 domain_ips = {}
@@ -347,7 +352,7 @@ for domain in domains:
     domain_ips[domain] = ips
     all_ips.update(ips)
 
-    logger.debug('\t\t+ FINAL: %s' % ips)
+    logger.debug('\t\t+ Result: %s' % ips)
 
 if not all_ips:
     logger.info('* No IP address/network found. Exit.')
