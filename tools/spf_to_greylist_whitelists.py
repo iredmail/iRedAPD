@@ -47,11 +47,6 @@
 #   * A simpler shell script which does the same job, it lists all IP addresses
 #     and/or networks on terminal: https://bitbucket.org/zhb/spf-to-ip
 
-#
-# TODO
-#
-#   - import generated SQL file directly.
-
 import os
 import sys
 import web
@@ -84,6 +79,7 @@ def query_a(domains, queried_domains=None, returned_ips=None):
             if qr:
                 for r in qr:
                     _ip = str(r)
+                    logger.debug('\t\t[%s] A: %s' % (domain, _ip))
                     ips.add(_ip)
 
                     returned_ips.add(_ip)
@@ -113,6 +109,7 @@ def query_mx(domains, queried_domains=None, returned_ips=None):
             if qr:
                 for r in qr:
                     hostname = str(r).split()[-1].rstrip('.')
+                    logger.debug('\t\t[%s] MX: %s' % (domain, hostname))
                     a.add(hostname)
 
             if a:
@@ -274,6 +271,11 @@ def query_spf_of_included_domains(domains, queried_domains=None, returned_ips=No
         spf = qr['spf']
         queried_domains = qr['queried_domains']
 
+        if spf:
+            logger.debug('\t\t+ [include: %s] %s' % (domain, spf))
+        else:
+            logger.debug('\t\t+ [include: %s] empty' % domain)
+
         qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_spf = qr['ips']
@@ -334,23 +336,18 @@ for domain in domains:
 
         # Parse returned SPF record
         qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
-
-        ips = qr['ips']
-        queried_domains = qr['queried_domains']
-        returned_ips = qr['returned_ips']
-
-        domain_ips[domain] = ips
-        all_ips.update(ips)
     else:
         # Whitelist hosts listed in MX records.
         qr = query_mx([domain], queried_domains=queried_domains, returned_ips=returned_ips)
 
-        ips = qr['ips']
-        queried_domains = qr['queried_domains']
-        returned_ips = qr['returned_ips']
+    ips = qr['ips']
+    queried_domains = qr['queried_domains']
+    returned_ips = qr['returned_ips']
 
-        domain_ips[domain] = ips
-        all_ips.update(ips)
+    domain_ips[domain] = ips
+    all_ips.update(ips)
+
+    logger.debug('\t\t+ FINAL: %s' % ips)
 
 if not all_ips:
     logger.info('* No IP address/network found. Exit.')

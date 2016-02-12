@@ -26,13 +26,15 @@ elif backend in ['pgsql']:
 else:
     sys.exit('Error: Unsupported backend (%s).' % backend)
 
-# Config logging
+# logging
 logger = logging.getLogger('iredapd')
 _ch = logging.StreamHandler(sys.stdout)
 _formatter = logging.Formatter('%(message)s')
 _ch.setFormatter(_formatter)
 logger.addHandler(_ch)
-logger.setLevel(logging.INFO)
+
+_log_level = getattr(logging, str(settings.log_level).upper())
+logger.setLevel(_log_level)
 
 
 def print_error(msg):
