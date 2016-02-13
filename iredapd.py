@@ -7,8 +7,17 @@ import socket
 import asyncore
 import asynchat
 
+# Remove 'settings.pyc' first.
+_pyc = os.path.abspath(os.path.dirname(__file__)) + '/settings.pyc'
+if os.path.exists(_pyc):
+    try:
+        os.remove(_pyc)
+    except:
+        pass
 
-# iRedAPD setting file and modules
+del _pyc
+
+# Import iRedAPD config file (settings.py) and modules
 import settings
 from libs import __version__, PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
 from libs.logger import logger
