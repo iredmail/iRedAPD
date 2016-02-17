@@ -80,10 +80,10 @@ if settings.log_action_in_db:
     conn_iredadmin = get_db_conn('iredapd')
 
     if settings.backend == 'pgsql':
-        conn_iredapd.delete('log',
+        conn_iredadmin.delete('log',
                             where="admin='iredapd' AND timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAYS'""" % settings.CLEANUP_KEEP_ACTION_LOG_DAYS)
     else:
-        conn_iredapd.delete('log',
+        conn_iredadmin.delete('log',
                             where="admin='iredapd' AND timestamp < date_sub(NOW(), INTERVAL %d DAY)" % settings.CLEANUP_KEEP_ACTION_LOG_DAYS)
 
 #
