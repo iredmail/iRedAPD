@@ -25,12 +25,13 @@ SMTP_ACTIONS = {
 #
 # With pre-defined priorities, the order defined in `plugins = []` setting
 # doesn't matter at all, so that we can apply plugins in ideal order.
-#
-# Plugin with larger number has higher priority and will be applied first.
 #             ---------------------------------
+# Plugin with larger number has higher priority and will be applied first.
+#             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # WARNING: Do not set the same priority for different plugins.
 PLUGIN_PRIORITIES = {
     'reject_null_sender': 100,
+    'reject_to_hostname': 99,
     'greylisting': 90,
     'reject_sender_login_mismatch': 80,
     'ldap_force_change_password_in_days': 70,
