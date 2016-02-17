@@ -104,10 +104,11 @@ if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
 # Remove old action log stored in iredadmin database.
 #
 if settings.log_action_in_db:
-    logger.info('* Remove old (%d days) action log in iredadmin database.' % kept_days)
+    kept_days = settings.CLEANUP_KEEP_ACTION_LOG_DAYS
+
+    logger.info('* Remove old (> %d days) action log in iredadmin database.' % kept_days)
 
     conn_iredadmin = get_db_conn('iredadmin')
-    kept_days = settings.CLEANUP_KEEP_ACTION_LOG_DAYS
 
     if settings.backend == 'pgsql':
         conn_iredadmin.delete('log',
