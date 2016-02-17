@@ -73,20 +73,6 @@ conn_iredapd.delete('greylisting_tracking', where='record_expired < %d' % now)
 total_after = sql_count_id(conn_iredapd, 'greylisting_tracking')
 
 #
-# Remove old action log stored in iredadmin database.
-#
-if settings.log_action_in_db:
-    logger.info('* Remove old action log in iredadmin database.')
-    conn_iredadmin = get_db_conn('iredapd')
-
-    if settings.backend == 'pgsql':
-        conn_iredadmin.delete('log',
-                            where="admin='iredapd' AND timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAYS'""" % settings.CLEANUP_KEEP_ACTION_LOG_DAYS)
-    else:
-        conn_iredadmin.delete('log',
-                            where="admin='iredapd' AND timestamp < date_sub(NOW(), INTERVAL %d DAY)" % settings.CLEANUP_KEEP_ACTION_LOG_DAYS)
-
-#
 # Some basic analyzation
 #
 # Count how many records are passed greylisting
@@ -113,3 +99,17 @@ if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
     print_top_greylisting_domains(conn=conn_iredapd, limit=top_limit, passed=True)
 
 # TODO Count passed sender domain and whitelist its IP address with comment (domain name).
+
+#
+# Remove old action log stored in iredadmin database.
+#
+if settings.log_action_in_db:
+    logger.info('* Remove old action log in iredadmin database.')
+    conn_iredadmin = get_db_conn('iredadmin')
+
+    if settings.backend == 'pgsql':
+        conn_iredadmin.delete('log',
+                            where="admin='iredapd' AND timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAYS'""" % settings.CLEANUP_KEEP_ACTION_LOG_DAYS)
+    else:
+        conn_iredadmin.delete('log',
+                            where="admin='iredapd' AND timestamp < date_sub(NOW(), INTERVAL %d DAY)" % settings.CLEANUP_KEEP_ACTION_LOG_DAYS)
