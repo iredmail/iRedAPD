@@ -93,6 +93,8 @@ else
     exit 255
 fi
 
+export CRON_FILE="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
+
 echo "* Detected Linux/BSD distribution: ${DISTRO}"
 
 # iRedAPD directory and config file.
@@ -119,7 +121,7 @@ strip_quotes()
     echo "${value}"
 }
 
-get_value_of_iredapd_setting()
+get_iredapd_setting()
 {
     var="${1}"
     value="$(grep "^${var}" ${IREDAPD_CONF_PY} | awk '{print $NF}' | strip_quotes)"
@@ -203,11 +205,14 @@ fi
 #
 # Require SQL root password to create `iredapd` database.
 #
-export IREDAPD_DB_SERVER='127.0.0.1'
-export IREDAPD_DB_USER='iredapd'
-export IREDAPD_DB_NAME='iredapd'
-export IREDAPD_DB_PASSWD="$(echo $RANDOM | ${MD5_BIN} | awk '{print $1}')"
 if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
+    export IREDAPD_DB_SERVER='127.0.0.1'
+    export IREDAPD_DB_USER='iredapd'
+    export IREDAPD_DB_NAME='iredapd'
+    export IREDAPD_DB_PASSWD="$(echo $RANDOM | ${MD5_BIN} | awk '{print $1}')"
+
+    cp -f ${PWD}/../SQL/iredapd.*sql /tmp/
+    chmod 0555 /tmp/iredapd.*sql
 
     # Check backend.
     if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
@@ -232,9 +237,6 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
             fi
         done
 
-        cp -f ${PWD}/../SQL/iredapd.mysql /tmp/
-        chmod 0555 /tmp/iredapd.mysql
-
         # Create database and tables.
         mysql -u${_sql_root_username} -p${_sql_root_password} <<EOF
 CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
@@ -243,15 +245,8 @@ SOURCE /tmp/iredapd.mysql;
 GRANT ALL ON ${IREDAPD_DB_NAME}.* TO "${IREDAPD_DB_USER}"@"localhost" IDENTIFIED BY "${IREDAPD_DB_PASSWD}";
 FLUSH PRIVILEGES;
 EOF
-
-        rm -f /tmp/{iredapd.mysql}
-
     elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
         export IREDAPD_DB_PORT='5432'
-
-        # Create database directly.
-        cp -f ${PWD}/../SQL/iredapd.pgsql /tmp/
-        chmod 0555 /tmp/iredapd.pgsql
 
         su - ${PGSQL_SYS_USER} -c "psql -d template1" <<EOF
 -- Create user, database, change owner
@@ -264,54 +259,65 @@ ALTER DATABASE ${IREDAPD_DB_NAME} OWNER TO ${IREDAPD_DB_USER};
 -- Import SQL template
 \i /tmp/iredapd.pgsql;
 
--- Enable greylisting by default
-INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
-
 -- Grant permissions
-GRANT ALL ON greylisting, greylisting_tracking, greylisting_whitelists TO ${IREDAPD_DB_USER};
-GRANT ALL ON greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitelists_id_seq TO ${IREDAPD_DB_USER};
+GRANT ALL ON greylisting, greylisting_tracking, greylisting_whitelists, greylisting_whitelist_domains TO ${IREDAPD_DB_USER};
+GRANT ALL ON greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitelists_id_seq, greylisting_whitelist_domains_id_seq TO ${IREDAPD_DB_USER};
 
 GRANT ALL ON throttle, throttle_tracking TO ${IREDAPD_DB_USER};
 GRANT ALL ON throttle_id_seq, throttle_tracking_id_seq TO ${IREDAPD_DB_USER};
 EOF
 
         su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
-
-        rm -f /tmp/{iredapd.pgsql}
     fi
+
+    rm -f /tmp/iredapd.*sql
 fi
 
 #
-# Add missing/new SQL columns
+# Add missing/new SQL table: greylisting_whitelist_domains
 #
-export iredapd_db_server="$(get_value_of_iredapd_setting 'iredapd_db_server')"
-export iredapd_db_port="$(get_value_of_iredapd_setting 'iredapd_db_port')"
-export iredapd_db_name="$(get_value_of_iredapd_setting 'iredapd_db_name')"
-export iredapd_db_user="$(get_value_of_iredapd_setting 'iredapd_db_user')"
-export iredapd_db_password="$(get_value_of_iredapd_setting 'iredapd_db_password')"
+export iredapd_db_server="$(get_iredapd_setting 'iredapd_db_server')"
+export iredapd_db_port="$(get_iredapd_setting 'iredapd_db_port')"
+export iredapd_db_name="$(get_iredapd_setting 'iredapd_db_name')"
+export iredapd_db_user="$(get_iredapd_setting 'iredapd_db_user')"
+export iredapd_db_password="$(get_iredapd_setting 'iredapd_db_password')"
 
 # Add sql table `greylisting_whitelist_domains`
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
-    cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
-    chmod 0555 /tmp/greylisting_whitelist_domains.sql
-
-    mysql -h${iredapd_db_server} \
-          -P${iredapd_db_port} \
-          -u${iredapd_db_user} \
+    # Check sql table existence
+    (mysql -h ${iredapd_db_server} \
+          -P ${iredapd_db_port} \
+          -u ${iredapd_db_user} \
           -p${iredapd_db_password} \
           ${iredapd_db_name} <<EOF
+show tables;
+EOF
+) | grep 'greylisting_whitelist_domains' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
+        chmod 0555 /tmp/greylisting_whitelist_domains.sql
+
+        mysql -h${iredapd_db_server} \
+              -P${iredapd_db_port} \
+              -u${iredapd_db_user} \
+              -p${iredapd_db_password} \
+              ${iredapd_db_name} <<EOF
 CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
     id        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
     domain    VARCHAR(255)    NOT NULL DEFAULT '',
     PRIMARY KEY (id),
     UNIQUE INDEX (domain)
 ) ENGINE=InnoDB;
+USE ${iredapd_db_name};
 SOURCE /tmp/greylisting_whitelist_domains.sql;
 EOF
+    fi
 
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
 
+    # Check sql table existence
     psql -h ${iredapd_db_server} \
          -p ${iredapd_db_port} \
          -U ${iredapd_db_user} \
@@ -362,11 +368,15 @@ if [ X"$(has_python_module dns)" == X'NO' ]; then
 fi
 
 
-# Copy current directory to Apache server root
+#
+# Upgrade to new version
+#
+# Copy current directory to web DocumentRoot
 dir_new_version="$(dirname ${PWD})"
 name_new_version="$(basename ${dir_new_version})"
 NEW_IREDAPD_ROOT_DIR="/opt/${name_new_version}"
 NEW_IREDAPD_CONF="${NEW_IREDAPD_ROOT_DIR}/settings.py"
+
 if [ ! -d ${NEW_IREDAPD_ROOT_DIR} ]; then
     echo "* Create directory ${NEW_IREDAPD_ROOT_DIR}."
     mkdir ${NEW_IREDAPD_ROOT_DIR} &>/dev/null
@@ -375,20 +385,17 @@ fi
 echo "* Copying new version to ${NEW_IREDAPD_ROOT_DIR}"
 cp -rf ${dir_new_version}/* ${NEW_IREDAPD_ROOT_DIR}
 
-# able to import default settings from libs/default_settings.py
+echo "* Copy old config file: settings.py: ${IREDAPD_CONF_PY} -> ${NEW_IREDAPD_CONF}"
 cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_CONF}
 
-echo "* Remove all *.pyc files."
-cd ${dir_new_version} && find . -name '*.pyc' | xargs rm -f {} &>/dev/null
-
+# Import settings from libs/default_settings.py
 if ! grep '^from libs.default_settings import' ${IREDAPD_CONF_PY} &>/dev/null; then
+    echo "* Update settings.py to import settings from libs/default_settings.py."
     cat > ${NEW_IREDAPD_CONF}_tmp <<EOF
 ############################################################
 # DO NOT TOUCH BELOW LINE.
 #
-# Import default settings.
-# You can always override default settings by placing custom settings in this
-# file.
+# Import default settings from libs/default_settings.py (don't touch this file).
 from libs.default_settings import *
 ############################################################
 EOF
@@ -397,19 +404,18 @@ EOF
     mv ${NEW_IREDAPD_CONF}_tmp ${NEW_IREDAPD_CONF}
 fi
 
+echo "* Set correct owner and permission for ${NEW_IREDAPD_ROOT_DIR}: ${SYS_ROOT_USER}:${SYS_ROOT_GROUP}, 0500."
 chown -R ${SYS_ROOT_USER}:${SYS_ROOT_GROUP} ${NEW_IREDAPD_ROOT_DIR}
 chmod -R 0500 ${NEW_IREDAPD_ROOT_DIR}
+
+echo "* Set permission for iRedAPD config file: ${NEW_IREDAPD_CONF} -> 0400."
 chmod 0400 ${NEW_IREDAPD_CONF}
 
-echo "* Removing old symbol link ${IREDAPD_ROOT_DIR}"
+echo "* Re-create symbol link: ${IREDAPD_ROOT_DIR} -> ${NEW_IREDAPD_ROOT_DIR}"
 rm -f ${IREDAPD_ROOT_DIR}
-
-echo "* Creating symbol link ${IREDAPD_ROOT_DIR} to ${NEW_IREDAPD_ROOT_DIR}"
 cd /opt && ln -s ${name_new_version} iredapd
 
-#-----------------------------
 # Always copy init rc script.
-#
 echo "* Copy new SysV init script."
 if [ X"${DISTRO}" == X'RHEL' ]; then
     cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.rhel ${DIR_RC_SCRIPTS}/iredapd
@@ -421,17 +427,22 @@ elif [ X"${DISTRO}" == X'OPENBSD' ]; then
     cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.openbsd ${DIR_RC_SCRIPTS}/iredapd
 fi
 
+# For systems which use systemd
 systemctl daemon-reload &>/dev/null
 
 chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 
+#-----------------------------------------------
+# Post-upgrade
 #-----------------------------
+
+#
 # Add missing parameters or rename old parameter names."
 #
-echo "* Add missing parameters or rename old parameter names."
-
 # Get Amavisd related settings from iRedAdmin config file.
 if ! grep '^amavisd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
+    echo "* Add missing parameters used for plugin `amavisd_wblist`."
+
     if [ -f ${IREDADMIN_CONF_PY} ]; then
         grep '^amavisd_db_' ${IREDADMIN_CONF_PY} >> ${IREDAPD_CONF_PY}
         perl -pi -e 's#amavisd_db_host#amavisd_db_server#g' ${IREDAPD_CONF_PY}
@@ -466,21 +477,21 @@ fi
 #
 echo "* Remove deprecated plugins."
 rm -f ${IREDAPD_ROOT_DIR}/plugins/ldap_amavisd_block_blacklisted_senders.py &>/dev/null
-rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/ldap_recipient_restrictions.py &>/dev/null
-rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/sql_user_restrictions.py &>/dev/null
-rm -f ${IREDAPD_ROOT_DIR}/plugins/plugins/amavisd_message_size_limit.py &>/dev/null
+rm -f ${IREDAPD_ROOT_DIR}/plugins/ldap_recipient_restrictions.py &>/dev/null
+rm -f ${IREDAPD_ROOT_DIR}/plugins/sql_user_restrictions.py &>/dev/null
+rm -f ${IREDAPD_ROOT_DIR}/plugins/amavisd_message_size_limit.py &>/dev/null
 
 #------------------------------
 # Log rotate
 #
-# Create directory to store log files.
+# Create directory which is used to store log files.
 if [ ! -d ${IREDAPD_LOG_DIR} ]; then
     echo "* Create directory to store log files: ${IREDAPD_LOG_DIR}."
     mkdir -p ${IREDAPD_LOG_DIR} 2>/dev/null
 fi
 
 # Move old log files to log directory.
-[ -f /var/log/iredapd.log ] && mv /var/log/iredapd.log* ${IREDAPD_LOG_DIR}
+mv /var/log/iredapd.log* ${IREDAPD_LOG_DIR} &>/dev/null
 
 # Always set correct owner and permission, so that we can rotate the log files.
 chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${IREDAPD_LOG_DIR}
@@ -498,10 +509,8 @@ perl -pi -e 's#^(log_file).*#${1} = "$ENV{IREDAPD_LOG_FILE}"#' ${IREDAPD_CONF_PY
 #------------------------------
 # Cron job.
 #
-# /opt/iRedAPD-* will be owned by root user, so we have to add cron job for
+# /opt/iRedAPD-* is owned by root user, so we have to add cron job for
 # root user instead of iredapd daemon user.
-CRON_FILE="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
-
 [[ -d ${CRON_SPOOL_DIR} ]] || mkdir -p ${CRON_SPOOL_DIR} &>/dev/null
 if [[ ! -f ${CRON_FILE} ]]; then
     touch ${CRON_FILE} &>/dev/null
@@ -517,7 +526,7 @@ EOF
 fi
 
 # cron job for updating IP addresses/networks of greylisting whitelist domains.
-if ! grep '/opt/iredapd/tools/spf_to_greylisting_whitelists.py' ${CRON_FILE} &>/dev/null; then
+if ! grep "${IREDAPD_ROOT_DIR}/tools/spf_to_greylisting_whitelists.py" ${CRON_FILE} &>/dev/null; then
     cat >> ${CRON_FILE} <<EOF
 # iRedAPD: Convert specified SPF DNS record of specified domain names to IP
 #          addresses/networks every 10 minutes.
@@ -527,8 +536,11 @@ fi
 
 
 #------------------------------
-# Post-upgrade, clean up.
+# Clean up.
 #
+echo "* Remove all *.pyc files."
+cd ${IREDAPD_ROOT_DIR} && find . -name '*.pyc' | xargs rm -f {} &>/dev/null
+
 echo "* Restarting iRedAPD service."
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     service ${RC_SCRIPT_NAME} restart
@@ -548,4 +560,5 @@ cat <<EOF
 <<< NOTE >>> If iRedAPD doesn't work as expected, please post your issue in
 <<< NOTE >>> our online support forum: http://www.iredmail.org/forum/
 <<< NOTE >>> iRedAPD log file is ${IREDAPD_LOG_FILE}.
+
 EOF
