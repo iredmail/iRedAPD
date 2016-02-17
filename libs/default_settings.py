@@ -140,3 +140,6 @@ THROTTLE_BYPASS_MYNETWORKS = False
 # Show senders which not yet passed greylisting.
 CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = False
 CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS = 30
+
+# Delete old action log in iRedAdmin database.
+CLEANUP_KEEP_ACTION_LOG_DAYS = 7

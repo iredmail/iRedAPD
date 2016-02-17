@@ -1,4 +1,8 @@
-iRedAPD-1.8.1:
+iRedAPD-1.9.0:
+    * Improvements:
+        + tools/cleanup_db.py: remove old action logs which are stored in
+          iredadmin database. Default is keeping for 7 days.
+
     * Fixed issues:
         - tools/spf_to_greylisting_whitelists.py: combine splited IP address
           in SPF record.

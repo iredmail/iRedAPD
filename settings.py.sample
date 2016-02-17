@@ -25,7 +25,7 @@ log_file = '/var/log/iredapd/iredapd.log'
 log_level = 'info'
 
 # Backend: ldap, mysql, pgsql.
-backend = 'ldap'
+backend = 'mysql'
 
 # Enabled plugins.
 plugins = ['reject_null_sender', 'amavisd_wblist', 'ldap_maillist_access_policy']
