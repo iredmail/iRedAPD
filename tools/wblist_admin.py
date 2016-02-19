@@ -53,9 +53,6 @@ USAGE = """Usage:
 
     WARNING: Do not use --list, --add-whitelist, --add-blacklist at the same time.
 
-    --noninteractive
-        Don't ask to confirm.
-
 Sample usage:
 
     * Show and add server-wide whitelists or blacklists:
@@ -110,48 +107,40 @@ wb_account_type = utils.is_valid_amavisd_address(wb_account)
 if not '@' in account:
     sys.exit('<<< ERROR >>> Invalid account format.')
 
-logger.info('* Manage (%s) wblist for account: %s' % (inout_type, account))
+# Get wblist type.
+wblist_type = ''
+for_whitelist = False
+for_blacklist = False
+if '--whitelist' in args:
+    wblist_type = 'whitelist'
+    for_whitelist = True
+    args.remove('--whitelist')
+elif '--blacklist' in args:
+    wblist_type = 'blacklist'
+    for_blacklist = True
+    args.remove('--blacklist')
+else:
+    sys.exit('No --whitelist or --blacklist specified. Exit.')
 
 # Get action.
 if '--add' in args:
     action = 'add'
     args.remove('--add')
-    logger.info('* Operation: add (--add).')
+    logger.info('* Add %s %s for account: %s' % (inout_type, wblist_type, account))
 elif '--delete' in args:
     action = 'delete'
     args.remove('--delete')
-    logger.info('* Operation: delete (--delete).')
+    logger.info('* Delete %s %s for account: %s' % (inout_type, wblist_type, account))
 elif '--delete-all' in args:
     action = 'delete-all'
     args.remove('--delete-all')
-    logger.info('* Operation: delete (--delete-all).')
+    logger.info('* Delete all %s %s for account: %s' % (inout_type, wblist_type, account))
 elif '--list' in args:
     action = 'list'
     args.remove('--list')
-    logger.info('* Operation: show existing wblist (--list).')
+    logger.info('* List all %s %s for account: %s' % (inout_type, wblist_type, account))
 else:
     sys.exit('No --add, --delete or --list specified. Exit.')
-
-require_confirm = True
-if '--noninteractive' in args:
-    require_confirm = False
-    args.remove('--noninteractive')
-elif action == 'list':
-    require_confirm = False
-
-# Get wblist type.
-for_whitelist = False
-for_blacklist = False
-if '--whitelist' in args:
-    for_whitelist = True
-    args.remove('--whitelist')
-    logger.info('* wblist type: whitelist (--whitelist).')
-elif '--blacklist' in args:
-    for_blacklist = True
-    args.remove('--blacklist')
-    logger.info('* wblist type: blacklist (--blacklist).')
-else:
-    sys.exit('No --whitelist or --blacklist specified. Exit.')
 
 # Get specified white/blacklists
 wl = []
@@ -164,11 +153,6 @@ if for_whitelist:
     wl = wb_senders
 elif for_blacklist:
     bl = wb_senders
-
-if require_confirm:
-    confirm = raw_input('Continue? [y|N] ')
-    if not confirm or confirm.lower() in ['n', 'no', '']:
-        sys.exit('Exit.')
 
 # Add, delete, show
 if action == 'add':
@@ -280,6 +264,3 @@ else:
                 logger.error(qr[1])
     except Exception, e:
         logger.info(str(e))
-
-if action != 'list':
-    logger.info('* Done.')
