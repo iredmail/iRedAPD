@@ -257,10 +257,6 @@ else:
                 else:
                     logger.info('* No blacklist.')
         else:
-            if qr[1] == "'module' object has no attribute 'logger'":
-                # safe to ignore.
-                pass
-            else:
-                logger.error(qr[1])
+            logger.error(qr[1])
     except Exception, e:
         logger.info(str(e))
