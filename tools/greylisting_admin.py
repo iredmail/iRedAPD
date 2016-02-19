@@ -59,31 +59,39 @@ USAGE = """Usage:
 
 Sample usages:
 
-    * List all existing greylisting settings
+    * List all existing greylisting settings:
 
         # python greylisting_admin.py --list
 
-    * List all whitelisted sender domain names
+    * List all whitelisted sender domain names:
 
         # python greylisting_admin.py --list-whitelist
 
+    * Whitelist a sender domain:
+
+        # python greylisting_admin.py --whitelist --from '@example.com'
+
+    * Remove a whitelisted sender domain:
+
+        # python greylisting_admin.py --remove-whitelist --from '@example.com'
+
     * Enable greylisting for emails which are sent
-      from anyone to local mail domain 'example.com'
+      from anyone to local mail domain 'example.com':
 
         # python greylisting_admin.py --enable --to '@example.com'
 
     * Disable greylisting for emails which are sent
-      from anyone to local mail user 'user@example.com'
+      from anyone to local mail user 'user@example.com':
 
         # python greylisting_admin.py --disable --to 'user@example.com'
 
     * Disable greylisting for emails which are sent
-      from 'gmail.com' to local mail user 'user@example.com'
+      from 'gmail.com' to local mail user 'user@example.com':
 
         # python greylisting_admin.py --disable --from '@gmail.com' --to 'user@example.com'
 
     * Delete greylisting setting for emails which are sent
-      from anyone to local domain 'test.com
+      from anyone to local domain 'test.com':
 
         # python greylisting_admin.py --delete --to '@test.com'
 """
@@ -118,15 +126,15 @@ elif '--disable' in args:
 elif '--delete' in args:
     action = 'delete'
     args.remove('--delete')
+elif '--list' in args:
+    action = 'list'
+    args.remove('--list')
 elif '--whitelist' in args:
     action = 'whitelist'
     args.remove('--whitelist')
 elif '--remove-whitelist' in args:
     action = 'remove-whitelist'
     args.remove('--remove-whitelist')
-elif '--list' in args:
-    action = 'list'
-    args.remove('--list')
 elif '--list-whitelist' in args:
     action = 'list-whitelist'
     args.remove('--list-whitelist')
@@ -185,6 +193,7 @@ def remove_whitelisted_domain(conn, domain):
 
 # Check whether sender address is a domain name.
 sender_is_domain = False
+sender_domain = ''
 if utils.is_valid_amavisd_address(sender) == 'domain':
     sender_is_domain = True
     sender_domain = sender.split('@', 1)[-1]
