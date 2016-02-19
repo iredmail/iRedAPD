@@ -17,6 +17,20 @@ web.config.debug = False
 
 USAGE = """Usage:
 
+    --list-whitelist
+        Show ALL whitelisted sender domain names.
+
+    --whitelist
+        Explicitly whitelist a sender domain for greylisting service.
+
+        Note: you must setup a cron job to run script
+        /opt/iredapd/tools/spf_to_greylist_whitelists.py to query SPF/MX/A
+        DNS records and store the IP addresses/networks stored in those DNS
+        records as whitelisted senders. Default interval is 10 minutes.
+
+    --remove-whitelist
+        Remove whitelisted sender domain
+
     --list
         Show ALL existing greylisting settings.
 
@@ -48,6 +62,10 @@ Sample usages:
     * List all existing greylisting settings
 
         # python greylisting_admin.py --list
+
+    * List all whitelisted sender domain names
+
+        # python greylisting_admin.py --list-whitelist
 
     * Enable greylisting for emails which are sent
       from anyone to local mail domain 'example.com'
@@ -100,9 +118,18 @@ elif '--disable' in args:
 elif '--delete' in args:
     action = 'delete'
     args.remove('--delete')
+elif '--whitelist' in args:
+    action = 'whitelist'
+    args.remove('--whitelist')
+elif '--remove-whitelist' in args:
+    action = 'remove-whitelist'
+    args.remove('--remove-whitelist')
 elif '--list' in args:
     action = 'list'
     args.remove('--list')
+elif '--list-whitelist' in args:
+    action = 'list-whitelist'
+    args.remove('--list-whitelist')
 else:
     sys.exit('<<< ERROR >>> No valid operation specified. Exit.')
 
@@ -132,6 +159,35 @@ if not '@' in sender:
 
 if not '@' in rcpt:
     sys.exit('<<< ERROR >>> Invalid recipient address.')
+
+
+def whitelisting_domain(conn, domain):
+    # Insert domain into sql table `iredapd.greylisting_whitelist_domains`
+    try:
+        conn.insert('greylisting_whitelist_domains',
+                    domain=domain)
+    except Exception, e:
+        error = str(e).lower()
+        if 'duplicate key' in error or 'duplicate entry' in error:
+            pass
+        else:
+            logger.info(str(e))
+
+
+def remove_whitelisted_domain(conn, domain):
+    # Delete sender domain from `iredapd.greylisting_whitelist_domains`
+    # Delete its spf/mx records from `iredapd.greylisting_whitelists`
+    try:
+        conn.delete('greylisting_whitelist_domains', where="domain='%s'" % domain)
+        conn.delete('greylisting_whitelists', where="comment='AUTO-UPDATE: %s'" % domain)
+    except Exception, e:
+        logger.info(str(e))
+
+# Check whether sender address is a domain name.
+sender_is_domain = False
+if utils.is_valid_amavisd_address(sender) == 'domain':
+    sender_is_domain = True
+    sender_domain = sender.split('@', 1)[-1]
 
 conn = get_db_conn('iredapd')
 
@@ -172,16 +228,30 @@ elif action == 'disable':
 elif action == 'delete':
     try:
         logger.info('* Delete greylisting setting: %s -> %s' % (sender, rcpt))
+        conn.delete('greylisting_whitelists',
+                    where="account='%s' AND sender='%s'" % (rcpt, sender))
     except Exception, e:
         logger.info(str(e))
-else:
+
+elif action == 'whitelist':
+    logger.info('* Whitelisting sender domain: %s' % sender_domain)
+    whitelisting_domain(conn=conn, domain=sender_domain)
+
+elif action == 'remove-whitelist':
+    logger.info('* Remove whitelisted sender domain: %s' % sender_domain)
+    remove_whitelisted_domain(conn=conn, domain=sender_domain)
+
+elif action == 'list':
     # show existing greylisting settings.
     try:
         qr = conn.select('greylisting', order='priority DESC, sender_priority DESC')
-        if qr:
-            output_format = '%-34s -> %-30s %-8s'
-            print output_format % ('Sender', 'Local Account', 'Status')
-            print '-' * 78
+        if not qr:
+            logger.info('* No whitelists.')
+            sys.exit()
+
+        output_format = '%-8s %-34s -> %-30s'
+        print output_format % ('Status', 'Sender', 'Local Account')
+        print '-' * 78
 
         for i in qr:
             _account = i.account
@@ -196,9 +266,20 @@ else:
                 _account = '@. (anyone)'
 
             if _active:
-                print output_format % (_sender, _account, 'enabled')
+                print output_format % ('enabled', _sender, _account)
             else:
-                print output_format % (_sender, _account, 'disabled')
+                print output_format % ('disabled', _sender, _account)
+
+    except Exception, e:
+        logger.info(str(e))
+
+elif action == 'list-whitelist':
+    # show whitelisted sender domain names
+    try:
+        qr = conn.select('greylisting_whitelist_domains', what='domain', order='domain ASC')
+
+        for r in qr:
+            logger.info(r.domain)
 
     except Exception, e:
         logger.info(str(e))
