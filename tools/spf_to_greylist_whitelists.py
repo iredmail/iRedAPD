@@ -68,6 +68,8 @@ from libs import utils
 if '--debug' in sys.argv:
     logger.setLevel(logging.DEBUG)
     sys.argv.remove('--debug')
+else:
+    logger.setLevel(logging.INFO)
 
 def query_a(domains, queried_domains=None, returned_ips=None):
     "Return list of IP addresses/networks defined in A record of domain name."

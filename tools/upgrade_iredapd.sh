@@ -286,7 +286,6 @@ export iredapd_db_password="$(get_iredapd_setting 'iredapd_db_password')"
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     # Check sql table existence
     (mysql -h ${iredapd_db_server} \
-          -P ${iredapd_db_port} \
           -u ${iredapd_db_user} \
           -p${iredapd_db_password} \
           ${iredapd_db_name} <<EOF
@@ -299,7 +298,6 @@ EOF
         chmod 0555 /tmp/greylisting_whitelist_domains.sql
 
         mysql -h${iredapd_db_server} \
-              -P${iredapd_db_port} \
               -u${iredapd_db_user} \
               -p${iredapd_db_password} \
               ${iredapd_db_name} <<EOF
