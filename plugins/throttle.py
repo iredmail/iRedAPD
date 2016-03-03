@@ -121,7 +121,7 @@ from web import sqlquote
 import settings
 from libs import SMTP_ACTIONS
 from libs.utils import is_ipv4, wildcard_ipv4, sqllist, is_trusted_client
-from libs.utils import is_valid_amavisd_address
+from libs.utils import is_valid_amavisd_address, pretty_left_seconds
 from libs.amavisd.core import get_valid_addresses_from_email
 
 SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
@@ -335,11 +335,15 @@ def apply_throttle(conn,
                                                                                                throttle_info))
                 return SMTP_ACTIONS['reject_exceed_max_msgs']
             else:
-                logger.info('[%s] %s throttle, %s -> max_msgs (%d/%d)' % (client_address,
-                                                                          throttle_type,
-                                                                          user,
-                                                                          max_msgs_cur_msgs,
-                                                                          max_msgs))
+                # Show the time tracking record is about to expire
+                _left_seconds = int(t_settings['max_msgs'].get('init_time', 0) + t_settings['max_msgs'].get('period', 0) - t_settings['max_msgs'].get('last_time', 0))
+
+                logger.info('[%s] %s throttle, %s -> max_msgs (%d/%d, %s)' % (client_address,
+                                                                              throttle_type,
+                                                                              user,
+                                                                              max_msgs_cur_msgs,
+                                                                              max_msgs,
+                                                                              pretty_left_seconds(_left_seconds)))
 
     elif protocol_state == 'END-OF-MESSAGE':
         # Check `msg_size`
@@ -355,11 +359,15 @@ def apply_throttle(conn,
                                                                                                        throttle_info))
                 return SMTP_ACTIONS['reject_exceed_msg_size']
             else:
-                logger.info('[%s] %s throttle, %s -> msg_size (%d/%d)' % (client_address,
-                                                                          throttle_type,
-                                                                          user,
-                                                                          size,
-                                                                          msg_size))
+                # Show the time tracking record is about to expire
+                _left_seconds = int(t_settings['msg_size'].get('init_time', 0) + t_settings['msg_size'].get('period', 0) - t_settings['msg_size'].get('last_time', 0))
+
+                logger.info('[%s] %s throttle, %s -> msg_size (%d/%d, %s)' % (client_address,
+                                                                              throttle_type,
+                                                                              user,
+                                                                              size,
+                                                                              msg_size,
+                                                                              pretty_left_seconds(_left_seconds)))
 
         # Check `max_quota`
         if 'max_quota' in t_settings:
@@ -383,11 +391,15 @@ def apply_throttle(conn,
                                                                                                 throttle_info))
                 return SMTP_ACTIONS['reject_exceed_max_quota']
             else:
-                logger.info('[%s] %s throttle, %s -> max_quota (%d/%d)' % (client_address,
-                                                                           throttle_type,
-                                                                           user,
-                                                                           cur_quota,
-                                                                           max_quota))
+                # Show the time tracking record is about to expire
+                _left_seconds = int(t_settings['max_quota'].get('init_time', 0) + t_settings['max_quota'].get('period', 0) - t_settings['max_quota'].get('last_time', 0))
+
+                logger.info('[%s] %s throttle, %s -> max_quota (%d/%d, %s)' % (client_address,
+                                                                               throttle_type,
+                                                                               user,
+                                                                               cur_quota,
+                                                                               max_quota,
+                                                                               pretty_left_seconds(_left_seconds)))
 
         # Update tracking record.
         #

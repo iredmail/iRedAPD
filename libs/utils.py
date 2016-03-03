@@ -294,6 +294,40 @@ def is_trusted_client(client_address):
     return False
 
 
+def pretty_left_seconds(seconds=0):
+    hours = 0
+    mins = 0
+    left_seconds = 0
+
+    # hours
+    if seconds >= 3600:
+        hours = seconds / 3600
+        left_seconds = seconds % 3600
+    else:
+        left_seconds = seconds
+
+    # minutes
+    if left_seconds >= 60:
+        mins = left_seconds / 60
+        left_seconds = left_seconds % 60
+
+    r = []
+    if hours:
+        r += ['%d hours' % hours]
+
+    if mins:
+        r += ['%d minutes' % mins]
+
+    if left_seconds:
+        r += ['%d seconds' % left_seconds]
+
+    logger.info('debug left 2: %s' % str(r))
+    if r:
+        return 'time left: ' + ', '.join(r)
+    else:
+        return ''
+
+
 def log_action(conn, action, sender, recipient, ip, plugin_name):
     # Don't log certain actions:
     #
