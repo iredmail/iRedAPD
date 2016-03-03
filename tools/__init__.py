@@ -89,9 +89,14 @@ def log_to_iredadmin(msg, event, admin='', loglevel='info'):
     return None
 
 
-def sql_count_id(conn, table, column='id'):
-    qr = conn.select(table,
-                     what='count(%s) as total' % column)
+def sql_count_id(conn, table, column='id', where=None):
+    if where:
+        qr = conn.select(table,
+                         what='count(%s) as total' % column,
+                         where=where)
+    else:
+        qr = conn.select(table,
+                         what='count(%s) as total' % column)
     if qr:
         total = qr[0].total
     else:

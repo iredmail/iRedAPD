@@ -111,8 +111,15 @@ if settings.log_action_in_db:
     conn_iredadmin = get_db_conn('iredadmin')
 
     if settings.backend == 'pgsql':
-        conn_iredadmin.delete('log',
-                              where="admin='iredapd' AND timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAYS'""" % kept_days)
+        sql_where = "admin='iredapd' AND timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAYS'""" % kept_days
     else:
-        conn_iredadmin.delete('log',
-                              where="admin='iredapd' AND timestamp < date_sub(NOW(), INTERVAL %d DAY)" % kept_days)
+        sql_where = "admin='iredapd' AND timestamp < date_sub(NOW(), INTERVAL %d DAY)" % kept_days
+
+    total_before = sql_count_id(conn_iredadmin, table='log', where="admin='iredapd'")
+
+    # Remove records
+    conn_iredadmin.delete('log', where=sql_where)
+
+    total_after = sql_count_id(conn_iredadmin, table='log', where="admin='iredapd'")
+    total_removed = total_before - total_after
+    logger.info('\t- %d removed, %d left.' % (total_removed, total_after))
