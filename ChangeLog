@@ -1,6 +1,7 @@
 iRedAPD-1.9.0:
     * Improvements:
-        + plugins/throttle.py: log time left before tracking record expired.
+        + plugins/throttle.py: log period and time left before tracking record
+          expires.
         + plugins/greylisting.py: log more info when log level is 'info'.
         + tools/greylisting_admin.py: it's now able to
             * list all whitelisted domains
