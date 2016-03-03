@@ -225,6 +225,7 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
             read _sql_server_address
             if [ -z ${_sql_server_address} ]; then
                 _sql_server_address='127.0.0.1'
+            fi
 
             echo -n "MySQL root username: "
             read _sql_root_username
