@@ -221,6 +221,11 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
         echo "Looks like you don't have 'iredapd' SQL database, please type root"
         echo "username and password of your SQL server to create it now."
         while :; do
+            echo -n "MySQL server address: [127.0.0.1] "
+            read _sql_server_address
+            if [ -z ${_sql_server_address} ]; then
+                _sql_server_address='127.0.0.1'
+
             echo -n "MySQL root username: "
             read _sql_root_username
 
@@ -228,7 +233,11 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
             read _sql_root_password
 
             # Verify username and password
-            mysql -u${_sql_root_username} -p${_sql_root_password} -e "show databases" >/dev/null
+            mysql -h ${_sql_server_address} \
+                  -u${_sql_root_username} \
+                  -p${_sql_root_password} \
+                  -e "show databases" >/dev/null
+
             if [ X"$?" == X'0' ]; then
                 export _sql_root_username _sql_root_password
                 break
@@ -238,7 +247,9 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
         done
 
         # Create database and tables.
-        mysql -u${_sql_root_username} -p${_sql_root_password} <<EOF
+        mysql -h ${_sql_server_address} \
+              -u${_sql_root_username} \
+              -p${_sql_root_password} <<EOF
 CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE ${IREDAPD_DB_NAME};
 SOURCE /tmp/iredapd.mysql;
@@ -286,9 +297,9 @@ export iredapd_db_password="$(get_iredapd_setting 'iredapd_db_password')"
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     # Check sql table existence
     (mysql -h ${iredapd_db_server} \
-          -u ${iredapd_db_user} \
-          -p${iredapd_db_password} \
-          ${iredapd_db_name} <<EOF
+           -u ${iredapd_db_user} \
+           -p${iredapd_db_password} \
+           ${iredapd_db_name} <<EOF
 show tables;
 EOF
 ) | grep 'greylisting_whitelist_domains' &>/dev/null
