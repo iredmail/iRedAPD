@@ -23,7 +23,7 @@ USAGE = """Usage:
     --list-whitelists
         Show ALL whitelisted sender addresses (in `greylisting_whitelists`)
 
-    --whitelist
+    --whitelist-domain
         Explicitly whitelist a sender domain for greylisting service.
 
         Note: you must setup a cron job to run script
@@ -76,7 +76,7 @@ Sample usages:
 
     * Whitelist a sender domain:
 
-        # python greylisting_admin.py --whitelist --from '@example.com'
+        # python greylisting_admin.py --whitelist-domain --from '@example.com'
 
     * Remove a whitelisted sender domain:
 
@@ -136,9 +136,9 @@ elif '--delete' in args:
 elif '--list' in args:
     action = 'list'
     args.remove('--list')
-elif '--whitelist' in args:
-    action = 'whitelist'
-    args.remove('--whitelist')
+elif '--whitelist-domain' in args:
+    action = 'whitelist-domain'
+    args.remove('--whitelist-domain')
 elif '--remove-whitelist-domain' in args:
     action = 'remove-whitelist-domain'
     args.remove('--remove-whitelist-domain')
@@ -252,7 +252,7 @@ elif action == 'delete':
     except Exception, e:
         logger.info(str(e))
 
-elif action == 'whitelist':
+elif action == 'whitelist-domain':
     logger.info('* Whitelisting sender domain: %s' % sender_domain)
     whitelisting_domain(conn=conn, domain=sender_domain)
 

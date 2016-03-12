@@ -3,10 +3,17 @@ iRedAPD-1.9.0:
         + plugins/throttle.py: log period and time left before tracking record
           expires.
         + plugins/greylisting.py: log more info when log level is 'info'.
+
         + tools/greylisting_admin.py: it's now able to
-            * list all whitelisted domains
-            * whitelist a sender domain
-            * remove a whitelisted domain
+            * list all whitelisted senders (--list-whitelists)
+            * list all sender domains (--list-whitelist-domains)
+            * whitelist a sender domain (--whitelist-domain)
+            * remove a whitelisted domain (--remove-whitelist-domain)
+            * delete tracking data after whitelisted a sender domain
+
+        + tools/spf_to_greylisting_whitelists.py:
+            * store whitelist sender domain in sql db (--submit)
+
         + tools/cleanup_db.py: remove old action logs which are stored in
           iredadmin database. Defaults to keep for 7 days.
 
