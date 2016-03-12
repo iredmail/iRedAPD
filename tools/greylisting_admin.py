@@ -17,8 +17,11 @@ web.config.debug = False
 
 USAGE = """Usage:
 
-    --list-whitelist
-        Show ALL whitelisted sender domain names.
+    --list-whitelist-domains
+        Show ALL whitelisted sender domain names (in `greylisting_whitelist_domains`)
+
+    --list-whitelists
+        Show ALL whitelisted sender addresses (in `greylisting_whitelists`)
 
     --whitelist
         Explicitly whitelist a sender domain for greylisting service.
@@ -28,7 +31,7 @@ USAGE = """Usage:
         DNS records and store the IP addresses/networks stored in those DNS
         records as whitelisted senders. Default interval is 10 minutes.
 
-    --remove-whitelist
+    --remove-whitelist-domain
         Remove whitelisted sender domain
 
     --list
@@ -65,7 +68,11 @@ Sample usages:
 
     * List all whitelisted sender domain names:
 
-        # python greylisting_admin.py --list-whitelist
+        # python greylisting_admin.py --list-whitelist-domains
+
+    * List all whitelisted sender addresses:
+
+        # python greylisting_admin.py --list-whitelists
 
     * Whitelist a sender domain:
 
@@ -73,7 +80,7 @@ Sample usages:
 
     * Remove a whitelisted sender domain:
 
-        # python greylisting_admin.py --remove-whitelist --from '@example.com'
+        # python greylisting_admin.py --remove-whitelist-domain --from '@example.com'
 
     * Enable greylisting for emails which are sent
       from anyone to local mail domain 'example.com':
@@ -132,12 +139,15 @@ elif '--list' in args:
 elif '--whitelist' in args:
     action = 'whitelist'
     args.remove('--whitelist')
-elif '--remove-whitelist' in args:
-    action = 'remove-whitelist'
-    args.remove('--remove-whitelist')
-elif '--list-whitelist' in args:
-    action = 'list-whitelist'
-    args.remove('--list-whitelist')
+elif '--remove-whitelist-domain' in args:
+    action = 'remove-whitelist-domain'
+    args.remove('--remove-whitelist-domain')
+elif '--list-whitelist-domains' in args:
+    action = 'list-whitelist-domains'
+    args.remove('--list-whitelist-domains')
+elif '--list-whitelists' in args:
+    action = 'list-whitelists'
+    args.remove('--list-whitelists')
 else:
     sys.exit('<<< ERROR >>> No valid operation specified. Exit.')
 
@@ -194,7 +204,7 @@ def remove_whitelisted_domain(conn, domain):
 # Check whether sender address is a domain name.
 sender_is_domain = False
 sender_domain = ''
-if utils.is_valid_amavisd_address(sender) == 'domain':
+if utils.is_valid_amavisd_address(sender) in ['domain', 'subdomain']:
     sender_is_domain = True
     sender_domain = sender.split('@', 1)[-1]
 
@@ -246,7 +256,7 @@ elif action == 'whitelist':
     logger.info('* Whitelisting sender domain: %s' % sender_domain)
     whitelisting_domain(conn=conn, domain=sender_domain)
 
-elif action == 'remove-whitelist':
+elif action == 'remove-whitelist-domain':
     logger.info('* Remove whitelisted sender domain: %s' % sender_domain)
     remove_whitelisted_domain(conn=conn, domain=sender_domain)
 
@@ -282,13 +292,24 @@ elif action == 'list':
     except Exception, e:
         logger.info(str(e))
 
-elif action == 'list-whitelist':
+elif action == 'list-whitelist-domains':
     # show whitelisted sender domain names
     try:
         qr = conn.select('greylisting_whitelist_domains', what='domain', order='domain ASC')
 
         for r in qr:
             logger.info(r.domain)
+
+    except Exception, e:
+        logger.info(str(e))
+
+elif action == 'list-whitelists':
+    # show whitelisted senders in `greylisting_whitelists` table.
+    try:
+        qr = conn.select('greylisting_whitelists', order='account ASC, sender ASC')
+
+        for r in qr:
+            logger.info('%s -> %s "%s"' % (r.sender, r.account, r.comment))
 
     except Exception, e:
         logger.info(str(e))

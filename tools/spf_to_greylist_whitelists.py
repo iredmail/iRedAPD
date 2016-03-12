@@ -24,7 +24,12 @@
 #      For example:
 #
 #       $ python spf_to_greylist_whitelists.py google.com aol.com
-
+#
+#   3) Run this script with option '--submit' and domain name to add domain
+#      name to SQL table `iredapd.greylisting_whitelist_domains`, and query
+#      its SPF/MX/A records immediately:
+#
+#       $ python spf_to_greylist_whitelists.py --submit <domain> [domain ...]
 #
 # Required third-party Python modules:
 #
@@ -36,6 +41,7 @@
 #
 #   * not supported spf syntax:
 #
+#       - -all
 #       - a/24 a:<domain>/24
 #       - mx/24 mx:<domain>/24
 #       - exists:<domain>
@@ -70,6 +76,13 @@ if '--debug' in sys.argv:
     sys.argv.remove('--debug')
 else:
     logger.setLevel(logging.INFO)
+
+# Add domain name to SQL table `iredapd.greylisting_whitelist_domains`
+submit_to_sql_db = False
+if '--submit' in sys.argv:
+    submit_to_sql_db = True
+    sys.argv.remove('--submit')
+
 
 def query_a(domains, queried_domains=None, returned_ips=None):
     "Return list of IP addresses/networks defined in A record of domain name."
@@ -316,6 +329,13 @@ domains = [d for d in domains if utils.is_domain(d)]
 if not domains:
     logger.info('* No valid domain names, exit.')
     sys.exit()
+
+logger.info('* Store domain names in SQL database as greylisting whitelists.')
+for d in domains:
+    try:
+        conn.insert('greylisting_whitelist_domains', domain=d)
+    except:
+        pass
 
 logger.info('* Parsing %d domains.' % len(domains))
 
