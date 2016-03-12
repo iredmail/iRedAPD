@@ -330,13 +330,6 @@ if not domains:
     logger.info('* No valid domain names, exit.')
     sys.exit()
 
-logger.info('* Store domain names in SQL database as greylisting whitelists.')
-for d in domains:
-    try:
-        conn.insert('greylisting_whitelist_domains', domain=d)
-    except:
-        pass
-
 logger.info('* Parsing %d domains.' % len(domains))
 
 all_ips = set()
@@ -408,3 +401,19 @@ for domain in domain_ips:
                 pass
             else:
                 logger.info('* <<< ERROR >>> Cannot insert new record for domain %s: %s' % (domain, error))
+
+if submit_to_sql_db:
+    logger.info('* Store domain names in SQL database as greylisting whitelists.')
+    for d in domains:
+        try:
+            conn.insert('greylisting_whitelist_domains', domain=d)
+        except:
+            pass
+
+        # Delete tracking data
+        try:
+            conn.delete('greylisting_tracking',
+                        vars={'domain': d},
+                        where='sender_domain=$domain')
+        except:
+            pass
