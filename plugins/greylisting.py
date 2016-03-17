@@ -70,8 +70,8 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     returns True if is whitelisted, otherwise returns False.
 
     conn        -- sql connection cursor
-    recipient   -- full email address of recipient
     senders     -- list of senders we should check greylisting
+    recipient   -- full email address of recipient
     """
 
     # query whitelists based on recipient
@@ -87,7 +87,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     whitelists = [str(v).lower() for (_, v, _) in records]
     wl = set(senders) & set(whitelists)
     if wl:
-        logger.info('[%s] Sender is whitelisted for greylisting service: %s' % (client_address, ', '.join(wl)))
+        logger.info('[%s] Client is whitelisted for greylisting service: %s' % (client_address, ', '.join(wl)))
         return True
 
     # check whitelisted cidr
@@ -120,7 +120,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
                     if _ip in _net:
-                        logger.info('[%s] Client address is whitelisted (greylisting): (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
+                        logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
                         return True
                 except Exception, e:
                     logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
@@ -147,7 +147,7 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
     logger.debug('[SQL] query result: %s' % str(records))
 
     if not records:
-        logger.debug('No setting found, greylisting is disabled for this client.')
+        logger.debug('No setting found. Disable Greylisting for this client.')
         return False
 
     _ip = ipaddress.ip_address(unicode(client_address))

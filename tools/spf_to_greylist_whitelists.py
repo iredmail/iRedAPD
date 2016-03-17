@@ -98,7 +98,7 @@ def query_a(domains, queried_domains=None, returned_ips=None):
             if qr:
                 for r in qr:
                     _ip = str(r)
-                    logger.debug('\t\t[%s] A: %s' % (domain, _ip))
+                    logger.debug('\t\t+ [%s] A: %s' % (domain, _ip))
                     ips.add(_ip)
 
                     returned_ips.add(_ip)
@@ -128,7 +128,7 @@ def query_mx(domains, queried_domains=None, returned_ips=None):
             if qr:
                 for r in qr:
                     hostname = str(r).split()[-1].rstrip('.')
-                    logger.debug('\t\t[%s] MX: %s' % (domain, hostname))
+                    logger.debug('\t\t+ [%s] MX: %s' % (domain, hostname))
                     a.add(hostname)
 
             if a:
