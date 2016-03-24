@@ -98,28 +98,27 @@ if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
 if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
     print_top_greylisting_domains(conn=conn_iredapd, limit=top_limit, passed=True)
 
-# TODO Count passed sender domain and whitelist its IP address with comment (domain name).
+#
+# Remove old records in `log_smtp_actions` table
+#
+kept_days = settings.CLEANUP_KEEP_ACTION_LOG_DAYS
+logger.info('* Remove old (> %d days) records in `log_smtp_actions`.' % kept_days)
+
+total_before = sql_count_id(conn_iredapd, 'log_smtp_actions')
+conn_iredapd.delete('log_smtp_actions', where='timestamp < %d' % now)
+total_after = sql_count_id(conn_iredapd, 'log_smtp_actions')
+
+logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_after))
 
 #
-# Remove old action log stored in iredadmin database.
+# Remove old records in `log_sasl` table
 #
-if settings.log_action_in_db:
-    kept_days = settings.CLEANUP_KEEP_ACTION_LOG_DAYS
 
-    logger.info('* Remove old (> %d days) action log in iredadmin database.' % kept_days)
+kept_days = settings.CLEANUP_KEEP_SASL_LOG_DAYS
+logger.info('* Remove old (> %d days) records in `log_sasl`.' % kept_days)
 
-    conn_iredadmin = get_db_conn('iredadmin')
+total_before = sql_count_id(conn_iredapd, 'log_sasl')
+conn_iredapd.delete('log_sasl', where='timestamp < %d' % now)
+total_after = sql_count_id(conn_iredapd, 'log_sasl')
 
-    if settings.backend == 'pgsql':
-        sql_where = "admin='iredapd' AND timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAYS'""" % kept_days
-    else:
-        sql_where = "admin='iredapd' AND timestamp < date_sub(NOW(), INTERVAL %d DAY)" % kept_days
-
-    total_before = sql_count_id(conn_iredadmin, table='log', where="admin='iredapd'")
-
-    # Remove records
-    conn_iredadmin.delete('log', where=sql_where)
-
-    total_after = sql_count_id(conn_iredadmin, table='log', where="admin='iredapd'")
-    total_removed = total_before - total_after
-    logger.info('\t- %d removed, %d left.' % (total_removed, total_after))
+logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_after)

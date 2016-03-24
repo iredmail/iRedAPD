@@ -162,6 +162,57 @@ CREATE TABLE greylisting_tracking (
     passed          SMALLINT NOT NULL DEFAULT 0
 );
 
-CREATE UNIQUE INDEX idx_greylisting_tracking_key ON greylisting_tracking (sender, recipient, client_address);
+CREATE UNIQUE INDEX idx_greylisting_tracking_key    ON greylisting_tracking (sender, recipient, client_address);
 CREATE INDEX idx_greylisting_tracking_sender_domain ON greylisting_tracking (sender_domain);
-CREATE INDEX idx_greylisting_tracking_rcpt_domain ON greylisting_tracking (rcpt_domain);
+CREATE INDEX idx_greylisting_tracking_rcpt_domain   ON greylisting_tracking (rcpt_domain);
+
+--
+-- Log smtp session which contains specified smtp actions (e.g. REJECT, DISCARD)
+-- Old records should be removed with a cron job.
+--
+CREATE TABLE log_smtp_actions (
+    id                  SERIAL PRIMARY KEY,
+    sender              VARCHAR(255) NOT NULL,
+    recipient           VARCHAR(255) NOT NULL,
+    client_address      VARCHAR(40) NOT NULL,
+    sender_domain       VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_username       VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain         VARCHAR(255) NOT NULL DEFAULT '',
+    action              TEXT NOT NULL DEFAULT '',
+    timestamp           TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_log_smtp_actions_sender          ON log_smtp_actions (sender);
+CREATE INDEX idx_log_smtp_actions_recipient       ON log_smtp_actions (recipient);
+CREATE INDEX idx_log_smtp_actions_client_address  ON log_smtp_actions (client_address);
+CREATE INDEX idx_log_smtp_actions_sender_domain   ON log_smtp_actions (sender_domain);
+CREATE INDEX idx_log_smtp_actions_recipient_domain    ON log_smtp_actions (recipient_domain);
+CREATE INDEX idx_log_smtp_actions_sasl_username   ON log_smtp_actions (sasl_username);
+CREATE INDEX idx_log_smtp_actions_sasl_domain     ON log_smtp_actions (sasl_domain);
+CREATE INDEX idx_log_smtp_actions_timestamp       ON log_smtp_actions (timestamp);
+
+--
+-- Log reject actions.
+-- Old records should be removed with a cron job.
+--
+CREATE TABLE log_sasl (
+    id                  SERIAL PRIMARY KEY,
+    sender              VARCHAR(255) NOT NULL,
+    recipient           VARCHAR(255) NOT NULL,
+    client_address      VARCHAR(40) NOT NULL,
+    sender_domain       VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_username       VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain         VARCHAR(255) NOT NULL DEFAULT '',
+    timestamp           TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_log_sasl_sender            ON log_sasl (sender);
+CREATE INDEX idx_log_sasl_recipient         ON log_sasl (recipient);
+CREATE INDEX idx_log_sasl_client_address    ON log_sasl (client_address);
+CREATE INDEX idx_log_sasl_sender_domain     ON log_sasl (sender_domain);
+CREATE INDEX idx_log_sasl_recipient_domain  ON log_sasl (recipient_domain);
+CREATE INDEX idx_log_sasl_sasl_username     ON log_sasl (sasl_username);
+CREATE INDEX idx_log_sasl_sasl_domain       ON log_sasl (sasl_domain);
+CREATE INDEX idx_log_sasl_timestamp         ON log_sasl (timestamp);

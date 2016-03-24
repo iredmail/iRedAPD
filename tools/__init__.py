@@ -71,24 +71,6 @@ def get_db_conn(db):
         print_error(e)
 
 
-# Log in `iredadmin.log`
-def log_to_iredadmin(msg, event, admin='', loglevel='info'):
-    conn = get_db_conn('iredadmin')
-
-    try:
-        conn.insert('log',
-                    admin=admin,
-                    event=event,
-                    loglevel=loglevel,
-                    msg=str(msg),
-                    ip='127.0.0.1',
-                    timestamp=get_gmttime())
-    except:
-        pass
-
-    return None
-
-
 def sql_count_id(conn, table, column='id', where=None):
     if where:
         qr = conn.select(table,

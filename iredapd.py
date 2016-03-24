@@ -19,9 +19,11 @@ del _pyc
 
 # Import config file (settings.py) and modules
 import settings
-from libs import __version__, PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
+from libs import __version__, daemon
+from libs import PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
+from libs import LOG_SMTP_ACTIONS, LOG_SASL_SESSION
 from libs.logger import logger
-from libs.utils import get_db_conn
+from libs.utils import get_db_conn, log_smtp_action, log_sasl
 
 # Plugin directory.
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
@@ -70,9 +72,17 @@ class PolicyChannel(asynchat.async_chat):
                 (key, value) = line.split('=', 1)
 
                 if key in SMTP_SESSION_ATTRIBUTES:
-                    self.smtp_session_data[key] = value
+                    if key in ['sender', 'recipient', 'sasl_username']:
+                        # convert to lower cases.
+                        v = value.lower()
+                        self.smtp_session_data[key] = v
+
+                        # Add sender_domain, recipient_domain, sasl_username_domain
+                        self.smtp_session_data[key + '_domain'] = v.split('@', 1)[-1]
+                    else:
+                        self.smtp_session_data[key] = value
                 else:
-                    logger.debug('Drop invalid smtp session attribute/value: %s' % line)
+                    logger.debug('Drop invalid smtp session input: %s' % line)
 
         elif self.smtp_session_data:
             try:
@@ -113,6 +123,22 @@ class PolicyChannel(asynchat.async_chat):
                                              self.smtp_session_data['protocol_state'],
                                              _log_sender_to_rcpt,
                                              action))
+
+            # Log into SQL
+            if LOG_SMTP_ACTIONS or LOG_SASL_SESSION:
+                conn_iredapd = self.db_conns['conn_iredapd'].connect()
+
+                # Log smtp session with specified smtp actions
+                _short_action = str(action.split(' ', 1)[0]).upper()
+                if _short_action in LOG_SMTP_ACTIONS \
+                   and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
+                    log_smtp_action(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
+
+                # Log (sasl authenticated) smtp session
+                if self.smtp_session_data['sasl_username'] \
+                   and LOG_SASL_SESSION \
+                   and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
+                    log_sasl(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended")
@@ -214,12 +240,10 @@ def main():
         conn_vmail = None
 
     conn_amavisd = get_db_conn('amavisd')
-    conn_iredadmin = get_db_conn('iredadmin')
     conn_iredapd = get_db_conn('iredapd')
 
     db_conns = {'conn_vmail': conn_vmail,
                 'conn_amavisd': conn_amavisd,
-                'conn_iredadmin': conn_iredadmin,
                 'conn_iredapd': conn_iredapd}
 
     # Initialize policy daemon.

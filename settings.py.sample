@@ -56,14 +56,6 @@ amavisd_db_name = 'amavisd'
 amavisd_db_user = 'amavisd'
 amavisd_db_password = 'password'
 
-# Log reject (and other non-DUNNO) action in iRedAdmin SQL database
-log_action_in_db = True
-iredadmin_db_server = '127.0.0.1'
-iredadmin_db_port = '3306'
-iredadmin_db_name = 'iredadmin'
-iredadmin_db_user = 'iredadmin'
-iredadmin_db_password = 'password'
-
 # iRedAPD database, used for greylisting, throttle.
 iredapd_db_server = '127.0.0.1'
 iredapd_db_port = '3306'

@@ -46,6 +46,14 @@ PLUGIN_PRIORITIES = {}
 #   - IP subnet: 192.168.1.0/24
 MYNETWORKS = []
 
+# Log basic info of smtp session which has specified smtp action.
+# List all smtp actions (uppercase) you want to log, leave it empty if you
+# don't want to log any session.
+LOG_SMTP_ACTIONS = ['REJECT', 'DISCARD']
+
+# Log basic info of sasl authenticated smtp session.
+LOG_SASL_SESSION = True
+
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
@@ -141,5 +149,8 @@ THROTTLE_BYPASS_MYNETWORKS = False
 CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = False
 CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS = 30
 
-# Delete old action log in iRedAdmin database.
-CLEANUP_KEEP_ACTION_LOG_DAYS = 7
+# Delete old records in `log_smtp_action` table.
+CLEANUP_KEEP_ACTION_LOG_DAYS = 15
+
+# Delete old records in `log_sasl` table.
+CLEANUP_KEEP_SASL_LOG_DAYS = 30

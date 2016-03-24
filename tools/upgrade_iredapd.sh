@@ -183,6 +183,18 @@ add_missing_parameter()
     fi
 }
 
+remove_parameter()
+{
+    # Usage: remove_parameter <var_name>
+    export var="${1}"
+
+    if ! grep "^${var}" ${IREDAPD_CONF_PY} &>/dev/null; then
+        perl -pi -e 's#^($ENV{var}.*)##g' ${IREDAPD_CONF_PY}
+    fi
+
+    unset var
+}
+
 # Copy config file
 if [ -f ${IREDAPD_CONF_PY} ]; then
     echo "* Found iRedAPD config file: ${IREDAPD_CONF_PY}"
@@ -286,7 +298,7 @@ EOF
 fi
 
 #
-# Add missing/new SQL table: greylisting_whitelist_domains
+# Add missing/new SQL tables
 #
 export iredapd_db_server="$(get_iredapd_setting 'iredapd_db_server')"
 export iredapd_db_port="$(get_iredapd_setting 'iredapd_db_port')"
@@ -294,9 +306,17 @@ export iredapd_db_name="$(get_iredapd_setting 'iredapd_db_name')"
 export iredapd_db_user="$(get_iredapd_setting 'iredapd_db_user')"
 export iredapd_db_password="$(get_iredapd_setting 'iredapd_db_password')"
 
-# Add sql table `greylisting_whitelist_domains`
+if [ X"${DISTRO}" == X'OPENBSD' -a X"${iredapd_db_server}" == X'127.0.0.1' ]; then
+    export iredapd_db_server='localhost'
+fi
+
+#
+# Add sql tables introduced in new iRedAPD releases
+#
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
-    # Check sql table existence
+    #
+    # `greylisting_whitelist_domains`
+    #
     (mysql -h ${iredapd_db_server} \
            -u ${iredapd_db_user} \
            -p${iredapd_db_password} \
@@ -324,10 +344,92 @@ SOURCE /tmp/greylisting_whitelist_domains.sql;
 EOF
     fi
 
+    #
+    # `log_smtp_actions`
+    #
+    (mysql -h ${iredapd_db_server} \
+           -u ${iredapd_db_user} \
+           -p${iredapd_db_password} \
+           ${iredapd_db_name} <<EOF
+show tables;
+EOF
+) | grep 'log_smtp_actions' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        mysql -h${iredapd_db_server} \
+              -u${iredapd_db_user} \
+              -p${iredapd_db_password} \
+              ${iredapd_db_name} <<EOF
+CREATE TABLE IF NOT EXISTS log_smtp_actions (
+    id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    sender            VARCHAR(255) NOT NULL,
+    recipient         VARCHAR(255) NOT NULL,
+    client_address    VARCHAR(40) NOT NULL,
+    sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_username     VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain       VARCHAR(255) NOT NULL DEFAULT '',
+    action            TEXT,
+    timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX (sender),
+    INDEX (recipient),
+    INDEX (client_address),
+    INDEX (sender_domain),
+    INDEX (recipient_domain),
+    INDEX (sasl_username),
+    INDEX (sasl_domain),
+    INDEX (timestamp)
+) ENGINE=InnoDB;
+EOF
+    fi
+
+    #
+    # `log_sasl`
+    #
+    (mysql -h ${iredapd_db_server} \
+           -u ${iredapd_db_user} \
+           -p${iredapd_db_password} \
+           ${iredapd_db_name} <<EOF
+show tables;
+EOF
+) | grep 'log_sasl' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        mysql -h${iredapd_db_server} \
+              -u${iredapd_db_user} \
+              -p${iredapd_db_password} \
+              ${iredapd_db_name} <<EOF
+CREATE TABLE IF NOT EXISTS log_sasl (
+    id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    sender            VARCHAR(255) NOT NULL,
+    recipient         VARCHAR(255) NOT NULL,
+    client_address    VARCHAR(40) NOT NULL,
+    sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_username     VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain       VARCHAR(255) NOT NULL DEFAULT '',
+    timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX (sender),
+    INDEX (recipient),
+    INDEX (client_address),
+    INDEX (sender_domain),
+    INDEX (recipient_domain),
+    INDEX (sasl_username),
+    INDEX (sasl_domain),
+    INDEX (timestamp)
+) ENGINE=InnoDB;
+EOF
+    fi
+
+
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
 
-    # Check sql table existence
+    #
+    # `greylisting_whitelist_domains`
+    #
     psql -h ${iredapd_db_server} \
          -p ${iredapd_db_port} \
          -U ${iredapd_db_user} \
@@ -351,9 +453,88 @@ CREATE TABLE greylisting_whitelist_domains (
 CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whitelist_domains (domain);
 \i /tmp/greylisting_whitelist_domains.sql;
 "
+
+        rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
     fi
+
+    #
+    # `log_smtp_actions`
+    #
+    psql -h ${iredapd_db_server} \
+         -p ${iredapd_db_port} \
+         -U ${iredapd_db_user} \
+         -d ${iredapd_db_name} \
+         -c "SELECT id FROM log_smtp_actions LIMIT 1" &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        psql -h ${iredapd_db_server} \
+             -p ${iredapd_db_port} \
+             -U ${iredapd_db_user} \
+             -d ${iredapd_db_name} \
+             -c "
+CREATE TABLE log_smtp_actions (
+    id              SERIAL PRIMARY KEY,
+    sender          VARCHAR(255) NOT NULL,
+    recipient       VARCHAR(255) NOT NULL,
+    client_address  VARCHAR(40) NOT NULL,
+    sender_domain   VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_username   VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain     VARCHAR(255) NOT NULL DEFAULT '',
+    action          TEXT NOT NULL DEFAULT '',
+    timestamp       TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_log_smtp_actions_sender          ON log_smtp_actions (sender);
+CREATE INDEX idx_log_smtp_actions_recipient       ON log_smtp_actions (recipient);
+CREATE INDEX idx_log_smtp_actions_client_address  ON log_smtp_actions (client_address);
+CREATE INDEX idx_log_smtp_actions_sender_domain   ON log_smtp_actions (sender_domain);
+CREATE INDEX idx_log_smtp_actions_recipient_domain ON log_smtp_actions (recipient_domain);
+CREATE INDEX idx_log_smtp_actions_sasl_username   ON log_smtp_actions (sasl_username);
+CREATE INDEX idx_log_smtp_actions_sasl_domain     ON log_smtp_actions (sasl_domain);
+CREATE INDEX idx_log_smtp_actions_timestamp       ON log_smtp_actions (timestamp);
+"
+    fi
+
+    #
+    # `log_sasl`
+    #
+    psql -h ${iredapd_db_server} \
+         -p ${iredapd_db_port} \
+         -U ${iredapd_db_user} \
+         -d ${iredapd_db_name} \
+         -c "SELECT id FROM log_sasl LIMIT 1" &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        psql -h ${iredapd_db_server} \
+             -p ${iredapd_db_port} \
+             -U ${iredapd_db_user} \
+             -d ${iredapd_db_name} \
+             -c "
+CREATE TABLE log_sasl (
+    id              SERIAL PRIMARY KEY,
+    sender          VARCHAR(255) NOT NULL,
+    recipient       VARCHAR(255) NOT NULL,
+    client_address  VARCHAR(40) NOT NULL,
+    sender_domain   VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_domain     VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_username   VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain     VARCHAR(255) NOT NULL DEFAULT '',
+    timestamp       TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_log_sasl_sender            ON log_sasl (sender);
+CREATE INDEX idx_log_sasl_recipient         ON log_sasl (recipient);
+CREATE INDEX idx_log_sasl_client_address    ON log_sasl (client_address);
+CREATE INDEX idx_log_sasl_sender_domain     ON log_sasl (sender_domain);
+CREATE INDEX idx_log_sasl_recipient_domain  ON log_sasl (recipient_domain);
+CREATE INDEX idx_log_sasl_sasl_username     ON log_sasl (sasl_username);
+CREATE INDEX idx_log_sasl_sasl_domain       ON log_sasl (sasl_domain);
+CREATE INDEX idx_log_sasl_timestamp         ON log_sasl (timestamp);
+"
+    fi
+
 fi
-rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
 
 #
 # Check dependent packages. Prompt to install missed ones manually.
@@ -451,7 +632,7 @@ chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 #
 # Get Amavisd related settings from iRedAdmin config file.
 if ! grep '^amavisd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
-    echo "* Add missing parameters used for plugin `amavisd_wblist`."
+    echo "* Add missing parameters used for plugin 'amavisd_wblist'."
 
     if [ -f ${IREDADMIN_CONF_PY} ]; then
         grep '^amavisd_db_' ${IREDADMIN_CONF_PY} >> ${IREDAPD_CONF_PY}
@@ -481,6 +662,16 @@ if grep '^sql_server' ${IREDAPD_CONF_PY} &>/dev/null; then
     perl -pi -e 's#^(sql_db)#vmail_db_name#g' ${IREDAPD_CONF_PY}
     perl -pi -e 's#^(sql_)#vmail_db_#g' ${IREDAPD_CONF_PY}
 fi
+
+#------------------------------
+# Remove unused parameters
+#
+remove_parameter 'log_action_in_db'
+remove_parameter 'iredadmin_db_server'
+remove_parameter 'iredadmin_db_port'
+remove_parameter 'iredadmin_db_name'
+remove_parameter 'iredadmin_db_user'
+remove_parameter 'iredadmin_db_password'
 
 #------------------------------
 # Remove old plugins
@@ -567,8 +758,11 @@ fi
 echo "* Upgrade completed."
 
 cat <<EOF
-<<< NOTE >>> If iRedAPD doesn't work as expected, please post your issue in
-<<< NOTE >>> our online support forum: http://www.iredmail.org/forum/
-<<< NOTE >>> iRedAPD log file is ${IREDAPD_LOG_FILE}.
+
+< NOTE > If iRedAPD doesn't work as expected, please post your issue in our
+< NOTE > online support forum: http://www.iredmail.org/forum/
+< NOTE >
+< NOTE > * Turn on debug mode: http://www.iredmail.org/docs/debug.iredapd.html
+< NOTE > * iRedAPD log file is ${IREDAPD_LOG_FILE}.
 
 EOF

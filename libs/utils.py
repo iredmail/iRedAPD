@@ -1,8 +1,9 @@
 import re
 from libs.logger import logger
-import time
-from web import sqlquote
+
 from sqlalchemy import create_engine
+from sqlalchemy.sql.expression import text as sql_text
+
 from libs import SMTP_ACTIONS
 from libs import ipaddress
 import settings
@@ -329,102 +330,47 @@ def pretty_left_seconds(seconds=0):
         return ''
 
 
-def log_action(conn, action, sender, recipient, ip, plugin_name):
-    # Don't log certain actions:
-    #
-    #   - DUNNO
-    #   - OK (whitelist)
-    #   - 451 ... (greylisting)
-    if action.startswith('DUNNO') \
-       or action.startswith('OK') \
-       or action.startswith('451'):
-        return None
-
+def log_sasl(conn, smtp_session_data):
     try:
-        do_log = settings.log_action_in_db
-    except:
-        do_log = False
+        sql = sql_text("""
+                       INSERT INTO log_sasl (sender,
+                                             recipient,
+                                             client_address,
+                                             sender_domain,
+                                             recipient_domain,
+                                             sasl_username)
+                       VALUES (:sender, :recipient, :client_address,
+                               :sender_domain, :recipient_domain, :sasl_username)""")
 
-    if not (do_log and conn):
-        return None
-
-    # Log action
-    try:
-        comment = '%s (%s -> %s, %s)' % (action, sender, recipient, plugin_name)
-        sql = """INSERT INTO log (admin, ip, msg, timestamp, event)
-                          VALUES ('iredapd', '%s', '%s', NOW(), 'iredapd')
-        """ % (ip, comment)
-
-        logger.debug(sql)
-        conn.execute(sql)
+        conn.execute(sql, **smtp_session_data)
+                             #sender=self.smtp_session_data.get('sender', ''),
+                             #recipient=self.smtp_session_data.get('recipient', ''),
+                             #client_address=self.smtp_session_data.get('client_address', ''),
+                             #sender_domain=self.smtp_session_data.get('sender_domain', ''),
+                             #recipient_domain=self.smtp_session_data.get('recipient_domain', ''),
+                             #sasl_username=self.smtp_session_data.get('sasl_username', ''))
     except Exception, e:
-        logger.error(e)
+        logger.error(str(e))
 
 
-def log_smtp_session(conn, smtp_session_data):
-    record = {'time': int(time.time())}
-    sql_columns = ['queue_id', 'helo_name',
-                   'client_address', 'client_name', 'reverse_client_name',
-                   'sender', 'recipient', 'recipient_count',
-                   'instance', 'sasl_username', 'size',
-                   'encryption_protocol', 'encryption_cipher']
+def log_smtp_action(conn, smtp_session_data):
+    try:
+        sql = sql_text("""
+                       INSERT INTO log_smtp_actions(sender,
+                                                    recipient,
+                                                    client_address,
+                                                    sender_domain,
+                                                    recipient_domain,
+                                                    sasl_username)
+                       VALUES (:sender, :recipient, :client_address,
+                               :sender_domain, :recipient_domain, :sasl_username)""")
 
-    for col in sql_columns:
-        record[col] = sqlquote(smtp_session_data.get(col, ''))
-
-    # TODO query sql db before inserting, make sure no record with same
-    #      `instance` value.
-
-    if smtp_session_data['protocol_state'] == 'RCPT':
-        # Create new record for new session (protocol_state == RCPT).
-        sql_new = """
-            INSERT INTO session_tracking (
-                        time,
-                        helo_name,
-                        sender,
-                        recipient,
-                        client_address,
-                        client_name,
-                        reverse_client_name,
-                        instance,
-                        sasl_username,
-                        encryption_protocol,
-                        encryption_cipher
-                        )
-                 VALUES (%(time)d,
-                         %(helo_name)s,
-                         %(sender)s,
-                         %(recipient)s,
-                         %(client_address)s,
-                         %(client_name)s,
-                         %(reverse_client_name)s,
-                         %(instance)s,
-                         %(sasl_username)s,
-                         %(encryption_protocol)s,
-                         %(encryption_cipher)s)
-        """ % record
-
-        try:
-            logger.debug('[SQL] Log smtp session: ' + sql_new)
-            conn.execute(sql_new)
-            logger.debug('Logged smtp session.')
-        except Exception, e:
-            logger.debug('Logging failed: %s' % str(e))
-
-    elif smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
-        # Update attributes has non-empty value in END-OF-MESSAGE
-        sql_update = """
-            UPDATE session_tracking
-               SET queue_id=%(queue_id)s,
-                   size=%(size)s,
-                   recipient_count=%(recipient_count)s
-             WHERE instance=%(instance)s
-        """ % record
-
-        try:
-            logger.debug('[SQL] Update smtp session: ' + sql_update)
-            conn.execute(sql_update)
-        except Exception, e:
-            logger.debug('Update failed: %s' % str(e))
-
-    return True
+        conn.execute(sql, **smtp_session_data)
+                             #sender=self.smtp_session_data.get('sender', ''),
+                             #recipient=self.smtp_session_data.get('recipient', ''),
+                             #client_address=self.smtp_session_data.get('client_address', ''),
+                             #sender_domain=self.smtp_session_data.get('sender_domain', ''),
+                             #recipient_domain=self.smtp_session_data.get('recipient_domain', ''),
+                             #sasl_username=self.smtp_session_data.get('sasl_username', ''))
+    except Exception, e:
+        logger.error(str(e))

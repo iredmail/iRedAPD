@@ -1,33 +1,3 @@
--- Track all in/out sessions.
-/*
-CREATE TABLE IF NOT EXISTS session_tracking (
-    id BIGINT(20) UNSIGNED AUTO_INCREMENT,
-    -- the current time in seconds since the Epoch
-    time BIGINT NOT NULL,
-    queue_id VARCHAR(255) NOT NULL DEFAULT '',
-    client_address VARCHAR(255) NOT NULL DEFAULT '',
-    client_name VARCHAR(255) NOT NULL DEFAULT '',
-    reverse_client_name VARCHAR(255) NOT NULL DEFAULT '',
-    helo_name VARCHAR(255) NOT NULL DEFAULT '',
-    sender VARCHAR(255) NOT NULL DEFAULT '',
-    recipient VARCHAR(255) NOT NULL DEFAULT '',
-    recipient_count INT(10) UNSIGNED DEFAULT 0,
-    instance VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_username VARCHAR(255) NOT NULL DEFAULT '',
-    size BIGINT(20) UNSIGNED DEFAULT 0,
-    encryption_protocol VARCHAR(255) NOT NULL DEFAULT '',
-    encryption_cipher VARCHAR(255) NOT NULL DEFAULT '',
-    PRIMARY KEY (id)
-) ENGINE=InnoDB;
-
-CREATE INDEX session_tracking_time          ON session_tracking (time);
-CREATE INDEX session_tracking_sender        ON session_tracking (sender);
-CREATE INDEX session_tracking_recipient     ON session_tracking (recipient);
-CREATE INDEX session_tracking_sasl_username ON session_tracking (sasl_username);
-CREATE INDEX session_tracking_instance      ON session_tracking (instance);
-CREATE INDEX session_tracking_idx1          ON session_tracking (queue_id, client_address, sender);
-*/
-
 -- Throttling.
 -- Please check iRedAPD plugin `throttle` for more details.
 CREATE TABLE throttle (
@@ -218,4 +188,55 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     UNIQUE INDEX (`sender`, `recipient`, `client_address`),
     INDEX (`sender_domain`),
     INDEX (`rcpt_domain`)
+) ENGINE=InnoDB;
+
+--
+-- Log smtp session which contains specified smtp actions (e.g. REJECT, DISCARD)
+-- Old records should be removed with a cron job.
+--
+CREATE TABLE IF NOT EXISTS `log_smtp_actions` (
+    `id`                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `sender`            VARCHAR(255) NOT NULL,
+    `recipient`         VARCHAR(255) NOT NULL,
+    `client_address`    VARCHAR(40) NOT NULL,
+    `sender_domain`     VARCHAR(255) NOT NULL DEFAULT '',
+    `recipient_domain`  VARCHAR(255) NOT NULL DEFAULT '',
+    `sasl_username`     VARCHAR(255) NOT NULL DEFAULT '',
+    `sasl_domain`       VARCHAR(255) NOT NULL DEFAULT '',
+    `action`            TEXT,
+    `timestamp`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX (`sender`),
+    INDEX (`recipient`),
+    INDEX (`client_address`),
+    INDEX (`sender_domain`),
+    INDEX (`recipient_domain`),
+    INDEX (`sasl_username`),
+    INDEX (`sasl_domain`),
+    INDEX (`timestamp`)
+) ENGINE=InnoDB;
+
+--
+-- Log basic info of outgoing emails.
+-- Old records should be removed with a cron job.
+--
+CREATE TABLE IF NOT EXISTS `log_sasl` (
+    `id`                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `sender`            VARCHAR(255) NOT NULL,
+    `recipient`         VARCHAR(255) NOT NULL,
+    `client_address`    VARCHAR(40) NOT NULL,
+    `sender_domain`     VARCHAR(255) NOT NULL DEFAULT '',
+    `recipient_domain`       VARCHAR(255) NOT NULL DEFAULT '',
+    `sasl_username`     VARCHAR(255) NOT NULL DEFAULT '',
+    `sasl_domain`     VARCHAR(255) NOT NULL DEFAULT '',
+    `timestamp`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX (`sender`),
+    INDEX (`recipient`),
+    INDEX (`client_address`),
+    INDEX (`sender_domain`),
+    INDEX (`recipient_domain`),
+    INDEX (`sasl_username`),
+    INDEX (`sasl_domain`),
+    INDEX (`timestamp`)
 ) ENGINE=InnoDB;
