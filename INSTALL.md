@@ -99,7 +99,11 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy
 # chmod -R 0500 /opt/iRedAPD-x.y.z/
 ```
 
-* Copy RC script to /etc/init.d/ (Linux) , /usr/local/etc/rc.d/ (FreeBSD), /etc/rc.d/ (OpenBSD), and set correct permission. **NOTE**: We have RC scripts for different Linux/BSD distributions, please copy the one for your distribution. e.g. `iredapd.rhel` for Red Hat, CentOS, Scientific Linux, `iredapd.debian` for Debian, Ubuntu.
+* Copy RC script to `/etc/init.d/` (Linux), or `/usr/local/etc/rc.d/`
+  (FreeBSD), `/etc/rc.d/` (OpenBSD), and set correct permission.
+
+    * `iredapd.rhel` for Red Hat, CentOS, Scientific Linux
+    * `iredapd.debian` for Debian, Ubuntu.
 
 ```shell
 # cp /opt/iredapd/rc_scripts/iredapd.rhel /etc/init.d/iredapd
@@ -128,7 +132,7 @@ run_as_user = "iredapd"
 pid_file = "/var/run/iredapd.pid"
 
 # Log file.
-log_file = "/var/log/iredapd.log"
+log_file = "/var/log/iredapd/iredapd.log"
 
 # Log level: info, warning, error, debug.
 # 'info' is recommended for product use.
@@ -156,7 +160,9 @@ sql_password = "Psaf68wsuVctYSbj4PJzRqmFsE0rlQ"
 * Create log file: `/var/log/iredapd.log`.
 
 ```shell
-# touch /var/log/iredapd.log
+mkdir -p /var/log/iredapd
+touch /var/log/iredapd/iredapd.log
+chown -R iredapd:iredapd /var/log/iredapd
 ```
 
 * Make iRedAPD start when boot your server.
@@ -170,7 +176,7 @@ $ sudo update-rc.d iredapd defaults
 
 # ---- on FreeBSD, please edit /etc/rc.conf, append below line ----
 iredapd_enable='YES'
-		
+
 # —— on OpenBSD, please list service `iredapd` in parameter `pkg_scripts=` in file `/etc/rc.conf.local` ——
 pkg_scripts=“ ... iredapd”
 ```
@@ -180,7 +186,7 @@ pkg_scripts=“ ... iredapd”
 ```shell
 # —— on Linux ----
 # /etc/init.d/iredapd restart
-		
+
 # —— on FreeBSD ——
 # /usr/local/etc/rc.d/iredapd restart
 
@@ -203,18 +209,23 @@ smtpd_recipient_restrictions =
     ...
 ```
 
-**WARNING**: Order of restriction rules is very important, please make sure
-you have `check_policy_service inet:127.0.0.1:7777` before `permit_mynetworks`.
+**WARNING**:
+
+* Order of restriction rules is very important, please make sure you have
+  `check_policy_service inet:127.0.0.1:7777` before `permit_mynetworks`.
+* If you update Postfix `mynetworks=` with some IP addresses/networks, please
+  also list them in iRedAPD config file `/opt/iredapd/settings.py`, parameter
+  `MYNETWORKS =`.
 
 Restart Postfix service to enable iRedAPD.
 
 ```shell
 # — on Linux
 # /etc/init.d/postfix restart
-		
+
 # —— on FreeBSD
 # /usr/local/etc/rc.d/postfix restart
-		
+
 # —— on OpenBSD
 # /etc/rc.d/postfix restart
 ```
@@ -243,7 +254,7 @@ smtpd_end_of_data_restrictions = check_policy_service inet:127.0.0.1:7777
     compresscmd /usr/bin/bzip2
     uncompresscmd /usr/bin/bunzip2
     compressoptions -9
-    compressext .bz2 
+    compressext .bz2
 
     # Used on RHEL/CentOS.
     postrotate

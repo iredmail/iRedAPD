@@ -7,7 +7,7 @@ import socket
 import asyncore
 import asynchat
 
-# Remove 'settings.pyc' first.
+# Always remove 'settings.pyc'.
 _pyc = os.path.abspath(os.path.dirname(__file__)) + '/settings.pyc'
 if os.path.exists(_pyc):
     try:
@@ -17,7 +17,7 @@ if os.path.exists(_pyc):
 
 del _pyc
 
-# Import iRedAPD config file (settings.py) and modules
+# Import config file (settings.py) and modules
 import settings
 from libs import __version__, PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES, daemon
 from libs.logger import logger
@@ -136,6 +136,7 @@ class DaemonSocket(asyncore.dispatcher):
 
         logger.info("Starting iRedAPD (version: %s, backend: %s), listening on %s:%d." % (__version__, settings.backend, ip, port))
 
+        # Rotate log file.
         if settings.LOGROTATE_TYPE == 'size':
             logger.info("Log rotate type: size (%d MB), backup copies: %d." % ((settings.LOGROTATE_SIZE / 1024 / 1024),
                                                                                settings.LOGROTATE_COPIES))

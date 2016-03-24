@@ -90,10 +90,6 @@ class Modeler:
                          'recipient_ldif': None,
                          'client_address': client_address}
 
-        # TODO Perform addition plugins which don't require sender/recipient info
-        # e.g.
-        #   - security enforce: encryption_protocol=TLSv1/SSLv3
-
         for plugin in plugins:
             # Get plugin target smtp protocol state
             try:

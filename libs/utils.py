@@ -222,6 +222,7 @@ def sqllist(values):
 
 
 def get_db_conn(db):
+    """Return SQL connection instance with connection pool support."""
     if settings.backend == 'pgsql':
         dbn = 'postgres'
     else:
