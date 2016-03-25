@@ -203,7 +203,8 @@ CREATE TABLE IF NOT EXISTS `log_smtp_actions` (
     `recipient_domain`  VARCHAR(255) NOT NULL DEFAULT '',
     `sasl_username`     VARCHAR(255) NOT NULL DEFAULT '',
     `sasl_domain`       VARCHAR(255) NOT NULL DEFAULT '',
-    `action`            TEXT,
+    `action`            VARCHAR(20) NOT NULL DEFAULT '',
+    `msg`               TEXT,
     `timestamp`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     INDEX (`sender`),
@@ -213,6 +214,7 @@ CREATE TABLE IF NOT EXISTS `log_smtp_actions` (
     INDEX (`recipient_domain`),
     INDEX (`sasl_username`),
     INDEX (`sasl_domain`),
+    INDEX (`action`),
     INDEX (`timestamp`)
 ) ENGINE=InnoDB;
 

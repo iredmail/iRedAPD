@@ -369,7 +369,8 @@ CREATE TABLE IF NOT EXISTS log_smtp_actions (
     recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
     sasl_username     VARCHAR(255) NOT NULL DEFAULT '',
     sasl_domain       VARCHAR(255) NOT NULL DEFAULT '',
-    action            TEXT,
+    action            VARCHAR(20) NOT NULL DEFAULT '',
+    msg               TEXT,
     timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX (sender),
@@ -379,6 +380,7 @@ CREATE TABLE IF NOT EXISTS log_smtp_actions (
     INDEX (recipient_domain),
     INDEX (sasl_username),
     INDEX (sasl_domain),
+    INDEX (action),
     INDEX (timestamp)
 ) ENGINE=InnoDB;
 EOF
@@ -481,18 +483,20 @@ CREATE TABLE log_smtp_actions (
     recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
     sasl_username   VARCHAR(255) NOT NULL DEFAULT '',
     sasl_domain     VARCHAR(255) NOT NULL DEFAULT '',
-    action          TEXT NOT NULL DEFAULT '',
+    action          VARCHAR(20)  NOT NULL DEFAULT '',
+    msg             TEXT NOT NULL DEFAULT '',
     timestamp       TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_log_smtp_actions_sender          ON log_smtp_actions (sender);
-CREATE INDEX idx_log_smtp_actions_recipient       ON log_smtp_actions (recipient);
-CREATE INDEX idx_log_smtp_actions_client_address  ON log_smtp_actions (client_address);
-CREATE INDEX idx_log_smtp_actions_sender_domain   ON log_smtp_actions (sender_domain);
-CREATE INDEX idx_log_smtp_actions_recipient_domain ON log_smtp_actions (recipient_domain);
-CREATE INDEX idx_log_smtp_actions_sasl_username   ON log_smtp_actions (sasl_username);
-CREATE INDEX idx_log_smtp_actions_sasl_domain     ON log_smtp_actions (sasl_domain);
-CREATE INDEX idx_log_smtp_actions_timestamp       ON log_smtp_actions (timestamp);
+CREATE INDEX idx_log_smtp_actions_sender            ON log_smtp_actions (sender);
+CREATE INDEX idx_log_smtp_actions_recipient         ON log_smtp_actions (recipient);
+CREATE INDEX idx_log_smtp_actions_client_address    ON log_smtp_actions (client_address);
+CREATE INDEX idx_log_smtp_actions_sender_domain     ON log_smtp_actions (sender_domain);
+CREATE INDEX idx_log_smtp_actions_recipient_domain  ON log_smtp_actions (recipient_domain);
+CREATE INDEX idx_log_smtp_actions_sasl_username     ON log_smtp_actions (sasl_username);
+CREATE INDEX idx_log_smtp_actions_sasl_domain       ON log_smtp_actions (sasl_domain);
+CREATE INDEX idx_log_smtp_actions_action            ON log_smtp_actions (action);
+CREATE INDEX idx_log_smtp_actions_timestamp         ON log_smtp_actions (timestamp);
 "
     fi
 

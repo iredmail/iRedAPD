@@ -349,7 +349,15 @@ def log_sasl(conn, smtp_session_data):
         logger.error(str(e))
 
 
-def log_smtp_action(conn, smtp_session_data):
+def log_smtp_action(conn, smtp_session_data, action, msg=None):
+    """Log smtp session of specified smtp action."""
+    # smtp_session_data doesn't contain nested var/dict,
+    # shallow copy `dict.copy()` is enough here.
+    d = smtp_session_data.copy()
+
+    d['action'] = action
+    d['msg'] = msg or ''
+
     try:
         sql = sql_text("""
                        INSERT INTO log_smtp_actions(sender,
@@ -358,11 +366,14 @@ def log_smtp_action(conn, smtp_session_data):
                                                     sender_domain,
                                                     recipient_domain,
                                                     sasl_username,
-                                                    sasl_domain)
+                                                    sasl_domain,
+                                                    action,
+                                                    msg)
                        VALUES (:sender, :recipient, :client_address,
                                :sender_domain, :recipient_domain,
-                               :sasl_username, :sasl_username_domain)""")
+                               :sasl_username, :sasl_username_domain,
+                               :action, :msg)""")
 
-        conn.execute(sql, **smtp_session_data)
+        conn.execute(sql, **d)
     except Exception, e:
         logger.error(str(e))

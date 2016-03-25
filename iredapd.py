@@ -128,16 +128,29 @@ class PolicyChannel(asynchat.async_chat):
                 conn_iredapd = self.db_conns['conn_iredapd'].connect()
 
                 # Log smtp session with specified smtp actions
+                _action = action.split(' ', 1)
+
+                _short_action = _action[0]
+                _action_msg = ''
+
+                if len(_action) == 2:
+                    _action_msg = _action[1]
+
                 _short_action = str(action.split(' ', 1)[0]).upper()
                 if _short_action in settings.LOG_SMTP_ACTIONS \
                    and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
-                    log_smtp_action(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
+                    log_smtp_action(conn=conn_iredapd,
+                                    smtp_session_data=self.smtp_session_data,
+                                    action=_short_action,
+                                    msg=_action_msg)
 
                 # Log (sasl authenticated) smtp session
                 if self.smtp_session_data['sasl_username'] \
                    and settings.LOG_SASL_SESSION \
                    and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
                     log_sasl(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
+
+                conn_iredapd.close()
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended")
