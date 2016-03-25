@@ -188,7 +188,7 @@ remove_parameter()
     # Usage: remove_parameter <var_name>
     export var="${1}"
 
-    if ! grep "^${var}" ${IREDAPD_CONF_PY} &>/dev/null; then
+    if grep "^${var}" ${IREDAPD_CONF_PY} &>/dev/null; then
         perl -pi -e 's#^($ENV{var}.*)##g' ${IREDAPD_CONF_PY}
     fi
 
