@@ -1,9 +1,10 @@
 import re
-from libs.logger import logger
+import time
 
 from sqlalchemy import create_engine
 from sqlalchemy.sql.expression import text as sql_text
 
+from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import ipaddress
 import settings
@@ -330,21 +331,30 @@ def pretty_left_seconds(seconds=0):
         return ''
 
 
+def get_gmttime():
+    # Convert local time to UTC
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
+
+
 def log_sasl(conn, smtp_session_data):
+    # smtp_session_data doesn't contain nested var/dict,
+    # shallow copy `dict.copy()` is enough here.
+    d = smtp_session_data.copy()
+
+    d['timestamp'] = get_gmttime()
+
     try:
         sql = sql_text("""
-                       INSERT INTO log_sasl (sender,
-                                             recipient,
-                                             client_address,
-                                             sender_domain,
-                                             recipient_domain,
-                                             sasl_username,
-                                             sasl_domain)
+                       INSERT INTO log_sasl (sender, recipient, client_address,
+                                             sender_domain, recipient_domain,
+                                             sasl_username, sasl_domain,
+                                             timestamp)
                        VALUES (:sender, :recipient, :client_address,
                                :sender_domain, :recipient_domain,
-                               :sasl_username, :sasl_username_domain)""")
+                               :sasl_username, :sasl_username_domain,
+                               :timestamp)""")
 
-        conn.execute(sql, **smtp_session_data)
+        conn.execute(sql, **d)
     except Exception, e:
         logger.error(str(e))
 
@@ -357,22 +367,20 @@ def log_smtp_action(conn, smtp_session_data, action, msg=None):
 
     d['action'] = action
     d['msg'] = msg or ''
+    d['timestamp'] = get_gmttime()
 
     try:
         sql = sql_text("""
-                       INSERT INTO log_smtp_actions(sender,
-                                                    recipient,
-                                                    client_address,
-                                                    sender_domain,
-                                                    recipient_domain,
-                                                    sasl_username,
-                                                    sasl_domain,
-                                                    action,
-                                                    msg)
+                       INSERT INTO log_smtp_actions(sender, recipient, client_address,
+                                                    sender_domain, recipient_domain,
+                                                    sasl_username, sasl_domain,
+                                                    action, msg,
+                                                    timestamp)
                        VALUES (:sender, :recipient, :client_address,
                                :sender_domain, :recipient_domain,
                                :sasl_username, :sasl_username_domain,
-                               :action, :msg)""")
+                               :action, :msg,
+                               :timestamp)""")
 
         conn.execute(sql, **d)
     except Exception, e:
