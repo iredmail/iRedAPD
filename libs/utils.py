@@ -338,17 +338,13 @@ def log_sasl(conn, smtp_session_data):
                                              client_address,
                                              sender_domain,
                                              recipient_domain,
-                                             sasl_username)
+                                             sasl_username,
+                                             sasl_domain)
                        VALUES (:sender, :recipient, :client_address,
-                               :sender_domain, :recipient_domain, :sasl_username)""")
+                               :sender_domain, :recipient_domain,
+                               :sasl_username, :sasl_username_domain)""")
 
         conn.execute(sql, **smtp_session_data)
-                             #sender=self.smtp_session_data.get('sender', ''),
-                             #recipient=self.smtp_session_data.get('recipient', ''),
-                             #client_address=self.smtp_session_data.get('client_address', ''),
-                             #sender_domain=self.smtp_session_data.get('sender_domain', ''),
-                             #recipient_domain=self.smtp_session_data.get('recipient_domain', ''),
-                             #sasl_username=self.smtp_session_data.get('sasl_username', ''))
     except Exception, e:
         logger.error(str(e))
 
@@ -361,16 +357,12 @@ def log_smtp_action(conn, smtp_session_data):
                                                     client_address,
                                                     sender_domain,
                                                     recipient_domain,
-                                                    sasl_username)
+                                                    sasl_username,
+                                                    sasl_domain)
                        VALUES (:sender, :recipient, :client_address,
-                               :sender_domain, :recipient_domain, :sasl_username)""")
+                               :sender_domain, :recipient_domain,
+                               :sasl_username, :sasl_username_domain)""")
 
         conn.execute(sql, **smtp_session_data)
-                             #sender=self.smtp_session_data.get('sender', ''),
-                             #recipient=self.smtp_session_data.get('recipient', ''),
-                             #client_address=self.smtp_session_data.get('client_address', ''),
-                             #sender_domain=self.smtp_session_data.get('sender_domain', ''),
-                             #recipient_domain=self.smtp_session_data.get('recipient_domain', ''),
-                             #sasl_username=self.smtp_session_data.get('sasl_username', ''))
     except Exception, e:
         logger.error(str(e))

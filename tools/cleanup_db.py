@@ -98,6 +98,12 @@ if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
 if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
     print_top_greylisting_domains(conn=conn_iredapd, limit=top_limit, passed=True)
 
+# SQL condition used to query `log_sasl` and `log_smtp_actions`.
+if settings.backend in ['ldap', 'mysql']:
+    sql_where_timestamp = 'timestamp < DATE_SUB(NOW(), INTERVAL %d DAY)'
+elif settings.backend in ['pgsql']:
+    sql_where_timestamp = "timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAY'"
+
 #
 # Remove old records in `log_smtp_actions` table
 #
@@ -105,7 +111,7 @@ kept_days = settings.CLEANUP_KEEP_ACTION_LOG_DAYS
 logger.info('* Remove old (> %d days) records in `log_smtp_actions`.' % kept_days)
 
 total_before = sql_count_id(conn_iredapd, 'log_smtp_actions')
-conn_iredapd.delete('log_smtp_actions', where='timestamp < %d' % now)
+conn_iredapd.delete('log_smtp_actions', where=sql_where_timestamp % kept_days)
 total_after = sql_count_id(conn_iredapd, 'log_smtp_actions')
 
 logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_after))
@@ -113,12 +119,11 @@ logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_afte
 #
 # Remove old records in `log_sasl` table
 #
-
 kept_days = settings.CLEANUP_KEEP_SASL_LOG_DAYS
 logger.info('* Remove old (> %d days) records in `log_sasl`.' % kept_days)
 
 total_before = sql_count_id(conn_iredapd, 'log_sasl')
-conn_iredapd.delete('log_sasl', where='timestamp < %d' % now)
+conn_iredapd.delete('log_sasl', where=sql_where_timestamp % kept_days)
 total_after = sql_count_id(conn_iredapd, 'log_sasl')
 
-logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_after)
+logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_after))

@@ -21,7 +21,6 @@ del _pyc
 import settings
 from libs import __version__, daemon
 from libs import PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
-from libs import LOG_SMTP_ACTIONS, LOG_SASL_SESSION
 from libs.logger import logger
 from libs.utils import get_db_conn, log_smtp_action, log_sasl
 
@@ -125,18 +124,18 @@ class PolicyChannel(asynchat.async_chat):
                                              action))
 
             # Log into SQL
-            if LOG_SMTP_ACTIONS or LOG_SASL_SESSION:
+            if settings.LOG_SMTP_ACTIONS or settings.LOG_SASL_SESSION:
                 conn_iredapd = self.db_conns['conn_iredapd'].connect()
 
                 # Log smtp session with specified smtp actions
                 _short_action = str(action.split(' ', 1)[0]).upper()
-                if _short_action in LOG_SMTP_ACTIONS \
+                if _short_action in settings.LOG_SMTP_ACTIONS \
                    and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
                     log_smtp_action(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
 
                 # Log (sasl authenticated) smtp session
                 if self.smtp_session_data['sasl_username'] \
-                   and LOG_SASL_SESSION \
+                   and settings.LOG_SASL_SESSION \
                    and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
                     log_sasl(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
 
