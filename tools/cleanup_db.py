@@ -108,7 +108,7 @@ elif settings.backend in ['pgsql']:
 # Remove old records in `log_smtp_actions` table
 #
 kept_days = settings.CLEANUP_KEEP_ACTION_LOG_DAYS
-logger.info('* Remove old (> %d days) records in `log_smtp_actions`.' % kept_days)
+logger.info('* Remove old smtp actions records (> %d days).' % kept_days)
 
 total_before = sql_count_id(conn_iredapd, 'log_smtp_actions')
 conn_iredapd.delete('log_smtp_actions', where=sql_where_timestamp % kept_days)
@@ -120,7 +120,7 @@ logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_afte
 # Remove old records in `log_sasl` table
 #
 kept_days = settings.CLEANUP_KEEP_SASL_LOG_DAYS
-logger.info('* Remove old (> %d days) records in `log_sasl`.' % kept_days)
+logger.info('* Remove old sasl auth records (> %d days).' % kept_days)
 
 total_before = sql_count_id(conn_iredapd, 'log_sasl')
 conn_iredapd.delete('log_sasl', where=sql_where_timestamp % kept_days)
