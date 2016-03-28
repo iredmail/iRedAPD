@@ -206,6 +206,7 @@ CREATE TABLE log_sasl (
     id                  SERIAL PRIMARY KEY,
     sender              VARCHAR(255) NOT NULL,
     recipient           VARCHAR(255) NOT NULL,
+    recipient_orig      VARCHAR(255) NOT NULL,
     client_address      VARCHAR(40) NOT NULL,
     sender_domain       VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
@@ -216,6 +217,7 @@ CREATE TABLE log_sasl (
 
 CREATE INDEX idx_log_sasl_sender            ON log_sasl (sender);
 CREATE INDEX idx_log_sasl_recipient         ON log_sasl (recipient);
+CREATE INDEX idx_log_sasl_recipient_orig    ON log_sasl (recipient_orig);
 CREATE INDEX idx_log_sasl_client_address    ON log_sasl (client_address);
 CREATE INDEX idx_log_sasl_sender_domain     ON log_sasl (sender_domain);
 CREATE INDEX idx_log_sasl_recipient_domain  ON log_sasl (recipient_domain);

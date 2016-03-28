@@ -363,7 +363,9 @@ EOF
 CREATE TABLE IF NOT EXISTS log_smtp_sessions (
     id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
     sender            VARCHAR(255) NOT NULL,
+    sender_orig       VARCHAR(255) NOT NULL,
     recipient         VARCHAR(255) NOT NULL,
+    recipient_orig    VARCHAR(255) NOT NULL,
     client_address    VARCHAR(40) NOT NULL,
     sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
@@ -374,7 +376,9 @@ CREATE TABLE IF NOT EXISTS log_smtp_sessions (
     timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX (sender),
+    INDEX (sender_orig),
     INDEX (recipient),
+    INDEX (recipient_orig),
     INDEX (client_address),
     INDEX (sender_domain),
     INDEX (recipient_domain),
@@ -406,6 +410,7 @@ CREATE TABLE IF NOT EXISTS log_sasl (
     id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
     sender            VARCHAR(255) NOT NULL,
     recipient         VARCHAR(255) NOT NULL,
+    recipient_orig    VARCHAR(255) NOT NULL,
     client_address    VARCHAR(40) NOT NULL,
     sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
@@ -415,6 +420,7 @@ CREATE TABLE IF NOT EXISTS log_sasl (
     PRIMARY KEY (id),
     INDEX (sender),
     INDEX (recipient),
+    INDEX (recipient_orig),
     INDEX (client_address),
     INDEX (sender_domain),
     INDEX (recipient_domain),
@@ -477,7 +483,9 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
 CREATE TABLE log_smtp_sessions (
     id              SERIAL PRIMARY KEY,
     sender          VARCHAR(255) NOT NULL,
+    sender_orig     VARCHAR(255) NOT NULL,
     recipient       VARCHAR(255) NOT NULL,
+    recipient_orig  VARCHAR(255) NOT NULL,
     client_address  VARCHAR(40) NOT NULL,
     sender_domain   VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
@@ -489,7 +497,9 @@ CREATE TABLE log_smtp_sessions (
 );
 
 CREATE INDEX idx_log_smtp_sessions_sender            ON log_smtp_sessions (sender);
+CREATE INDEX idx_log_smtp_sessions_sender_orig       ON log_smtp_sessions (sender_orig);
 CREATE INDEX idx_log_smtp_sessions_recipient         ON log_smtp_sessions (recipient);
+CREATE INDEX idx_log_smtp_sessions_recipient_orig    ON log_smtp_sessions (recipient_orig);
 CREATE INDEX idx_log_smtp_sessions_client_address    ON log_smtp_sessions (client_address);
 CREATE INDEX idx_log_smtp_sessions_sender_domain     ON log_smtp_sessions (sender_domain);
 CREATE INDEX idx_log_smtp_sessions_recipient_domain  ON log_smtp_sessions (recipient_domain);
@@ -519,6 +529,7 @@ CREATE TABLE log_sasl (
     id              SERIAL PRIMARY KEY,
     sender          VARCHAR(255) NOT NULL,
     recipient       VARCHAR(255) NOT NULL,
+    recipient_orig  VARCHAR(255) NOT NULL,
     client_address  VARCHAR(40) NOT NULL,
     sender_domain   VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain     VARCHAR(255) NOT NULL DEFAULT '',
@@ -529,6 +540,7 @@ CREATE TABLE log_sasl (
 
 CREATE INDEX idx_log_sasl_sender            ON log_sasl (sender);
 CREATE INDEX idx_log_sasl_recipient         ON log_sasl (recipient);
+CREATE INDEX idx_log_sasl_recipient_orig    ON log_sasl (recipient_orig);
 CREATE INDEX idx_log_sasl_client_address    ON log_sasl (client_address);
 CREATE INDEX idx_log_sasl_sender_domain     ON log_sasl (sender_domain);
 CREATE INDEX idx_log_sasl_recipient_domain  ON log_sasl (recipient_domain);

@@ -361,15 +361,16 @@ def log_sasl(conn, smtp_session_data):
     d = smtp_session_data.copy()
 
     d['timestamp'] = get_gmttime()
+    d['recipient_no_ext'] = strip_mail_ext_address(mail=d['recipient'])
 
     try:
         sql = sql_text("""
-                       INSERT INTO log_sasl (sender, recipient,
+                       INSERT INTO log_sasl (sender, recipient, recipient_orig,
                                              sender_domain, recipient_domain,
                                              sasl_username, sasl_domain,
                                              client_address,
                                              timestamp)
-                       VALUES (:sender, :recipient,
+                       VALUES (:sender, :recipient_no_ext, :recipient,
                                :sender_domain, :recipient_domain,
                                :sasl_username, :sasl_username_domain,
                                :client_address,
