@@ -336,6 +336,25 @@ def get_gmttime():
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
 
+def strip_mail_ext_address(mail, delimiters=None):
+    """Remove '+extension' in email address.
+
+    >>> strip_mail_ext_address('user+ext@domain.com')
+    'user@domain.com'
+    """
+
+    if not delimiters:
+        delimiters = settings.RECIPIENT_DELIMITERS
+
+    (_orig_user, _domain) = mail.split('@', 1)
+    for delimiter in delimiters:
+        if delimiter in _orig_user:
+            (_user, _ext) = _orig_user.split(delimiter, 1)
+            return _user + '@' + _domain
+
+    return mail
+
+
 def log_sasl(conn, smtp_session_data):
     # smtp_session_data doesn't contain nested var/dict,
     # shallow copy `dict.copy()` is enough here.
@@ -369,14 +388,22 @@ def log_smtp_session(conn, smtp_session_data, action, msg=None):
     d['msg'] = msg or ''
     d['timestamp'] = get_gmttime()
 
+    # Sender/recipient addresses without '+extension'
+    d['sender_no_ext'] = strip_mail_ext_address(mail=d['sender'])
+    d['recipient_no_ext'] = strip_mail_ext_address(mail=d['sender'])
+
     try:
         sql = sql_text("""
-                       INSERT INTO log_smtp_sessions(sender, recipient, client_address,
+                       INSERT INTO log_smtp_sessions(sender, sender_orig,
+                                                     recipient, recipient_orig,
+                                                     client_address,
                                                      sender_domain, recipient_domain,
                                                      sasl_username, sasl_domain,
                                                      action, msg,
                                                      timestamp)
-                       VALUES (:sender, :recipient, :client_address,
+                       VALUES (:sender_no_ext, :sender,
+                               :recipient_no_ext, :recipient,
+                               :client_address,
                                :sender_domain, :recipient_domain,
                                :sasl_username, :sasl_username_domain,
                                :action, :msg,

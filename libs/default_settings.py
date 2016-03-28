@@ -46,6 +46,9 @@ PLUGIN_PRIORITIES = {}
 #   - IP subnet: 192.168.1.0/24
 MYNETWORKS = []
 
+# Recipient delimiters. If you have multiple delimiters, please list them all.
+RECIPIENT_DELIMITERS = ['+']
+
 # Log basic info of smtp session which has specified smtp action.
 # List all smtp actions (uppercase) you want to log, leave it empty if you
 # don't want to log any smtp session.

@@ -196,8 +196,14 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
 --
 CREATE TABLE IF NOT EXISTS `log_smtp_sessions` (
     `id`                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    -- sender address without '+extension'. e.g. 'user@domain.com'
     `sender`            VARCHAR(255) NOT NULL,
+    -- sender address with '+extension'. e.g. 'user+Ext@domain.com
+    `sender_orig`       VARCHAR(255) NOT NULL,
+    -- recipient address without '+extension'. e.g. 'user@domain.com'
     `recipient`         VARCHAR(255) NOT NULL,
+    -- recipient address with '+extension'. e.g. 'user+Ext@domain.com
+    `recipient_orig`    VARCHAR(255) NOT NULL,
     `client_address`    VARCHAR(40) NOT NULL,
     `sender_domain`     VARCHAR(255) NOT NULL DEFAULT '',
     `recipient_domain`  VARCHAR(255) NOT NULL DEFAULT '',
@@ -208,7 +214,9 @@ CREATE TABLE IF NOT EXISTS `log_smtp_sessions` (
     `timestamp`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     INDEX (`sender`),
+    INDEX (`sender_orig`),
     INDEX (`recipient`),
+    INDEX (`recipient_orig`),
     INDEX (`client_address`),
     INDEX (`sender_domain`),
     INDEX (`recipient_domain`),

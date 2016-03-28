@@ -173,7 +173,9 @@ CREATE INDEX idx_greylisting_tracking_rcpt_domain   ON greylisting_tracking (rcp
 CREATE TABLE log_smtp_sessions (
     id                  SERIAL PRIMARY KEY,
     sender              VARCHAR(255) NOT NULL,
+    sender_orig         VARCHAR(255) NOT NULL,
     recipient           VARCHAR(255) NOT NULL,
+    recipient_orig      VARCHAR(255) NOT NULL,
     client_address      VARCHAR(40) NOT NULL,
     sender_domain       VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
@@ -185,7 +187,9 @@ CREATE TABLE log_smtp_sessions (
 );
 
 CREATE INDEX idx_log_smtp_sessions_sender            ON log_smtp_sessions (sender);
+CREATE INDEX idx_log_smtp_sessions_sender_orig       ON log_smtp_sessions (sender_orig);
 CREATE INDEX idx_log_smtp_sessions_recipient         ON log_smtp_sessions (recipient);
+CREATE INDEX idx_log_smtp_sessions_recipient_orig    ON log_smtp_sessions (recipient_orig);
 CREATE INDEX idx_log_smtp_sessions_client_address    ON log_smtp_sessions (client_address);
 CREATE INDEX idx_log_smtp_sessions_sender_domain     ON log_smtp_sessions (sender_domain);
 CREATE INDEX idx_log_smtp_sessions_recipient_domain  ON log_smtp_sessions (recipient_domain);
