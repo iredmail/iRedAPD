@@ -364,13 +364,15 @@ def log_sasl(conn, smtp_session_data):
 
     try:
         sql = sql_text("""
-                       INSERT INTO log_sasl (sender, recipient, client_address,
+                       INSERT INTO log_sasl (sender, recipient,
                                              sender_domain, recipient_domain,
                                              sasl_username, sasl_domain,
+                                             client_address,
                                              timestamp)
-                       VALUES (:sender, :recipient, :client_address,
+                       VALUES (:sender, :recipient,
                                :sender_domain, :recipient_domain,
                                :sasl_username, :sasl_username_domain,
+                               :client_address,
                                :timestamp)""")
 
         conn.execute(sql, **d)
@@ -390,7 +392,7 @@ def log_smtp_session(conn, smtp_session_data, action, msg=None):
 
     # Sender/recipient addresses without '+extension'
     d['sender_no_ext'] = strip_mail_ext_address(mail=d['sender'])
-    d['recipient_no_ext'] = strip_mail_ext_address(mail=d['sender'])
+    d['recipient_no_ext'] = strip_mail_ext_address(mail=d['recipient'])
 
     try:
         sql = sql_text("""
