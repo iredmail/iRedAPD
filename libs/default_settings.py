@@ -48,8 +48,10 @@ MYNETWORKS = []
 
 # Log basic info of smtp session which has specified smtp action.
 # List all smtp actions (uppercase) you want to log, leave it empty if you
-# don't want to log any session.
-LOG_SMTP_ACTIONS = ['REJECT', 'DISCARD']
+# don't want to log any smtp session.
+LOG_SMTP_ACTIONS = ['REJECT', 'DISCARD', 'DUNNO', 'OK', 'DEFER',
+                    'BCC', 'FILTER', 'HOLD', 'REDIRECT',
+                    'INFO', 'WARN']
 
 # Log basic info of sasl authenticated smtp session.
 LOG_SASL_SESSION = True
@@ -149,7 +151,7 @@ THROTTLE_BYPASS_MYNETWORKS = False
 CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = False
 CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS = 30
 
-# Delete old records in `log_smtp_action` table.
+# Delete old records in `log_smtp_sessions` table.
 CLEANUP_KEEP_ACTION_LOG_DAYS = 15
 
 # Delete old records in `log_sasl` table.

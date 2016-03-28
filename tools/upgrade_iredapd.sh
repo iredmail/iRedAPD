@@ -345,7 +345,7 @@ EOF
     fi
 
     #
-    # `log_smtp_actions`
+    # `log_smtp_sessions`
     #
     (mysql -h ${iredapd_db_server} \
            -u ${iredapd_db_user} \
@@ -353,14 +353,14 @@ EOF
            ${iredapd_db_name} <<EOF
 show tables;
 EOF
-) | grep 'log_smtp_actions' &>/dev/null
+) | grep 'log_smtp_sessions' &>/dev/null
 
     if [ X"$?" != X'0' ]; then
         mysql -h${iredapd_db_server} \
               -u${iredapd_db_user} \
               -p${iredapd_db_password} \
               ${iredapd_db_name} <<EOF
-CREATE TABLE IF NOT EXISTS log_smtp_actions (
+CREATE TABLE IF NOT EXISTS log_smtp_sessions (
     id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
     sender            VARCHAR(255) NOT NULL,
     recipient         VARCHAR(255) NOT NULL,
@@ -460,13 +460,13 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
     fi
 
     #
-    # `log_smtp_actions`
+    # `log_smtp_sessions`
     #
     psql -h ${iredapd_db_server} \
          -p ${iredapd_db_port} \
          -U ${iredapd_db_user} \
          -d ${iredapd_db_name} \
-         -c "SELECT id FROM log_smtp_actions LIMIT 1" &>/dev/null
+         -c "SELECT id FROM log_smtp_sessions LIMIT 1" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
         psql -h ${iredapd_db_server} \
@@ -474,7 +474,7 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
              -U ${iredapd_db_user} \
              -d ${iredapd_db_name} \
              -c "
-CREATE TABLE log_smtp_actions (
+CREATE TABLE log_smtp_sessions (
     id              SERIAL PRIMARY KEY,
     sender          VARCHAR(255) NOT NULL,
     recipient       VARCHAR(255) NOT NULL,
@@ -488,15 +488,15 @@ CREATE TABLE log_smtp_actions (
     timestamp       TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_log_smtp_actions_sender            ON log_smtp_actions (sender);
-CREATE INDEX idx_log_smtp_actions_recipient         ON log_smtp_actions (recipient);
-CREATE INDEX idx_log_smtp_actions_client_address    ON log_smtp_actions (client_address);
-CREATE INDEX idx_log_smtp_actions_sender_domain     ON log_smtp_actions (sender_domain);
-CREATE INDEX idx_log_smtp_actions_recipient_domain  ON log_smtp_actions (recipient_domain);
-CREATE INDEX idx_log_smtp_actions_sasl_username     ON log_smtp_actions (sasl_username);
-CREATE INDEX idx_log_smtp_actions_sasl_domain       ON log_smtp_actions (sasl_domain);
-CREATE INDEX idx_log_smtp_actions_action            ON log_smtp_actions (action);
-CREATE INDEX idx_log_smtp_actions_timestamp         ON log_smtp_actions (timestamp);
+CREATE INDEX idx_log_smtp_sessions_sender            ON log_smtp_sessions (sender);
+CREATE INDEX idx_log_smtp_sessions_recipient         ON log_smtp_sessions (recipient);
+CREATE INDEX idx_log_smtp_sessions_client_address    ON log_smtp_sessions (client_address);
+CREATE INDEX idx_log_smtp_sessions_sender_domain     ON log_smtp_sessions (sender_domain);
+CREATE INDEX idx_log_smtp_sessions_recipient_domain  ON log_smtp_sessions (recipient_domain);
+CREATE INDEX idx_log_smtp_sessions_sasl_username     ON log_smtp_sessions (sasl_username);
+CREATE INDEX idx_log_smtp_sessions_sasl_domain       ON log_smtp_sessions (sasl_domain);
+CREATE INDEX idx_log_smtp_sessions_action            ON log_smtp_sessions (action);
+CREATE INDEX idx_log_smtp_sessions_timestamp         ON log_smtp_sessions (timestamp);
 "
     fi
 

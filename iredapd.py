@@ -22,7 +22,7 @@ import settings
 from libs import __version__, daemon
 from libs import PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
 from libs.logger import logger
-from libs.utils import get_db_conn, log_smtp_action, log_sasl
+from libs.utils import get_db_conn, log_smtp_session, log_sasl
 
 # Plugin directory.
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
@@ -139,7 +139,7 @@ class PolicyChannel(asynchat.async_chat):
                 _short_action = str(action.split(' ', 1)[0]).upper()
                 if _short_action in settings.LOG_SMTP_ACTIONS \
                    and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
-                    log_smtp_action(conn=conn_iredapd,
+                    log_smtp_session(conn=conn_iredapd,
                                     smtp_session_data=self.smtp_session_data,
                                     action=_short_action,
                                     msg=_action_msg)

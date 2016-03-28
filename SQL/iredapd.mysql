@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
 -- Log smtp session which contains specified smtp actions (e.g. REJECT, DISCARD)
 -- Old records should be removed with a cron job.
 --
-CREATE TABLE IF NOT EXISTS `log_smtp_actions` (
+CREATE TABLE IF NOT EXISTS `log_smtp_sessions` (
     `id`                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
     `sender`            VARCHAR(255) NOT NULL,
     `recipient`         VARCHAR(255) NOT NULL,

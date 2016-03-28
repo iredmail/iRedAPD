@@ -170,7 +170,7 @@ CREATE INDEX idx_greylisting_tracking_rcpt_domain   ON greylisting_tracking (rcp
 -- Log smtp session which contains specified smtp actions (e.g. REJECT, DISCARD)
 -- Old records should be removed with a cron job.
 --
-CREATE TABLE log_smtp_actions (
+CREATE TABLE log_smtp_sessions (
     id                  SERIAL PRIMARY KEY,
     sender              VARCHAR(255) NOT NULL,
     recipient           VARCHAR(255) NOT NULL,
@@ -184,15 +184,15 @@ CREATE TABLE log_smtp_actions (
     timestamp           TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_log_smtp_actions_sender            ON log_smtp_actions (sender);
-CREATE INDEX idx_log_smtp_actions_recipient         ON log_smtp_actions (recipient);
-CREATE INDEX idx_log_smtp_actions_client_address    ON log_smtp_actions (client_address);
-CREATE INDEX idx_log_smtp_actions_sender_domain     ON log_smtp_actions (sender_domain);
-CREATE INDEX idx_log_smtp_actions_recipient_domain  ON log_smtp_actions (recipient_domain);
-CREATE INDEX idx_log_smtp_actions_sasl_username     ON log_smtp_actions (sasl_username);
-CREATE INDEX idx_log_smtp_actions_sasl_domain       ON log_smtp_actions (sasl_domain);
-CREATE INDEX idx_log_smtp_actions_action            ON log_smtp_actions (action);
-CREATE INDEX idx_log_smtp_actions_timestamp         ON log_smtp_actions (timestamp);
+CREATE INDEX idx_log_smtp_sessions_sender            ON log_smtp_sessions (sender);
+CREATE INDEX idx_log_smtp_sessions_recipient         ON log_smtp_sessions (recipient);
+CREATE INDEX idx_log_smtp_sessions_client_address    ON log_smtp_sessions (client_address);
+CREATE INDEX idx_log_smtp_sessions_sender_domain     ON log_smtp_sessions (sender_domain);
+CREATE INDEX idx_log_smtp_sessions_recipient_domain  ON log_smtp_sessions (recipient_domain);
+CREATE INDEX idx_log_smtp_sessions_sasl_username     ON log_smtp_sessions (sasl_username);
+CREATE INDEX idx_log_smtp_sessions_sasl_domain       ON log_smtp_sessions (sasl_domain);
+CREATE INDEX idx_log_smtp_sessions_action            ON log_smtp_sessions (action);
+CREATE INDEX idx_log_smtp_sessions_timestamp         ON log_smtp_sessions (timestamp);
 
 --
 -- Log reject actions.
