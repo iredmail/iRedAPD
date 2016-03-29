@@ -100,6 +100,9 @@ class PolicyChannel(asynchat.async_chat):
                 action = SMTP_ACTIONS['default']
                 logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
+            self.push('action=' + action + '\n')
+            logger.debug("Session ended")
+
             # Log sasl username, sender, recipient
             #   `sender -> recipient`: sender not authenticated
             #   `sender => recipient`: sasl username is same as sender address (From:)
@@ -140,9 +143,9 @@ class PolicyChannel(asynchat.async_chat):
                 if _short_action in settings.LOG_SMTP_ACTIONS \
                    and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
                     log_smtp_session(conn=conn_iredapd,
-                                    smtp_session_data=self.smtp_session_data,
-                                    action=_short_action,
-                                    msg=_action_msg)
+                                     smtp_session_data=self.smtp_session_data,
+                                     action=_short_action,
+                                     msg=_action_msg)
 
                 # Log (sasl authenticated) smtp session
                 if self.smtp_session_data['sasl_username'] \
@@ -151,9 +154,6 @@ class PolicyChannel(asynchat.async_chat):
                     log_sasl(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
 
                 conn_iredapd.close()
-
-            self.push('action=' + action + '\n')
-            logger.debug("Session ended")
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)

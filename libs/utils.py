@@ -343,6 +343,9 @@ def strip_mail_ext_address(mail, delimiters=None):
     'user@domain.com'
     """
 
+    if not is_email(mail):
+        return mail
+
     if not delimiters:
         delimiters = settings.RECIPIENT_DELIMITERS
 
