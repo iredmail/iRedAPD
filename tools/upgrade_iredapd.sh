@@ -362,15 +362,25 @@ EOF
               ${iredapd_db_name} <<EOF
 CREATE TABLE IF NOT EXISTS log_smtp_sessions (
     id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    -- sender address without '+extension'. e.g. 'user@domain.com'
     sender            VARCHAR(255) NOT NULL,
+    -- sender address with '+extension'. e.g. 'user+Ext@domain.com
     sender_orig       VARCHAR(255) NOT NULL,
+    -- recipient address without '+extension'. e.g. 'user@domain.com'
     recipient         VARCHAR(255) NOT NULL,
+    -- recipient address with '+extension'. e.g. 'user+Ext@domain.com
     recipient_orig    VARCHAR(255) NOT NULL,
     client_address    VARCHAR(40) NOT NULL,
     sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
     sasl_username     VARCHAR(255) NOT NULL DEFAULT '',
     sasl_domain       VARCHAR(255) NOT NULL DEFAULT '',
+    size              INTEGER UNSIGNED NOT NULL DEFAULT 0,
+    reverse_client_name   VARCHAR(255) NOT NULL DEFAULT '',
+    helo_name         VARCHAR(255) NOT NULL DEFAULT '',
+    queue_id          VARCHAR(50) NOT NULL DEFAULT '',
+    sasl_method       VARCHAR(20) NOT NULL DEFAULT '',
+    encryption_protocol   VARCHAR(20) NOT NULL DEFAULT '',
     action            VARCHAR(20) NOT NULL DEFAULT '',
     msg               TEXT,
     timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -384,9 +394,15 @@ CREATE TABLE IF NOT EXISTS log_smtp_sessions (
     INDEX (recipient_domain),
     INDEX (sasl_username),
     INDEX (sasl_domain),
+    INDEX (reverse_client_name),
+    INDEX (helo_name),
+    INDEX (queue_id),
+    INDEX (sasl_method),
+    INDEX (encryption_protocol),
     INDEX (action),
     INDEX (timestamp)
 ) ENGINE=InnoDB;
+
 EOF
     fi
 
@@ -408,14 +424,20 @@ EOF
               ${iredapd_db_name} <<EOF
 CREATE TABLE IF NOT EXISTS log_sasl (
     id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-    sender            VARCHAR(255) NOT NULL,
-    recipient         VARCHAR(255) NOT NULL,
-    recipient_orig    VARCHAR(255) NOT NULL,
-    client_address    VARCHAR(40) NOT NULL,
+    sender            VARCHAR(255) NOT NULL DEFAULT '',
+    recipient         VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_orig    VARCHAR(255) NOT NULL DEFAULT '',
+    client_address    VARCHAR(40) NOT NULL DEFAULT '',
     sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
     sasl_username     VARCHAR(255) NOT NULL DEFAULT '',
     sasl_domain       VARCHAR(255) NOT NULL DEFAULT '',
+    size              INTEGER UNSIGNED NOT NULL DEFAULT 0,
+    reverse_client_name   VARCHAR(255) NOT NULL DEFAULT '',
+    helo_name         VARCHAR(255) NOT NULL DEFAULT '',
+    queue_id          VARCHAR(50) NOT NULL DEFAULT '',
+    sasl_method       VARCHAR(20) NOT NULL DEFAULT '',
+    encryption_protocol   VARCHAR(20) NOT NULL DEFAULT '',
     timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX (sender),
@@ -426,6 +448,11 @@ CREATE TABLE IF NOT EXISTS log_sasl (
     INDEX (recipient_domain),
     INDEX (sasl_username),
     INDEX (sasl_domain),
+    INDEX (reverse_client_name),
+    INDEX (helo_name),
+    INDEX (queue_id),
+    INDEX (sasl_method),
+    INDEX (encryption_protocol),
     INDEX (timestamp)
 ) ENGINE=InnoDB;
 EOF
@@ -481,19 +508,25 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
              -d ${iredapd_db_name} \
              -c "
 CREATE TABLE log_smtp_sessions (
-    id              SERIAL PRIMARY KEY,
-    sender          VARCHAR(255) NOT NULL,
-    sender_orig     VARCHAR(255) NOT NULL,
-    recipient       VARCHAR(255) NOT NULL,
-    recipient_orig  VARCHAR(255) NOT NULL,
-    client_address  VARCHAR(40) NOT NULL,
-    sender_domain   VARCHAR(255) NOT NULL DEFAULT '',
+    id                  SERIAL PRIMARY KEY,
+    sender              VARCHAR(255) NOT NULL,
+    sender_orig         VARCHAR(255) NOT NULL,
+    recipient           VARCHAR(255) NOT NULL,
+    recipient_orig      VARCHAR(255) NOT NULL,
+    client_address      VARCHAR(40) NOT NULL,
+    sender_domain       VARCHAR(255) NOT NULL DEFAULT '',
     recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_username   VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_domain     VARCHAR(255) NOT NULL DEFAULT '',
-    action          VARCHAR(20)  NOT NULL DEFAULT '',
-    msg             TEXT NOT NULL DEFAULT '',
-    timestamp       TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    sasl_username       VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain         VARCHAR(255) NOT NULL DEFAULT '',
+    size                INTEGER NOT NULL DEFAULT 0,
+    reverse_client_name VARCHAR(255) NOT NULL DEFAULT '',
+    helo_name           VARCHAR(255) NOT NULL DEFAULT '',
+    queue_id            VARCHAR(50) NOT NULL DEFAULT '',
+    sasl_method         VARCHAR(20) NOT NULL DEFAULT '',
+    encryption_protocol VARCHAR(20) NOT NULL DEFAULT '',
+    action              VARCHAR(20)  NOT NULL DEFAULT '',
+    msg                 TEXT NOT NULL DEFAULT '',
+    timestamp           TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_log_smtp_sessions_sender            ON log_smtp_sessions (sender);
@@ -505,8 +538,16 @@ CREATE INDEX idx_log_smtp_sessions_sender_domain     ON log_smtp_sessions (sende
 CREATE INDEX idx_log_smtp_sessions_recipient_domain  ON log_smtp_sessions (recipient_domain);
 CREATE INDEX idx_log_smtp_sessions_sasl_username     ON log_smtp_sessions (sasl_username);
 CREATE INDEX idx_log_smtp_sessions_sasl_domain       ON log_smtp_sessions (sasl_domain);
+
+CREATE INDEX idx_log_smtp_sessions_reverse_client_name  ON log_smtp_sessions (reverse_client_name);
+CREATE INDEX idx_log_smtp_sessions_helo_name            ON log_smtp_sessions (helo_name);
+CREATE INDEX idx_log_smtp_sessions_queue_id             ON log_smtp_sessions (queue_id);
+CREATE INDEX idx_log_smtp_sessions_sasl_method          ON log_smtp_sessions (sasl_method);
+CREATE INDEX idx_log_smtp_sessions_encryption_protocol  ON log_smtp_sessions (encryption_protocol);
+
 CREATE INDEX idx_log_smtp_sessions_action            ON log_smtp_sessions (action);
 CREATE INDEX idx_log_smtp_sessions_timestamp         ON log_smtp_sessions (timestamp);
+
 "
     fi
 
@@ -526,16 +567,22 @@ CREATE INDEX idx_log_smtp_sessions_timestamp         ON log_smtp_sessions (times
              -d ${iredapd_db_name} \
              -c "
 CREATE TABLE log_sasl (
-    id              SERIAL PRIMARY KEY,
-    sender          VARCHAR(255) NOT NULL,
-    recipient       VARCHAR(255) NOT NULL,
-    recipient_orig  VARCHAR(255) NOT NULL,
-    client_address  VARCHAR(40) NOT NULL,
-    sender_domain   VARCHAR(255) NOT NULL DEFAULT '',
-    recipient_domain     VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_username   VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_domain     VARCHAR(255) NOT NULL DEFAULT '',
-    timestamp       TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                  SERIAL PRIMARY KEY,
+    sender              VARCHAR(255) NOT NULL,
+    recipient           VARCHAR(255) NOT NULL,
+    recipient_orig      VARCHAR(255) NOT NULL,
+    client_address      VARCHAR(40) NOT NULL,
+    sender_domain       VARCHAR(255) NOT NULL DEFAULT '',
+    recipient_domain    VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_username       VARCHAR(255) NOT NULL DEFAULT '',
+    sasl_domain         VARCHAR(255) NOT NULL DEFAULT '',
+    size                INTEGER NOT NULL DEFAULT 0,
+    reverse_client_name VARCHAR(255) NOT NULL DEFAULT '',
+    helo_name           VARCHAR(255) NOT NULL DEFAULT '',
+    queue_id            VARCHAR(50) NOT NULL DEFAULT '',
+    sasl_method         VARCHAR(20) NOT NULL DEFAULT '',
+    encryption_protocol VARCHAR(20) NOT NULL DEFAULT '',
+    timestamp           TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_log_sasl_sender            ON log_sasl (sender);
@@ -546,6 +593,13 @@ CREATE INDEX idx_log_sasl_sender_domain     ON log_sasl (sender_domain);
 CREATE INDEX idx_log_sasl_recipient_domain  ON log_sasl (recipient_domain);
 CREATE INDEX idx_log_sasl_sasl_username     ON log_sasl (sasl_username);
 CREATE INDEX idx_log_sasl_sasl_domain       ON log_sasl (sasl_domain);
+
+CREATE INDEX idx_log_sasl_reverse_client_name  ON log_sasl (reverse_client_name);
+CREATE INDEX idx_log_sasl_helo_name            ON log_sasl (helo_name);
+CREATE INDEX idx_log_sasl_queue_id             ON log_sasl (queue_id);
+CREATE INDEX idx_log_sasl_sasl_method          ON log_sasl (sasl_method);
+CREATE INDEX idx_log_sasl_encryption_protocol  ON log_sasl (encryption_protocol);
+
 CREATE INDEX idx_log_sasl_timestamp         ON log_sasl (timestamp);
 "
     fi

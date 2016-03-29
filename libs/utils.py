@@ -368,16 +368,22 @@ def log_sasl(conn, smtp_session_data):
 
     try:
         sql = sql_text("""
-                       INSERT INTO log_sasl (sender, recipient, recipient_orig,
-                                             sender_domain, recipient_domain,
-                                             sasl_username, sasl_domain,
-                                             client_address,
-                                             timestamp)
-                       VALUES (:sender, :recipient_no_ext, :recipient,
-                               :sender_domain, :recipient_domain,
-                               :sasl_username, :sasl_username_domain,
-                               :client_address,
-                               :timestamp)""")
+            INSERT INTO log_sasl (sender, recipient, recipient_orig,
+                                  sender_domain, recipient_domain,
+                                  sasl_username, sasl_domain,
+                                  client_address,
+                                  reverse_client_name, helo_name,
+                                  size, queue_id,
+                                  sasl_method, encryption_protocol,
+                                  timestamp)
+                 VALUES (:sender, :recipient_no_ext, :recipient,
+                         :sender_domain, :recipient_domain,
+                         :sasl_username, :sasl_username_domain,
+                         :client_address,
+                         :reverse_client_name, :helo_name,
+                         :size, :queue_id,
+                         :sasl_method, :encryption_protocol,
+                         :timestamp)""")
 
         conn.execute(sql, **d)
     except Exception, e:
@@ -400,20 +406,26 @@ def log_smtp_session(conn, smtp_session_data, action, msg=None):
 
     try:
         sql = sql_text("""
-                       INSERT INTO log_smtp_sessions(sender, sender_orig,
-                                                     recipient, recipient_orig,
-                                                     client_address,
-                                                     sender_domain, recipient_domain,
-                                                     sasl_username, sasl_domain,
-                                                     action, msg,
-                                                     timestamp)
-                       VALUES (:sender_no_ext, :sender,
-                               :recipient_no_ext, :recipient,
-                               :client_address,
-                               :sender_domain, :recipient_domain,
-                               :sasl_username, :sasl_username_domain,
-                               :action, :msg,
-                               :timestamp)""")
+            INSERT INTO log_smtp_sessions(sender, sender_orig,
+                                          recipient, recipient_orig,
+                                          client_address,
+                                          sender_domain, recipient_domain,
+                                          sasl_username, sasl_domain,
+                                          reverse_client_name, helo_name,
+                                          size, queue_id,
+                                          sasl_method, encryption_protocol,
+                                          action, msg,
+                                          timestamp)
+                 VALUES (:sender_no_ext, :sender,
+                         :recipient_no_ext, :recipient,
+                         :client_address,
+                         :sender_domain, :recipient_domain,
+                         :sasl_username, :sasl_username_domain,
+                         :reverse_client_name, :helo_name,
+                         :size, :queue_id,
+                         :sasl_method, :encryption_protocol,
+                         :action, :msg,
+                         :timestamp)""")
 
         conn.execute(sql, **d)
     except Exception, e:
