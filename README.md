@@ -14,6 +14,11 @@
   guide is `INSTALL.md`.
 * You can manage iRedAPD with iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
 
+# Manage iRedAPD with command line tools
+
+iRedMail project has a detailed tutorial to show you how to manage iRedAPD
+with command line tools: [Manage iRedAPD](http://www.iredmail.org/docs/manage.iredapd.html)
+
 # Available plugins
 
 Plugins are files placed under `plugins/` directory, plugin name is file name

@@ -49,16 +49,6 @@ MYNETWORKS = []
 # Recipient delimiters. If you have multiple delimiters, please list them all.
 RECIPIENT_DELIMITERS = ['+']
 
-# Log basic info of smtp session which has specified smtp action.
-# List all smtp actions (uppercase) you want to log, leave it empty if you
-# don't want to log any smtp session.
-LOG_SMTP_ACTIONS = ['REJECT', 'DISCARD', 'DUNNO', 'OK', 'DEFER',
-                    'BCC', 'FILTER', 'HOLD', 'REDIRECT',
-                    'INFO', 'WARN']
-
-# Log basic info of sasl authenticated smtp session.
-LOG_SASL_SESSION = True
-
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
@@ -153,9 +143,3 @@ THROTTLE_BYPASS_MYNETWORKS = False
 # Show senders which not yet passed greylisting.
 CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = False
 CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS = 30
-
-# Delete old records in `log_smtp_sessions` table.
-CLEANUP_KEEP_ACTION_LOG_DAYS = 15
-
-# Delete old records in `log_sasl` table.
-CLEANUP_KEEP_SASL_LOG_DAYS = 30

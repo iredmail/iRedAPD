@@ -22,7 +22,7 @@ import settings
 from libs import __version__, daemon
 from libs import PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
 from libs.logger import logger
-from libs.utils import get_db_conn, log_smtp_session, log_sasl
+from libs.utils import get_db_conn
 
 # Plugin directory.
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
@@ -125,35 +125,6 @@ class PolicyChannel(asynchat.async_chat):
                                              self.smtp_session_data['protocol_state'],
                                              _log_sender_to_rcpt,
                                              action))
-
-            # Log into SQL
-            if settings.LOG_SMTP_ACTIONS or settings.LOG_SASL_SESSION:
-                conn_iredapd = self.db_conns['conn_iredapd'].connect()
-
-                # Log smtp session with specified smtp actions
-                _action = action.split(' ', 1)
-
-                _short_action = _action[0]
-                _action_msg = ''
-
-                if len(_action) == 2:
-                    _action_msg = _action[1]
-
-                _short_action = str(action.split(' ', 1)[0]).upper()
-                if _short_action in settings.LOG_SMTP_ACTIONS \
-                   and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
-                    log_smtp_session(conn=conn_iredapd,
-                                     smtp_session_data=self.smtp_session_data,
-                                     action=_short_action,
-                                     msg=_action_msg)
-
-                # Log (sasl authenticated) smtp session
-                if self.smtp_session_data['sasl_username'] \
-                   and settings.LOG_SASL_SESSION \
-                   and self.smtp_session_data['protocol_state'] == 'END-OF-MESSAGE':
-                    log_sasl(conn=conn_iredapd, smtp_session_data=self.smtp_session_data)
-
-                conn_iredapd.close()
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)

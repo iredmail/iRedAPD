@@ -97,33 +97,3 @@ if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
 # Show top senders which already passed greylisting.
 if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
     print_top_greylisting_domains(conn=conn_iredapd, limit=top_limit, passed=True)
-
-# SQL condition used to query `log_sasl` and `log_smtp_sessions`.
-if settings.backend in ['ldap', 'mysql']:
-    sql_where_timestamp = 'timestamp < DATE_SUB(NOW(), INTERVAL %d DAY)'
-elif settings.backend in ['pgsql']:
-    sql_where_timestamp = "timestamp < CURRENT_TIMESTAMP - INTERVAL '%d DAY'"
-
-#
-# Remove old records in `log_smtp_sessions` table
-#
-kept_days = settings.CLEANUP_KEEP_ACTION_LOG_DAYS
-logger.info('* Remove old smtp actions records (> %d days).' % kept_days)
-
-total_before = sql_count_id(conn_iredapd, 'log_smtp_sessions')
-conn_iredapd.delete('log_smtp_sessions', where=sql_where_timestamp % kept_days)
-total_after = sql_count_id(conn_iredapd, 'log_smtp_sessions')
-
-logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_after))
-
-#
-# Remove old records in `log_sasl` table
-#
-kept_days = settings.CLEANUP_KEEP_SASL_LOG_DAYS
-logger.info('* Remove old sasl auth records (> %d days).' % kept_days)
-
-total_before = sql_count_id(conn_iredapd, 'log_sasl')
-conn_iredapd.delete('log_sasl', where=sql_where_timestamp % kept_days)
-total_after = sql_count_id(conn_iredapd, 'log_sasl')
-
-logger.info('\t- %d removed, %d left.' % (total_before - total_after, total_after))

@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     `id`        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
     `account`   VARCHAR(255)    NOT NULL DEFAULT '',
     `sender`    VARCHAR(255)    NOT NULL DEFAULT '',
-    `comment`   VARCHAR(255) NOT NULL DEFAULT '',
+    `comment`   VARCHAR(255)    NOT NULL DEFAULT '',
     PRIMARY KEY (`id`),
     UNIQUE INDEX (`account`, `sender`),
     INDEX (`comment`)
@@ -188,89 +188,4 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     UNIQUE INDEX (`sender`, `recipient`, `client_address`),
     INDEX (`sender_domain`),
     INDEX (`rcpt_domain`)
-) ENGINE=InnoDB;
-
---
--- Log smtp session which contains specified smtp actions (e.g. REJECT, DISCARD)
--- Old records should be removed with a cron job.
---
-CREATE TABLE IF NOT EXISTS log_smtp_sessions (
-    id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-    -- sender address without '+extension'. e.g. 'user@domain.com'
-    sender            VARCHAR(255) NOT NULL,
-    -- sender address with '+extension'. e.g. 'user+Ext@domain.com
-    sender_orig       VARCHAR(255) NOT NULL,
-    -- recipient address without '+extension'. e.g. 'user@domain.com'
-    recipient         VARCHAR(255) NOT NULL,
-    -- recipient address with '+extension'. e.g. 'user+Ext@domain.com
-    recipient_orig    VARCHAR(255) NOT NULL,
-    client_address    VARCHAR(40) NOT NULL,
-    sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
-    recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_username     VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_domain       VARCHAR(255) NOT NULL DEFAULT '',
-    size              INTEGER UNSIGNED NOT NULL DEFAULT 0,
-    reverse_client_name   VARCHAR(255) NOT NULL DEFAULT '',
-    helo_name         VARCHAR(255) NOT NULL DEFAULT '',
-    queue_id          VARCHAR(50) NOT NULL DEFAULT '',
-    sasl_method       VARCHAR(20) NOT NULL DEFAULT '',
-    encryption_protocol   VARCHAR(20) NOT NULL DEFAULT '',
-    action            VARCHAR(20) NOT NULL DEFAULT '',
-    msg               TEXT,
-    timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    INDEX (sender),
-    INDEX (sender_orig),
-    INDEX (recipient),
-    INDEX (recipient_orig),
-    INDEX (client_address),
-    INDEX (sender_domain),
-    INDEX (recipient_domain),
-    INDEX (sasl_username),
-    INDEX (sasl_domain),
-    INDEX (reverse_client_name),
-    INDEX (helo_name),
-    INDEX (queue_id),
-    INDEX (sasl_method),
-    INDEX (encryption_protocol),
-    INDEX (action),
-    INDEX (timestamp)
-) ENGINE=InnoDB;
-
---
--- Log basic info of outgoing emails.
--- Old records should be removed with a cron job.
---
-CREATE TABLE IF NOT EXISTS log_sasl (
-    id                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-    sender            VARCHAR(255) NOT NULL DEFAULT '',
-    recipient         VARCHAR(255) NOT NULL DEFAULT '',
-    recipient_orig    VARCHAR(255) NOT NULL DEFAULT '',
-    client_address    VARCHAR(40) NOT NULL DEFAULT '',
-    sender_domain     VARCHAR(255) NOT NULL DEFAULT '',
-    recipient_domain  VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_username     VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_domain       VARCHAR(255) NOT NULL DEFAULT '',
-    size              INTEGER UNSIGNED NOT NULL DEFAULT 0,
-    reverse_client_name   VARCHAR(255) NOT NULL DEFAULT '',
-    helo_name         VARCHAR(255) NOT NULL DEFAULT '',
-    queue_id          VARCHAR(50) NOT NULL DEFAULT '',
-    sasl_method       VARCHAR(20) NOT NULL DEFAULT '',
-    encryption_protocol   VARCHAR(20) NOT NULL DEFAULT '',
-    timestamp         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    INDEX (sender),
-    INDEX (recipient),
-    INDEX (recipient_orig),
-    INDEX (client_address),
-    INDEX (sender_domain),
-    INDEX (recipient_domain),
-    INDEX (sasl_username),
-    INDEX (sasl_domain),
-    INDEX (reverse_client_name),
-    INDEX (helo_name),
-    INDEX (queue_id),
-    INDEX (sasl_method),
-    INDEX (encryption_protocol),
-    INDEX (timestamp)
 ) ENGINE=InnoDB;

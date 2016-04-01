@@ -1,14 +1,5 @@
 iRedAPD-1.9.0:
     * Improvements:
-        + New SQL tables: log_sasl, log_smtp_sessions.
-
-            - `log_sasl`: stores sasl authenticated smtp session. Set
-                          `LOG_SASL_SESSIONS = False` to disable it.
-            - `log_smtp_sessions`: stores smtp session with specified smtp
-                                   actions, default actions are: REJECT,
-                                   DISCARD. Set 'LOG_SMTP_ACTIONS = []` to
-                                   disable it.
-
         + plugins/throttle.py: log period and time left before tracking record
           expires.
         + plugins/greylisting.py: log more info when log level is 'info'.
