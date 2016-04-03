@@ -511,6 +511,7 @@ def restriction(**kwargs):
         if is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
+    # Apply sender throttling to only sasl auth users.
     if kwargs['sasl_username']:
         logger.debug('Check sender throttling.')
         action = apply_throttle(conn=conn,
@@ -525,15 +526,19 @@ def restriction(**kwargs):
     else:
         logger.debug('Bypass sender throttling (No sasl_username).')
 
-    logger.debug('Check recipient throttling.')
-    action = apply_throttle(conn=conn,
-                            user=recipient,
-                            client_address=client_address,
-                            protocol_state=protocol_state,
-                            size=size,
-                            is_sender_throttling=False)
+    # Apply recipient throttling to smtp sessions without sasl_username
+    if not kwargs['sasl_username']:
+        logger.debug('Check recipient throttling.')
+        action = apply_throttle(conn=conn,
+                                user=recipient,
+                                client_address=client_address,
+                                protocol_state=protocol_state,
+                                size=size,
+                                is_sender_throttling=False)
 
-    if not action.startswith('DUNNO'):
-        return action
+        if not action.startswith('DUNNO'):
+            return action
+    else:
+        logger.debug('Bypass recipient throttling (found sasl_username).')
 
     return SMTP_ACTIONS['default']
