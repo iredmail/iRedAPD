@@ -511,16 +511,19 @@ def restriction(**kwargs):
         if is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
-    logger.debug('Check sender throttling.')
-    action = apply_throttle(conn=conn,
-                            user=sender,
-                            client_address=client_address,
-                            protocol_state=protocol_state,
-                            size=size,
-                            is_sender_throttling=True)
+    if kwargs['sasl_username']:
+        logger.debug('Check sender throttling.')
+        action = apply_throttle(conn=conn,
+                                user=sender,
+                                client_address=client_address,
+                                protocol_state=protocol_state,
+                                size=size,
+                                is_sender_throttling=True)
 
-    if not action.startswith('DUNNO'):
-        return action
+        if not action.startswith('DUNNO'):
+            return action
+    else:
+        logger.debug('Bypass sender throttling (No sasl_username).')
 
     logger.debug('Check recipient throttling.')
     action = apply_throttle(conn=conn,
