@@ -118,17 +118,17 @@ ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = False
 # Reject reason for greylisting.
 GREYLISTING_MESSAGE = 'Intentional policy rejection, please try again later'
 
-# Number of MINUTES to wait before client retrying.
-# Temporarily reject if client retries in specified time.
+# Time (in MINUTES) to wait before client retrying, client will be rejected if
+# retires too soon (in less than specified minutes). Defaults to 15 minutes.
 GREYLISTING_BLOCK_EXPIRE = 15
 
-# Disable greylisting in DAYS for clients which successfully passed
+# Disable greylisting for how long (in DAYS) for clients which passed
 # greylisting (retried and delivered). It's also used to clean up old
-# greylisting tracking records.
+# greylisting tracking records. Defaults to 30 days.
 GREYLISTING_AUTH_TRIPLET_EXPIRE = 30
 
-# Delete tracking record x DAYS after block_expire time, if no successful
-# attempt was made.
+# Time (in DAYS) to keep tracking records if client didn't pass the
+# greylisting and no further deliver attempts. Defaults to `2` days.
 GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 2
 
 # --------------
@@ -136,10 +136,3 @@ GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 2
 #
 # Don't apply throttle settings on senders specified in `MYNETWORKS`.
 THROTTLE_BYPASS_MYNETWORKS = False
-
-# --------------
-# Required by: tools/cleanup_db.py
-#
-# Show senders which not yet passed greylisting.
-CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS = False
-CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS = 30

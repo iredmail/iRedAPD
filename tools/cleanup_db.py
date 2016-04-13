@@ -16,31 +16,6 @@ sys.path.insert(0, rootdir)
 import settings
 from tools import logger, get_db_conn, sql_count_id
 
-
-def print_top_greylisting_domains(conn, limit=30, passed=False):
-    if not limit:
-        limit = settings.CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS
-
-    sql_where = 'passed=0'
-    banner = '* Top %d sender_domains which not yet passed greylisting:' % limit
-    if passed:
-        sql_where = 'passed=1'
-        banner = '* Top %d sender_domains which already passed greylisting:' % limit
-
-    qr = conn.select('greylisting_tracking',
-                     what='count(id) as count, sender_domain, client_address',
-                     where=sql_where,
-                     group='sender_domain',
-                     order='count DESC',
-                     limit=limit)
-
-    if qr:
-        logger.info(banner)
-
-        for r in qr:
-            logger.info('\t%5d %s  [%s]' % (r.count, r.sender_domain, r.client_address))
-
-
 web.config.debug = False
 
 backend = settings.backend
@@ -88,12 +63,3 @@ logger.info('\t- %d removed, %d left (%d passed, %d not).' % (
     total_after,
     total_passed,
     total_after - total_passed))
-
-# Show top senders which not yet passed greylisting.
-top_limit = settings.CLEANUP_NUM_OF_TOP_GREYLISTED_DOMAINS
-if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
-    print_top_greylisting_domains(conn=conn_iredapd, limit=top_limit, passed=False)
-
-# Show top senders which already passed greylisting.
-if total_after and settings.CLEANUP_SHOW_TOP_GREYLISTED_DOMAINS:
-    print_top_greylisting_domains(conn=conn_iredapd, limit=top_limit, passed=True)
