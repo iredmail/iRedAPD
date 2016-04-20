@@ -14,9 +14,13 @@ CREATE TABLE throttle (
     -- throttle settings.
     --  * set value to `-1` to force check setting with lower priority
     --  * set value to `0` to unlimited, and stop checking settings with lower priority.
-    msg_size    INT(10)                 NOT NULL DEFAULT -1, -- Limit of single (received) message size, in bytes.
-    max_msgs    MEDIUMINT(8)            NOT NULL DEFAULT -1, -- Number of max (received) messages in total.
-    max_quota   MEDIUMINT(8)            NOT NULL DEFAULT -1, -- Number of current (received) messages.
+    --
+    -- msg_size: single message size (in bytes)
+    -- max_msgs: cumulate max messages in total
+    -- max_quota: cumulate message size in total (in bytes)
+    msg_size    BIGINT(20)              NOT NULL DEFAULT -1,
+    max_msgs    BIGINT(20)              NOT NULL DEFAULT -1,
+    max_quota   BIGINT(20)              NOT NULL DEFAULT -1,
 
     PRIMARY KEY (id),
     UNIQUE INDEX account_kind (account, kind)

@@ -247,6 +247,7 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
 
             # Verify username and password
             mysql -h ${_sql_server_address} \
+                  -P ${IREDAPD_DB_PORT} \
                   -u${_sql_root_username} \
                   -p${_sql_root_password} \
                   -e "show databases" >/dev/null
@@ -261,6 +262,7 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
 
         # Create database and tables.
         mysql -h ${_sql_server_address} \
+              -P ${IREDAPD_DB_PORT} \
               -u${_sql_root_username} \
               -p${_sql_root_password} <<EOF
 CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
@@ -311,13 +313,14 @@ if [ X"${DISTRO}" == X'OPENBSD' -a X"${iredapd_db_server}" == X'127.0.0.1' ]; th
 fi
 
 #
-# Add sql tables introduced in new iRedAPD releases
+# Update sql tables
 #
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     #
     # `greylisting_whitelist_domains`
     #
     (mysql -h ${iredapd_db_server} \
+           -P ${iredapd_db_port} \
            -u ${iredapd_db_user} \
            -p${iredapd_db_password} \
            ${iredapd_db_name} <<EOF
@@ -330,6 +333,7 @@ EOF
         chmod 0555 /tmp/greylisting_whitelist_domains.sql
 
         mysql -h${iredapd_db_server} \
+              -P ${iredapd_db_port} \
               -u${iredapd_db_user} \
               -p${iredapd_db_password} \
               ${iredapd_db_name} <<EOF
@@ -343,6 +347,19 @@ USE ${iredapd_db_name};
 SOURCE /tmp/greylisting_whitelist_domains.sql;
 EOF
     fi
+
+    #
+    # alter some columns to BIGINT(20): throttle.{msg_size,max_quota,max_msgs}
+    #
+    mysql -h ${iredapd_db_server} \
+          -P ${iredapd_db_port} \
+          -u ${iredapd_db_user} \
+          -p${iredapd_db_password} \
+           ${iredapd_db_name} <<EOF
+ALTER TABLE throttle MODIFY COLUMN msg_size  BIGINT(20) NOT NULL DEFAULT -1;
+ALTER TABLE throttle MODIFY COLUMN max_msgs  BIGINT(20) NOT NULL DEFAULT -1;
+ALTER TABLE throttle MODIFY COLUMN max_quota BIGINT(20) NOT NULL DEFAULT -1;
+EOF
 
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
