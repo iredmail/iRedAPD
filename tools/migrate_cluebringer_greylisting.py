@@ -136,6 +136,6 @@ for rcd in qr:
 
         sql = """INSERT INTO greylisting_whitelists (account, sender, comment) VALUES ('@.', '%s', '%s');""" % (wl, comment)
         try:
-            conn_iredapd.execute(sql)
+            conn_iredapd.query(sql)
         except Exception, e:
             pass

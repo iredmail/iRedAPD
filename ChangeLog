@@ -18,6 +18,9 @@ iRedAPD-1.9.0:
           iredadmin database. Defaults to keep for 7 days.
 
     * Fixed issues:
+        - Incorrect function call to execute SQL command in file
+          tools/migrate_cluebringer_greylisting.py.
+          Thanks Ivan Novokhatski <de7 _at_ deseven.info> for the report.
         - Infinite loop caused by improper SPF record which contains itself.
         - Improper type of sql columns: throttle.{msg_size,max_quota,max_msgs}.
         - tools/spf_to_greylisting_whitelists.py: not combine splited IP
