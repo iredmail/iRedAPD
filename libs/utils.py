@@ -2,7 +2,6 @@ import re
 import time
 
 from sqlalchemy import create_engine
-from sqlalchemy.sql.expression import text as sql_text
 
 from libs.logger import logger
 from libs import SMTP_ACTIONS

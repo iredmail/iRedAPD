@@ -27,7 +27,8 @@
 #
 #   3) Run this script with option '--submit' and domain name to add domain
 #      name to SQL table `iredapd.greylisting_whitelist_domains`, and query
-#      its SPF/MX/A records immediately:
+#      its SPF/MX/A records immediately, and remove all greylisting tracking
+#      data (since it's whitelisted, we don't need the tracking data anymore):
 #
 #       $ python spf_to_greylist_whitelists.py --submit <domain> [domain ...]
 #
@@ -295,6 +296,7 @@ def query_spf_of_included_domains(domains, queried_domains=None, returned_ips=No
         else:
             logger.debug('\t\t+ [include: %s] empty' % domain)
 
+        queried_domains.add('spf:' + domain)
         qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_spf = qr['ips']
@@ -410,7 +412,8 @@ if submit_to_sql_db:
         except:
             pass
 
-        # Delete tracking data
+        # Delete tracking data.
+        # Since domain is whitelisted, we don't need tracking data anymore.
         try:
             conn.delete('greylisting_tracking',
                         vars={'domain': d},
