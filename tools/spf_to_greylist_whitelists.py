@@ -332,7 +332,7 @@ if not domains:
     logger.info('* No valid domain names, exit.')
     sys.exit()
 
-logger.info('* Parsing %d domains.' % len(domains))
+logger.info('* Parsing domains, %d in total.' % len(domains))
 
 all_ips = set()
 domain_ips = {}
