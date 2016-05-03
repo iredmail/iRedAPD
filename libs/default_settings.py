@@ -87,22 +87,23 @@ CHANGE_PASSWORD_NEVER_EXPIRE_USERS = []
 # --------------
 # Required by: plugins/reject_sender_login_mismatch.py
 #
-# Check whether sender is forged on message which sent without smtp auth.
+# Check whether sender is forged in message sent without smtp auth.
 CHECK_FORGED_SENDER = True
 
-# Allowed messages with below forged addresses
+# If you allow someone or some service providers to send email as forged
+# (your local) address, you can list all allowed addresses in this parameter.
+# For example, if some ISPs may send email as 'user@mydomain.com' (mydomain.com
+# is hosted on your server) to you, you should add `user@mydomain.com` as one
+# of forged senders.
+# Sample: ALLOWED_FORGED_SENDERS = ['user@mydomain.com', 'mydomain.com']
 ALLOWED_FORGED_SENDERS = []
 
-# Allowed senders or sender domains.
-#
-# If you want to allow someone to send email as forged address, e.g.
-# salesforce.com, you can bypass these addresses in this setting.
-# Default value is empty (no allowed forged sender).
+# Allow sender login mismatch for specified senders or sender domains.
 #
 # Sample setting: allow local user `user@local_domain_1.com` and all users
 # under `local_domain_2.com` to send email as other users.
 #
-#   ALLOWED_FORGED_SENDERS = ['user@local_domain_1.com', 'local_domain_2.com']
+#   ALLOWED_LOGIN_MISMATCH_SENDERS = ['user@local_domain_1.com', 'local_domain_2.com']
 ALLOWED_LOGIN_MISMATCH_SENDERS = []
 
 # Strictly allow sender to send as one of user alias addresses. Default is True.

@@ -31,6 +31,8 @@ INSERT INTO greylisting_whitelist_domains (domain) VALUES ('pinterest.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('reddit.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('sendgrid.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('sendgrid.net');
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('serverfault.com');
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('stackoverflow.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('tumblr.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('twitter.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('yahoo.com');

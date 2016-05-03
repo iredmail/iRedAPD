@@ -109,7 +109,7 @@ if is_strict or allow_list_member:
     if settings.backend == 'ldap':
         from libs.ldaplib import conn_utils
 
-reject = 'REJECT Sender login mismatch'
+action_reject = SMTP_ACTIONS['reject_sender_login_mismatch']
 
 
 def restriction(**kwargs):
@@ -203,7 +203,7 @@ def restriction(**kwargs):
     # If no access settings available, reject directly.
     if not (allowed_senders or is_strict or allow_list_member):
         logger.debug('No allowed senders in config file.')
-        return reject
+        return action_reject
 
     # Check explicitly allowed senders
     if allowed_senders:
@@ -259,7 +259,7 @@ def restriction(**kwargs):
                 return SMTP_ACTIONS['default']
             else:
                 logger.debug('Sender is either an user alias address or list/alias member.')
-                return reject
+                return action_reject
 
         elif settings.backend in ['mysql', 'pgsql']:
             if is_strict:
@@ -309,4 +309,4 @@ def restriction(**kwargs):
                 else:
                     logger.debug('No such mail alias account.')
 
-    return reject
+    return action_reject
