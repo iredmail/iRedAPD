@@ -178,6 +178,8 @@ def query_spf(domain, queried_domains=None):
     except:
         pass
 
+    queried_domains.add('spf:' + domain)
+
     return {'spf': spf,
             'queried_domains': queried_domains}
 
@@ -191,12 +193,6 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
 
     queried_domains = queried_domains or set()
     returned_ips = returned_ips or set()
-
-    if 'spf:' + domain in queried_domains:
-        logger.debug('\t- [SKIP] %s had been queried.' % domain)
-        return {'ips': ips,
-                'queried_domains': queried_domains,
-                'returned_ips': returned_ips}
 
     if not spf:
         return {'ips': ips,
@@ -296,7 +292,7 @@ def query_spf_of_included_domains(domains, queried_domains=None, returned_ips=No
         else:
             logger.debug('\t\t+ [include: %s] empty' % domain)
 
-        queried_domains.add('spf:' + domain)
+        #queried_domains.add('spf:' + domain)
         qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_spf = qr['ips']

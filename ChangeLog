@@ -1,3 +1,8 @@
+iRedAPD-1.9.1:
+    * Fixed issues:
+        - Not correctly handle nested 'include:' tag in
+          tools/spf_to_greylisting_whitelists.py (bug introduced in v1.9.0).
+
 iRedAPD-1.9.0:
     * Improvements:
         + plugins/throttle.py: log period and time left before tracking record
