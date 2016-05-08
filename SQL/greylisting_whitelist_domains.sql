@@ -1,6 +1,7 @@
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('amazon.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('aol.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('cloudfiltering.com');
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('cloudflare.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('constantcontact.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('craigslist.org');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('cust-spf.exacttarget.com');

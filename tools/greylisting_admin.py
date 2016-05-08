@@ -24,12 +24,9 @@ USAGE = """Usage:
         Show ALL whitelisted sender addresses (in `greylisting_whitelists`)
 
     --whitelist-domain
-        Explicitly whitelist a sender domain for greylisting service.
-
-        Note: you must setup a cron job to run script
-        /opt/iredapd/tools/spf_to_greylist_whitelists.py to query SPF/MX/A
-        DNS records and store the IP addresses/networks stored in those DNS
-        records as whitelisted senders. Default interval is 10 minutes.
+        Whitelist the IP addresses/networks in SPF record of specified sender
+        domain for greylisting service. Whitelisted domain is stored in sql
+        table `greylisting_whitelist_domains`.
 
     --remove-whitelist-domain
         Remove whitelisted sender domain
@@ -66,39 +63,43 @@ Sample usages:
 
         # python greylisting_admin.py --list
 
-    * List all whitelisted sender domain names:
+    * List all whitelisted sender domain names (in SQL table `greylisting_whitelist_domains`):
 
         # python greylisting_admin.py --list-whitelist-domains
 
-    * List all whitelisted sender addresses:
+    * List all whitelisted sender addresses (in SQL table `greylisting_whitelists`):
 
         # python greylisting_admin.py --list-whitelists
 
-    * Whitelist a sender domain:
+    * Whitelist IP networks/addresses specified in sender domain:
 
         # python greylisting_admin.py --whitelist-domain --from '@example.com'
 
-    * Remove a whitelisted sender domain:
+      This is same as:
+
+        # python spf_to_whitelist_domains.py --submit example.com
+
+    * Remove a whitelisted sender domain (from SQL table `greylisting_whitelist_domains`):
 
         # python greylisting_admin.py --remove-whitelist-domain --from '@example.com'
 
     * Enable greylisting for emails which are sent
-      from anyone to local mail domain 'example.com':
+      from anyone to local mail domain `example.com`:
 
         # python greylisting_admin.py --enable --to '@example.com'
 
     * Disable greylisting for emails which are sent
-      from anyone to local mail user 'user@example.com':
+      from anyone to local mail user `user@example.com`:
 
         # python greylisting_admin.py --disable --to 'user@example.com'
 
     * Disable greylisting for emails which are sent
-      from 'gmail.com' to local mail user 'user@example.com':
+      from `gmail.com` to local mail user `user@example.com`:
 
         # python greylisting_admin.py --disable --from '@gmail.com' --to 'user@example.com'
 
     * Delete greylisting setting for emails which are sent
-      from anyone to local domain 'test.com':
+      from anyone to local domain `test.com`:
 
         # python greylisting_admin.py --delete --to '@test.com'
 """
