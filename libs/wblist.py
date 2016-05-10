@@ -258,16 +258,21 @@ def delete_wblist(conn,
     # Remove wblist.
     # No need to remove unused senders in `mailaddr` table, because we
     # have daily cron job to delete them (tools/cleanup_amavisd_db.py).
+    wl_smails = []
+    wl_rmails = []
+    bl_smails = []
+    bl_rmails = []
     try:
         # Get `mailaddr.id` for wblist senders
         if wl_senders:
             sids = []
             qr = conn.select('mailaddr',
                              vars={'addresses': wl_senders},
-                             what='id',
+                             what='id, email',
                              where='email IN $addresses')
             for r in qr:
                 sids.append(r.id)
+                wl_smails.append(r.email)
 
             if sids:
                 conn.delete('wblist',
@@ -276,12 +281,14 @@ def delete_wblist(conn,
 
         if bl_senders:
             sids = []
+            bl_smails = []
             qr = conn.select('mailaddr',
                              vars={'addresses': bl_senders},
-                             what='id',
+                             what='id, email',
                              where='email IN $addresses')
             for r in qr:
                 sids.append(r.id)
+                bl_smails.append(r.email)
 
             if sids:
                 conn.delete('wblist',
@@ -290,12 +297,14 @@ def delete_wblist(conn,
 
         if wl_rcpts:
             rids = []
+            wl_rmails = []
             qr = conn.select('mailaddr',
                              vars={'addresses': wl_rcpts},
-                             what='id',
+                             what='id, email',
                              where='email IN $addresses')
             for r in qr:
                 rids.append(r.id)
+                wl_rmails.append(r.email)
 
             if rids:
                 conn.delete('outbound_wblist',
@@ -304,12 +313,14 @@ def delete_wblist(conn,
 
         if bl_rcpts:
             rids = []
+            bl_rmails = []
             qr = conn.select('mailaddr',
                              vars={'addresses': bl_rcpts},
-                             what='id',
+                             what='id, email',
                              where='email IN $addresses')
             for r in qr:
                 rids.append(r.id)
+                bl_rmails.append(r.email)
 
             if rids:
                 conn.delete('outbound_wblist',
@@ -319,7 +330,10 @@ def delete_wblist(conn,
     except Exception, e:
         return (False, str(e))
 
-    return (True, )
+    return (True, {'wl_senders': wl_smails,
+                   'wl_rcpts': wl_rmails,
+                   'bl_senders': bl_smails,
+                   'bl_rcpts': bl_rmails})
 
 
 def delete_all_wblist(conn,

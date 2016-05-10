@@ -174,11 +174,7 @@ if action == 'add':
                                    flush_before_import=False)
 
         if not qr[0]:
-            if qr[1] == "'module' object has no attribute 'logger'":
-                # safe to ignore.
-                pass
-            else:
-                logger.error(qr[1])
+            logger.error(qr[1])
     except Exception, e:
         logger.info(str(e))
 
@@ -191,37 +187,45 @@ elif action == 'delete':
                                       bl_senders=bl)
         else:
             # inout_type == 'outbound':
-            qr = wblist.delete_wblist(account=wb_account,
+            qr = wblist.delete_wblist(conn=conn,
+                                      account=wb_account,
                                       wl_rcpts=wl,
                                       bl_rcpts=bl)
 
-        if not qr[0]:
-            if qr[1] == "'module' object has no attribute 'logger'":
-                # safe to ignore.
-                pass
-            else:
-                logger.error(qr[1])
+        if qr[0]:
+            _wl_senders = qr[1]['wl_senders']
+            _wl_rcpts = qr[1]['wl_rcpts']
+            _bl_senders = qr[1]['bl_senders']
+            _bl_rcpts = qr[1]['bl_rcpts']
+
+            for i in set(_wl_senders):
+                logger.info('- Delete whitelist sender for account %s: %s' % (wb_account, str(i)))
+            for i in set(_wl_rcpts):
+                logger.info('- Delete whitelist recipient for account %s: %s' % (wb_account, str(i)))
+            for i in set(_bl_senders):
+                logger.info('- Delete blacklist sender for account %s: %s' % (wb_account, str(i)))
+            for i in set(_bl_rcpts):
+                logger.info('- Delete blacklist recipient for account %s: %s' % (wb_account, str(i)))
+        else:
+            logger.error(qr[1])
     except Exception, e:
         logger.info(str(e))
 elif action == 'delete-all':
-    logger.info('* Delete all.')
     try:
         if inout_type == 'inbound':
-            qr = wblist.delete_all_wblist(account=wb_account,
+            qr = wblist.delete_all_wblist(conn=conn,
+                                          account=wb_account,
                                           wl_senders=for_whitelist,
                                           bl_senders=for_blacklist)
         else:
             # inout_type == 'outbound':
-            qr = wblist.delete_all_wblist(account=wb_account,
+            qr = wblist.delete_all_wblist(conn=conn,
+                                          account=wb_account,
                                           wl_rcpts=for_whitelist,
                                           bl_rcpts=for_blacklist)
 
         if not qr[0]:
-            if qr[1] == "'module' object has no attribute 'logger'":
-                # safe to ignore.
-                pass
-            else:
-                logger.error(qr[1])
+            logger.error(qr[1])
     except Exception, e:
         logger.info(str(e))
 else:
