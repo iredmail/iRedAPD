@@ -199,13 +199,13 @@ elif action == 'delete':
             _bl_rcpts = qr[1]['bl_rcpts']
 
             for i in set(_wl_senders):
-                logger.info('- Delete whitelist sender for account %s: %s' % (wb_account, str(i)))
+                logger.info('- Delete: %s' % str(i))
             for i in set(_wl_rcpts):
-                logger.info('- Delete whitelist recipient for account %s: %s' % (wb_account, str(i)))
+                logger.info('- Delete: %s' % str(i))
             for i in set(_bl_senders):
-                logger.info('- Delete blacklist sender for account %s: %s' % (wb_account, str(i)))
+                logger.info('- Delete: %s' % str(i))
             for i in set(_bl_rcpts):
-                logger.info('- Delete blacklist recipient for account %s: %s' % (wb_account, str(i)))
+                logger.info('- Delete: %s' % str(i))
         else:
             logger.error(qr[1])
     except Exception, e:
