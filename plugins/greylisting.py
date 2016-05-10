@@ -314,6 +314,7 @@ def restriction(**kwargs):
 
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
+    sender_tld_domain = sender_domain.split('.')[-1]
     recipient = kwargs['recipient']
     recipient_domain = kwargs['recipient_domain']
 
@@ -321,6 +322,7 @@ def restriction(**kwargs):
     policy_senders = [sender,
                       '@' + sender_domain,      # per-domain
                       '@.' + sender_domain,     # sub-domains
+                      sender_tld_domain,        # top-level-domain
                       '@.',                     # catch-all
                       client_address]
 
