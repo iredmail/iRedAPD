@@ -1,8 +1,9 @@
-iRedAPD-1.9.1:
+iRedAPD-1.9.2:
     * Improvements:
         - tools/greylisting_admin.py: able to specify IP address/network,
           email address as greylisting sender.
 
+iRedAPD-1.9.1:
     * Fixed issues:
         - Not correctly handle nested 'include:' tag in
           tools/spf_to_greylisting_whitelists.py (bug introduced in v1.9.0).
