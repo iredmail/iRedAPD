@@ -98,6 +98,11 @@ from libs import SMTP_ACTIONS
 from libs.utils import is_trusted_client
 import settings
 
+if settings.backend == 'ldap':
+    from libs.ldaplib.conn_utils import is_local_domain
+else:
+    from libs.sql import is_local_domain
+
 
 check_forged_sender = settings.CHECK_FORGED_SENDER
 allowed_forged_sender = settings.ALLOWED_FORGED_SENDERS
@@ -156,33 +161,8 @@ def restriction(**kwargs):
                 sender_is_forged = True
             else:
                 # Check whether sender domain is hosted on localhost
-                if settings.backend == 'ldap':
-                    filter_domains = '(&(objectClass=mailDomain)'
-                    filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (sender_domain, sender_domain)
-                    filter_domains += ')'
-
-                    qr = conn.search_s(settings.ldap_basedn,
-                                       1,   # 1 == ldap.SCOPE_ONELEVEL
-                                       filter_domains,
-                                       ['dn'])
-                    if qr:
-                        logger.debug('Sender is forged address (sender domain is hosted locally).')
-                        sender_is_forged = True
-
-                elif settings.backend in ['mysql', 'pgsql']:
-                    sql = """SELECT alias_domain
-                               FROM alias_domain
-                              WHERE alias_domain='%s' OR target_domain='%s'
-                              LIMIT 1""" % (sender_domain, sender_domain)
-                    logger.debug('[SQL] query alias domains: \n%s' % sql)
-
-                    qr = conn.execute(sql)
-                    sql_record = qr.fetchone()
-                    logger.debug('SQL query result: %s' % str(sql_record))
-
-                    if sql_record:
-                        logger.debug('Sender is forged address (sender domain is hosted locally).')
-                        sender_is_forged = True
+                if is_local_domain(conn=conn, domain=sender_domain):
+                    sender_is_forged = True
 
             if sender_is_forged:
                 return SMTP_ACTIONS['reject'] + ' not logged in'

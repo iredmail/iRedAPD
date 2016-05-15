@@ -1,5 +1,6 @@
 import re
 import time
+import socket
 
 from sqlalchemy import create_engine
 
@@ -393,3 +394,12 @@ def get_account_priority(account):
     priority = ACCOUNT_PRIORITIES.get(account_type, 0)
 
     return priority
+
+
+def is_server_hostname(domain):
+    name = socket.gethostname()
+
+    if domain == name:
+        return True
+    else:
+        return False

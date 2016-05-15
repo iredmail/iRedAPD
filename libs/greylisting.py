@@ -38,9 +38,9 @@ def enable_greylisting(conn, account, sender):
         gl_setting['active'] = 1
 
         sql = """INSERT INTO greylisting (account, priority, sender, sender_priority, active)
-                                  VALUES ('%(account)s', '%(priority)d',
-                                          '%(sender)s', '%(sender_priority)d',
-                                          '%(active)d)'""" % gl_setting
+                                  VALUES ('%(account)s', %(priority)d,
+                                          '%(sender)s', %(sender_priority)d,
+                                          %(active)d)""" % gl_setting
         conn.execute(sql)
 
         return (True, )
@@ -56,14 +56,36 @@ def disable_greylisting(conn, account, sender):
         delete_setting(conn=conn, account=account, sender=sender)
 
         sql = """INSERT INTO greylisting (account, priority, sender, sender_priority, active)
-                                  VALUES ('%(account)s', '%(priority)d',
-                                          '%(sender)s', '%(sender_priority)d',
-                                          '%(active)d)'""" % gl_setting
+                                  VALUES ('%(account)s', %(priority)d,
+                                          '%(sender)s', %(sender_priority)d,
+                                          %(active)d)""" % gl_setting
         conn.execute(sql)
 
         return (True, )
     except Exception, e:
         return (False, str(e))
+
+def add_whitelist_sender(conn, account, sender, comment=None):
+    if not is_valid_sender(sender):
+        return (False, 'INVALID_SENDER')
+
+    if utils.is_valid_amavisd_address(account) not in ['catchall', 'domain', 'subdomain', 'email']:
+        return (False, 'INVALID_ACCOUNT')
+
+    comment = comment or ''
+
+    try:
+        sql = """INSERT INTO greylisting_whitelists (account, sender, comment)
+                                             VALUES ('%s', '%s', '%s')""" % (account, sender, comment)
+        conn.execute(sql)
+    except Exception, e:
+        error = str(e).lower()
+        if 'duplicate key' in error or 'duplicate entry' in error:
+            pass
+        else:
+            return (False, str(e))
+
+    return (True, )
 
 def add_whitelist_domain(conn, domain):
     # Insert domain into sql table `iredapd.greylisting_whitelist_domains`

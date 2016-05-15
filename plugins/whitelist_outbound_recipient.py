@@ -6,7 +6,15 @@ from libs import greylisting as lib_gl
 from libs import wblist
 from libs.utils import is_email
 from libs.logger import logger
+
 import settings
+
+if settings.backend == 'ldap':
+    from libs.ldaplib.conn_utils import is_local_domain
+else:
+    from libs.sql import is_local_domain
+
+SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
 
 wl_greylisting = settings.WL_RCPT_UPDATE_GREYLISTING
 wl_whitelist = settings.WL_RCPT_UPDATE_WHITELIST
@@ -27,11 +35,25 @@ def restriction(**kwargs):
         logger.debug('Recipient is not a valid email address, skip.')
         return SMTP_ACTIONS['default']
 
+    # Check whether recipient domain is hosted locally.
+    sasl_username_domain = kwargs['sasl_username_domain']
+    recipient_domain = kwargs['recipient_domain']
+
+    if sasl_username_domain == recipient_domain:
+        logger.debug('Sender domain is same as recipient domain, skip.')
+        return SMTP_ACTIONS['default']
+
+    conn_vmail = kwargs['conn_vmail']
+    if is_local_domain(conn=conn_vmail, domain=recipient_domain):
+        logger.debug('Recipient domain is local domain, skip.')
+        return SMTP_ACTIONS['default']
+
     if wl_greylisting:
         conn_iredapd = kwargs['conn_iredapd']
-        qr = lib_gl.disable_greylisting(conn=conn_iredapd,
-                                        account=sasl_username,
-                                        sender=recipient)
+        qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
+                                         account=sasl_username,
+                                         sender=recipient,
+                                         comment="AUTO-WHITELIST BY %s" % __name__)
 
         if qr[0]:
             logger.debug('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))

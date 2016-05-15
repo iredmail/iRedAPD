@@ -1,6 +1,7 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
 from libs.logger import logger
+from libs import utils
 import ldap
 import settings
 from libs import MAILLIST_POLICY_MEMBERSONLY, \
@@ -186,3 +187,27 @@ def get_allowed_senders_of_mail_list(conn,
                         allowed_senders += ['.' + d for d in domains]
 
     return [u.lower() for u in allowed_senders]
+
+
+def is_local_domain(conn, domain):
+    if not utils.is_domain(domain):
+        return False
+
+    if utils.is_server_hostname(domain):
+        return True
+
+    try:
+        filter_domains = '(&(objectClass=mailDomain)'
+        filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (domain, domain)
+        filter_domains += ')'
+
+        qr = conn.search_s(settings.ldap_basedn,
+                           1,   # 1 == ldap.SCOPE_ONELEVEL
+                           filter_domains,
+                           ['dn'])
+        if qr:
+            return True
+    except Exception, e:
+        logger.error('<!> Error while querying alias domain: %s' % str(e))
+
+    return False
