@@ -156,31 +156,38 @@ class DaemonSocket(asyncore.dispatcher):
         # Load plugins.
         self.loaded_plugins = []
 
-        # Sort plugin order with pre-defined priorities, so that we can apply
-        # plugins in ideal order.
-        ordered_plugins = []
+        # Import priorities of built-in plugins.
+        _plugin_priorities = PLUGIN_PRIORITIES
 
-        swapped_plugin_name_order = {}
-        _plugin_priorities = PLUGIN_PRIORITIES      # built-in plugins
+        # Import priorities of custom plugins, or custom built-in plugin priorities
         _plugin_priorities.update(settings.PLUGIN_PRIORITIES)   # third-party plugins
-        for i in _plugin_priorities:
-            swapped_plugin_name_order[_plugin_priorities[i]] = i
 
-        po = {}
+        # If enabled plugin doesn't have a priority pre-defined, set it to 0 (lowest)
+        _plugins_without_priority = [p for p in settings.plugins if p not in _plugin_priorities]
+        for _p in _plugins_without_priority:
+            _plugin_priorities[_p] = 0
+
+        # a list of {priority: name}
+        pnl = []
         for p in settings.plugins:
             plugin_file = os.path.join(plugin_dir, p + '.py')
             if not os.path.isfile(plugin_file):
                 logger.info('Plugin %s (%s) does not exist.' % (p, plugin_file))
                 continue
 
-            po[_plugin_priorities[p]] = p
+            priority = _plugin_priorities[p]
+            pnl += [{priority: p}]
 
-        ordered_plugins = [swapped_plugin_name_order[order] for order in sorted(po, reverse=True)]
+        # Sort plugin order with pre-defined priorities, so that we can apply
+        # plugins in ideal order.
+        ordered_plugins = []
+        for item in sorted(pnl, reverse=True):
+            ordered_plugins += item.values()
 
         for plugin in ordered_plugins:
             try:
                 self.loaded_plugins.append(__import__(plugin))
-                logger.info('Loading plugin: %s' % plugin)
+                logger.info('Loading plugin: %s (priority: %s)' % (plugin, _plugin_priorities[plugin]))
             except Exception, e:
                 logger.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
 

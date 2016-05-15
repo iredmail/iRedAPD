@@ -304,21 +304,24 @@ def is_ip(s):
 
 
 def is_trusted_client(client_address):
+    msg = 'Client address (%s) is trusted networks (MYNETWORKS).' % client_address
+
     if client_address in ['127.0.0.1', '::1']:
         logger.debug('Local sender.')
         return True
 
     if client_address in TRUSTED_IPS:
-        logger.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
+        logger.debug(msg)
         return True
 
     if set(wildcard_ipv4(client_address)) & set(TRUSTED_IPS):
-        logger.debug('Client address (%s) is trusted networks (MYNETWORKS).' % client_address)
+        logger.debug(msg)
         return True
 
     ip_addr = ipaddress.ip_address(unicode(client_address))
     for net in TRUSTED_NETWORKS:
         if ip_addr in net:
+            logger.debug(msg)
             return True
 
     return False

@@ -7,10 +7,12 @@ how it works:
 ## Define your plugin priority in iRedAPD config file `settings.py`
 
 Please define the priority of your plugin, so that iRedAPD can apply plugins
-in ideal order. Priorities of built-in plugins are defined in
-`libs/__init__.py`, parameter `PLUGIN_PRIORITIES`. You should define the
-priority of your own plugin in iRedAPD config file `/opt/iredapd/settings.py`,
-so that it won't be overriden after upgrading iRedAPD.
+in ideal order. If no priority defined, defaults to 0 (lowest).
+
+Priorities of built-in plugins are defined in `libs/__init__.py`, parameter
+`PLUGIN_PRIORITIES`. You should define the priority of your own plugin in
+iRedAPD config file `/opt/iredapd/settings.py`, so that it won't be overriden
+after upgrading iRedAPD.
 
 ## SMTP protocol state
 

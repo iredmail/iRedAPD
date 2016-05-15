@@ -23,24 +23,26 @@ SMTP_ACTIONS = {
 
 # Plugin priorities.
 #
-# With pre-defined priorities, the order defined in `plugins = []` setting
-# doesn't matter at all, so that we can apply plugins in ideal order.
-#             ---------------------------------
-# Plugin with larger number has higher priority and will be applied first.
-#             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# WARNING: Do not set the same priority for different plugins.
+# * With pre-defined priorities, the order defined in `plugins = []` setting
+#   doesn't matter at all, so that we can apply plugins in ideal order.
+#
+# * It's better to run plugins which doesn't require SQL/LDAP connection first.
+#
+#               +-----------------------------------+
+# * Plugin with | larger number has higher priority | and will be applied first.
+#               +-----------------------------------+
 PLUGIN_PRIORITIES = {
     'reject_null_sender': 100,
-    'reject_to_hostname': 99,
+    'reject_to_hostname': 100,
     'reject_sender_login_mismatch': 90,
     'greylisting': 80,
     'ldap_force_change_password_in_days': 70,
-    'sql_force_change_password_in_days': 71,
+    'sql_force_change_password_in_days': 70,
     'throttle': 60,
     'ldap_maillist_access_policy': 50,
-    'sql_alias_access_policy': 51,
+    'sql_alias_access_policy': 50,
     'amavisd_wblist': 40,
-    'gl_whitelist_outbound_recipient': 0,
+    'gl_whitelist_outbound_recipient': 10,
 }
 
 # Account proiroties.

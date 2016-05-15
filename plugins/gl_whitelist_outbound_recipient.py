@@ -10,10 +10,12 @@ def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
 
     if not sasl_username:
+        logger.debug('No sasl_username found, skip.')
         return SMTP_ACTIONS['default']
 
     recipient = kwargs['recipient']
     if not is_email(recipient):
+        logger.debug('Recipient is not a valid email address, skip.')
         return SMTP_ACTIONS['default']
 
     conn_iredapd = kwargs['conn_iredapd']
