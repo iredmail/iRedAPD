@@ -40,6 +40,7 @@ PLUGIN_PRIORITIES = {
     'ldap_maillist_access_policy': 50,
     'sql_alias_access_policy': 51,
     'amavisd_wblist': 40,
+    'gl_whitelist_outbound_recipient': 0,
 }
 
 # Account proiroties.
