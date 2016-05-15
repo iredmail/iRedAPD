@@ -38,9 +38,9 @@ def enable_greylisting(conn, account, sender):
         gl_setting['active'] = 1
 
         sql = """INSERT INTO greylisting (account, priority, sender, sender_priority, active)
-                                  VALUES (%(account)s, %(priority)d,
-                                          %(sender)s, %(sender_priority)d,
-                                          %(active)d)""" % gl_setting
+                                  VALUES ('%(account)s', '%(priority)d',
+                                          '%(sender)s', '%(sender_priority)d',
+                                          '%(active)d)'""" % gl_setting
         conn.execute(sql)
 
         return (True, )
@@ -56,9 +56,9 @@ def disable_greylisting(conn, account, sender):
         delete_setting(conn=conn, account=account, sender=sender)
 
         sql = """INSERT INTO greylisting (account, priority, sender, sender_priority, active)
-                                  VALUES (%(account)s, %(priority)d,
-                                          %(sender)s, %(sender_priority)d,
-                                          %(active)d)""" % gl_setting
+                                  VALUES ('%(account)s', '%(priority)d',
+                                          '%(sender)s', '%(sender_priority)d',
+                                          '%(active)d)'""" % gl_setting
         conn.execute(sql)
 
         return (True, )
