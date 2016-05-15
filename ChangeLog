@@ -1,8 +1,9 @@
 iRedAPD-1.9.2:
     * New plugins:
-        - plugins/gl_whitelist_outbound_recipient.py: used to automatically
-          disable greylisting for recipient in outgoing email for SASL
-          authenticated sender.
+        - plugins/whitelist_outbound_recipient.py: used to automatically
+          whitelist outbound recipient for greylisting (parameter
+          'WL_RCPT_UPDATE_GREYLISTING') and/or normal whitelists (parameter
+          'WL_RCPT_UPDATE_WHITELIST') for SASL authenticated sender.
 
 authenticated sender."""
     * Improvements:

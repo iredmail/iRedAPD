@@ -133,6 +133,16 @@ GREYLISTING_AUTH_TRIPLET_EXPIRE = 30
 GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 2
 
 # --------------
+# Required by: plugins/whitelist_outbound_recipient.py
+#
+# Whitelist outbound recipient for greylisting service.
+WL_RCPT_UPDATE_GREYLISTING = True
+
+# Whitelist outbound recipient as normal whitelist which works for iRedAPD
+# plugin `amavisd_wblist`, and also works after-queue in Amavisd.
+WL_RCPT_UPDATE_WHITELIST = False
+
+# --------------
 # Required by: plugins/throttle.py
 #
 # Don't apply throttle settings on senders specified in `MYNETWORKS`.
