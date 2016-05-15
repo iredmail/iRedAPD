@@ -13,6 +13,7 @@ sys.path.insert(0, rootdir)
 from libs import utils
 from libs import greylisting as lib_gl
 from tools import logger, get_db_conn
+from libs.utils import get_db_conn as get_db_conn2
 
 web.config.debug = False
 
@@ -171,28 +172,6 @@ if not '@' in rcpt:
     sys.exit('<<< ERROR >>> Invalid recipient address.')
 
 
-def add_whitelist_domain(conn, domain):
-    # Insert domain into sql table `iredapd.greylisting_whitelist_domains`
-    try:
-        conn.insert('greylisting_whitelist_domains',
-                    domain=domain)
-    except Exception, e:
-        error = str(e).lower()
-        if 'duplicate key' in error or 'duplicate entry' in error:
-            pass
-        else:
-            logger.info(str(e))
-
-
-def remove_whitelisted_domain(conn, domain):
-    # Delete sender domain from `iredapd.greylisting_whitelist_domains`
-    # Delete its spf/mx records from `iredapd.greylisting_whitelists`
-    try:
-        conn.delete('greylisting_whitelist_domains', where="domain='%s'" % domain)
-        conn.delete('greylisting_whitelists', where="comment='AUTO-UPDATE: %s'" % domain)
-    except Exception, e:
-        logger.info(str(e))
-
 # Check whether sender address is a domain name.
 sender_is_domain = False
 sender_domain = ''
@@ -200,7 +179,11 @@ if utils.is_valid_amavisd_address(sender) in ['domain', 'subdomain']:
     sender_is_domain = True
     sender_domain = sender.split('@', 1)[-1]
 
+# Connection cursor with web.py
 conn = get_db_conn('iredapd')
+
+# Connection cursor with SQLAlchemy
+conn2 = get_db_conn2('iredapd')
 
 gl_setting = lib_gl.get_gl_base_setting(account=rcpt, sender=sender)
 
@@ -208,7 +191,7 @@ gl_setting = lib_gl.get_gl_base_setting(account=rcpt, sender=sender)
 if action == 'enable':
     logger.info('* Enable greylisting: %s -> %s' % (sender, rcpt))
 
-    qr = lib_gl.enable_greylisting(conn=conn,
+    qr = lib_gl.enable_greylisting(conn=conn2,
                                    account=rcpt,
                                    sender=sender)
     if not qr[0]:
@@ -217,7 +200,7 @@ if action == 'enable':
 elif action == 'disable':
     logger.info('* Disable greylisting: %s -> %s' % (sender, rcpt))
 
-    qr = lib_gl.disable_greylisting(conn=conn,
+    qr = lib_gl.disable_greylisting(conn=conn2,
                                     account=rcpt,
                                     sender=sender)
 
@@ -226,7 +209,7 @@ elif action == 'disable':
 
 elif action == 'delete':
     logger.info('* Delete greylisting setting: %s -> %s' % (sender, rcpt))
-    qr = lib_gl.delete_setting(conn=conn,
+    qr = lib_gl.delete_setting(conn=conn2,
                                account=rcpt,
                                sender=sender)
 
@@ -235,11 +218,11 @@ elif action == 'delete':
 
 elif action == 'whitelist-domain':
     logger.info('* Whitelisting sender domain: %s' % sender_domain)
-    add_whitelist_domain(conn=conn, domain=sender_domain)
+    lib_gl.add_whitelist_domain(conn=conn2, domain=sender_domain)
 
 elif action == 'remove-whitelist-domain':
     logger.info('* Remove whitelisted sender domain: %s' % sender_domain)
-    remove_whitelisted_domain(conn=conn, domain=sender_domain)
+    lib_gl.remove_whitelisted_domain(conn=conn2, domain=sender_domain)
 
 elif action == 'list':
     # show existing greylisting settings.
