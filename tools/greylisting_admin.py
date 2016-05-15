@@ -10,7 +10,8 @@ os.environ['LC_ALL'] = 'C'
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 
-from libs import ACCOUNT_PRIORITIES, utils
+from libs import utils
+from libs import greylisting as lib_gl
 from tools import logger, get_db_conn
 
 web.config.debug = False
@@ -109,16 +110,6 @@ if len(sys.argv) == 1:
     sys.exit()
 
 
-def delete_setting(conn, sender, rcpt):
-    try:
-        # Delete existing record first.
-        conn.delete('greylisting',
-                    vars={'account': rcpt, 'sender': sender},
-                    where='account = $account AND sender = $sender')
-    except Exception, e:
-        logger.error(str(e))
-
-
 args = [v for v in sys.argv[1:]]
 
 #
@@ -181,7 +172,7 @@ if not '@' in rcpt:
     sys.exit('<<< ERROR >>> Invalid recipient address.')
 
 
-def whitelisting_domain(conn, domain):
+def add_whitelist_domain(conn, domain):
     # Insert domain into sql table `iredapd.greylisting_whitelist_domains`
     try:
         conn.insert('greylisting_whitelist_domains',
@@ -212,51 +203,40 @@ if utils.is_valid_amavisd_address(sender) in ['domain', 'subdomain']:
 
 conn = get_db_conn('iredapd')
 
-if action in ['enable', 'disable', 'delete']:
-    sender_type = utils.is_valid_amavisd_address(sender)
-    rcpt_type = utils.is_valid_amavisd_address(rcpt)
-
-    sender_priority = ACCOUNT_PRIORITIES.get(sender_type, 0)
-    rcpt_priority = ACCOUNT_PRIORITIES.get(rcpt_type, 0)
-
-    gl_setting = {'account': rcpt,
-                  'priority': rcpt_priority,
-                  'sender': sender,
-                  'sender_priority': sender_priority}
-
-    # Delete existing setting first.
-    delete_setting(conn=conn, sender=sender, rcpt=rcpt)
+gl_setting = lib_gl.get_gl_base_setting(account=rcpt, sender=sender)
 
 # Perform the operations
 if action == 'enable':
-    try:
-        logger.info('* Enable greylisting: %s -> %s' % (sender, rcpt))
+    logger.info('* Enable greylisting: %s -> %s' % (sender, rcpt))
 
-        gl_setting['active'] = 1
-        conn.insert('greylisting', **gl_setting)
-    except Exception, e:
-        logger.info(str(e))
+    qr = lib_gl.enable_greylisting(conn=conn,
+                                   account=rcpt,
+                                   sender=sender)
+    if not qr[0]:
+        logger.info(qr[1])
 
 elif action == 'disable':
-    try:
-        logger.info('* Disable greylisting: %s -> %s' % (sender, rcpt))
+    logger.info('* Disable greylisting: %s -> %s' % (sender, rcpt))
 
-        gl_setting['active'] = 0
-        conn.insert('greylisting', **gl_setting)
-    except Exception, e:
-        logger.info(str(e))
+    qr = lib_gl.disable_greylisting(conn=conn,
+                                    account=rcpt,
+                                    sender=sender)
+
+    if not qr[0]:
+        logger.info(qr[1])
 
 elif action == 'delete':
-    try:
-        logger.info('* Delete greylisting setting: %s -> %s' % (sender, rcpt))
-        conn.delete('greylisting_whitelists',
-                    where="account='%s' AND sender='%s'" % (rcpt, sender))
-    except Exception, e:
-        logger.info(str(e))
+    logger.info('* Delete greylisting setting: %s -> %s' % (sender, rcpt))
+    qr = lib_gl.delete_setting(conn=conn,
+                               account=rcpt,
+                               sender=sender)
+
+    if not qr[0]:
+        logger.info(qr[1])
 
 elif action == 'whitelist-domain':
     logger.info('* Whitelisting sender domain: %s' % sender_domain)
-    whitelisting_domain(conn=conn, domain=sender_domain)
+    add_whitelist_domain(conn=conn, domain=sender_domain)
 
 elif action == 'remove-whitelist-domain':
     logger.info('* Remove whitelisted sender domain: %s' % sender_domain)

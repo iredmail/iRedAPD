@@ -68,10 +68,10 @@ def get_user_record(conn, account, create_if_missing=True):
 
 def add_wblist(conn,
                account,
-               wl_senders=(),
-               bl_senders=(),
-               wl_rcpts=(),
-               bl_rcpts=(),
+               wl_senders=None,
+               bl_senders=None,
+               wl_rcpts=None,
+               bl_rcpts=None,
                flush_before_import=False):
     """Add white/blacklists for specified account.
 

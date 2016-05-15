@@ -4,7 +4,7 @@ import time
 from sqlalchemy import create_engine
 
 from libs.logger import logger
-from libs import SMTP_ACTIONS
+from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
 from libs import ipaddress
 import settings
 
@@ -383,3 +383,10 @@ def strip_mail_ext_address(mail, delimiters=None):
             return _user + '@' + _domain
 
     return mail
+
+
+def get_account_priority(account):
+    account_type = is_valid_amavisd_address(account)
+    priority = ACCOUNT_PRIORITIES.get(account_type, 0)
+
+    return priority
