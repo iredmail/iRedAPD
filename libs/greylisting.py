@@ -1,5 +1,15 @@
 from libs import utils
 
+def is_valid_sender(sender):
+    if utils.is_ip(sender) or \
+       utils.is_valid_amavisd_address(sender) in ['catchall',
+                                                  'top_level_domain',
+                                                  'domain', 'subdomain',
+                                                  'email']:
+        return True
+    else:
+        return False
+
 def get_gl_base_setting(account, sender):
     return {'account': account,
             'priority': utils.get_account_priority(account),

@@ -164,8 +164,7 @@ if '--to' in args:
     args.pop(index)
     args.pop(index)
 
-if not utils.is_ip(sender) or \
-   not utils.is_valid_amavisd_address(sender) in ['catchall', 'domain', 'subdomain', 'email']:
+if not lib_gl.is_valid_sender(sender):
     sys.exit('<<< ERROR >>> Invalid sender address.')
 
 if not '@' in rcpt:
