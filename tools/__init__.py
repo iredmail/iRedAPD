@@ -27,7 +27,7 @@ else:
     sys.exit('Error: Unsupported backend (%s).' % backend)
 
 # logging
-logger = logging.getLogger('iredapd')
+logger = logging.getLogger('iredapd-cmd')
 _ch = logging.StreamHandler(sys.stdout)
 _formatter = logging.Formatter('%(message)s')
 _ch.setFormatter(_formatter)
