@@ -53,7 +53,7 @@ def restriction(**kwargs):
         qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
                                          account=sasl_username,
                                          sender=recipient,
-                                         comment="AUTO-WHITELIST BY %s" % __name__)
+                                         comment='AUTO-WHITELISTED')
 
         if qr[0]:
             logger.debug('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))
