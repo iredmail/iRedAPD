@@ -356,7 +356,9 @@ def restriction(**kwargs):
                                              recipient=recipient,
                                              recipient_domain=recipient_domain,
                                              client_address=client_address):
-            if not settings.GREYLISTING_TRAINING_MODE:
+            if settings.GREYLISTING_TRAINING_MODE:
+                logger.debug("Running in greylisting training mode, bypass.")
+            else:
                 return action_greylisting
 
     return SMTP_ACTIONS['default']
