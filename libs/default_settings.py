@@ -119,6 +119,11 @@ ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = False
 # Reject reason for greylisting.
 GREYLISTING_MESSAGE = 'Intentional policy rejection, please try again later'
 
+# Training mode.
+# Greylisting plugin still analyze incoming emails and stores tracking info
+# in SQL database for greylisting purpose, but it doesn't reject emails.
+GREYLISTING_TRAINING_MODE = False
+
 # Time (in MINUTES) to wait before client retrying, client will be rejected if
 # retires too soon (in less than specified minutes). Defaults to 15 minutes.
 GREYLISTING_BLOCK_EXPIRE = 15

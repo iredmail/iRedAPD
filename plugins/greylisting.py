@@ -28,6 +28,13 @@ follows:
     * Increment the failed count on the matching row.
     * If the sender is the special case of the null sender, do not return a
       failure after RCPT, instead wait until after the DATA phase.
+
+#
+# Manage greylisting settings
+#
+Please manage greylisting settings with script 'tools/greylisting_admin.py'.
+Fore more details, please read our document:
+http://www.iredmail.org/manage.iredapd.html
 """
 
 import time
@@ -349,6 +356,7 @@ def restriction(**kwargs):
                                              recipient=recipient,
                                              recipient_domain=recipient_domain,
                                              client_address=client_address):
-            return action_greylisting
+            if not settings.GREYLISTING_TRAINING_MODE:
+                return action_greylisting
 
     return SMTP_ACTIONS['default']
