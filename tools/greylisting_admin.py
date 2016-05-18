@@ -59,6 +59,9 @@ USAGE = """Usage:
     --delete
         Delete specified greylisting setting.
 
+    --add-whitelist
+        Whitelist specified sender for greylisting service.
+
 Sample usages:
 
     * List all existing greylisting settings:
@@ -141,6 +144,9 @@ elif '--list-whitelist-domains' in args:
 elif '--list-whitelists' in args:
     action = 'list-whitelists'
     args.remove('--list-whitelists')
+elif '--add-whitelist' in args:
+    action = 'add-whitelist'
+    args.remove('--add-whitelist')
 else:
     sys.exit('<<< ERROR >>> No valid operation specified. Exit.')
 
@@ -227,7 +233,16 @@ elif action == 'remove-whitelist-domain':
 elif action == 'list':
     # show existing greylisting settings.
     try:
-        qr = conn.select('greylisting', order='priority DESC, sender_priority DESC')
+        if rcpt == '@.':
+            # Show all greylisting settings
+            qr = conn.select('greylisting', order='priority DESC, sender_priority DESC')
+        else:
+            # Show per-account greylisting settings
+            qr = conn.select('greylisting',
+                             vars={'account': rcpt},
+                             where='account=$account',
+                             order='priority DESC, sender_priority DESC')
+
         if not qr:
             logger.info('* No whitelists.')
             sys.exit()
@@ -270,10 +285,27 @@ elif action == 'list-whitelist-domains':
 elif action == 'list-whitelists':
     # show whitelisted senders in `greylisting_whitelists` table.
     try:
-        qr = conn.select('greylisting_whitelists', order='account ASC, sender ASC')
+        if rcpt == '@.':
+            # Show global whitelists
+            qr = conn.select('greylisting_whitelists', order='account ASC, sender ASC')
+        else:
+            # Show per-account whitelists
+            qr = conn.select('greylisting_whitelists',
+                             vars={'account': rcpt},
+                             where='account=$account',
+                             order='account ASC, sender ASC')
 
         for r in qr:
-            logger.info('%s -> %s "%s"' % (r.sender, r.account, r.comment))
+            logger.info('%s -> %s, "%s"' % (r.sender, r.account, r.comment))
+
+    except Exception, e:
+        logger.info(str(e))
+elif action == 'add-whitelist':
+    # show whitelisted senders in `greylisting_whitelists` table.
+    try:
+        qr = conn.insert('greylisting_whitelists',
+                         account=rcpt,
+                         sender=sender)
 
     except Exception, e:
         logger.info(str(e))

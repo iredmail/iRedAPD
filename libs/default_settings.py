@@ -59,7 +59,7 @@ RECIPIENT_DELIMITERS = ['+']
 # it just query 'w.x.y.z', 'w.x.y.*' and 'w.x.*.z' (wildcard). If enabled (True),
 # it will replace all possible fields by '*' as wildcard:
 #   w.x.y.z, w.x.y.*, w.x.*.z, w.*.y.z, *.x.y.z, w.x.*.*, w.*.*.*, ...
-ENABLE_ALL_WILDCARD_IP = True
+ENABLE_ALL_WILDCARD_IP = False
 
 # ---------------
 # Required by: plugins/amavisd_wblist.py
