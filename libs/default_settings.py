@@ -49,6 +49,8 @@ MYNETWORKS = []
 # Recipient delimiters. If you have multiple delimiters, please list them all.
 RECIPIENT_DELIMITERS = ['+']
 
+# SQL connection pool size
+SQL_CONNECTION_POOL_SIZE = 50
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
