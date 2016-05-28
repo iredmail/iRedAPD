@@ -32,7 +32,6 @@ def restriction(**kwargs):
     base_dn = kwargs['base_dn']
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
-    recipient_dn = kwargs['recipient_dn']
 
     recipient_alias_domains = []
 
@@ -67,9 +66,9 @@ def restriction(**kwargs):
                 return SMTP_ACTIONS['default'] + ' (Access policy: subdomain (%s))' % (d)
 
         return SMTP_ACTIONS['reject_not_authorized']
-    elif policy in ['membersonly', 'allowedonly', 'membersandmoderatorsonly']:
+    elif policy in ['membersonly', 'allowedonly', 'moderatorsonly', 'membersandmoderatorsonly']:
         allowed_senders = recipient_ldif.get('listAllowedUser', [])
-        if policy == 'allowedonly':
+        if policy in ['allowedonly', 'moderatorsonly']:
             if sender in allowed_senders \
                or sender_domain in allowed_senders \
                or '*@' + sender_domain in allowed_senders:
@@ -87,7 +86,7 @@ def restriction(**kwargs):
             allowed_senders=qr_allowed_senders,
         )
 
-        if policy == 'allowedonly':
+        if policy in ['allowedonly', 'moderatorsonly']:
             # Check allowed sender domain or sub-domains
             sender_domain = kwargs['sender_domain']
             all_possible_sender_domains = [sender_domain]

@@ -298,9 +298,9 @@ Below access policies are recognized in iRedAPD-1.4.0 and later releases:
 * `public`:  Unrestricted. Everyone can mail to this address.
 * `domain`: Only users under same domain can send mail to this address.
 * `subdomain`: Only users under same domain and sub-domains can send mail to this address.
-* `membersOnly`: Only members can send mail to this address.
-* `allowedOnly`: Only moderators can send mail to this address.
-* `membersAndModeratorsOnly`: Only members and moderators can send mail to this address.
+* `membersonly`: Only members can send mail to this address.
+* `moderatorsonly`: Only moderators can send mail to this address.
+* `membersandmoderatorsonly`: Only members and moderators can send mail to this address.
 
 **NOTE**:
 

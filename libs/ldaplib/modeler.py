@@ -132,6 +132,10 @@ class Modeler:
 
         try:
             conn_amavisd.close()
+        except:
+            pass
+
+        try:
             conn_iredapd.close()
         except:
             pass

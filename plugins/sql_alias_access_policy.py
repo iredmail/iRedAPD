@@ -100,6 +100,10 @@ def restriction(**kwargs):
     if not policy:
         policy = 'public'
 
+    # Use 'moderatorsonly' instead of 'allowedonly'
+    if policy == 'allowedonly':
+        policy = 'moderatorsonly'
+
     # Log access policy and description
     logger.debug('Access policy: %s' % policy)
 

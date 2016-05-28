@@ -64,6 +64,10 @@ def get_allowed_senders_of_mail_list(conn,
     basedn = domaindn
     search_scope = 2
 
+    # Use 'moderatorsonly' instead of 'allowedonly'
+    if policy == 'allowedonly':
+        policy = 'moderatorsonly'
+
     # Set search filter, attributes based on policy.
     # Override base dn, scope if necessary.
     if policy == MAILLIST_POLICY_MEMBERSONLY:
@@ -74,7 +78,7 @@ def get_allowed_senders_of_mail_list(conn,
                         ')'
 
         # Get both mail and shadowAddress.
-        search_attrs = ['mail', 'shadowAddress', ]
+        search_attrs = ['mail', 'shadowAddress']
     elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
         # Policy: policy==
         # Filter used to get both members and moderators.
