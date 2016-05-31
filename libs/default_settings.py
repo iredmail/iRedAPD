@@ -50,7 +50,7 @@ MYNETWORKS = []
 RECIPIENT_DELIMITERS = ['+']
 
 # SQL connection pool size
-SQL_CONNECTION_POOL_SIZE = 50
+SQL_CONNECTION_POOL_SIZE = 20
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
