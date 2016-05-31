@@ -25,6 +25,10 @@ INSERT INTO greylisting_whitelist_domains (domain) VALUES ('mail.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('mailchimp.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('mailgun.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('mailjet.com');
+
+-- Symantec
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('messagelabs.com');
+
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('microsoft.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('outlook.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('paypal.com');

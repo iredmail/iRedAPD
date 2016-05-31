@@ -2,9 +2,8 @@
 
 * `iRedMail`: All iRedMail versions should work as expected.
 * `Python` >= 2.4: core programming language.
-* `web.py` >= 0.34: utility used to parse URI.
+* `web.py` >= 0.37: utility used to parse URI.
 * `SQLAlchemy` >= 0.9: The Python SQL Toolkit and Object Relational Mapper.
-  iRedAPD just uses its sql connection pool, not ORM.
 * `Python-LDAP` >= 2.3.7: API to access LDAP directory servers from Python
   programs. Required by OpenLDAP backend.
 * `Python-MySQLdb` >= 1.2.2: Python DB API interface for MySQL database.
@@ -68,27 +67,30 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy python-webpy
 # cd /usr/ports/net/py-ldap2 && make install clean
 # cd /usr/ports/databases/py-MySQLdb && make install clean
 # cd /usr/ports/databases/py-sqlalchemy && make install clean
+# cd /usr/ports/www/webpy && make install clean
 
 # ---- For MySQL backend:
 # cd /usr/ports/databases/py-MySQLdb && make install clean
 # cd /usr/ports/databases/py-sqlalchemy && make install clean
+# cd /usr/ports/www/webpy && make install clean
 
 # ---- For PostgreSQL backend:
 # cd /usr/ports/databases/py-psycopg2 && make install clean
 # cd /usr/ports/databases/py-sqlalchemy && make install clean
+# cd /usr/ports/www/webpy && make install clean
 ```
 
 * on OpenBSD:
 
 ```
 # ---- For OpenLDAP backend:
-# pkg_add -r py-ldap py-mysql py-sqlalchemy
+# pkg_add -r py-ldap py-mysql py-sqlalchemy py-webpy
 
 # ---- For MySQL backend:
-# pkg_add -r py-mysql py-mysql py-sqlalchemy
+# pkg_add -r py-mysql py-mysql py-sqlalchemy py-webpy
 
 # ---- For PostgreSQL backend:
-# pkg_add -r py-psycopg2 py-mysql py-sqlalchemy
+# pkg_add -r py-psycopg2 py-mysql py-sqlalchemy py-webpy
 ```
 
 ## Download and configure iRedAPD
