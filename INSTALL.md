@@ -2,6 +2,7 @@
 
 * `iRedMail`: All iRedMail versions should work as expected.
 * `Python` >= 2.4: core programming language.
+* `web.py` >= 0.34: utility used to parse URI.
 * `SQLAlchemy` >= 0.9: The Python SQL Toolkit and Object Relational Mapper.
   iRedAPD just uses its sql connection pool, not ORM.
 * `Python-LDAP` >= 2.3.7: API to access LDAP directory servers from Python
@@ -36,25 +37,28 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 ```shell
 # ---- For OpenLDAP backend:
 # yum install python-ldap MySQL-python python-sqlalchemy
+# easy_install web.py
 
 # ---- For MySQL backend:
 # yum install MySQL-python python-sqlalchemy
+# easy_install web.py
 
 # ---- For PostgreSQL backend:
 # yum install python-pyscopg2 python-sqlalchemy
+# easy_install web.py
 ```
 
 * on Debian, Ubuntu:
 
 ```shell
 # —— For OpenLDAP backend:
-$ sudo apt-get install python-ldap python-mysqldb python-sqlalchemy
+$ sudo apt-get install python-ldap python-mysqldb python-sqlalchemy python-webpy
 
 # —— For MySQL backend:
-$ sudo apt-get install python-mysqldb python-sqlalchemy
+$ sudo apt-get install python-mysqldb python-sqlalchemy python-webpy
 
 # —— For PostgreSQL backend:
-$ sudo apt-get install python-psycopg2 python-sqlalchemy
+$ sudo apt-get install python-psycopg2 python-sqlalchemy python-webpy
 ```
 
 * on FreeBSD:
