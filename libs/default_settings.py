@@ -51,6 +51,10 @@ RECIPIENT_DELIMITERS = ['+']
 
 # SQL connection pool size
 SQL_CONNECTION_POOL_SIZE = 20
+
+# SQL connection recycle
+SQL_CONNECTION_POOL_RECYCLE = 360
+
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py

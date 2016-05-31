@@ -6,9 +6,11 @@ iRedAPD-1.9.2:
           'WL_RCPT_UPDATE_WHITELIST') for SASL authenticated sender.
 
     * Improvements:
-        - sqlAlchemy connection pool size is now increased to 50 by default,
-          configurable with parameter `SQL_CONNECTION_POOL_SIZE` in iRedAPD
-          config file.
+        - Reduce SQLAlchemy connection pool recycle to 360 (was 3600) to work
+          better on low traffic server.
+        - SQLAlchemy connection pool size and pool recycle are configurable
+          with parameter `SQL_CONNECTION_POOL_SIZE` and
+          `SQL_CONNECTION_POOL_RECYCLE` in iRedAPD config file.
         - tools/greylisting_admin.py::
             + able to specify IP address/network, email address as sender.
             + able to add/list per-account whitelists.
