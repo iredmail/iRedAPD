@@ -16,7 +16,7 @@ after upgrading iRedAPD.
 
 ## SMTP protocol state
 
-Plugins are applied to Postfix protocol state `RCPT` by default, 
+Plugins are applied to Postfix protocol state `RCPT` by default,
 if your plugin works in another protocol state, please explicitly set the
 protocol state with variable `SMTP_PROTOCOL_STATE` in plugin file. For example:
 

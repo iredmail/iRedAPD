@@ -3,7 +3,7 @@
 # Author: Zhang Huangbin (zhb@iredmail.org)
 
 ### BEGIN INIT INFO
-# Provides:          iredapd 
+# Provides:          iredapd
 # Required-Start:    $network $syslog
 # Required-Stop:     $network $syslog
 # Default-Start:     2 3 4 5

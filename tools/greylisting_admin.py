@@ -40,7 +40,7 @@ USAGE = """Usage:
     --to <to_address>
         Manage greylisting setting from email which is sent from <from_address>
         to <to_address>.
-        
+
         Valid formats for both <from_address> and <to_address>:
 
             - a single user: username@domain.com

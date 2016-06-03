@@ -16,11 +16,9 @@ else:
 
 SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
 
-wl_greylisting = settings.WL_RCPT_UPDATE_GREYLISTING
-wl_whitelist = settings.WL_RCPT_UPDATE_WHITELIST
 
 def restriction(**kwargs):
-    if not (wl_greylisting or wl_whitelist):
+    if not (settings.WL_RCPT_FOR_GREYLISTING or settings.WL_RCPT_FOR_WBLIST):
         logger.debug('No setting available: WL_RCPT_UPDATE_GREYLISTING, WL_RCPT_UPDATE_WHITELIST.')
         return SMTP_ACTIONS['default']
 
@@ -48,23 +46,37 @@ def restriction(**kwargs):
         logger.debug('Recipient domain is local domain, skip.')
         return SMTP_ACTIONS['default']
 
-    if wl_greylisting:
+    if WL_RCPT_FOR_GREYLISTING:
         conn_iredapd = kwargs['conn_iredapd']
-        qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
-                                         account=sasl_username,
-                                         sender=recipient,
-                                         comment='AUTO-WHITELISTED')
+
+        if settings.WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING:
+            # Whitelist recipient domain for greylisting
+            qr = lib_gl.add_whitelist_domain(conn=conn_iredapd,
+                                             domain=recipient_domain)
+        else:
+            # Whitelist recipient for greylisting
+            qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
+                                             account=sasl_username,
+                                             sender=recipient,
+                                             comment='AUTO-WHITELISTED')
 
         if qr[0]:
             logger.debug('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))
         else:
             logger.error('<!> Error while whitelisting address %s for greylisting service for local user %s: %s' % (recipient, sasl_username, qr[1]))
 
-    if wl_whitelist:
+    if settings.WL_RCPT_FOR_WBLIST:
         conn_amavisd = kwargs['conn_amavisd']
-        qr = wblist.add_wblist(conn=conn_amavisd,
-                               account=sasl_username,
-                               wl_senders=[recipient])
+        if settings.WL_RCPT_WHITELIST_DOMAIN_FOR_WBLIST:
+            # Whitelist recipient domain for wblist
+            qr = wblist.add_wblist(conn=conn_amavisd,
+                                   account=sasl_username,
+                                   wl_senders=['@' + recipient_domain])
+        else:
+            # Whitelist recipient domain for wblist
+            qr = wblist.add_wblist(conn=conn_amavisd,
+                                   account=sasl_username,
+                                   wl_senders=[recipient])
 
         if qr[0]:
             logger.debug('Address %s has been whitelisted for local user %s.' % (recipient, sasl_username))

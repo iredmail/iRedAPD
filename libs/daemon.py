@@ -134,12 +134,12 @@ def daemonize(noClose=False):
             # Parent. Exit using os._exit(), which doesn't fire any atexit
             # functions.
             os._exit(0)
-    
+
         # First child. Create a new session. os.setsid() creates the session
         # and makes this (child) process the process group leader. The process
         # is guaranteed not to have a control terminal.
         os.setsid()
-    
+
         # Ignore SIGHUP
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
@@ -149,22 +149,22 @@ def daemonize(noClose=False):
         if pid != 0:
             # Original child. Exit.
             os._exit(0)
-            
+
         # This is the second child. Set the umask.
         os.umask(UMASK)
-    
+
         # Go to a neutral corner (i.e., the primary file system, so
         # the daemon doesn't prevent some other file system from being
         # unmounted).
         os.chdir(WORKDIR)
-    
+
         # Unless noClose was specified, close all file descriptors.
         if not noClose:
             _redirectFileDescriptors()
 
     except Exception, e:
         raise DaemonError, 'Error during daemonizing: %s [%d]' % (e.strerror, e.errno)
-            
+
 
 # ---------------------------------------------------------------------------
 # Private functions
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     hdlr = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%T')
     hdlr.setFormatter(formatter)
-    log.addHandler(hdlr) 
+    log.addHandler(hdlr)
     log.setLevel(logging.DEBUG)
 
     log.debug('Before daemonizing, PID=%d' % os.getpid())

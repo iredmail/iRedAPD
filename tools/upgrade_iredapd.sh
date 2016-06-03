@@ -93,7 +93,7 @@ else
     exit 255
 fi
 
-export CRON_FILE="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
+export CRON_FILE_ROOT="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
 
 echo "* Detected Linux/BSD distribution: ${DISTRO}"
 
@@ -572,22 +572,22 @@ perl -pi -e 's#^(log_file).*#${1} = "$ENV{IREDAPD_LOG_FILE}"#' ${IREDAPD_CONF_PY
 # /opt/iRedAPD-* is owned by root user, so we have to add cron job for
 # root user instead of iredapd daemon user.
 [[ -d ${CRON_SPOOL_DIR} ]] || mkdir -p ${CRON_SPOOL_DIR} &>/dev/null
-if [[ ! -f ${CRON_FILE} ]]; then
-    touch ${CRON_FILE} &>/dev/null
-    chmod 0600 ${CRON_FILE} &>/dev/null
+if [[ ! -f ${CRON_FILE_ROOT} ]]; then
+    touch ${CRON_FILE_ROOT} &>/dev/null
+    chmod 0600 ${CRON_FILE_ROOT} &>/dev/null
 fi
 
 # cron job for cleaning up database.
-if ! grep '/opt/iredapd/tools/cleanup_db.py' ${CRON_FILE} &>/dev/null; then
-    cat >> ${CRON_FILE} <<EOF
+if ! grep '/opt/iredapd/tools/cleanup_db.py' ${CRON_FILE_ROOT} &>/dev/null; then
+    cat >> ${CRON_FILE_ROOT} <<EOF
 # iRedAPD: Clean up expired tracking records hourly.
 1   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/cleanup_db.py &>/dev/null
 EOF
 fi
 
 # cron job for updating IP addresses/networks of greylisting whitelist domains.
-if ! grep "${IREDAPD_ROOT_DIR}/tools/spf_to_greylisting_whitelists.py" ${CRON_FILE} &>/dev/null; then
-    cat >> ${CRON_FILE} <<EOF
+if ! grep 'spf_to_greylisting_whitelists.py' ${CRON_FILE_ROOT} &>/dev/null; then
+    cat >> ${CRON_FILE_ROOT} <<EOF
 # iRedAPD: Convert specified SPF DNS record of specified domain names to IP
 #          addresses/networks every 10 minutes.
 */30   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylist_whitelists.py &>/dev/null

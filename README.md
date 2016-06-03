@@ -6,7 +6,7 @@
 * License: GPL v3 (except file libs/daemon.py, BSD style as mentioned in this file by file author).
 * Author: Zhang Huangbin <zhb _at_ iredmail.org>.
 
-**NOTES**: 
+**NOTES**:
 
 * iRedAPD is a sub-project of [iRedMail project](http://www.iredmail.org).
 * iRedAPD is installed and enabled in iRedMail by default, so you don’t need

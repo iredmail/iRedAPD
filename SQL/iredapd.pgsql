@@ -125,8 +125,8 @@ CREATE INDEX idx_greylisting_whitelists_comment ON greylisting_whitelists (comme
 -- Note: these domain names are not used by iRedAPD directly, you need to setup
 --       a daily cron job to run 'tools/spf_to_greylisting_whitelists.sh' to
 CREATE TABLE greylisting_whitelist_domains (
-    id      SERIAL PRIMARY KEY,
-    domain  VARCHAR(255) NOT NULL DEFAULT ''
+    id          SERIAL PRIMARY KEY,
+    domain      VARCHAR(255) NOT NULL DEFAULT ''
 );
 
 CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whitelist_domains (domain);

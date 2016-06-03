@@ -2,8 +2,9 @@ iRedAPD-1.9.2:
     * New plugins:
         - plugins/whitelist_outbound_recipient.py: used to automatically
           whitelist outbound recipient for greylisting (parameter
-          'WL_RCPT_UPDATE_GREYLISTING') and/or normal whitelists (parameter
-          'WL_RCPT_UPDATE_WHITELIST') for SASL authenticated sender.
+          'WL_RCPT_FOR_GREYLISTING') and/or normal whitelists (parameter
+          'WL_RCPT_FOR_WBLIST') for SASL authenticated sender. Please
+          check comments in `libs/default_settings.py` for more details.
 
     * Improvements:
         - Reduce SQLAlchemy connection pool recycle to 360 (was 3600) to work
@@ -68,7 +69,7 @@ iRedAPD-1.8.0:
         - tools/spf_to_greylist_whitelists.py: it queries SPF DNS records of
           given domains and imports converted IP addresses/networks as
           greylisting whitelists.
-          
+
           if no domain name specified, it queries from NEW sql table
           "iredapd.greylisting_whitelist_domains".
 

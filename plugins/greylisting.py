@@ -2,39 +2,13 @@
 # Purpose: Greylisting.
 # Reference: http://greylisting.org/articles/whitepaper.shtml
 
+# TODO Support per-domain whitelisting for greylisting service.
+
 """
-Quote from http://greylisting.org/articles/whitepaper.shtml
------------------------------------------------------------
+* Please read tutorial below to understand how to manage greylisting settings:
+  http://www.iredmail.org/manage.iredapd.html
 
-The specific methodology for a fairly basic Greylisting implementation is as
-follows:
-
-* Check if we have seen this email triplet before.
-
-    * If we have not seen it, create a record describing it and return a
-      tempfail to the sending MTA.
-    * If we have seen it, and the block is not expired, return a tempfail to
-      the sending MTA.
-    * If we have seen it, and the block has expired, then pass the email.
-
-* If the delivery attempt should be passed and the delivery is successful:
-
-    * Increment the passed count on the matching row.
-    * Reset the expiration time of the record to be the standard lifetime past
-      the current time.
-
-* If the delivery attempt has been temporarily failed:
-
-    * Increment the failed count on the matching row.
-    * If the sender is the special case of the null sender, do not return a
-      failure after RCPT, instead wait until after the DATA phase.
-
-#
-# Manage greylisting settings
-#
-Please manage greylisting settings with script 'tools/greylisting_admin.py'.
-Fore more details, please read our document:
-http://www.iredmail.org/manage.iredapd.html
+* Understand greylisting: http://greylisting.org/articles/whitepaper.shtml
 """
 
 import time

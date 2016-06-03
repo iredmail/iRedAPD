@@ -147,11 +147,42 @@ GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 2
 # Required by: plugins/whitelist_outbound_recipient.py
 #
 # Whitelist outbound recipient for greylisting service.
-WL_RCPT_UPDATE_GREYLISTING = True
+#
+# Note: Default is whitelisting recipient email address for the (local) sender,
+#          +----------------------------+
+#       so | it's a per-user whitelist. | If you want to whitelist whole
+#          +----------------------------+
+#       recipient domain globally, please check setting
+#       `WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING` below.
+WL_RCPT_FOR_GREYLISTING = True
+
+# Whitelist domain of recipient.
+#
+# Notes:
+#
+#   *) this will submit domain to SQL table
+#      `iredapd.greylisting_whitelist_domains` and waiting for cron job
+#      `spf_to_greylisting_whitelists.py` to whitelist IP addresses/networks
+#      in SPF/MX/A records of the domain.
+#
+#      +----------------------- WARNING -----------------------------+
+#   *) | The domain is whitelisted for greylisting service globally. |
+#      +-------------------------------------------------------------+
+#      This should be useful if your mail server just serve your own company.
+WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING = False
 
 # Whitelist outbound recipient as normal whitelist which works for iRedAPD
 # plugin `amavisd_wblist`, and also works after-queue in Amavisd.
-WL_RCPT_UPDATE_WHITELIST = False
+#                 +---------------------+
+# Note: this is a | per-user whitelist. |
+#                 +---------------------+
+WL_RCPT_FOR_WBLIST = False
+
+# Whitelist domain of recipient instead of full recipient email address.
+#                 +---------------------+
+# Note: this is a | per-user whitelist. |
+#                 +---------------------+
+WL_RCPT_WHITELIST_DOMAIN_FOR_WBLIST = False
 
 # --------------
 # Required by: plugins/throttle.py
