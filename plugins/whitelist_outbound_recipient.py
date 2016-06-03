@@ -53,6 +53,11 @@ def restriction(**kwargs):
             # Whitelist recipient domain for greylisting
             qr = lib_gl.add_whitelist_domain(conn=conn_iredapd,
                                              domain=recipient_domain)
+
+            if qr[0]:
+                logger.debug('Domain %s has been whitelisted globally for greylisting service.' % recipient_domain)
+            else:
+                logger.error('<!> Error while whitelisting domain %s globally for greylisting service: %s' % (recipient_domain, qr[1]))
         else:
             # Whitelist recipient for greylisting
             qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
@@ -60,10 +65,10 @@ def restriction(**kwargs):
                                              sender=recipient,
                                              comment='AUTO-WHITELISTED')
 
-        if qr[0]:
-            logger.debug('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))
-        else:
-            logger.error('<!> Error while whitelisting address %s for greylisting service for local user %s: %s' % (recipient, sasl_username, qr[1]))
+            if qr[0]:
+                logger.debug('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))
+            else:
+                logger.error('<!> Error while whitelisting address %s for greylisting service for local user %s: %s' % (recipient, sasl_username, qr[1]))
 
     if settings.WL_RCPT_FOR_WBLIST:
         conn_amavisd = kwargs['conn_amavisd']
@@ -72,15 +77,20 @@ def restriction(**kwargs):
             qr = wblist.add_wblist(conn=conn_amavisd,
                                    account=sasl_username,
                                    wl_senders=['@' + recipient_domain])
+
+            if qr[0]:
+                logger.debug('Domain %s has been whitelisted for local user %s.' % (recipient_domain, sasl_username))
+            else:
+                logger.error('<!> Error while whitelisting domain %s for local user %s: %s' % (recipient_domain, sasl_username, qr[1]))
         else:
             # Whitelist recipient domain for wblist
             qr = wblist.add_wblist(conn=conn_amavisd,
                                    account=sasl_username,
                                    wl_senders=[recipient])
 
-        if qr[0]:
-            logger.debug('Address %s has been whitelisted for local user %s.' % (recipient, sasl_username))
-        else:
-            logger.error('<!> Error while whitelisting address %s for local user %s: %s' % (recipient, sasl_username, qr[1]))
+            if qr[0]:
+                logger.debug('Address %s has been whitelisted for local user %s.' % (recipient, sasl_username))
+            else:
+                logger.error('<!> Error while whitelisting address %s for local user %s: %s' % (recipient, sasl_username, qr[1]))
 
     return SMTP_ACTIONS['default']
