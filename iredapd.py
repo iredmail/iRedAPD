@@ -187,7 +187,7 @@ class DaemonSocket(asyncore.dispatcher):
         for plugin in ordered_plugins:
             try:
                 self.loaded_plugins.append(__import__(plugin))
-                logger.info('Loading plugin: %s (priority: %s)' % (plugin, _plugin_priorities[plugin]))
+                logger.info('Loading plugin (priority: %s): %s' % (_plugin_priorities[plugin], plugin))
             except Exception, e:
                 logger.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
 
