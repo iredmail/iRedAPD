@@ -27,19 +27,38 @@ source files to understand how it works and what it does.
 
 ## Plugins for all backends
 
+* `reject_to_hostname`: reject emails sent to `xxx@<server hostname>` from
+  external network.
 * `reject_sender_login_mismatch`: Reject sender login mismatch (addresses in
   `From:` and SASL username). It will verify user alias addresses against
   SQL/LDAP database.
 
+    This plugin also verifies forged sender address, e.g. sending email as
+    a local domain to local domain.
+
 * `reject_null_sender`: Reject message submitted by sasl authenticated user but
-  specifying null sender in `From:` header (`from=<>` in Postfix log).
-  RECOMMEND to enable this plugin.
+  use null sender in `From:` header (`from=<>` in Postfix log).
+  RECOMMENDED to enable this plugin. It doesn't require SQL/LDAP query.
 
     If your user's password was cracked by spammer, spammer can use
     this account to bypass smtp authentication, but with a null sender
     in `From:` header, throttling won't be triggered.
 
 * `amavisd_wblist`: Whitelist/blacklist for both inbound and outbound messages.
+
+    The white/blacklists are used by both iRedAPD (before-queue) and Amavisd
+    (after-queue).
+
+* `greylisting`: for greylisting service.
+* `throttle`: Throttling based on:
+    * max number of mail messages sent/received in specified period of time
+    * total mail size sent in specified period of time
+    * size of single message
+
+* `whitelist_outbound_recipient`: automatically whitelist recipient addresses
+  of outgoing emails sent by sasl authenticated (local) users. It's able to
+  whitelist single recipient address or domain for greylisting and normal
+  white/blacklist.
 
 ## Plugins for OpenLDAP backend
 
@@ -50,4 +69,3 @@ source files to understand how it works and what it does.
 
 * `sql_alias_access_policy`: restrict who can send email to mail alias.
 * `sql_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
-
