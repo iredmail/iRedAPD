@@ -92,7 +92,7 @@ def apply_plugin(plugin, **kwargs):
         action = plugin.restriction(**kwargs)
         logger.debug('<-- Result: %s' % action)
     except Exception, e:
-        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, str(e)))
+        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, repr(e)))
 
     return action
 
