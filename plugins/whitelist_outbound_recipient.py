@@ -46,7 +46,7 @@ def restriction(**kwargs):
         logger.debug('Recipient domain is local domain, skip.')
         return SMTP_ACTIONS['default']
 
-    if WL_RCPT_FOR_GREYLISTING:
+    if settings.WL_RCPT_FOR_GREYLISTING:
         conn_iredapd = kwargs['conn_iredapd']
 
         if settings.WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING:
