@@ -3,7 +3,7 @@ authenticated sender."""
 
 from libs import SMTP_ACTIONS
 from libs import greylisting as lib_gl
-from libs import wblist
+#from libs import wblist
 from libs.utils import is_email
 from libs.logger import logger
 
@@ -70,6 +70,7 @@ def restriction(**kwargs):
             else:
                 logger.error('<!> Error while whitelisting address %s for greylisting service for local user %s: %s' % (recipient, sasl_username, qr[1]))
 
+    """
     if settings.WL_RCPT_FOR_WBLIST:
         conn_amavisd = kwargs['conn_amavisd']
 
@@ -94,5 +95,6 @@ def restriction(**kwargs):
                 logger.debug('Address %s has been whitelisted for local user %s.' % (recipient, sasl_username))
             else:
                 logger.error('<!> Error while whitelisting address %s for local user %s: %s' % (recipient, sasl_username, repr(qr)))
+    """
 
     return SMTP_ACTIONS['default']

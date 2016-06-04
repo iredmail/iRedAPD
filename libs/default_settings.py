@@ -176,13 +176,13 @@ WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING = False
 #                 +---------------------+
 # Note: this is a | per-user whitelist. |
 #                 +---------------------+
-WL_RCPT_FOR_WBLIST = False
+#WL_RCPT_FOR_WBLIST = False
 
 # Whitelist domain of recipient instead of full recipient email address.
 #                 +---------------------+
 # Note: this is a | per-user whitelist. |
 #                 +---------------------+
-WL_RCPT_WHITELIST_DOMAIN_FOR_WBLIST = False
+#WL_RCPT_WHITELIST_DOMAIN_FOR_WBLIST = False
 
 # --------------
 # Required by: plugins/throttle.py
