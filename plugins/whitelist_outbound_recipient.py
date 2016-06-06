@@ -18,7 +18,7 @@ SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
 
 
 def restriction(**kwargs):
-    if not (settings.WL_RCPT_FOR_GREYLISTING or settings.WL_RCPT_FOR_WBLIST):
+    if not settings.WL_RCPT_FOR_GREYLISTING:
         logger.debug('No setting available: WL_RCPT_UPDATE_GREYLISTING, WL_RCPT_UPDATE_WHITELIST.')
         return SMTP_ACTIONS['default']
 
@@ -55,7 +55,7 @@ def restriction(**kwargs):
                                              domain=recipient_domain)
 
             if qr[0]:
-                logger.debug('Domain %s has been whitelisted globally for greylisting service.' % recipient_domain)
+                logger.info('Domain %s has been whitelisted globally for greylisting service.' % recipient_domain)
             else:
                 logger.error('<!> Error while whitelisting domain %s globally for greylisting service: %s' % (recipient_domain, qr[1]))
         else:
@@ -66,35 +66,8 @@ def restriction(**kwargs):
                                              comment='AUTO-WHITELISTED')
 
             if qr[0]:
-                logger.debug('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))
+                logger.info('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))
             else:
                 logger.error('<!> Error while whitelisting address %s for greylisting service for local user %s: %s' % (recipient, sasl_username, qr[1]))
-
-    """
-    if settings.WL_RCPT_FOR_WBLIST:
-        conn_amavisd = kwargs['conn_amavisd']
-
-        if settings.WL_RCPT_WHITELIST_DOMAIN_FOR_WBLIST:
-            # Whitelist recipient domain for wblist
-            qr = wblist.add_wblist(conn=conn_amavisd,
-                                   account=sasl_username,
-                                   wl_senders=['@' + recipient_domain])
-
-            if qr[0]:
-                logger.debug('Domain %s has been whitelisted for local user %s.' % (recipient_domain, sasl_username))
-            else:
-                logger.error('<!> Error while whitelisting domain %s for local user %s: %s' % (recipient_domain, sasl_username, repr(qr)))
-        else:
-            # Whitelist recipient domain for wblist
-            qr = wblist.add_wblist(conn=conn_amavisd,
-                                   account=sasl_username,
-                                   wl_senders=[recipient])
-
-            logger.debug('%s' % repr(qr))
-            if qr[0]:
-                logger.debug('Address %s has been whitelisted for local user %s.' % (recipient, sasl_username))
-            else:
-                logger.error('<!> Error while whitelisting address %s for local user %s: %s' % (recipient, sasl_username, repr(qr)))
-    """
 
     return SMTP_ACTIONS['default']

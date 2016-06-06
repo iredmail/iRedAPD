@@ -171,19 +171,6 @@ WL_RCPT_FOR_GREYLISTING = True
 #      This should be useful if your mail server just serve your own company.
 WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING = False
 
-# Whitelist outbound recipient as normal whitelist which works for iRedAPD
-# plugin `amavisd_wblist`, and also works after-queue in Amavisd.
-#                 +---------------------+
-# Note: this is a | per-user whitelist. |
-#                 +---------------------+
-#WL_RCPT_FOR_WBLIST = False
-
-# Whitelist domain of recipient instead of full recipient email address.
-#                 +---------------------+
-# Note: this is a | per-user whitelist. |
-#                 +---------------------+
-#WL_RCPT_WHITELIST_DOMAIN_FOR_WBLIST = False
-
 # --------------
 # Required by: plugins/throttle.py
 #
