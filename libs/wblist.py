@@ -375,7 +375,7 @@ def delete_all_wblist(conn,
         if bl_rcpts:
             conn.delete('outbound_wblist',
                         vars={'user_id': user_id},
-                                  where="sid=$user_id AND wb='B'")
+                        where="sid=$user_id AND wb='B'")
 
     except Exception, e:
         return (False, str(e))
@@ -434,5 +434,3 @@ def get_account_wblist(conn,
                    'blacklist': bl,
                    'outbound_whitelist': outbound_wl,
                    'outbound_blacklist': outbound_bl})
-
-

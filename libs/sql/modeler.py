@@ -14,8 +14,8 @@ class Modeler:
                     plugins=[],
                     **kwargs):
         # No sender or recipient in smtp session.
-        if not 'sender' in smtp_session_data or \
-           not 'recipient' in smtp_session_data:
+        if 'sender' not in smtp_session_data or \
+           'recipient' not in smtp_session_data:
             return SMTP_ACTIONS['default']
 
         # No plugins available.
@@ -59,7 +59,7 @@ class Modeler:
             except:
                 target_smtp_protocol_state = ['RCPT']
 
-            if not smtp_protocol_state in target_smtp_protocol_state:
+            if smtp_protocol_state not in target_smtp_protocol_state:
                 logger.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
                 continue
 

@@ -3,7 +3,6 @@ authenticated sender."""
 
 from libs import SMTP_ACTIONS
 from libs import greylisting as lib_gl
-#from libs import wblist
 from libs.utils import is_email
 from libs.logger import logger
 

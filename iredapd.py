@@ -28,7 +28,7 @@ from libs.utils import get_db_conn
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
 sys.path.append(plugin_dir)
 
-if not settings.backend in ['ldap', 'mysql', 'pgsql']:
+if settings.backend not in ['ldap', 'mysql', 'pgsql']:
     sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
 
 if settings.backend == 'ldap':

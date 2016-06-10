@@ -112,8 +112,6 @@
 #                        10240000,
 #                        100,
 #                        4096000000);
-#
-#-------------
 
 import time
 from libs.logger import logger
