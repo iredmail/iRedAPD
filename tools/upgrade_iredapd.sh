@@ -542,6 +542,13 @@ rm -f ${IREDAPD_ROOT_DIR}/plugins/sql_user_restrictions.py &>/dev/null
 rm -f ${IREDAPD_ROOT_DIR}/plugins/amavisd_message_size_limit.py &>/dev/null
 
 #------------------------------
+# Remove old plugins
+#
+echo "* Rename old plugins."
+perl -pi -e 's#sql_force_change_password_in_days#sql_force_change_password#g' ${IREDAPD_CONF_PY}
+perl -pi -e 's#ldap_force_change_password_in_days#ldap_force_change_password#g' ${IREDAPD_CONF_PY}
+
+#------------------------------
 # Log rotate
 #
 # Create directory which is used to store log files.
