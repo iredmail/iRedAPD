@@ -15,6 +15,10 @@ iRedAPD-1.9.2:
             + able to specify IP address/network, email address as sender.
             + able to add/list per-account whitelists.
 
+    * Fixed issues:
+        - Throttle plugin cannot handle email which has multiple recipients.
+          Thanks to Andrea <info _at_ nili.ca> for the report.
+
 iRedAPD-1.9.1:
     * Fixed issues:
         - Not correctly handle nested 'include:' tag in

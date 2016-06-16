@@ -22,7 +22,7 @@ class Modeler:
         if not plugins:
             return 'DUNNO'
 
-        smtp_protocol_state = smtp_session_data['protocol_state'].upper()
+        protocol_state = smtp_session_data['protocol_state'].upper()
         sender = smtp_session_data.get('sender', '')
         recipient = smtp_session_data.get('recipient', '')
         client_address = smtp_session_data.get('client_address', '')
@@ -55,31 +55,24 @@ class Modeler:
         for plugin in plugins:
             # Get plugin target smtp protocol state
             try:
-                target_smtp_protocol_state = plugin.SMTP_PROTOCOL_STATE
+                target_protocol_state = plugin.SMTP_PROTOCOL_STATE
             except:
-                target_smtp_protocol_state = ['RCPT']
+                target_protocol_state = ['RCPT']
 
-            if smtp_protocol_state not in target_smtp_protocol_state:
-                logger.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, smtp_protocol_state))
+            if protocol_state not in target_protocol_state:
+                logger.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, protocol_state))
                 continue
 
             action = utils.apply_plugin(plugin, **plugin_kwargs)
+
+            try:
+                conn_vmail.close()
+                conn_amavisd.close()
+                conn_iredapd.close()
+            except:
+                pass
+
             if not action.startswith('DUNNO'):
                 return action
-
-        try:
-            conn_vmail.close()
-        except:
-            pass
-
-        try:
-            conn_amavisd.close()
-        except:
-            pass
-
-        try:
-            conn_iredapd.close()
-        except:
-            pass
 
         return SMTP_ACTIONS['default']

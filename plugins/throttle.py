@@ -26,7 +26,21 @@
 # *) Enable this plugin in iRedAPD config file /opt/iredapd/settings.py.
 # *) Restart both iRedAPD and Postfix services.
 
-# Technical details
+# Technical details of Postfix policy
+# -------------
+#
+# if email has multiple recipients:
+#
+#   *) Postfix send policy request at RCPT state for each recipient. Policy
+#      server knows the recipient address, but not `recipient_count`.
+#
+#   *) Postfix send ONLY ONE policy request at END-OF-MESSAGE state. Policy
+#      server doesn't know the recipient address, but knows `recipient_count`.
+#
+#   *) If some recipients were rejected at RCPT state, Postfix will correctly
+#      store the number of final recipients in `recipient_count`.
+
+# Technical details of throttle plugin
 # -------------
 #
 # Currently you may throttle based on:
@@ -134,6 +148,8 @@ def apply_throttle(conn,
                    client_address,
                    protocol_state,
                    size,
+                   recipient_count,
+                   instance_id,
                    is_sender_throttling=True):
     possible_addrs = [client_address, '@ip']
 
@@ -198,7 +214,7 @@ def apply_throttle(conn,
         t_setting_keys[(_id, _account)] = []
         t_setting_ids[_id] = _account
 
-        if continue_check_msg_size and _msg_size >= 0:
+        if continue_check_msg_size and _msg_size > 0:
             continue_check_msg_size = False
             t_settings['msg_size'] = {'value': _msg_size,
                                       'period': _period,
@@ -213,7 +229,7 @@ def apply_throttle(conn,
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'msg_size=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['msg_size']
 
-        if continue_check_max_msgs and _max_msgs >= 0:
+        if continue_check_max_msgs and _max_msgs > 0:
             continue_check_max_msgs = False
             t_settings['max_msgs'] = {'value': _max_msgs,
                                       'period': _period,
@@ -228,7 +244,7 @@ def apply_throttle(conn,
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'max_msgs=%(value)d/id=%(tid)d/account=%(account)s; ' % t_settings['max_msgs']
 
-        if continue_check_max_quota and _max_quota >= 0:
+        if continue_check_max_quota and _max_quota > 0:
             continue_check_max_quota = False
             t_settings['max_quota'] = {'value': _max_quota,
                                        'period': _period,
@@ -329,7 +345,11 @@ def apply_throttle(conn,
             _init_time = int(t_settings['max_msgs'].get('init_time', 0))
             _last_time = int(t_settings['max_msgs'].get('last_time', 0))
 
-            if max_msgs_cur_msgs >= max_msgs > 0:
+            # Get the real cur_msgs (if mail contains multiple recipients, we
+            # need to count them all)
+            _real_max_msgs_cur_msgs = max_msgs_cur_msgs + settings.GLOBAL_SESSION_TRACKING[instance_id]['processed']
+
+            if _real_max_msgs_cur_msgs >= max_msgs > 0:
                 logger.info('[%s] [%s] Exceeds %s throttle for max_msgs, current: %d. (%s)' % (client_address,
                                                                                                user,
                                                                                                throttle_type,
@@ -441,11 +461,11 @@ def apply_throttle(conn,
 
                     if v['expired']:
                         _sql += ['init_time = %d' % now]
-                        _sql += ['cur_msgs = 1']
+                        _sql += ['cur_msgs = %d' % recipient_count]
                         _sql += ['cur_quota = %d' % size]
                     else:
                         _sql += ['init_time = %d' % v['init_time']]
-                        _sql += ['cur_msgs = cur_msgs + 1']
+                        _sql += ['cur_msgs = cur_msgs + %d' % recipient_count]
                         _sql += ['cur_quota = cur_quota + %d' % size]
 
                     sql_updates[tracking_id] = _sql
@@ -454,7 +474,7 @@ def apply_throttle(conn,
                     # no tracking record. insert new one.
                     # (tid, account, cur_msgs, period, cur_quota, init_time, last_time)
                     if not (tid, k) in sql_inserts:
-                        _sql = '(%d, %s, 1, %d, %d, %d, %d)' % (tid, sqlquote(k), v['period'], size, now, now)
+                        _sql = '(%d, %s, %d, %d, %d, %d, %d)' % (tid, sqlquote(k), recipient_count, v['period'], size, now, now)
 
                         sql_inserts.append(_sql)
 
@@ -494,8 +514,13 @@ def restriction(**kwargs):
     recipient = kwargs['recipient']
     recipient_domain = kwargs['recipient_domain']
     client_address = kwargs['client_address']
-    protocol_state = kwargs['smtp_session_data']['protocol_state']
-    size = kwargs['smtp_session_data']['size']
+
+    smtp_session_data = kwargs['smtp_session_data']
+    protocol_state = smtp_session_data['protocol_state']
+    size = smtp_session_data['size']
+    recipient_count = int(smtp_session_data['recipient_count'])
+    instance_id = smtp_session_data['instance']
+
     if size:
         size = int(size)
     else:
@@ -517,6 +542,8 @@ def restriction(**kwargs):
                                 client_address=client_address,
                                 protocol_state=protocol_state,
                                 size=size,
+                                recipient_count=recipient_count,
+                                instance_id=instance_id,
                                 is_sender_throttling=True)
 
         if not action.startswith('DUNNO'):
@@ -532,6 +559,8 @@ def restriction(**kwargs):
                                 client_address=client_address,
                                 protocol_state=protocol_state,
                                 size=size,
+                                recipient_count=recipient_count,
+                                instance_id=instance_id,
                                 is_sender_throttling=False)
 
         if not action.startswith('DUNNO'):

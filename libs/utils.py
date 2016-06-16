@@ -355,7 +355,6 @@ def pretty_left_seconds(seconds=0):
     if left_seconds:
         r += ['%d seconds' % left_seconds]
 
-    logger.info('debug left 2: %s' % str(r))
     if r:
         return 'time left: ' + ', '.join(r)
     else:

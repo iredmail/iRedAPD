@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 import pwd
 import socket
 import asyncore
@@ -84,7 +85,25 @@ class PolicyChannel(asynchat.async_chat):
                     logger.debug('Drop invalid smtp session input: %s' % line)
 
         elif self.smtp_session_data:
+            # Count recipients at RCPT state, data will be used in 'END-OF-MESSAGE'
+            _instance = self.smtp_session_data['instance']
+            _protocol_state = self.smtp_session_data['protocol_state']
+
+            if _protocol_state == 'RCPT':
+                if _instance not in settings.GLOBAL_SESSION_TRACKING:
+                    # tracking data should be removed/expired in 120 seconds to
+                    # avoid infinitely increased memory if some tracking data
+                    # was not removed.
+                    _tracking_expired = int(time.time())
+
+                    # @processed: processed smtp session
+                    settings.GLOBAL_SESSION_TRACKING[_instance] = {'processed': 0,
+                                                                   'expired': _tracking_expired}
+                else:
+                    settings.GLOBAL_SESSION_TRACKING[_instance]['processed'] += 1
+
             try:
+                # Call modeler can apply plugins in `handle_data`
                 modeler = Modeler(conns=self.db_conns)
                 result = modeler.handle_data(
                     smtp_session_data=self.smtp_session_data,
@@ -99,6 +118,16 @@ class PolicyChannel(asynchat.async_chat):
             except Exception, e:
                 action = SMTP_ACTIONS['default']
                 logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
+
+            if _protocol_state == 'END-OF-MESSAGE':
+                # Cleanup settings.GLOBAL_SESSION_TRACKING
+                if _instance in settings.GLOBAL_SESSION_TRACKING:
+                    settings.GLOBAL_SESSION_TRACKING.pop(_instance)
+                else:
+                    # Remove expired data.
+                    for i in settings.GLOBAL_SESSION_TRACKING:
+                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 120 < int(time.time()):
+                            settings.GLOBAL_SESSION_TRACKING
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended")
@@ -262,6 +291,12 @@ def main():
 
     # Run as daemon user
     os.setuid(uid)
+
+    # Create a global dict used to track smtp session data.
+    #   - gather data at RCPT state
+    #   - used in END-OF-MESSAGE state
+    #   - clean up after applied all enabled plugins
+    settings.GLOBAL_SESSION_TRACKING = {}
 
     # Starting loop.
     try:
