@@ -128,13 +128,13 @@ class Modeler:
             # Apply plugins
             action = utils.apply_plugin(plugin, **plugin_kwargs)
 
-            try:
-                conn_amavisd.close()
-                conn_iredapd.close()
-            except:
-                pass
-
             if not action.startswith('DUNNO'):
                 return action
+
+        try:
+            conn_amavisd.close()
+            conn_iredapd.close()
+        except:
+            pass
 
         return SMTP_ACTIONS['default']
