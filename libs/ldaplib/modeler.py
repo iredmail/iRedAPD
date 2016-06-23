@@ -131,6 +131,7 @@ class Modeler:
             if not action.startswith('DUNNO'):
                 return action
 
+        # Close sql connections.
         try:
             conn_amavisd.close()
             conn_iredapd.close()

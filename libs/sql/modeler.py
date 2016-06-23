@@ -68,6 +68,7 @@ class Modeler:
             if not action.startswith('DUNNO'):
                 return action
 
+        # Close sql connections.
         try:
             conn_vmail.close()
             conn_amavisd.close()
