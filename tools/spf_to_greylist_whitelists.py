@@ -292,7 +292,6 @@ def query_spf_of_included_domains(domains, queried_domains=None, returned_ips=No
         else:
             logger.debug('\t\t+ [include: %s] empty' % domain)
 
-        #queried_domains.add('spf:' + domain)
         qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_spf = qr['ips']
@@ -405,14 +404,5 @@ if submit_to_sql_db:
     for d in domains:
         try:
             conn.insert('greylisting_whitelist_domains', domain=d)
-        except Exception, e:
-            logger.error('<<< ERROR >>> %s' % str(e))
-
-        # Delete tracking data.
-        # Since domain is whitelisted, we don't need tracking data anymore.
-        try:
-            conn.delete('greylisting_tracking',
-                        vars={'domain': d},
-                        where='sender_domain=$domain')
         except Exception, e:
             logger.error('<<< ERROR >>> %s' % str(e))

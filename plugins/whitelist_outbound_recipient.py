@@ -1,5 +1,6 @@
-"""Automatically disable greylisting for recipient in outgoing email for SASL
-authenticated sender."""
+# Author: Zhang Huangbin <zhb _at_ iredmail.org>
+# Purpose: Automatically whitelist recipient or recipient domain for
+#          greylisting service.
 
 from libs import SMTP_ACTIONS
 from libs import greylisting as lib_gl
