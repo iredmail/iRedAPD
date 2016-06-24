@@ -6,6 +6,7 @@ iRedAPD-1.9.2:
           `libs/default_settings.py` for more details.
 
     * Improvements:
+        - Get full traceback if error occurs while applying plugin.
         - Reduce SQLAlchemy connection pool recycle to 360 (was 3600) to work
           better on low traffic server.
         - SQLAlchemy connection pool size and pool recycle are configurable
@@ -22,7 +23,7 @@ iRedAPD-1.9.2:
 iRedAPD-1.9.1:
     * Fixed issues:
         - Not correctly handle nested 'include:' tag in
-          tools/spf_to_greylisting_whitelists.py (bug introduced in v1.9.0).
+          tools/spf_to_greylist_whitelists.py (bug introduced in v1.9.0).
 
 iRedAPD-1.9.0:
     * Improvements:
@@ -37,7 +38,7 @@ iRedAPD-1.9.0:
             * remove a whitelisted domain (--remove-whitelist-domain)
             * delete tracking data after whitelisted a sender domain
 
-        + tools/spf_to_greylisting_whitelists.py:
+        + tools/spf_to_greylist_whitelists.py:
             * store whitelist sender domain in sql db (--submit)
 
         + tools/cleanup_db.py: remove old action logs which are stored in
@@ -49,7 +50,7 @@ iRedAPD-1.9.0:
           Thanks Ivan Novokhatski <de7 _at_ deseven.info> for the report.
         - Infinite loop caused by improper SPF record which contains itself.
         - Improper type of sql columns: throttle.{msg_size,max_quota,max_msgs}.
-        - tools/spf_to_greylisting_whitelists.py: not combine splited IP
+        - tools/spf_to_greylist_whitelists.py: not combine splited IP
           address in returned SPF record. For example, it may return value
           like "[..., '192.168.1', '0.20', ...]", but it should be
           "[..., '192.168.10.20', ...]".
@@ -62,7 +63,7 @@ iRedAPD-1.8.0:
 
       Note: these domain names are not used by iRedAPD plugin `greylisting`
             directly, you need to setup a daily cron job to run script
-            'tools/spf_to_greylisting_whitelists.py' to whitelist IP addresses
+            'tools/spf_to_greylist_whitelists.py' to whitelist IP addresses
             and networks of their mail servers.
 
     * New script:

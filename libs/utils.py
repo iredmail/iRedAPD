@@ -1,3 +1,5 @@
+import sys
+import traceback
 import re
 import time
 import socket
@@ -91,8 +93,10 @@ def apply_plugin(plugin, **kwargs):
     try:
         action = plugin.restriction(**kwargs)
         logger.debug('<-- Result: %s' % action)
-    except Exception, e:
-        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, repr(e)))
+    except:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        err_msg = repr(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, err_msg))
 
     return action
 
