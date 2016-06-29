@@ -156,6 +156,21 @@ GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 2
 #       `WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING` below.
 WL_RCPT_FOR_GREYLISTING = True
 
+# Whitelist sender directly (no SPF query).
+# Requires options `WL_RCPT_LOCAL_ACCOUNT` and `WL_RCPT_RCPT` listed below.
+WL_RCPT_WITHOUT_SPF = False
+
+# Whitelist recipient directly (no SPF query) for local account:
+#   - user: for the sender (per-user whitelist)
+#   - domain: for the sender domain (per-domain whitelist)
+#   - global: for global whitelist
+WL_RCPT_LOCAL_ACCOUNT = 'user'
+
+# Whitelist which recipient for local account
+#   - user: the recipient (single email address)
+#   - domain: the recipient domain
+WL_RCPT_RCPT = 'user'
+
 # Whitelist domain of recipient.
 #
 # Notes:

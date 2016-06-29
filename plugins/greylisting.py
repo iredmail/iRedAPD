@@ -76,12 +76,12 @@ def _is_whitelisted(conn, senders, recipients, client_address):
 
     # Check IPv4.
     if _ip.version == 4:
-        _cidr_start = '.'.join(client_address.split('.', 2)[:2])
+        _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
         for r in records:
             (_id, _cidr, _comment) = r
 
             # Make sure _cidr is IPv4 network and in 'same' IP range.
-            if '/' in _cidr and _cidr.startswith(_cidr_start + '.'):
+            if _cidr.startswith(_cidr_prefix) and '.0/' in _cidr:
                 _net = ()
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
@@ -115,13 +115,15 @@ def _client_address_passed_in_tracking(conn, client_address):
               WHERE client_address=%s AND passed=1
               LIMIT 1""" % sqlquote(client_address)
 
-    logger.debug('[SQL] query greylisting tracking to check whether client address passed greylisting: \n%s' % sql)
+    logger.debug('[SQL] check whether client address (%s) passed greylisting: \n%s' % (client_address, sql))
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
 
     if sql_record:
+        logger.debug('Client address (%s) passed greylisting.' % client_address)
         return True
     else:
+        logger.debug("Client address (%s) didn't pass greylisting." % client_address)
         return False
 
 
@@ -149,7 +151,7 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
     _ip = ipaddress.ip_address(unicode(client_address))
 
     if _ip.version == 4:
-        _cidr_start = '.'.join(client_address.split('.', 2)[:2])
+        _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
 
     # Found enabled/disabled greylisting setting
     for r in records:
@@ -164,7 +166,7 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
                 # IPv4
                 if _ip.version == 4 \
                    and '/' in _sender \
-                   and _sender.startswith(_cidr_start + '.'):
+                   and _sender.startswith(_cidr_prefix):
                     _net = ()
                     try:
                         _net = ipaddress.ip_network(_sender)
