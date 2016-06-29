@@ -315,15 +315,21 @@ fi
 #
 # Update sql tables
 #
+mysql_conn="mysql -h${iredapd_db_server} \
+                  -P ${iredapd_db_port} \
+                  -u${iredapd_db_user} \
+                  -p${iredapd_db_password} \
+                  ${iredapd_db_name}"
+psql_conn="psql -h ${iredapd_db_server} \
+                -p ${iredapd_db_port} \
+                -U ${iredapd_db_user} \
+                -d ${iredapd_db_name}"
+
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     #
     # `greylisting_whitelist_domains`
     #
-    (mysql -h ${iredapd_db_server} \
-           -P ${iredapd_db_port} \
-           -u ${iredapd_db_user} \
-           -p${iredapd_db_password} \
-           ${iredapd_db_name} <<EOF
+    (${mysql_conn} <<EOF
 show tables;
 EOF
 ) | grep 'greylisting_whitelist_domains' &>/dev/null
@@ -332,11 +338,7 @@ EOF
         cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
         chmod 0555 /tmp/greylisting_whitelist_domains.sql
 
-        mysql -h${iredapd_db_server} \
-              -P ${iredapd_db_port} \
-              -u${iredapd_db_user} \
-              -p${iredapd_db_password} \
-              ${iredapd_db_name} <<EOF
+        ${mysql_conn} <<EOF
 CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
     id        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
     domain    VARCHAR(255)    NOT NULL DEFAULT '',
@@ -351,15 +353,23 @@ EOF
     #
     # alter some columns to BIGINT(20): throttle.{msg_size,max_quota,max_msgs}
     #
-    mysql -h ${iredapd_db_server} \
-          -P ${iredapd_db_port} \
-          -u ${iredapd_db_user} \
-          -p${iredapd_db_password} \
-           ${iredapd_db_name} <<EOF
+    ${mysql_conn} <<EOF
 ALTER TABLE throttle MODIFY COLUMN msg_size  BIGINT(20) NOT NULL DEFAULT -1;
 ALTER TABLE throttle MODIFY COLUMN max_msgs  BIGINT(20) NOT NULL DEFAULT -1;
 ALTER TABLE throttle MODIFY COLUMN max_quota BIGINT(20) NOT NULL DEFAULT -1;
 EOF
+
+    #
+    # INDEX on `greylisting_tracking`: (client_address, passed)
+    #
+    (${mysql_conn} <<EOF
+SHOW CREATE TABLE greylisting_tracking \G
+EOF
+) | grep 'Key_name: client_address_passed' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${mysql_conn} -e "CREATE INDEX client_address_passed ON greylisting_tracking (client_address, passed);"
+    fi
 
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
@@ -367,21 +377,13 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     #
     # `greylisting_whitelist_domains`
     #
-    psql -h ${iredapd_db_server} \
-         -p ${iredapd_db_port} \
-         -U ${iredapd_db_user} \
-         -d ${iredapd_db_name} \
-         -c "SELECT id FROM greylisting_whitelist_domains LIMIT 1" &>/dev/null
+    ${psql_conn} -c "SELECT id FROM greylisting_whitelist_domains LIMIT 1" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
         cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
         chmod 0555 /tmp/greylisting_whitelist_domains.sql
 
-        psql -h ${iredapd_db_server} \
-             -p ${iredapd_db_port} \
-             -U ${iredapd_db_user} \
-             -d ${iredapd_db_name} \
-             -c "
+        ${psql_conn} -c "
 CREATE TABLE greylisting_whitelist_domains (
     id      SERIAL PRIMARY KEY,
     domain  VARCHAR(255) NOT NULL DEFAULT ''
@@ -392,6 +394,15 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
 "
 
         rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
+    fi
+
+    #
+    # INDEX on `greylisting_tracking`: (client_address, passed)
+    #
+    ${psql_conn} -c "SELECT indexname FROM pg_indexes WHERE indexname='idx_greylisting_tracking_client_address_passed'" | grep 'idx_greylisting_tracking_client_address_passed' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${psql_conn} -c "CREATE INDEX idx_greylisting_tracking_client_address_passed ON greylisting_tracking (client_address, passed);"
     fi
 fi
 

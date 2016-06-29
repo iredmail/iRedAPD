@@ -165,3 +165,4 @@ CREATE TABLE greylisting_tracking (
 CREATE UNIQUE INDEX idx_greylisting_tracking_key    ON greylisting_tracking (sender, recipient, client_address);
 CREATE INDEX idx_greylisting_tracking_sender_domain ON greylisting_tracking (sender_domain);
 CREATE INDEX idx_greylisting_tracking_rcpt_domain   ON greylisting_tracking (rcpt_domain);
+CREATE INDEX idx_greylisting_tracking_client_address_passed ON greylisting_tracking (client_address, passed);
