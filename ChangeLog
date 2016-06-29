@@ -6,6 +6,8 @@ iRedAPD-1.9.2:
           `libs/default_settings.py` for more details.
 
     * Improvements:
+        - If one sender passed greylisting service, we reuse the sender IP
+          address to avoid further temporary rejection.
         - Get full traceback if error occurs while applying plugin.
         - Reduce SQLAlchemy connection pool recycle to 360 (was 3600) to work
           better on low traffic server.

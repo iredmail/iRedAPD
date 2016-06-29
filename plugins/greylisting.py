@@ -110,6 +110,21 @@ def _is_whitelisted(conn, senders, recipients, client_address):
     return False
 
 
+def _client_address_passed_in_tracking(conn, client_address):
+    sql = """SELECT id FROM greylisting_tracking
+              WHERE client_address=%s AND passed=1
+              LIMIT 1""" % sqlquote(client_address)
+
+    logger.debug('[SQL] query greylisting tracking to check whether client address passed greylisting: \n%s' % sql)
+    qr = conn.execute(sql)
+    sql_record = qr.fetchone()
+
+    if sql_record:
+        return True
+    else:
+        return False
+
+
 def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
     """Check if greylisting should be applied to specified senders: True, False.
 
@@ -192,7 +207,10 @@ def _should_be_greylisted_by_tracking(conn,
     recipient_domain = sqlquote(recipient_domain)
     client_address_sql = sqlquote(client_address)
 
+    #
     # Get existing tracking record
+    #
+    # Get passed IP address.
     sql = """SELECT init_time, blocked_count, block_expired, record_expired
                FROM greylisting_tracking
               WHERE     sender=%s
@@ -300,12 +318,12 @@ def restriction(**kwargs):
     recipient_domain = kwargs['recipient_domain']
 
     policy_recipients = [recipient, '@' + recipient_domain, '@.']
-    policy_senders = [sender,
-                      '@' + sender_domain,      # per-domain
-                      '@.' + sender_domain,     # sub-domains
+    policy_senders = [sender,                   # email address
+                      '@' + sender_domain,      # sender domain
+                      '@.' + sender_domain,     # sender sub-domains
                       sender_tld_domain,        # top-level-domain
                       '@.',                     # catch-all
-                      client_address]
+                      client_address]           # client IP address
 
     if utils.is_ipv4(client_address):
         # Add wildcard ip address: xx.xx.xx.*.
@@ -319,20 +337,25 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     # Check greylisting settings
-    if _should_be_greylisted_by_setting(conn=conn,
-                                        recipients=policy_recipients,
-                                        senders=policy_senders,
-                                        client_address=client_address):
-        # check greylisting tracking.
-        if _should_be_greylisted_by_tracking(conn=conn,
-                                             sender=sender,
-                                             sender_domain=sender_domain,
-                                             recipient=recipient,
-                                             recipient_domain=recipient_domain,
-                                             client_address=client_address):
-            if settings.GREYLISTING_TRAINING_MODE:
-                logger.debug("Running in greylisting training mode, bypass.")
-            else:
-                return action_greylisting
+    if not _should_be_greylisted_by_setting(conn=conn,
+                                            recipients=policy_recipients,
+                                            senders=policy_senders,
+                                            client_address=client_address):
+        return SMTP_ACTIONS['default']
+
+    if _client_address_passed_in_tracking(conn=conn, client_address=client_address):
+        return SMTP_ACTIONS['default']
+
+    # check greylisting tracking.
+    if _should_be_greylisted_by_tracking(conn=conn,
+                                         sender=sender,
+                                         sender_domain=sender_domain,
+                                         recipient=recipient,
+                                         recipient_domain=recipient_domain,
+                                         client_address=client_address):
+        if settings.GREYLISTING_TRAINING_MODE:
+            logger.debug("Running in greylisting training mode, bypass.")
+        else:
+            return action_greylisting
 
     return SMTP_ACTIONS['default']
