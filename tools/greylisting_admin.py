@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Manage greylisting settings.
 
@@ -174,7 +175,7 @@ if '--to' in args:
 if not lib_gl.is_valid_sender(sender):
     sys.exit('<<< ERROR >>> Invalid sender address.')
 
-if not '@' in rcpt:
+if '@' not in rcpt:
     sys.exit('<<< ERROR >>> Invalid recipient address.')
 
 

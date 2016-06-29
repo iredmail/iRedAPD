@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: add, delete, show whitelists/blacklists for specified local recipient.
 
@@ -104,7 +105,7 @@ if '--account' in args:
 wb_account = account
 wb_account_type = utils.is_valid_amavisd_address(wb_account)
 
-if not '@' in account:
+if '@' not in account:
     sys.exit('<<< ERROR >>> Invalid account format.')
 
 # Get wblist type.
