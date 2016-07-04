@@ -51,7 +51,7 @@ import settings
 REQUIRE_AMAVISD_DB = True
 
 
-def query_external_addresses(conn, addresses):
+def get_id_of_external_addresses(conn, addresses):
     '''Return list of `mailaddr.id` of external addresses.'''
 
     # Get 'mailaddr.id' of external addresses, ordered by priority
@@ -76,7 +76,7 @@ def query_external_addresses(conn, addresses):
         return ids
 
 
-def query_local_addresses(conn, addresses):
+def get_id_of_local_addresses(conn, addresses):
     '''Return list of `users.id` of local addresses.'''
 
     # Get 'users.id' of local addresses
@@ -101,7 +101,7 @@ def query_local_addresses(conn, addresses):
         return ids
 
 
-def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
+def apply_inbound_wblist(conn, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
         logger.debug('No valid sender id or recipient id.')
@@ -137,7 +137,7 @@ def apply_wblist_on_inbound(conn, sender_ids, recipient_ids):
     return SMTP_ACTIONS['default']
 
 
-def apply_wblist_on_outbound(conn, sender_ids, recipient_ids):
+def apply_outbound_wblist(conn, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
         logger.debug('No valid sender id or recipient id.')
@@ -184,8 +184,10 @@ def restriction(**kwargs):
         logger.error('Error, no valid Amavisd database connection.')
         return SMTP_ACTIONS['default']
 
-    # Get sender
+    # Get sender and recipient
     sender = kwargs['sender']
+    recipient = kwargs['recipient']
+
     if kwargs['sasl_username']:
         # Use sasl_username as sender for outgoing email
         sender = kwargs['sasl_username']
@@ -193,8 +195,6 @@ def restriction(**kwargs):
     if not sender:
         logger.debug('Bypass: both sender and sasl_username are empty.')
         return SMTP_ACTIONS['default']
-
-    recipient = kwargs['recipient']
 
     if sender == recipient:
         logger.debug('Sender is same as recipient, bypassed.')
@@ -211,12 +211,12 @@ def restriction(**kwargs):
         else:
             valid_senders.append(sender_username + '@*')
 
-        # Append original IP address and all possible wildcast IP addresses
-        client_address = kwargs['client_address']
+    # Append original IP address and all possible wildcast IP addresses
+    client_address = kwargs['client_address']
 
-        valid_senders.append(client_address)
-        if is_ipv4(client_address):
-            valid_senders += wildcard_ipv4(client_address)
+    valid_senders.append(client_address)
+    if is_ipv4(client_address):
+        valid_senders += wildcard_ipv4(client_address)
 
     logger.debug('Possible policy senders: %s' % str(valid_senders))
     logger.debug('Possible policy recipients: %s' % str(valid_recipients))
@@ -224,22 +224,23 @@ def restriction(**kwargs):
     if kwargs['sasl_username']:
         logger.debug('Apply wblist for outbound message.')
 
-        id_of_ext_addresses = []
-        id_of_local_addresses = query_local_addresses(conn, valid_senders)
-        if id_of_local_addresses:
-            id_of_ext_addresses = query_external_addresses(conn, valid_recipients)
+        id_of_local_addresses = get_id_of_local_addresses(conn, valid_senders)
 
-        return apply_wblist_on_outbound(conn,
-                                        sender_ids=id_of_local_addresses,
-                                        recipient_ids=id_of_ext_addresses)
+        id_of_ext_addresses = []
+        if id_of_local_addresses:
+            id_of_ext_addresses = get_id_of_external_addresses(conn, valid_recipients)
+
+        return apply_outbound_wblist(conn,
+                                     sender_ids=id_of_local_addresses,
+                                     recipient_ids=id_of_ext_addresses)
     else:
         logger.debug('Apply wblist for inbound message.')
 
         id_of_ext_addresses = []
-        id_of_local_addresses = query_local_addresses(conn, valid_recipients)
+        id_of_local_addresses = get_id_of_local_addresses(conn, valid_recipients)
         if id_of_local_addresses:
-            id_of_ext_addresses = query_external_addresses(conn, valid_senders)
+            id_of_ext_addresses = get_id_of_external_addresses(conn, valid_senders)
 
-        return apply_wblist_on_inbound(conn,
-                                       sender_ids=id_of_ext_addresses,
-                                       recipient_ids=id_of_local_addresses)
+        return apply_inbound_wblist(conn,
+                                    sender_ids=id_of_ext_addresses,
+                                    recipient_ids=id_of_local_addresses)

@@ -1,4 +1,4 @@
-iRedAPD-1.9.2:
+iRedAPD-2.0:
     * New plugins:
         - plugins/whitelist_outbound_recipient.py: used to automatically
           whitelist outbound recipient for greylisting (parameter
@@ -17,6 +17,8 @@ iRedAPD-1.9.2:
         - tools/greylisting_admin.py::
             + able to specify IP address/network, email address as sender.
             + able to add/list per-account whitelists.
+        - Systemd script used to control iredapd service:
+          rc_scripts/iredapd.service.
 
     * Fixed issues:
         - Throttle plugin cannot handle email which has multiple recipients.
