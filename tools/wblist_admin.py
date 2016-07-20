@@ -12,7 +12,7 @@ rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 
 from libs import utils, wblist
-from tools import logger, get_db_conn
+from tools import logger
 
 web.config.debug = False
 
@@ -79,7 +79,7 @@ elif not len(sys.argv) >= 3:
     sys.exit()
 
 logger.info('* Establishing SQL connection.')
-conn = get_db_conn('amavisd')
+conn = utils.get_db_conn('amavisd')
 
 args = [v for v in sys.argv[1:]]
 
@@ -230,37 +230,31 @@ elif action == 'delete-all':
     except Exception, e:
         logger.info(str(e))
 else:
-    # show existing wblist entries.
+    # action == 'list'
     try:
         if inout_type == 'inbound':
-            qr_key_wl = 'whitelist'
-            qr_key_bl = 'blacklist'
             qr = wblist.get_account_wblist(conn=conn,
                                            account=wb_account,
                                            whitelist=for_whitelist,
                                            blacklist=for_blacklist)
         else:
             # inout_type == 'outbound'
-            qr_key_wl = 'outbound_whitelist'
-            qr_key_bl = 'outbound_blacklist'
-            qr = wblist.get_account_wblist(conn=conn,
-                                           account=wb_account,
-                                           outbound_whitelist=for_whitelist,
-                                           outbound_blacklist=for_blacklist)
+            qr = wblist.get_account_outbound_wblist(conn=conn,
+                                                    account=wb_account,
+                                                    whitelist=for_whitelist,
+                                                    blacklist=for_blacklist)
 
         if qr[0]:
             if for_whitelist:
-                if qr[1][qr_key_wl]:
-                    for i in sorted(qr[1][qr_key_wl]):
-                        print i
-                else:
-                    logger.info('* No whitelist.')
+                _wb = qr[1]['whitelist']
             elif for_blacklist:
-                if qr[1][qr_key_bl]:
-                    for i in sorted(qr[1][qr_key_bl]):
-                        print i
-                else:
-                    logger.info('* No blacklist.')
+                _wb = qr[1]['blacklist']
+
+            if _wb:
+                for i in sorted(_wb):
+                    print i
+            else:
+                logger.info('* No whitelist/blacklist.')
         else:
             logger.error(qr[1])
     except Exception, e:

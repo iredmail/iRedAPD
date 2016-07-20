@@ -7,10 +7,10 @@ def create_mailaddr(conn, addresses):
     for addr in addresses:
         addr_type = utils.is_valid_amavisd_address(addr)
         if addr_type in utils.MAILADDR_PRIORITIES:
+            priority = utils.MAILADDR_PRIORITIES[addr_type]
             try:
-                conn.insert('mailaddr',
-                            priority=utils.MAILADDR_PRIORITIES[addr_type],
-                            email=addr)
+                sql = "INSERT INTO mailaddr (email, priority) VALUES (%s, %s)" % (sqlquote(addr), sqlquote(priority))
+                conn.execute(sql)
             except:
                 pass
 
@@ -26,7 +26,7 @@ def create_user(conn, account, policy_id=0, return_record=True):
         conn.execute(sql)
 
         if return_record:
-            sql = "SELECT * FROM users WHERE email='%s' LIMIT 1" % account
+            sql = "SELECT id, priority, policy_id, email FROM users WHERE email='%s' LIMIT 1" % account
             qr = conn.execute(sql)
             sql_record = qr.fetchone()
             return (True, sql_record[0])
@@ -38,12 +38,12 @@ def create_user(conn, account, policy_id=0, return_record=True):
 
 def get_user_record(conn, account, create_if_missing=True):
     try:
-        sql = "SELECT * FROM users WHERE email='%s' LIMIT 1" % account
+        sql = "SELECT id, priority, policy_id, email FROM users WHERE email='%s' LIMIT 1" % account
         qr = conn.execute(sql)
         sql_record = qr.fetchall()
 
-        if qr:
-            return (True, sql_record[0])
+        if sql_record:
+            user_record = sql_record[0]
         else:
             if create_if_missing:
                 qr = create_user(conn=conn,
@@ -51,11 +51,21 @@ def get_user_record(conn, account, create_if_missing=True):
                                  return_record=True)
 
                 if qr[0]:
-                    return (True, qr[1])
+                    user_record = qr[1]
                 else:
                     return qr
             else:
-                (False, 'ACCOUNT_NOT_EXIST')
+                return (False, 'ACCOUNT_NOT_EXIST')
+
+        (_id, _priority, _policy_id, _email) = user_record
+
+        d = {}
+        d['id'] = int(_id)
+        d['priority'] = int(_priority)
+        d['_policy_id'] = int(_policy_id)
+        d['email'] = str(_email)
+
+        return (True, d)
     except Exception, e:
         return (False, str(e))
 
@@ -124,21 +134,17 @@ def add_wblist(conn,
     qr = get_user_record(conn=conn, account=account)
 
     if qr[0]:
-        user_id = qr[1].id
+        user_id = qr[1]['id']
     else:
         return qr
 
     # Delete old records
     if flush_before_import:
         # user_id = wblist.rid
-        conn.delete('wblist',
-                    vars={'rid': user_id},
-                    where='rid=$rid')
+        conn.execute('DELETE FROM wblist WHERE rid=%s' % sqlquote(user_id))
 
         # user_id = outbound_wblist.sid
-        conn.delete('outbound_wblist',
-                    vars={'sid': user_id},
-                    where='sid=$sid')
+        conn.execute('DELETE FROM outbound_wblist WHERE sid=%s' % sqlquote(user_id))
 
     if not all_addresses:
         return (True, )
@@ -153,7 +159,8 @@ def add_wblist(conn,
         qr = conn.execute(sql)
         sql_records = qr.fetchall()
         for r in sql_records:
-            sender_records[str(r.email)] = r.id
+            (_id, _email) = r
+            sender_records[str(_email)] = int(_id)
         del qr
 
     # Get `mailaddr.id` of recipients
@@ -164,19 +171,19 @@ def add_wblist(conn,
         sql_records = qr.fetchall()
 
         for r in sql_records:
-            rcpt_records[str(r.email)] = r.id
+            (_id, _email) = r
+            rcpt_records[str(_email)] = int(_id)
         del qr
 
     # Remove existing records of current submitted records then insert new.
     try:
         if sender_records:
-            sql = "DELETE FROM wblist WHERE rid=%d AND sid IN %s" % (user_id, sqlquote(sender_records.value()))
-            qr = conn.execute(sql)
-            sql_records = qr.fetchall()
+            sql = "DELETE FROM wblist WHERE rid=%d AND sid IN %s" % (user_id, sqlquote(sender_records.values()))
+            conn.execute(sql)
 
-            if sql_records:
-                sql = "DELETE FROM outbound_wblist WHERE sid=%d AND rid IN %s" (user_id, sqlquote(sql_records.values()))
-                conn.execute(sql)
+        if rcpt_records:
+            sql = "DELETE FROM outbound_wblist WHERE sid=%d AND rid IN %s" % (user_id, sqlquote(rcpt_records.values()))
+            conn.execute(sql)
     except Exception, e:
         return (False, e)
 
@@ -205,10 +212,22 @@ def add_wblist(conn,
 
     try:
         if values:
-            conn.multiple_insert('wblist', values)
+            for v in values:
+                try:
+                    conn.execute("INSERT INTO wblist (sid, rid, wb) VALUES (%s, %s, %s)" % (sqlquote(v['sid']),
+                                                                                            sqlquote(v['rid']),
+                                                                                            sqlquote(v['wb'])))
+                except:
+                    pass
 
         if rcpt_values:
-            conn.multiple_insert('outbound_wblist', rcpt_values)
+            for v in rcpt_values:
+                try:
+                    conn.execute("INSERT INTO outbound_wblist (sid, rid, wb) VALUES (%s, %s, %s)" % (sqlquote(v['sid']),
+                                                                                                     sqlquote(v['rid']),
+                                                                                                     sqlquote(v['wb'])))
+                except:
+                    pass
 
     except Exception, e:
         return (False, e)
@@ -251,7 +270,7 @@ def delete_wblist(conn,
     qr = get_user_record(conn=conn, account=account)
 
     if qr[0]:
-        user_id = qr[1].id
+        user_id = qr[1]['id']
     else:
         return qr
 
@@ -266,66 +285,63 @@ def delete_wblist(conn,
         # Get `mailaddr.id` for wblist senders
         if wl_senders:
             sids = []
-            qr = conn.select('mailaddr',
-                             vars={'addresses': wl_senders},
-                             what='id, email',
-                             where='email IN $addresses')
-            for r in qr:
-                sids.append(r.id)
-                wl_smails.append(r.email)
+
+            sql = "SELECT id, email FROM mailaddr WHERE email in %s" % sqlquote(wl_senders)
+            qr = conn.execute(sql)
+            sql_records = qr.fetchall()
+
+            for r in sql_records:
+                (_id, _email) = r
+                sids.append(int(_id))
+                wl_smails.append(str(_email))
 
             if sids:
-                conn.delete('wblist',
-                            vars={'user_id': user_id, 'sids': sids},
-                            where="rid=$user_id AND sid IN $sids AND wb='W'")
+                conn.execute("DELETE FROM wblist WHERE rid=%s AND sid IN %s AND wb='W'" % (sqlquote(user_id), sqlquote(sids)))
 
         if bl_senders:
             sids = []
-            bl_smails = []
-            qr = conn.select('mailaddr',
-                             vars={'addresses': bl_senders},
-                             what='id, email',
-                             where='email IN $addresses')
-            for r in qr:
-                sids.append(r.id)
-                bl_smails.append(r.email)
+
+            sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(bl_senders)
+            qr = conn.execute(sql)
+            sql_records = qr.fetchall()
+
+            for r in sql_records:
+                (_id, _email) = r
+                sids.append(int(_id))
+                bl_smails.append(str(_email))
 
             if sids:
-                conn.delete('wblist',
-                            vars={'user_id': user_id, 'sids': sids},
-                            where="rid=$user_id AND sid IN $sids AND wb='B'")
+                conn.execute("DELETE FROM wblist WHERE rid=%s AND sid IN %s AND wb='B'" % (sqlquote(user_id), sqlquote(sids)))
 
         if wl_rcpts:
             rids = []
-            wl_rmails = []
-            qr = conn.select('mailaddr',
-                             vars={'addresses': wl_rcpts},
-                             what='id, email',
-                             where='email IN $addresses')
-            for r in qr:
-                rids.append(r.id)
-                wl_rmails.append(r.email)
+
+            sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(wl_rcpts)
+            qr = conn.execute(sql)
+            sql_records = qr.fetchall()
+
+            for r in sql_records:
+                (_id, _email) = r
+                rids.append(int(_id))
+                wl_rmails.append(str(_email))
 
             if rids:
-                conn.delete('outbound_wblist',
-                            vars={'user_id': user_id, 'rids': rids},
-                            where="sid=$user_id AND rid IN $rids AND wb='W'")
+                conn.execute("DELETE FROM outbound_wblist WHERE sid=%s AND rid IN %s AND wb='W'" % (sqlquote(user_id), sqlquote(rids)))
 
         if bl_rcpts:
             rids = []
-            bl_rmails = []
-            qr = conn.select('mailaddr',
-                             vars={'addresses': bl_rcpts},
-                             what='id, email',
-                             where='email IN $addresses')
-            for r in qr:
-                rids.append(r.id)
-                bl_rmails.append(r.email)
+
+            sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(bl_rcpts)
+            qr = conn.execute(sql)
+            sql_records = qr.fetchall()
+
+            for r in sql_records:
+                (_id, _email) = r
+                rids.append(int(_id))
+                bl_rmails.append(str(_email))
 
             if rids:
-                conn.delete('outbound_wblist',
-                            vars={'user_id': user_id, 'rids': rids},
-                            where="sid=$user_id AND rid IN $rids AND wb='B'")
+                conn.execute("DELETE FROM outbound_wblist WHERE sid=%s AND rid IN %s AND wb='B'" % (sqlquote(user_id), sqlquote(rids)))
 
     except Exception, e:
         return (False, str(e))
@@ -349,7 +365,7 @@ def delete_all_wblist(conn,
     qr = get_user_record(conn=conn, account=account)
 
     if qr[0]:
-        user_id = qr[1].id
+        user_id = qr[1]['id']
     else:
         return qr
 
@@ -386,51 +402,67 @@ def delete_all_wblist(conn,
 def get_account_wblist(conn,
                        account,
                        whitelist=True,
-                       blacklist=True,
-                       outbound_whitelist=True,
-                       outbound_blacklist=True):
-    """Get white/blacklists of specified account."""
-    inbound_sql_where = 'users.email=$user AND users.id=wblist.rid AND wblist.sid = mailaddr.id'
+                       blacklist=True):
+    """Get inbound white/blacklists of specified account."""
+    sql_where = "users.email=%s AND users.id=wblist.rid AND wblist.sid = mailaddr.id" % sqlquote(account)
     if whitelist and not blacklist:
-        inbound_sql_where += ' AND wblist.wb=%s' % sqlquote('W')
-    if not whitelist and blacklist:
-        inbound_sql_where += ' AND wblist.wb=%s' % sqlquote('B')
+        sql_where += " AND wblist.wb='W'"
 
-    outbound_sql_where = 'users.email=$user AND users.id=outbound_wblist.sid AND outbound_wblist.rid = mailaddr.id'
-    if outbound_whitelist and not outbound_blacklist:
-        outbound_sql_where += ' AND outbound_wblist.wb=%s' % sqlquote('W')
     if not whitelist and blacklist:
-        outbound_sql_where += ' AND outbound_wblist.wb=%s' % sqlquote('B')
+        sql_where += " AND wblist.wb='B'"
 
     wl = []
     bl = []
-    outbound_wl = []
-    outbound_bl = []
 
     try:
-        qr = conn.select(['mailaddr', 'users', 'wblist'],
-                         vars={'user': account},
-                         what='mailaddr.email AS address, wblist.wb AS wb',
-                         where=inbound_sql_where)
-        for r in qr:
-            if r.wb == 'W':
-                wl.append(r.address)
-            else:
-                bl.append(r.address)
+        sql = """SELECT mailaddr.email, wblist.wb
+                   FROM mailaddr, users, wblist
+                  WHERE %s
+                  """ % sql_where
+        qr = conn.execute(sql)
+        sql_records = qr.fetchall()
 
-        qr = conn.select(['mailaddr', 'users', 'outbound_wblist'],
-                         vars={'user': account},
-                         what='mailaddr.email AS address, outbound_wblist.wb AS wb',
-                         where=outbound_sql_where)
-        for r in qr:
-            if r.wb == 'W':
-                outbound_wl.append(r.address)
+        for r in sql_records:
+            (_addr, _wb) = r
+            if _wb == 'W':
+                wl.append(_addr)
             else:
-                outbound_bl.append(r.address)
+                bl.append(_addr)
     except Exception, e:
         return (False, e)
 
-    return (True, {'whitelist': wl,
-                   'blacklist': bl,
-                   'outbound_whitelist': outbound_wl,
-                   'outbound_blacklist': outbound_bl})
+    return (True, {'whitelist': wl, 'blacklist': bl})
+
+
+def get_account_outbound_wblist(conn,
+                                account,
+                                whitelist=True,
+                                blacklist=True):
+    """Get outbound white/blacklists of specified account."""
+    sql_where = 'users.email=%s AND users.id=outbound_wblist.sid AND outbound_wblist.rid = mailaddr.id' % sqlquote(account)
+    if whitelist and not blacklist:
+        sql_where += " AND outbound_wblist.wb='W'"
+
+    if not whitelist and blacklist:
+        sql_where += " AND outbound_wblist.wb='B'"
+
+    wl = []
+    bl = []
+
+    try:
+        sql = """SELECT mailaddr.email, outbound_wblist.wb
+                   FROM mailaddr, users, outbound_wblist
+                  WHERE %s""" % sql_where
+        qr = conn.execute(sql)
+        sql_records = qr.fetchall()
+
+        for r in sql_records:
+            (_addr, _wb) = r
+            if _wb == 'W':
+                wl.append(_addr)
+            else:
+                bl.append(_addr)
+    except Exception, e:
+        return (False, e)
+
+    return (True, {'whitelist': wl, 'blacklist': bl})

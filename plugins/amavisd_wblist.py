@@ -50,6 +50,11 @@ import settings
 
 REQUIRE_AMAVISD_DB = True
 
+if settings.backend == 'ldap':
+    from libs.ldaplib.conn_utils import is_local_domain
+else:
+    from libs.sql import is_local_domain
+
 
 def get_id_of_external_addresses(conn, addresses):
     '''Return list of `mailaddr.id` of external addresses.'''
@@ -179,6 +184,7 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
 
 def restriction(**kwargs):
     conn = kwargs['conn_amavisd']
+    conn_vmail = kwargs['conn_vmail']
 
     if not conn:
         logger.error('Error, no valid Amavisd database connection.')
@@ -186,14 +192,16 @@ def restriction(**kwargs):
 
     # Get sender and recipient
     sender = kwargs['sender']
+    sender_domain = kwargs['sender_domain']
     recipient = kwargs['recipient']
 
     if kwargs['sasl_username']:
         # Use sasl_username as sender for outgoing email
         sender = kwargs['sasl_username']
+        sender_domain = kwargs['sasl_username_domain']
 
     if not sender:
-        logger.debug('Bypass: both sender and sasl_username are empty.')
+        logger.debug('Bypass: no sender address.')
         return SMTP_ACTIONS['default']
 
     if sender == recipient:
@@ -221,7 +229,8 @@ def restriction(**kwargs):
     logger.debug('Possible policy senders: %s' % str(valid_senders))
     logger.debug('Possible policy recipients: %s' % str(valid_recipients))
 
-    if kwargs['sasl_username']:
+    # Outbound
+    if kwargs['sasl_username'] or is_local_domain(conn=conn_vmail, domain=sender_domain):
         logger.debug('Apply wblist for outbound message.')
 
         id_of_local_addresses = get_id_of_local_addresses(conn, valid_senders)

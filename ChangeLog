@@ -21,6 +21,10 @@ iRedAPD-2.0:
           rc_scripts/iredapd.service.
 
     * Fixed issues:
+        - White/blacklist doesn't work if email was sent from SOGo or
+          ActiveSync client (e.g. Outlook).
+          Thanks <alexeilevinzon _at gmail.com> for the report.
+        - tools/wblist_admin.py cannot add/delete white/blacklists.
         - Throttle plugin cannot handle email which has multiple recipients.
           Thanks to Andrea <info _at_ nili.ca> for the report.
 
