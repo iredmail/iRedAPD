@@ -393,11 +393,10 @@ for domain in domain_ips:
                         sender=ip,
                         comment=comment)
         except Exception, e:
-            error = str(e).lower()
-            if 'duplicate key' in error or 'duplicate entry' in error:
+            if e.__class__.__name__ == 'IntegrityError':
                 pass
             else:
-                logger.info('* <<< ERROR >>> Cannot insert new record for domain %s: %s' % (domain, error))
+                logger.error('* <<< ERROR >>> Cannot insert new record for domain %s: %s' % (domain, e.message))
 
 if submit_to_sql_db:
     logger.info('* Store domain names in SQL database as greylisting whitelists.')
