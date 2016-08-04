@@ -50,10 +50,10 @@ MYNETWORKS = []
 RECIPIENT_DELIMITERS = ['+']
 
 # SQL connection pool size
-SQL_CONNECTION_POOL_SIZE = 20
+SQL_CONNECTION_POOL_SIZE = 10
 
 # SQL connection recycle
-SQL_CONNECTION_POOL_RECYCLE = 360
+SQL_CONNECTION_POOL_RECYCLE = 50
 
 # ---------------
 # Required by:
