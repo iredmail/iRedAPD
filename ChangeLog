@@ -6,6 +6,8 @@ iRedAPD-2.0:
           `libs/default_settings.py` for more details.
 
     * Improvements:
+        - Return 'DISCARD' instead of 'REJECT' to Postfix so that blacklisted
+          sender won't know it's blacklisted.
         - If one sender passed greylisting service, we reuse the sender IP
           address to avoid further temporary rejection.
         - Get full traceback if error occurs while applying plugin.
