@@ -476,16 +476,30 @@ echo "* Re-create symbol link: ${IREDAPD_ROOT_DIR} -> ${NEW_IREDAPD_ROOT_DIR}"
 rm -f ${IREDAPD_ROOT_DIR}
 cd /opt && ln -s ${name_new_version} iredapd
 
+export USE_SYSTEMD='NO'
+if which systemctl &>/dev/null; then
+    export USE_SYSTEMD='YES'
+    export SYSTEMD_SERVICE_DIR='/etc/systemd/system/multi-user.target.wants/'
+fi
+
 # Always copy init rc script.
-echo "* Copy new SysV init script."
-if [ X"${DISTRO}" == X'RHEL' ]; then
-    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.rhel ${DIR_RC_SCRIPTS}/iredapd
-elif [ X"${DISTRO}" == X'DEBIAN' -o X"${DISTRO}" == X'UBUNTU' ]; then
-    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.debian ${DIR_RC_SCRIPTS}/iredapd
-elif [ X"${DISTRO}" == X"FREEBSD" ]; then
-    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.freebsd ${DIR_RC_SCRIPTS}/iredapd
-elif [ X"${DISTRO}" == X'OPENBSD' ]; then
-    cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.openbsd ${DIR_RC_SCRIPTS}/iredapd
+if [ -f "${DIR_RC_SCRIPTS}/iredapd" ]; then
+    echo "* Copy new SysV init script."
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.rhel ${DIR_RC_SCRIPTS}/iredapd
+    elif [ X"${DISTRO}" == X'DEBIAN' -o X"${DISTRO}" == X'UBUNTU' ]; then
+        cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.debian ${DIR_RC_SCRIPTS}/iredapd
+    elif [ X"${DISTRO}" == X"FREEBSD" ]; then
+        cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.freebsd ${DIR_RC_SCRIPTS}/iredapd
+    elif [ X"${DISTRO}" == X'OPENBSD' ]; then
+        cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.openbsd ${DIR_RC_SCRIPTS}/iredapd
+    fi
+else
+    if [ X"${USE_SYSTEMD}" == X'YES' ]; then
+        ECHO_DEBUG "Create symbol link: ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service -> ${SYSTEMD_SERVICE_DIR}/iredapd.service."
+        ln -s ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service ${SYSTEMD_SERVICE_DIR}/iredapd.service
+        systemctl daemon-reload &>/dev/null
+    fi
 fi
 
 # For systems which use systemd
