@@ -6,6 +6,7 @@ iRedAPD-2.0:
           `libs/default_settings.py` for more details.
 
     * Improvements:
+        - Handle systemd script while upgrading in tools/upgrade_iredapd.sh.
         - Return 'DISCARD' instead of 'REJECT' to Postfix so that blacklisted
           sender won't know it's blacklisted.
         - If one sender passed greylisting service, we reuse the sender IP
@@ -23,6 +24,8 @@ iRedAPD-2.0:
           rc_scripts/iredapd.service.
 
     * Fixed issues:
+        - Remove host bits in IP address of SPF record in
+          tools/spf_to_greylist_whitelists.py: x.x.x.Y/zz -> x.x.x.Y.
         - White/blacklist doesn't work if email was sent from SOGo or
           ActiveSync client (e.g. Outlook).
           Thanks <alexeilevinzon _at gmail.com> for the report.
