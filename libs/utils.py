@@ -257,7 +257,7 @@ def get_db_conn(db):
         conn = create_engine(uri,
                              pool_size=settings.SQL_CONNECTION_POOL_SIZE,
                              pool_recycle=settings.SQL_CONNECTION_POOL_RECYCLE,
-                             max_overflow=0)
+                             max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
         return conn
     except:
         return None

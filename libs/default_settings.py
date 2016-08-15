@@ -49,11 +49,31 @@ MYNETWORKS = []
 # Recipient delimiters. If you have multiple delimiters, please list them all.
 RECIPIENT_DELIMITERS = ['+']
 
-# SQL connection pool size
+# SQLAlchemy: The size of the SQL connection pool to be maintained.
+# This is the largest number of connections that will be kept persistently in
+# the pool. Note that the pool begins with no connections; once this number of
+# connections is requested, that number of connections will remain.
+# Can be set to 0 to indicate no size limit.
 SQL_CONNECTION_POOL_SIZE = 10
 
-# SQL connection recycle
-SQL_CONNECTION_POOL_RECYCLE = 50
+# SQLAlchemy: SQL connection max overflow
+# The maximum overflow size of the pool.
+# When the number of checked-out connections reaches the size set in pool_size,
+# additional connections will be returned up to this limit. When those
+# additional connections are returned to the pool, they are disconnected and
+# discarded. It follows then that the total number of simultaneous connections
+# the pool will allow is pool_size + max_overflow, and the total number of
+# `sleeping` connections the pool will allow is pool_size. max_overflow can be
+# set to -1 to indicate no overflow limit; no limit will be placed on the total
+# number of concurrent connections. Defaults to 10.
+SQL_CONNECTION_MAX_OVERFLOW = 10
+
+# SQLAlchemy: SQL connection recycle
+# This parameter prevents the pool from using a particular connection that has
+# passed a certain age (in seconds), and is appropriate for database backends
+# such as MySQL that automatically close connections that have been stale after
+# a particular period of time.
+SQL_CONNECTION_POOL_RECYCLE = 60
 
 # ---------------
 # Required by:
