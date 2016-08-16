@@ -160,8 +160,8 @@ GREYLISTING_BLOCK_EXPIRE = 15
 GREYLISTING_AUTH_TRIPLET_EXPIRE = 30
 
 # Time (in DAYS) to keep tracking records if client didn't pass the
-# greylisting and no further deliver attempts. Defaults to `2` days.
-GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 2
+# greylisting and no further deliver attempts. Defaults to `1` day.
+GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 1
 
 # --------------
 # Required by: plugins/whitelist_outbound_recipient.py

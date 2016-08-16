@@ -240,7 +240,14 @@ def _should_be_greylisted_by_tracking(conn,
                                                                        now,
                                                                        block_expired, unauth_triplet_expire)
         logger.debug('[SQL] New tracking: \n%s' % sql)
-        conn.execute(sql)
+        try:
+            conn.execute(sql)
+        except Exception, e:
+            if e.__class__.__name__ == 'IntegrityError':
+                pass
+            else:
+                logger.error('Error while initializing greylisting tracking: %s' % repr(e))
+
         return True
 
     (_init_time, _blocked_count, _block_expired, _record_expired) = sql_record
