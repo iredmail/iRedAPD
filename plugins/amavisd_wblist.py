@@ -91,11 +91,14 @@ def get_id_of_local_addresses(conn, addresses):
            ORDER BY priority DESC""" % sqllist(addresses)
     logger.debug('[SQL] Query local addresses: \n%s' % sql)
 
-    qr = conn.execute(sql)
-    qr_addresses = qr.fetchall()
     ids = []
-    if qr_addresses:
-        ids = [r.id for r in qr_addresses]
+    try:
+        qr = conn.execute(sql)
+        qr_addresses = qr.fetchall()
+        if qr_addresses:
+            ids = [r.id for r in qr_addresses]
+    except Exception, e:
+        logger.error('Error while executing SQL command: %s' % repr(e))
 
     if not ids:
         # don't waste time if we don't have any per-recipient wblist.

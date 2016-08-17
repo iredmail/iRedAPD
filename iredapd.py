@@ -44,7 +44,7 @@ class PolicyChannel(asynchat.async_chat):
     def __init__(self,
                  sock,
                  db_conns=None,
-                 plugins=[],
+                 plugins=None,
                  sender_search_attrlist=None,
                  recipient_search_attrlist=None):
         asynchat.async_chat.__init__(self, sock)
@@ -58,7 +58,10 @@ class PolicyChannel(asynchat.async_chat):
         self.recipient_search_attrlist = recipient_search_attrlist
 
     def push(self, msg):
-        asynchat.async_chat.push(self, msg + '\n')
+        try:
+            asynchat.async_chat.push(self, msg + '\n')
+        except Exception, e:
+            logger.error('Error while pushing message: %s. Msg: %s' % (repr(e), repr(msg)))
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -96,7 +99,7 @@ class PolicyChannel(asynchat.async_chat):
                     # was not removed due to some reason.
                     _tracking_expired = int(time.time())
 
-                    # @processed: processed smtp session
+                    # @processed: count of processed smtp sessions
                     settings.GLOBAL_SESSION_TRACKING[_instance] = {'processed': 0,
                                                                    'expired': _tracking_expired}
                 else:
@@ -114,6 +117,7 @@ class PolicyChannel(asynchat.async_chat):
                 if result:
                     action = result
                 else:
+                    logger.error('No result returned by modeler, fallback to default action: %s' % str(action))
                     action = SMTP_ACTIONS['default']
             except Exception, e:
                 action = SMTP_ACTIONS['default']
@@ -240,11 +244,14 @@ class DaemonSocket(asyncore.dispatcher):
         sock, remote_addr = self.accept()
         logger.debug("Connect from %s, port %s." % remote_addr)
 
-        PolicyChannel(sock,
-                      db_conns=self.db_conns,
-                      plugins=self.loaded_plugins,
-                      sender_search_attrlist=self.sender_search_attrlist,
-                      recipient_search_attrlist=self.recipient_search_attrlist)
+        try:
+            PolicyChannel(sock,
+                          db_conns=self.db_conns,
+                          plugins=self.loaded_plugins,
+                          sender_search_attrlist=self.sender_search_attrlist,
+                          recipient_search_attrlist=self.recipient_search_attrlist)
+        except Exception, e:
+            logger.error('Error while applying PolicyChannel: %s' % repr(e))
 
 
 def main():
