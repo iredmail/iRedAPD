@@ -278,7 +278,12 @@ def _should_be_greylisted_by_tracking(conn,
                         AND client_address=%s""" % (sender, recipient, client_address_sql)
 
         logger.debug('[SQL] Update tracking record: \n%s' % sql)
-        conn.execute(sql)
+        try:
+            conn.execute(sql)
+        except Exception, e:
+            logger.error('Error while updating greylisting tracking: %s' % repr(e))
+            conn.execute(sql)
+            logger.error('Re-updated. It is safe to ignore above error message.')
         return True
     else:
         logger.info('[%s] Client has passed the greylisting, accept this email.' % client_address)
