@@ -134,7 +134,7 @@ class PolicyChannel(asynchat.async_chat):
                             settings.GLOBAL_SESSION_TRACKING
 
             self.push('action=' + action + '\n')
-            logger.debug("Session ended")
+            logger.debug('Session ended.')
 
             # Log sasl username, sender, recipient
             #   `sender -> recipient`: sender not authenticated

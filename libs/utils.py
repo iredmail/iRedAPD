@@ -86,6 +86,12 @@ for ip in settings.MYNETWORKS:
             pass
 
 
+def get_traceback():
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    err_msg = repr(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    return err_msg
+
+
 def apply_plugin(plugin, **kwargs):
     action = SMTP_ACTIONS['default']
 
@@ -94,8 +100,7 @@ def apply_plugin(plugin, **kwargs):
         action = plugin.restriction(**kwargs)
         logger.debug('<-- Result: %s' % action)
     except:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        err_msg = repr(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        err_msg = get_traceback()
         logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, err_msg))
 
     return action
@@ -259,7 +264,8 @@ def get_db_conn(db):
                              pool_recycle=settings.SQL_CONNECTION_POOL_RECYCLE,
                              max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
         return conn
-    except:
+    except Exception, e:
+        logger.error('Error while create SQL connection: %s' % repr(e))
         return None
 
 
