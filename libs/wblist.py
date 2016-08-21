@@ -29,7 +29,7 @@ def create_user(conn, account, policy_id=0, return_record=True):
             sql = "SELECT id, priority, policy_id, email FROM users WHERE email='%s' LIMIT 1" % account
             qr = conn.execute(sql)
             sql_record = qr.fetchone()
-            return (True, sql_record[0])
+            return (True, sql_record)
         else:
             return (True, )
     except Exception, e:
@@ -38,7 +38,10 @@ def create_user(conn, account, policy_id=0, return_record=True):
 
 def get_user_record(conn, account, create_if_missing=True):
     try:
-        sql = "SELECT id, priority, policy_id, email FROM users WHERE email='%s' LIMIT 1" % account
+        sql = """SELECT id, priority, policy_id, email
+                   FROM users
+                  WHERE email='%s'
+                  LIMIT 1""" % account
         qr = conn.execute(sql)
         sql_record = qr.fetchall()
 
