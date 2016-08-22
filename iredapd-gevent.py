@@ -138,8 +138,6 @@ def policy_handle(socket, address):
 
             if '=' in line:
                 (key, value) = line.split('=', 1)
-                if not value:
-                    continue
 
                 if key in SMTP_SESSION_ATTRIBUTES:
                     if key in ['sender', 'recipient', 'sasl_username']:
