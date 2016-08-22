@@ -23,7 +23,7 @@ import settings
 from libs import __version__, daemon
 from libs import PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
 from libs.logger import logger
-from libs.utils import get_db_conn
+from libs.utils import get_db_conn, log_policy_request
 
 # Plugin directory.
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
@@ -135,29 +135,7 @@ class PolicyChannel(asynchat.async_chat):
 
             self.push('action=' + action + '\n')
             logger.debug('Session ended.')
-
-            # Log sasl username, sender, recipient
-            #   `sender -> recipient`: sender not authenticated
-            #   `sender => recipient`: sasl username is same as sender address (From:)
-            #   `sasl_username => sender -> recipient`: user send as different sender address
-            _log_sender_to_rcpt = ''
-            if self.smtp_session_data['sasl_username']:
-                if self.smtp_session_data['sasl_username'] == self.smtp_session_data['sender']:
-                    _log_sender_to_rcpt = '%s => %s' % (self.smtp_session_data['sasl_username'],
-                                                        self.smtp_session_data['recipient'])
-                else:
-                    _log_sender_to_rcpt = '%s => %s -> %s' % (self.smtp_session_data['sasl_username'],
-                                                              self.smtp_session_data['sender'],
-                                                              self.smtp_session_data['recipient'])
-            else:
-                _log_sender_to_rcpt = '%s -> %s' % (self.smtp_session_data['sender'],
-                                                    self.smtp_session_data['recipient'])
-
-            # Log final action
-            logger.info('[%s] %s, %s, %s' % (self.smtp_session_data['client_address'],
-                                             self.smtp_session_data['protocol_state'],
-                                             _log_sender_to_rcpt,
-                                             action))
+            log_policy_request(smtp_session_data=self.smtp_session_data, action=action)
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)
@@ -192,11 +170,11 @@ class DaemonSocket(asyncore.dispatcher):
         # Import priorities of built-in plugins.
         _plugin_priorities = PLUGIN_PRIORITIES
 
-        # Import priorities of custom plugins, or custom built-in plugin priorities
-        _plugin_priorities.update(settings.PLUGIN_PRIORITIES)   # third-party plugins
+        # Import priorities of custom plugins, or custom priorities of built-in plugins
+        _plugin_priorities.update(settings.PLUGIN_PRIORITIES)
 
         # If enabled plugin doesn't have a priority pre-defined, set it to 0 (lowest)
-        _plugins_without_priority = [p for p in settings.plugins if p not in _plugin_priorities]
+        _plugins_without_priority = [i for i in settings.plugins if i not in _plugin_priorities]
         for _p in _plugins_without_priority:
             _plugin_priorities[_p] = 0
 
