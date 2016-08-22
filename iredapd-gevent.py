@@ -3,7 +3,7 @@ import sys
 import pwd
 import time
 from gevent.server import StreamServer
-from gevent.pool import Pool
+#from gevent.pool import Pool
 
 # Always remove 'settings.pyc'.
 _pyc = os.path.abspath(os.path.dirname(__file__)) + '/settings.pyc'
@@ -129,11 +129,14 @@ def policy_handle(socket, address):
         lines = request.splitlines()
         if not lines:
             action = SMTP_ACTIONS['default']
-            socket.send('action=' + action + '\n')
+            socket.send('action=' + action + '\n\n')
             logger.info('Client disconnected without valid input.')
 
         smtp_session_data = {}
         for line in lines:
+            if not line:
+                break
+
             logger.debug("smtp session: " + line)
 
             if '=' in line:
@@ -197,9 +200,8 @@ def policy_handle(socket, address):
                     if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 120 < int(time.time()):
                         settings.GLOBAL_SESSION_TRACKING
 
-        socket.send('action=' + action + '\n')
-        logger.debug('Session ended.')
         log_policy_request(smtp_session_data=smtp_session_data, action=action)
+        socket.send('action=' + action + '\n\n')
 
 def main():
     # Set umask.
@@ -207,8 +209,9 @@ def main():
 
     # Initialize policy daemon.
     bind_address = (settings.listen_address, int(settings.listen_port))
-    pool = Pool(size=100000)
-    server = StreamServer(bind_address, handle=policy_handle, spawn=pool)
+    #pool = Pool(size=100000)
+    #server = StreamServer(bind_address, handle=policy_handle, spawn=pool)
+    server = StreamServer(bind_address, handle=policy_handle)
 
     # Run this program as daemon.
     try:
