@@ -2,6 +2,7 @@ import os
 import sys
 import pwd
 import time
+import signal
 from gevent.server import StreamServer
 #from gevent.pool import Pool
 
@@ -204,18 +205,74 @@ def policy_handle(socket, address):
         socket.send('action=' + action + '\n\n')
 
 def main():
-    # Set umask.
-    os.umask(0077)
-
-    # Initialize policy daemon.
-    bind_address = (settings.listen_address, int(settings.listen_port))
-    #pool = Pool(size=100000)
-    #server = StreamServer(bind_address, handle=policy_handle, spawn=pool)
-    server = StreamServer(bind_address, handle=policy_handle)
-
-    # Run this program as daemon.
+    # Fork to run this program as daemon.
     try:
         daemon.daemonize(noClose=True)
+    except Exception, e:
+        logger.error('Error in daemon.daemonize: ' + repr(e))
+
+    try:
+        # Fork once to go into the background.
+        pid = os.fork()
+        if pid > 0:
+            # Parent. Exit using os._exit(), which doesn't fire any atexit
+            # functions.
+            os._exit(0)
+
+        # First child. Create a new session. os.setsid() creates the session
+        # and makes this (child) process the process group leader. The process
+        # is guaranteed not to have a control terminal.
+        os.setsid()
+
+        # Ignore SIGHUP
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
+        # Fork a second child to ensure that the daemon never reacquires
+        # a control terminal.
+        pid = os.fork()
+        if pid > 0:
+            # Original child. Exit.
+            os._exit(0)
+
+        # This is the second child. Set the umask.
+        os.umask(0077)
+
+        # Write pid number into pid file.
+        f = open(settings.pid_file, 'w')
+        f.write(str(os.getpid()))
+        f.close()
+
+        # Get uid/gid of daemon user.
+        p = pwd.getpwnam(settings.run_as_user)
+        uid = p.pw_uid
+        gid = p.pw_gid
+
+        # Set log file owner
+        os.chown(settings.log_file, uid, gid)
+        os.chmod(settings.log_file, 0o700)
+
+        # Run as daemon user
+        os.setuid(uid)
+
+        # Rotate log file.
+        if settings.LOGROTATE_TYPE == 'size':
+            logger.info("Log rotate type: size (%d MB), backup copies: %d." % ((settings.LOGROTATE_SIZE / 1024 / 1024),
+                                                                               settings.LOGROTATE_COPIES))
+        elif settings.LOGROTATE_TYPE == 'time':
+            logger.info("Log rotate type: time, interval: %s, backup copies: %d." % (settings.LOGROTATE_INTERVAL,
+                                                                                     settings.LOGROTATE_COPIES))
+    except Exception, e:
+        logger.error('Error while running in background: ' + repr(e))
+        sys.exit(255)
+
+    # Initialize policy daemon.
+    try:
+        bind_address = (settings.listen_address, int(settings.listen_port))
+
+        #pool = Pool(size=100000)
+        #server = StreamServer(bind_address, handle=policy_handle, spawn=pool)
+        server = StreamServer(bind_address, handle=policy_handle)
+
         server.serve_forever()
         logger.info("""Starting iRedAPD (version: %s, backend: %s), \
                     listening on %s:%d.""" % (__version__,
@@ -223,32 +280,7 @@ def main():
                                               settings.listen_address,
                                               int(settings.listen_port)))
     except Exception, e:
-        logger.error('Error in daemon.daemonize: ' + str(e))
-
-    # Write pid number into pid file.
-    f = open(settings.pid_file, 'w')
-    f.write(str(os.getpid()))
-    f.close()
-
-    # Get uid/gid of daemon user.
-    p = pwd.getpwnam(settings.run_as_user)
-    uid = p.pw_uid
-    gid = p.pw_gid
-
-    # Set log file owner
-    os.chown(settings.log_file, uid, gid)
-    os.chmod(settings.log_file, 0o700)
-
-    # Run as daemon user
-    os.setuid(uid)
-
-    # Rotate log file.
-    if settings.LOGROTATE_TYPE == 'size':
-        logger.info("Log rotate type: size (%d MB), backup copies: %d." % ((settings.LOGROTATE_SIZE / 1024 / 1024),
-                                                                           settings.LOGROTATE_COPIES))
-    elif settings.LOGROTATE_TYPE == 'time':
-        logger.info("Log rotate type: time, interval: %s, backup copies: %d." % (settings.LOGROTATE_INTERVAL,
-                                                                                 settings.LOGROTATE_COPIES))
+        logger.error('Error while looping: ' + repr(e))
 
 if __name__ == '__main__':
     main()
