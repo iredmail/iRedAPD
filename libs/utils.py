@@ -1,3 +1,4 @@
+import os
 import sys
 import traceback
 import re
@@ -7,7 +8,7 @@ import socket
 from sqlalchemy import create_engine
 
 from libs.logger import logger
-from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
+from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES, SMTP_ACTIONS
 from libs import ipaddress
 import settings
 
@@ -439,3 +440,85 @@ def log_policy_request(smtp_session_data, action):
                                      action))
 
     return None
+
+
+def load_enabled_plugins():
+    """Load and import enabled plugins."""
+    plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '../plugins'
+
+    loaded_plugins = []
+
+    # Import priorities of built-in plugins.
+    _plugin_priorities = PLUGIN_PRIORITIES
+
+    # Import priorities of custom plugins, or custom priorities of built-in plugins
+    _plugin_priorities.update(settings.PLUGIN_PRIORITIES)
+
+    # If enabled plugin doesn't have a priority pre-defined, set it to 0 (lowest)
+    _plugins_without_priority = [i for i in settings.plugins if i not in _plugin_priorities]
+    for _p in _plugins_without_priority:
+        _plugin_priorities[_p] = 0
+
+    # a list of {priority: name}
+    pnl = []
+    for p in settings.plugins:
+        plugin_file = os.path.join(plugin_dir, p + '.py')
+        if not os.path.isfile(plugin_file):
+            logger.info('Plugin %s (%s) does not exist.' % (p, plugin_file))
+            continue
+
+        priority = _plugin_priorities[p]
+        pnl += [{priority: p}]
+
+    # Sort plugin order with pre-defined priorities, so that we can apply
+    # plugins in ideal order.
+    ordered_plugins = []
+    for item in sorted(pnl, reverse=True):
+        ordered_plugins += item.values()
+
+    for plugin in ordered_plugins:
+        try:
+            loaded_plugins.append(__import__(plugin))
+            logger.info('Loading plugin (priority: %s): %s' % (_plugin_priorities[plugin], plugin))
+        except Exception, e:
+            logger.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
+
+    # Get list of LDAP query attributes
+    sender_search_attrlist = []
+    recipient_search_attrlist = []
+
+    if settings.backend == 'ldap':
+        sender_search_attrlist = ['objectClass']
+        recipient_search_attrlist = ['objectClass']
+
+        for plugin in loaded_plugins:
+            try:
+                sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
+            except:
+                pass
+
+            try:
+                recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
+            except:
+                pass
+
+    return {'loaded_plugins': loaded_plugins,
+            'sender_search_attrlist': sender_search_attrlist,
+            'recipient_search_attrlist': recipient_search_attrlist}
+
+
+def get_required_db_conns():
+    """Establish SQL database connections."""
+    if settings.backend in ['mysql', 'pgsql']:
+        conn_vmail = get_db_conn('vmail')
+    else:
+        # we don't have ldap connection pool, a connection object will be
+        # created in libs/ldaplib/modeler.py.
+        conn_vmail = None
+
+    conn_amavisd = get_db_conn('amavisd')
+    conn_iredapd = get_db_conn('iredapd')
+
+    return {'conn_vmail': conn_vmail,
+            'conn_amavisd': conn_amavisd,
+            'conn_iredapd': conn_iredapd}

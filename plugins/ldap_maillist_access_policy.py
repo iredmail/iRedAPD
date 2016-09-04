@@ -11,15 +11,19 @@ RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy']
 
 
 def restriction(**kwargs):
+    sasl_username = kwargs['sasl_username']
     recipient = kwargs['recipient']
     recipient_ldif = kwargs['recipient_ldif']
+
+    if sasl_username == recipient:
+        return SMTP_ACTIONS['default'] + ' (sasl_username == recipient, not a mail list account)'
 
     # Return if recipient is not a mail list object.
     if not recipient_ldif:
         return SMTP_ACTIONS['default'] + ' (No recipient LDIF data)'
 
-    if not ('mailList' in recipient_ldif['objectClass']):
-        return SMTP_ACTIONS['default'] + ' (Not a mail list account)'
+    if 'mailList' not in recipient_ldif['objectClass']:
+        return SMTP_ACTIONS['default'] + ' (Recipient is not a mailing list account)'
 
     policy = recipient_ldif.get('accessPolicy', ['public'])[0].lower()
 

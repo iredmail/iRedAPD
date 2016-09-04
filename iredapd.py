@@ -21,9 +21,9 @@ del _pyc
 # Import config file (settings.py) and modules
 import settings
 from libs import __version__, daemon
-from libs import PLUGIN_PRIORITIES, SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
+from libs import SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
 from libs.logger import logger
-from libs.utils import get_db_conn, log_policy_request
+from libs.utils import load_enabled_plugins, get_required_db_conns, log_policy_request
 
 # Plugin directory.
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
@@ -164,59 +164,12 @@ class DaemonSocket(asyncore.dispatcher):
             logger.info("Log rotate type: time, interval: %s, backup copies: %d." % (settings.LOGROTATE_INTERVAL,
                                                                                      settings.LOGROTATE_COPIES))
 
-        # Load plugins.
-        self.loaded_plugins = []
+        # Load enabled plugins.
+        self.loaded_plugins = load_enabled_plugins()['loaded_plugins']
 
-        # Import priorities of built-in plugins.
-        _plugin_priorities = PLUGIN_PRIORITIES
-
-        # Import priorities of custom plugins, or custom priorities of built-in plugins
-        _plugin_priorities.update(settings.PLUGIN_PRIORITIES)
-
-        # If enabled plugin doesn't have a priority pre-defined, set it to 0 (lowest)
-        _plugins_without_priority = [i for i in settings.plugins if i not in _plugin_priorities]
-        for _p in _plugins_without_priority:
-            _plugin_priorities[_p] = 0
-
-        # a list of {priority: name}
-        pnl = []
-        for p in settings.plugins:
-            plugin_file = os.path.join(plugin_dir, p + '.py')
-            if not os.path.isfile(plugin_file):
-                logger.info('Plugin %s (%s) does not exist.' % (p, plugin_file))
-                continue
-
-            priority = _plugin_priorities[p]
-            pnl += [{priority: p}]
-
-        # Sort plugin order with pre-defined priorities, so that we can apply
-        # plugins in ideal order.
-        ordered_plugins = []
-        for item in sorted(pnl, reverse=True):
-            ordered_plugins += item.values()
-
-        for plugin in ordered_plugins:
-            try:
-                self.loaded_plugins.append(__import__(plugin))
-                logger.info('Loading plugin (priority: %s): %s' % (_plugin_priorities[plugin], plugin))
-            except Exception, e:
-                logger.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
-
-        self.sender_search_attrlist = []
-        self.recipient_search_attrlist = []
-        if settings.backend == 'ldap':
-            self.sender_search_attrlist = ['objectClass']
-            self.recipient_search_attrlist = ['objectClass']
-            for plugin in self.loaded_plugins:
-                try:
-                    self.sender_search_attrlist += plugin.SENDER_SEARCH_ATTRLIST
-                except:
-                    pass
-
-                try:
-                    self.recipient_search_attrlist += plugin.RECIPIENT_SEARCH_ATTRLIST
-                except:
-                    pass
+        # Get list of LDAP query attributes
+        self.sender_search_attrlist = load_enabled_plugins()['sender_search_attrlist']
+        self.recipient_search_attrlist = load_enabled_plugins()['recipient_search_attrlist']
 
     def handle_accept(self):
         sock, remote_addr = self.accept()
@@ -236,19 +189,8 @@ def main():
     # Set umask.
     os.umask(0077)
 
-    if settings.backend in ['mysql', 'pgsql']:
-        conn_vmail = get_db_conn('vmail')
-    else:
-        # we don't have ldap connection pool, a connection object will be
-        # created in libs/ldaplib/modeler.py.
-        conn_vmail = None
-
-    conn_amavisd = get_db_conn('amavisd')
-    conn_iredapd = get_db_conn('iredapd')
-
-    db_conns = {'conn_vmail': conn_vmail,
-                'conn_amavisd': conn_amavisd,
-                'conn_iredapd': conn_iredapd}
+    # Establish SQL database connections.
+    db_conns = get_required_db_conns()
 
     # Initialize policy daemon.
     local_addr = (settings.listen_address, int(settings.listen_port))
