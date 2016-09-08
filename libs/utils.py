@@ -444,7 +444,7 @@ def log_policy_request(smtp_session_data, action):
 
 def load_enabled_plugins():
     """Load and import enabled plugins."""
-    plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '../plugins'
+    plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/../plugins'
 
     loaded_plugins = []
 
