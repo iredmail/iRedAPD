@@ -25,6 +25,7 @@ iRedAPD-2.0:
 
     * Fixed issues:
         - Incorrect account type: tld_domain -> top_level_domain.
+          Thanks Ralph <shane _at_ greenjames.com> for the report in forum.
         - Remove host bits in IP address of SPF record in
           tools/spf_to_greylist_whitelists.py: x.x.x.Y/zz -> x.x.x.Y.
         - White/blacklist doesn't work if email was sent from SOGo or
