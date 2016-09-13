@@ -66,7 +66,7 @@ MAILADDR_PRIORITIES = {
                             # as wildcard sender. e.g. 'user@*'
     'domain': 5,
     'subdomain': 3,
-    'tld_domain': 2,
+    'top_level_domain': 2,
     'catchall_ip': 1,       # used in iRedAPD plugin `throttle`
     'catchall': 0,
 }
