@@ -63,7 +63,8 @@ def policy_handle(socket, address):
             if not lines:
                 action = SMTP_ACTIONS['default']
                 socket.send('action=' + action + '\n\n')
-                logger.info('Client disconnected without valid input.')
+                logger.error('Client disconnected without valid input, fallback to default action: %s.' % action)
+                continue
 
             smtp_session_data = {}
             for line in lines:
@@ -84,6 +85,7 @@ def policy_handle(socket, address):
                                     # Don't waste time on invalid email addresses.
                                     action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (key, v)
                                     socket.send('action=' + action + '\n\n')
+                                    continue
 
                             smtp_session_data[key] = v
 
@@ -123,11 +125,11 @@ def policy_handle(socket, address):
                 if result:
                     action = result
                 else:
-                    logger.error('No result returned by modeler, fallback to default action: %s' % str(action))
                     action = SMTP_ACTIONS['default']
+                    logger.error('No result returned by modeler, fallback to default action: %s' % action)
             except Exception, e:
                 action = SMTP_ACTIONS['default']
-                logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
+                logger.error('Unexpected error (#1): %s. Fallback to default action: %s' % (repr(e), action))
 
             # Cleanup settings.GLOBAL_SESSION_TRACKING
             if _protocol_state == 'END-OF-MESSAGE':
@@ -142,7 +144,7 @@ def policy_handle(socket, address):
             utils.log_policy_request(smtp_session_data=smtp_session_data, action=action)
         except Exception, e:
             action = SMTP_ACTIONS['default']
-            logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
+            logger.error('Unexpected error (#2): %s. Fallback to default action: %s' % (repr(e), action))
 
         socket.send('action=' + action + '\n\n')
 
