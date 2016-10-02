@@ -4,7 +4,6 @@ import pwd
 import time
 import signal
 from gevent.server import StreamServer
-#from gevent.pool import Pool
 
 # Always remove 'settings.pyc'.
 _pyc = os.path.abspath(os.path.dirname(__file__)) + '/settings.pyc'
@@ -60,7 +59,7 @@ def policy_handle(socket, address):
         try:
             request = socket.recv(1024)
             if not request:
-                continue
+                break
 
             lines = request.splitlines()
             if not lines:
@@ -72,7 +71,7 @@ def policy_handle(socket, address):
             smtp_session_data = {}
             for line in lines:
                 if not line:
-                    continue
+                    break
 
                 logger.debug("smtp session: " + line)
 
@@ -216,8 +215,6 @@ def main():
     try:
         bind_address = (settings.listen_address, int(settings.listen_port))
 
-        #pool = Pool(size=100000)
-        #server = StreamServer(bind_address, handle=policy_handle, spawn=pool)
         server = StreamServer(bind_address, handle=policy_handle)
 
         logger.info("""Starting iRedAPD (version: %s, backend: %s), listening on %s:%d.""" % (
