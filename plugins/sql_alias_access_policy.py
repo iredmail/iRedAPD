@@ -41,8 +41,7 @@ def get_access_policy_and_more(conn, recipient):
     # Get access policy directly.
     sql = '''SELECT accesspolicy, goto, moderators
                FROM alias
-              WHERE
-                    address='%s'
+              WHERE address='%s'
                     AND islist=1
                     AND active=1
               LIMIT 1
@@ -85,7 +84,7 @@ def restriction(**kwargs):
 
         if not _sql_record:
             logger.debug('Recipient domain is not an alias domain.')
-            return SMTP_ACTIONS['default'] + ' (Not a mail alias account)'
+            return SMTP_ACTIONS['default'] + ' Recipient is not a mail alias account or no access policy'
 
         # Reset recipient and recipient domain
         real_recipient_domain = _sql_record[0].lower()

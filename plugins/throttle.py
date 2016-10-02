@@ -527,7 +527,7 @@ def restriction(**kwargs):
         size = 0
 
     if sender_domain == recipient_domain:
-        logger.debug('Sender domain (@%s) is same as recipient domain, skip throttling.' % sender_domain)
+        logger.debug('SKIP: Sender domain (@%s) is same as recipient domain.' % sender_domain)
         return SMTP_ACTIONS['default']
 
     if settings.THROTTLE_BYPASS_MYNETWORKS:

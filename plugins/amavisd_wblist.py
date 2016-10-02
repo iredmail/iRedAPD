@@ -213,11 +213,11 @@ def restriction(**kwargs):
         sender_domain = kwargs['sasl_username_domain']
 
     if not sender:
-        logger.debug('Bypass: no sender address.')
+        logger.debug('SKIP: no sender address.')
         return SMTP_ACTIONS['default']
 
     if sender == recipient:
-        logger.debug('Sender is same as recipient, bypassed.')
+        logger.debug('SKIP: Sender is same as recipient.')
         return SMTP_ACTIONS['default']
 
     valid_senders = amavisd_lib.get_valid_addresses_from_email(sender)
