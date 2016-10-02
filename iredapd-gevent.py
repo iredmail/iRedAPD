@@ -53,11 +53,14 @@ sender_search_attrlist = utils.load_enabled_plugins()['sender_search_attrlist']
 recipient_search_attrlist = utils.load_enabled_plugins()['recipient_search_attrlist']
 
 def policy_handle(socket, address):
+    # When the request handler returns, the socket used for the request will
+    # be closed. Therefore, the handler must not return if the socket is still
+    # in use (for example, by manually spawned greenlets).
     while True:
         try:
             request = socket.recv(1024)
             if not request:
-                break
+                continue
 
             lines = request.splitlines()
             if not lines:
@@ -69,7 +72,7 @@ def policy_handle(socket, address):
             smtp_session_data = {}
             for line in lines:
                 if not line:
-                    break
+                    continue
 
                 logger.debug("smtp session: " + line)
 

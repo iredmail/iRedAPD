@@ -112,4 +112,9 @@ SMTP_SESSION_ATTRIBUTES = [
     'ccert_pubkey_fingerprint',
     # Postfix version 3.0 and later:
     'client_port',
+    # Postfix version 3.1 and later:
+    'policy_context',
+    # Postfix version 3.2 and later:
+    'server_address',
+    'server_port',
 ]
