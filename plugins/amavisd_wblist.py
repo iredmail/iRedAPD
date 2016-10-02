@@ -60,6 +60,10 @@ def get_id_of_external_addresses(conn, addresses):
     '''Return list of `mailaddr.id` of external addresses.'''
     ids = []
 
+    if not addresses:
+        logger.debug('No addresses, return empty list of ids.')
+        return ids
+
     # Get 'mailaddr.id' of external addresses, ordered by priority
     sql = """SELECT id, email
                FROM mailaddr
@@ -71,7 +75,7 @@ def get_id_of_external_addresses(conn, addresses):
         qr = conn.execute(sql)
         qr_addresses = qr.fetchall()
     except Exception, e:
-        logger.error('Error while getting list of id of external addresses: %s' % repr(e))
+        logger.error('Error while getting list of id of external addresses: %s, SQL: %s' % (repr(e), sql))
         return ids
 
     if qr_addresses:

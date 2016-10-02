@@ -28,8 +28,8 @@ def restriction(**kwargs):
     if is_trusted_client(client_address):
         return SMTP_ACTIONS['default']
 
-    if sasl_username and not sender:
-        logger.debug('Possible spam (authenticated as %s but sender is null).' % sasl_username)
+    if sasl_username and (not sender):
+        logger.debug('Possible spam (authenticated as %s but sender address is null).' % sasl_username)
         return SMTP_ACTIONS['reject']
 
     return SMTP_ACTIONS['default']

@@ -215,14 +215,17 @@ def _should_be_greylisted_by_tracking(conn,
     # Get passed IP address.
     sql = """SELECT init_time, blocked_count, block_expired, record_expired
                FROM greylisting_tracking
-              WHERE     sender=%s
+              WHERE sender=%s
                     AND recipient=%s
                     AND client_address=%s
               LIMIT 1""" % (sender, recipient, client_address_sql)
 
     logger.debug('[SQL] query greylisting tracking: \n%s' % sql)
-    qr = conn.execute(sql)
-    sql_record = qr.fetchone()
+    try:
+        qr = conn.execute(sql)
+        sql_record = qr.fetchone()
+    except Exception, e:
+        logger.error('Error while querying greylisting tracking: %s. SQL: %s' % (repr(e), sql))
 
     if not sql_record:
         # Not record found, insert a new one.
@@ -306,9 +309,9 @@ def _should_be_greylisted_by_tracking(conn,
 
 def restriction(**kwargs):
     # Bypass null sender (in case we don't have `reject_null_sender` plugin enabled)
-    if not kwargs['sender']:
-        logger.debug('Bypass greylisting for null sender.')
-        return SMTP_ACTIONS['default']
+    #if not kwargs['sender']:
+    #    logger.debug('Bypass greylisting for null sender.')
+    #    return SMTP_ACTIONS['default']
 
     # Bypass outgoing emails.
     if kwargs['sasl_username']:

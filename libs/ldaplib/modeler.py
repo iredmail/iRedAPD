@@ -41,17 +41,11 @@ class Modeler:
 
     def handle_data(self,
                     smtp_session_data,
-                    plugins=[],
-                    sender_search_attrlist=[],
-                    recipient_search_attrlist=[]):
-        # No sender or recipient in smtp session.
-        if 'sender' not in smtp_session_data or \
-           'recipient' not in smtp_session_data:
-            return SMTP_ACTIONS['default']
-
-        # No plugins available.
+                    plugins=None,
+                    sender_search_attrlist=None,
+                    recipient_search_attrlist=None):
         if not plugins:
-            return 'DUNNO'
+            return SMTP_ACTIONS['default'] + ' No enabled plugins'
 
         protocol_state = smtp_session_data['protocol_state'].upper()
         sender = smtp_session_data.get('sender', '')

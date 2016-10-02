@@ -18,10 +18,9 @@ del _pyc
 
 # Import config file (settings.py) and modules
 import settings
-from libs import __version__, daemon
+from libs import __version__, daemon, utils
 from libs import SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
 from libs.logger import logger
-from libs.utils import load_enabled_plugins, get_required_db_conns, log_policy_request
 
 # Plugin directory.
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
@@ -44,14 +43,14 @@ elif settings.backend in ['mysql', 'pgsql']:
 settings.GLOBAL_SESSION_TRACKING = {}
 
 # Establish SQL database connections.
-db_conns = get_required_db_conns()
+db_conns = utils.get_required_db_conns()
 
 # Load enabled plugins.
-loaded_plugins = load_enabled_plugins()['loaded_plugins']
+loaded_plugins = utils.load_enabled_plugins()['loaded_plugins']
 
 # Get list of LDAP query attributes
-sender_search_attrlist = load_enabled_plugins()['sender_search_attrlist']
-recipient_search_attrlist = load_enabled_plugins()['recipient_search_attrlist']
+sender_search_attrlist = utils.load_enabled_plugins()['sender_search_attrlist']
+recipient_search_attrlist = utils.load_enabled_plugins()['recipient_search_attrlist']
 
 def policy_handle(socket, address):
     while True:
@@ -80,6 +79,12 @@ def policy_handle(socket, address):
                         if key in ['sender', 'recipient', 'sasl_username']:
                             # convert to lower cases.
                             v = value.lower()
+                            if v:
+                                if not utils.is_email(v):
+                                    # Don't waste time on invalid email addresses.
+                                    action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (key, v)
+                                    socket.send('action=' + action + '\n\n')
+
                             smtp_session_data[key] = v
 
                             # Add sender_domain, recipient_domain, sasl_username_domain
@@ -134,7 +139,7 @@ def policy_handle(socket, address):
                         if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 120 < int(time.time()):
                             settings.GLOBAL_SESSION_TRACKING
 
-            log_policy_request(smtp_session_data=smtp_session_data, action=action)
+            utils.log_policy_request(smtp_session_data=smtp_session_data, action=action)
         except Exception, e:
             action = SMTP_ACTIONS['default']
             logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))

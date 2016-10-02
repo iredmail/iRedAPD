@@ -20,10 +20,9 @@ del _pyc
 
 # Import config file (settings.py) and modules
 import settings
-from libs import __version__, daemon
+from libs import __version__, daemon, utils
 from libs import SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
 from libs.logger import logger
-from libs.utils import load_enabled_plugins, get_required_db_conns, log_policy_request
 
 # Plugin directory.
 plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
@@ -78,6 +77,13 @@ class PolicyChannel(asynchat.async_chat):
                     if key in ['sender', 'recipient', 'sasl_username']:
                         # convert to lower cases.
                         v = value.lower()
+
+                        if v:
+                            if not utils.is_email(v):
+                                # Don't waste time on invalid email addresses.
+                                action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (key, v)
+                                self.push('action=' + action + '\n')
+
                         self.smtp_session_data[key] = v
 
                         # Add sender_domain, recipient_domain, sasl_username_domain
@@ -135,7 +141,7 @@ class PolicyChannel(asynchat.async_chat):
 
             self.push('action=' + action + '\n')
             logger.debug('Session ended.')
-            log_policy_request(smtp_session_data=self.smtp_session_data, action=action)
+            utils.log_policy_request(smtp_session_data=self.smtp_session_data, action=action)
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)
@@ -165,11 +171,11 @@ class DaemonSocket(asyncore.dispatcher):
                                                                                      settings.LOGROTATE_COPIES))
 
         # Load enabled plugins.
-        self.loaded_plugins = load_enabled_plugins()['loaded_plugins']
+        self.loaded_plugins = utils.load_enabled_plugins()['loaded_plugins']
 
         # Get list of LDAP query attributes
-        self.sender_search_attrlist = load_enabled_plugins()['sender_search_attrlist']
-        self.recipient_search_attrlist = load_enabled_plugins()['recipient_search_attrlist']
+        self.sender_search_attrlist = utils.load_enabled_plugins()['sender_search_attrlist']
+        self.recipient_search_attrlist = utils.load_enabled_plugins()['recipient_search_attrlist']
 
     def handle_accept(self):
         sock, remote_addr = self.accept()
@@ -190,7 +196,7 @@ def main():
     os.umask(0077)
 
     # Establish SQL database connections.
-    db_conns = get_required_db_conns()
+    db_conns = utils.get_required_db_conns()
 
     # Initialize policy daemon.
     local_addr = (settings.listen_address, int(settings.listen_port))
