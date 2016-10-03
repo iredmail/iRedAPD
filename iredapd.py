@@ -94,6 +94,9 @@ class PolicyChannel(asynchat.async_chat):
                     logger.debug('Drop invalid smtp session input: %s' % line)
 
         elif self.smtp_session_data:
+            # Track how long a request takes
+            _start_time = time.time()
+
             # Gather data at RCPT , data will be used at END-OF-MESSAGE
             _instance = self.smtp_session_data['instance']
             _protocol_state = self.smtp_session_data['protocol_state']
@@ -141,7 +144,12 @@ class PolicyChannel(asynchat.async_chat):
 
             self.push('action=' + action + '\n')
             logger.debug('Session ended.')
-            utils.log_policy_request(smtp_session_data=self.smtp_session_data, action=action)
+
+            _end_time = time.time()
+            utils.log_policy_request(smtp_session_data=self.smtp_session_data,
+                                     action=action,
+                                     start_time=_start_time,
+                                     end_time=_end_time)
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)

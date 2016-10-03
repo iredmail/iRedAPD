@@ -68,6 +68,9 @@ def policy_handle(socket, address):
                 logger.error('Client disconnected without valid input, fallback to default action: %s.' % action)
                 continue
 
+            # Track how long a request takes
+            _start_time = time.time()
+
             smtp_session_data = {}
             for line in lines:
                 if not line:
@@ -143,7 +146,11 @@ def policy_handle(socket, address):
                         if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 120 < int(time.time()):
                             settings.GLOBAL_SESSION_TRACKING
 
-            utils.log_policy_request(smtp_session_data=smtp_session_data, action=action)
+            _end_time = time.time()
+            utils.log_policy_request(smtp_session_data=smtp_session_data,
+                                     action=action,
+                                     start_time=_start_time,
+                                     end_time=_end_time)
         except Exception, e:
             action = SMTP_ACTIONS['default']
             logger.error('Unexpected error (#2): %s. Fallback to default action: %s' % (repr(e), action))

@@ -415,11 +415,12 @@ def is_server_hostname(domain):
         return False
 
 
-def log_policy_request(smtp_session_data, action):
+def log_policy_request(smtp_session_data, action, start_time=None, end_time=None):
     # Log sasl username, sender, recipient
     #   `sender -> recipient`: sender not authenticated
     #   `sender => recipient`: sasl username is same as sender address (From:)
     #   `sasl_username => sender -> recipient`: user send as different sender address
+    # @start_time, @end_time are instance of 'time.time()'.
     _log_sender_to_rcpt = ''
 
     sasl_username = smtp_session_data.get('sasl_username', '')
@@ -434,11 +435,16 @@ def log_policy_request(smtp_session_data, action):
     else:
         _log_sender_to_rcpt = '%s -> %s' % (sender, recipient)
 
+    _time = ''
+    if start_time and end_time:
+        _time = '[%.4fs] ' % (end_time - start_time)
+
     # Log final action
-    logger.info('[%s] %s, %s, %s' % (smtp_session_data['client_address'],
-                                     smtp_session_data['protocol_state'],
-                                     _log_sender_to_rcpt,
-                                     action))
+    logger.info('%s[%s] %s, %s, %s' % (_time,
+                                       smtp_session_data['client_address'],
+                                       smtp_session_data['protocol_state'],
+                                       _log_sender_to_rcpt,
+                                       action))
 
     return None
 
