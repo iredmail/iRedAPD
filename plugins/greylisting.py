@@ -1,14 +1,14 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose: Greylisting.
-# Reference: http://greylisting.org/articles/whitepaper.shtml
 
 # TODO Support per-domain whitelisting for greylisting service.
 
 """
 * Please read tutorial below to understand how to manage greylisting settings:
-  http://www.iredmail.org/manage.iredapd.html
+  http://www.iredmail.org/docs/manage.iredapd.html
 
-* Understand greylisting: http://greylisting.org/articles/whitepaper.shtml
+* Understand greylisting:
+  http://greylisting.org/articles/whitepaper.shtml
 """
 
 import time
