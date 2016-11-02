@@ -139,19 +139,27 @@ def restriction(**kwargs):
 
     if policy == MAILLIST_POLICY_DOMAIN:
         # Bypass all users under the same domain.
-        if sender_domain == recipient_domain or sender_domain in rcpt_alias_domains:
+        if sender_domain == recipient_domain \
+           or sender_domain in rcpt_alias_domains:
             return SMTP_ACTIONS['default']
         else:
             return SMTP_ACTIONS['reject_not_authorized']
+
     elif policy == MAILLIST_POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
-        if sender_domain == recipient_domain or sender.endswith('.' + recipient_domain):
+        if sender_domain == recipient_domain \
+           or sender_domain == real_recipient_domain \
+           or sender.endswith('.' + recipient_domain):
+            logger.debug('Sender domain is same as recipient domain or is sub-domain.')
             return SMTP_ACTIONS['default']
-
-        if rcpt_alias_domains:
+        elif sender_domain in rcpt_alias_domains:
+            logger.debug('Sender domain is one of recipient alias domain.')
+            return SMTP_ACTIONS['default']
+        else:
+            # Check whether sender domain is subdomain of primary/alias recipient domains
             for d in rcpt_alias_domains:
-                if sender_domain == d or sender.endswith('.' + d):
-                    logger.debug('Matched: %s or .%s' % (d, d))
+                if sender.endswith('.' + d):
+                    logger.debug('Sender domain is sub-domain of recipient alias domain (%s).' % d)
                     return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']

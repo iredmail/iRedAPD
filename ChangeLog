@@ -24,6 +24,9 @@ iRedAPD-2.0:
           rc_scripts/iredapd.service.
 
     * Fixed issues:
+        - plugins/sql_alias_access_policy: if access policy is 'subdomain',
+          email sent from alias member (which is under same domain) to
+          <alias_account@alias_domain.com> was incorrectly rejected.
         - Incorrect account type: tld_domain -> top_level_domain.
           Thanks Ralph <shane _at_ greenjames.com> for the report in forum.
         - Remove host bits in IP address of SPF record in
