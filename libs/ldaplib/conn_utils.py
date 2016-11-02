@@ -4,9 +4,9 @@ from libs.logger import logger
 from libs import utils
 import ldap
 import settings
-from libs import MAILLIST_POLICY_MEMBERSONLY, \
-    MAILLIST_POLICY_ALLOWEDONLY, \
-    MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
+
+from libs import POLICY_MEMBERSONLY, POLICY_ALLOWEDONLY
+from libs import POLICY_MEMBERSANDMODERATORSONLY
 
 
 def get_account_ldif(conn, account, query_filter=None, attrs=None):
@@ -70,7 +70,7 @@ def get_allowed_senders_of_mail_list(conn,
 
     # Set search filter, attributes based on policy.
     # Override base dn, scope if necessary.
-    if policy == MAILLIST_POLICY_MEMBERSONLY:
+    if policy == POLICY_MEMBERSONLY:
         # Filter: get mail list members.
         search_filter = '(&' + \
                         '(accountStatus=active)(memberOfGroup=%s)' % (recipient) + \
@@ -79,13 +79,13 @@ def get_allowed_senders_of_mail_list(conn,
 
         # Get both mail and shadowAddress.
         search_attrs = ['mail', 'shadowAddress']
-    elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
+    elif policy == POLICY_MEMBERSANDMODERATORSONLY:
         # Policy: policy==
         # Filter used to get both members and moderators.
         search_filter = "(|(&(|(objectClass=mailUser)(objectClass=mailExternalUser))(memberOfGroup=%s))(&(objectclass=mailList)(mail=%s)))" % (recipient, recipient)
         search_attrs = ['mail', 'shadowAddress', 'listAllowedUser']
 
-    if policy == MAILLIST_POLICY_ALLOWEDONLY:
+    if policy == POLICY_ALLOWEDONLY:
         # Not necessary to query LDAP to get value of listAllowedUser.
         allowed_senders = allowed_senders
     else:
@@ -109,7 +109,7 @@ def get_allowed_senders_of_mail_list(conn,
 
     logger.debug('result: %s' % str(allowed_senders))
 
-    if policy == MAILLIST_POLICY_ALLOWEDONLY:
+    if policy == POLICY_ALLOWEDONLY:
         recipient_domain = recipient.split('@', 1)[-1]
 
         # Seperate valid email addresses under same domain and domain names.

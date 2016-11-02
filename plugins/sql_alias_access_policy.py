@@ -11,12 +11,12 @@
 
 from libs.logger import logger
 from libs import SMTP_ACTIONS
-from libs import MAILLIST_POLICY_PUBLIC
-from libs import MAILLIST_POLICY_DOMAIN
-from libs import MAILLIST_POLICY_SUBDOMAIN
-from libs import MAILLIST_POLICY_MEMBERSONLY
-from libs import MAILLIST_POLICY_ALLOWEDONLY
-from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
+from libs import POLICY_PUBLIC
+from libs import POLICY_DOMAIN
+from libs import POLICY_SUBDOMAIN
+from libs import POLICY_MEMBERSONLY
+from libs import POLICY_ALLOWEDONLY
+from libs import POLICY_MEMBERSANDMODERATORSONLY
 
 
 def is_allowed_alias_domain_user(sender,
@@ -106,7 +106,7 @@ def restriction(**kwargs):
     # Log access policy and description
     logger.debug('Access policy: %s' % policy)
 
-    if policy == MAILLIST_POLICY_PUBLIC:
+    if policy == POLICY_PUBLIC:
         return SMTP_ACTIONS['default']
 
     members = [str(v.lower()) for v in str(policy_record[1]).split(',')]
@@ -137,7 +137,7 @@ def restriction(**kwargs):
     else:
         logger.debug('No alias domain.')
 
-    if policy == MAILLIST_POLICY_DOMAIN:
+    if policy == POLICY_DOMAIN:
         # Bypass all users under the same domain.
         if sender_domain == recipient_domain \
            or sender_domain in rcpt_alias_domains:
@@ -145,7 +145,7 @@ def restriction(**kwargs):
         else:
             return SMTP_ACTIONS['reject_not_authorized']
 
-    elif policy == MAILLIST_POLICY_SUBDOMAIN:
+    elif policy == POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
         if sender_domain == recipient_domain \
            or sender_domain == real_recipient_domain \
@@ -164,7 +164,7 @@ def restriction(**kwargs):
 
         return SMTP_ACTIONS['reject_not_authorized']
 
-    elif policy == MAILLIST_POLICY_MEMBERSONLY:
+    elif policy == POLICY_MEMBERSONLY:
         # Bypass all members.
         if sender in members \
            or is_allowed_alias_domain_user(sender,
@@ -177,7 +177,7 @@ def restriction(**kwargs):
 
         return SMTP_ACTIONS['reject_not_authorized']
 
-    elif policy == MAILLIST_POLICY_ALLOWEDONLY:
+    elif policy == POLICY_ALLOWEDONLY:
         # Bypass all moderators.
         if sender in moderators \
            or '*@' + sender_domain in moderators \
@@ -191,7 +191,7 @@ def restriction(**kwargs):
 
         return SMTP_ACTIONS['reject_not_authorized']
 
-    elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
+    elif policy == POLICY_MEMBERSANDMODERATORSONLY:
         # Bypass both members and moderators.
         if sender in members \
            or sender in moderators \
