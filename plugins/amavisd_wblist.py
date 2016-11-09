@@ -206,6 +206,7 @@ def restriction(**kwargs):
     sender = kwargs['sender']
     sender_domain = kwargs['sender_domain']
     recipient = kwargs['recipient']
+    recipient_domain = kwargs['recipient_domain']
 
     if kwargs['sasl_username']:
         # Use sasl_username as sender for outgoing email
@@ -251,10 +252,14 @@ def restriction(**kwargs):
         if id_of_local_addresses:
             id_of_ext_addresses = get_id_of_external_addresses(conn, valid_recipients)
 
-        return apply_outbound_wblist(conn,
-                                     sender_ids=id_of_local_addresses,
-                                     recipient_ids=id_of_ext_addresses)
-    else:
+        action = apply_outbound_wblist(conn,
+                                       sender_ids=id_of_local_addresses,
+                                       recipient_ids=id_of_ext_addresses)
+
+        if not action.startswith('DUNNO'):
+            return action
+
+    if (not kwargs['sasl_username']) or is_local_domain(conn=conn_vmail, domain=recipient_domain):
         logger.debug('Apply wblist for inbound message.')
 
         id_of_ext_addresses = []
@@ -262,6 +267,11 @@ def restriction(**kwargs):
         if id_of_local_addresses:
             id_of_ext_addresses = get_id_of_external_addresses(conn, valid_senders)
 
-        return apply_inbound_wblist(conn,
-                                    sender_ids=id_of_ext_addresses,
-                                    recipient_ids=id_of_local_addresses)
+        action = apply_inbound_wblist(conn,
+                                      sender_ids=id_of_ext_addresses,
+                                      recipient_ids=id_of_local_addresses)
+
+        if not action.startswith('DUNNO'):
+            return action
+
+    return SMTP_ACTIONS['default']

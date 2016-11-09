@@ -24,6 +24,9 @@ iRedAPD-2.0:
           rc_scripts/iredapd.service.
 
     * Fixed issues:
+        - plugins/amavisd_wblist.py: not apply inbound wblist if both sender
+          and recipient are local virtual mail user.
+          Thanks Tom <tom _at_ ansspc.com> for the report in forum.
         - plugins/sql_alias_access_policy: if access policy is 'subdomain',
           email sent from alias member (which is under same domain) to
           <alias_account@alias_domain.com> was incorrectly rejected.
