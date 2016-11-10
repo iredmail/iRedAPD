@@ -45,11 +45,13 @@ settings.GLOBAL_SESSION_TRACKING = {}
 db_conns = utils.get_required_db_conns()
 
 # Load enabled plugins.
-loaded_plugins = utils.load_enabled_plugins()['loaded_plugins']
+qr = utils.load_enabled_plugins()
+loaded_plugins = qr['loaded_plugins']
 
 # Get list of LDAP query attributes
-sender_search_attrlist = utils.load_enabled_plugins()['sender_search_attrlist']
-recipient_search_attrlist = utils.load_enabled_plugins()['recipient_search_attrlist']
+sender_search_attrlist = qr['sender_search_attrlist']
+recipient_search_attrlist = qr['recipient_search_attrlist']
+del qr
 
 def policy_handle(socket, address):
     # When the request handler returns, the socket used for the request will

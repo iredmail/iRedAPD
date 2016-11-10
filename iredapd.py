@@ -179,11 +179,13 @@ class DaemonSocket(asyncore.dispatcher):
                                                                                      settings.LOGROTATE_COPIES))
 
         # Load enabled plugins.
-        self.loaded_plugins = utils.load_enabled_plugins()['loaded_plugins']
+        qr = utils.load_enabled_plugins()
+        self.loaded_plugins = qr['loaded_plugins']
 
         # Get list of LDAP query attributes
-        self.sender_search_attrlist = utils.load_enabled_plugins()['sender_search_attrlist']
-        self.recipient_search_attrlist = utils.load_enabled_plugins()['recipient_search_attrlist']
+        self.sender_search_attrlist = qr['sender_search_attrlist']
+        self.recipient_search_attrlist = qr['recipient_search_attrlist']
+        del qr
 
     def handle_accept(self):
         sock, remote_addr = self.accept()

@@ -242,8 +242,15 @@ def restriction(**kwargs):
     logger.debug('Possible policy senders: %s' % str(valid_senders))
     logger.debug('Possible policy recipients: %s' % str(valid_recipients))
 
+    check_outbound = False
+    if (not check_outbound) and kwargs['sasl_username']:
+        check_outbound = True
+
+    if (not check_outbound) and is_local_domain(conn=conn_vmail, domain=sender_domain):
+        check_outbound = True
+
     # Outbound
-    if kwargs['sasl_username'] or is_local_domain(conn=conn_vmail, domain=sender_domain):
+    if check_outbound:
         logger.debug('Apply wblist for outbound message.')
 
         id_of_local_addresses = get_id_of_local_addresses(conn, valid_senders)
@@ -259,7 +266,19 @@ def restriction(**kwargs):
         if not action.startswith('DUNNO'):
             return action
 
-    if (not kwargs['sasl_username']) or is_local_domain(conn=conn_vmail, domain=recipient_domain):
+    check_inbound = False
+    if (not check_inbound) and (not kwargs['sasl_username']):
+        check_inbound = True
+
+    if (not check_inbound) and kwargs['sasl_username'] and (sender_domain == recipient_domain):
+        # Local user sends to another user in same domain
+        check_inbound = True
+
+    if (not check_inbound) and is_local_domain(conn=conn_vmail, domain=recipient_domain):
+        # Local user sends to another local user in different domain
+        check_inbound = True
+
+    if check_inbound:
         logger.debug('Apply wblist for inbound message.')
 
         id_of_ext_addresses = []
