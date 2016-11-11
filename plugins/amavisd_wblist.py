@@ -37,9 +37,9 @@
 #   - @.:           all senders
 #   - 192.168.1.2:  single sender ip address
 #   - 192.168.1.*, 192.168.*.2:  wildcard sender ip addresses.
-#                   NOTE: if you want to use
-#                   wildcard IP address like '192.*.1.2', '192.*.*.2', please
-#                   set 'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
+#                   NOTE: if you want to use wildcard IP address like
+#                   '192.*.1.2', '192.*.*.2', please set
+#                   'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
 #                   /opt/iredapd/settings.py.
 
 from libs.logger import logger
