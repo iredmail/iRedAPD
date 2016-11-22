@@ -29,11 +29,11 @@ See Also
 Stevens, W. Richard. I{Unix Network Programming} (Addison-Wesley, 1990).
 """
 
-__version__   = "1.0.1"
-__author__    = "Brian Clapper, bmc@clapper.org"
-__url__       = "http://www.clapper.org/software/python/daemon/"
+__version__ = "1.0.1"
+__author__ = "Brian Clapper, bmc@clapper.org"
+__url__ = "http://www.clapper.org/software/python/daemon/"
 __copyright__ = "(c) 2008 Brian M. Clapper"
-__license__   = "BSD-style license"
+__license__ = "BSD-style license"
 
 __all__ = ['daemonize', 'DaemonError']
 
@@ -163,7 +163,7 @@ def daemonize(noClose=False):
             _redirectFileDescriptors()
 
     except Exception, e:
-        raise DaemonError, 'Error during daemonizing: %s [%d]' % (e.strerror, e.errno)
+        raise DaemonError('Error during daemonizing: %s [%d]' % (e.strerror, e.errno))
 
 
 # ---------------------------------------------------------------------------
@@ -174,7 +174,7 @@ def _fork():
     try:
         return os.fork()
     except OSError, e:
-        raise DaemonError, 'Cannot fork: %s [%d]' % (e.strerror, e.errno)
+        raise DaemonError('Cannot fork: %s [%d]' % (e.strerror, e.errno))
 
 def _redirectFileDescriptors():
     import resource  # POSIX resource information
@@ -198,7 +198,6 @@ def _redirectFileDescriptors():
             logging.info('Error in _redirectFileDescriptors 1: (%d, %s)' % (e.errno, e.strerror))
         except Exception, e:
             logging.info('Error in _redirectFileDescriptors 2: (%d, %s)' % (e.errno, e.strerror))
-
 
     # Redirect standard input, output and error to something safe.
     # os.open() is guaranteed to return the lowest available file
