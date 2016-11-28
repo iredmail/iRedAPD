@@ -46,13 +46,15 @@ def _check_sender_type(sender):
     return 'unknown'
 
 
-def _is_whitelisted(conn, senders, recipients, client_address):
+def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
     """Check greylisting whitelists stored in table `greylisting_whitelists`,
     returns True if is whitelisted, otherwise returns False.
 
     conn        -- sql connection cursor
     senders     -- list of senders we should check greylisting
     recipient   -- full email address of recipient
+    client_address -- client IP address
+    ip_object   -- object of IP address type (get by ipaddress.ip_address())
     """
 
     # query whitelists based on recipient
@@ -72,10 +74,8 @@ def _is_whitelisted(conn, senders, recipients, client_address):
         return True
 
     # check whitelisted cidr
-    _ip = ipaddress.ip_address(unicode(client_address))
-
     # Check IPv4.
-    if _ip.version == 4:
+    if ip_object.version == 4:
         _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
         for r in records:
             (_id, _cidr, _comment) = r
@@ -85,12 +85,12 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 _net = ()
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
-                    if _ip in _net:
+                    if ip_object in _net:
                         logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
                         return True
                 except Exception, e:
                     logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
-    elif _ip.version == 6:
+    elif ip_object.version == 6:
         # Check IPv6.
         for r in records:
             (_id, _cidr, _comment) = r
@@ -100,7 +100,7 @@ def _is_whitelisted(conn, senders, recipients, client_address):
                 _net = ()
                 try:
                     _net = ipaddress.ip_network(unicode(_cidr))
-                    if _ip in _net:
+                    if ip_object in _net:
                         logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
                         return True
                 except Exception, e:
@@ -112,7 +112,8 @@ def _is_whitelisted(conn, senders, recipients, client_address):
 
 def _client_address_passed_in_tracking(conn, client_address):
     sql = """SELECT id FROM greylisting_tracking
-              WHERE client_address=%s AND passed=1
+              WHERE client_address=%s
+                    AND passed=1
               LIMIT 1""" % sqlquote(client_address)
 
     logger.debug('[SQL] check whether client address (%s) passed greylisting: \n%s' % (client_address, sql))
@@ -127,12 +128,18 @@ def _client_address_passed_in_tracking(conn, client_address):
         return False
 
 
-def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
+def _should_be_greylisted_by_setting(conn,
+                                     recipients,
+                                     senders,
+                                     client_address,
+                                     ip_object):
     """Check if greylisting should be applied to specified senders: True, False.
 
     conn -- sql connection cursor
     recipient -- full email address of recipient
     senders -- list of senders we should check greylisting
+    client_address -- client IP address
+    ip_object   -- object of IP address type (get by ipaddress.ip_address())
     """
     sql = """SELECT id, account, sender, sender_priority, active
                FROM greylisting
@@ -148,9 +155,7 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
         logger.debug('No setting found. Disable Greylisting for this client.')
         return False
 
-    _ip = ipaddress.ip_address(unicode(client_address))
-
-    if _ip.version == 4:
+    if ip_object.version == 4:
         _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
 
     # Found enabled/disabled greylisting setting
@@ -164,13 +169,13 @@ def _should_be_greylisted_by_setting(conn, recipients, senders, client_address):
             # Compare client address with CIDR ip network.
             if _sender_priority == ACCOUNT_PRIORITIES['cidr']:
                 # IPv4
-                if _ip.version == 4 \
+                if ip_object.version == 4 \
                    and '/' in _sender \
                    and _sender.startswith(_cidr_prefix):
                     _net = ()
                     try:
                         _net = ipaddress.ip_network(_sender)
-                        if _ip in _net:
+                        if ip_object in _net:
                             _matched = True
                     except Exception, e:
                         logger.debug('Not an valid IP network: %s (error: %s)' % (_sender, str(e)))
@@ -346,18 +351,23 @@ def restriction(**kwargs):
         # Add wildcard ip address: xx.xx.xx.*.
         policy_senders += client_address.rsplit('.', 1)[0] + '.*'
 
+    # Get object of IP address type
+    _ip_object = ipaddress.ip_address(unicode(client_address))
+
     # Check greylisting whitelists
     if _is_whitelisted(conn,
                        senders=policy_senders,
                        recipients=policy_recipients,
-                       client_address=client_address):
+                       client_address=client_address,
+                       ip_object=_ip_object):
         return SMTP_ACTIONS['default']
 
     # Check greylisting settings
     if not _should_be_greylisted_by_setting(conn=conn,
                                             recipients=policy_recipients,
                                             senders=policy_senders,
-                                            client_address=client_address):
+                                            client_address=client_address,
+                                            ip_object=_ip_object):
         return SMTP_ACTIONS['default']
 
     if _client_address_passed_in_tracking(conn=conn, client_address=client_address):
