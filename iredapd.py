@@ -103,9 +103,8 @@ class PolicyChannel(asynchat.async_chat):
 
             if _protocol_state == 'RCPT':
                 if _instance not in settings.GLOBAL_SESSION_TRACKING:
-                    # tracking data should be removed/expired in 120 seconds to
-                    # avoid infinitely increased memory if some tracking data
-                    # was not removed due to some reason.
+                    # add timestamp of tracked smtp instance, so that we can
+                    # remove them after instance finished.
                     _tracking_expired = int(time.time())
 
                     # @processed: count of processed smtp sessions
@@ -132,14 +131,18 @@ class PolicyChannel(asynchat.async_chat):
                 action = SMTP_ACTIONS['default']
                 logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
-            # Cleanup settings.GLOBAL_SESSION_TRACKING
-            if _protocol_state == 'END-OF-MESSAGE':
+            # Remove tracking data when:
+            #
+            #   - if session was rejected/discard/whitelisted ('OK') during
+            #     RCPT state (it never reach END-OF-MESSAGE state)
+            #   - if session is in last state (END-OF-MESSAGE)
+            if not action.startswith('DUNNO') or _protocol_state == 'END-OF-MESSAGE':
                 if _instance in settings.GLOBAL_SESSION_TRACKING:
                     settings.GLOBAL_SESSION_TRACKING.pop(_instance)
                 else:
                     # Remove expired/ghost data.
                     for i in settings.GLOBAL_SESSION_TRACKING:
-                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 120 < int(time.time()):
+                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 60 < int(time.time()):
                             settings.GLOBAL_SESSION_TRACKING
 
             self.push('action=' + action + '\n')

@@ -463,13 +463,9 @@ def apply_throttle(conn,
         sql_updates = {}
 
         for (_, v) in t_settings.items():
-            print 1, v
             tid = v['tid']
-            print 2, tid
             for k in v['track_key']:
-                print 2.1, k
                 if (tid, k) in tracking_ids:
-                    print 2.2, tid, k
                     # Update existing tracking records
                     tracking_id = tracking_ids[(tid, k)]
 
