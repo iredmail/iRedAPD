@@ -92,11 +92,12 @@
 #       `msg_size` setting in per-domain (`@domain.com`) and/or global (`@.`)
 #       throttle settings.
 #
-# ------------
+####################################
 # Sample sender throttle settings:
 #
-# *) Allow user `user@domain.com` to send in 6 minutes (period=360):
+# *) Allow local user `user@domain.com` to send in 6 minutes (period=360):
 #
+#   * value of sql column `throttle.kind` is 'outbound'
 #   * max size of single message is 10240000 bytes (msg_size)
 #   * max 100 messages (max_msgs)
 #   * max 4096000000 bytes (max_quota)
@@ -110,10 +111,25 @@
 #                        100,
 #                        4096000000);
 #
+# *) Allow external user `user@not-my-domain.com` to send in 6 minutes (period=360):
+#
+#   * value of sql column `throttle.kind` is 'external'
+#
+#  INSERT INTO throttle (account, kind, priority, period, msg_size, max_msgs, max_quota)
+#                VALUES ('user@not-my-domain.com',
+#                        'external',
+#                        10,
+#                        360,
+#                        10240000,
+#                        100,
+#                        4096000000);
+#
+#####################################
 # Sample recipient throttle settings:
 #
-# *) Allow user 'user@domain.com' to receive in 6 minutes (period=360):
+# *) Allow local user 'user@domain.com' to receive in 6 minutes (period=360):
 #
+#   * value of sql column `throttle.kind` is 'inbound'
 #   * max size of single message is 10240000 bytes (msg_size)
 #   * max 100 messages (max_msgs)
 #   * max 4096000000 bytes (max_quota)
@@ -150,7 +166,8 @@ def apply_throttle(conn,
                    size,
                    recipient_count,
                    instance_id,
-                   is_sender_throttling=True):
+                   is_sender_throttling=True,
+                   is_external_sender=False):
     possible_addrs = [client_address, '@ip']
 
     if user:
@@ -161,9 +178,13 @@ def apply_throttle(conn,
     if is_ipv4(client_address):
         possible_addrs += wildcard_ipv4(client_address)
 
-    throttle_type = 'sender'
-    throttle_kind = 'outbound'       # throttle.kind
-    if not is_sender_throttling:
+    if is_sender_throttling:
+        throttle_type = 'sender'
+        throttle_kind = 'outbound'
+
+        if is_external_sender:
+            throttle_kind = 'external'
+    else:
         throttle_type = 'recipient'
         throttle_kind = 'inbound'
 
@@ -282,11 +303,10 @@ def apply_throttle(conn,
 
     # Get throttle tracking data.
     # Construct SQL query WHERE statement
-    sql = """
-        SELECT id, tid, account, cur_msgs, cur_quota, init_time, last_time
-          FROM throttle_tracking
-         WHERE %s
-         """ % ' OR '.join(tracking_sql_where)
+    sql = """SELECT id, tid, account, cur_msgs, cur_quota, init_time, last_time
+               FROM throttle_tracking
+              WHERE %s
+              """ % ' OR '.join(tracking_sql_where)
 
     logger.debug('[SQL] Query throttle tracking data:\n%s' % sql)
     qr = conn.execute(sql)
@@ -443,9 +463,13 @@ def apply_throttle(conn,
         sql_updates = {}
 
         for (_, v) in t_settings.items():
+            print 1, v
             tid = v['tid']
+            print 2, tid
             for k in v['track_key']:
+                print 2.1, k
                 if (tid, k) in tracking_ids:
+                    print 2.2, tid, k
                     # Update existing tracking records
                     tracking_id = tracking_ids[(tid, k)]
 
@@ -534,22 +558,24 @@ def restriction(**kwargs):
         if is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
-    # Apply sender throttling to only sasl auth users.
+    is_external_sender = True
     if kwargs['sasl_username']:
-        logger.debug('Check sender throttling.')
-        action = apply_throttle(conn=conn,
-                                user=sender,
-                                client_address=client_address,
-                                protocol_state=protocol_state,
-                                size=size,
-                                recipient_count=recipient_count,
-                                instance_id=instance_id,
-                                is_sender_throttling=True)
+        is_external_sender = False
 
-        if not action.startswith('DUNNO'):
-            return action
-    else:
-        logger.debug('Bypass sender throttling (No sasl_username).')
+    # Apply sender throttling to only sasl auth users.
+    logger.debug('Check sender throttling.')
+    action = apply_throttle(conn=conn,
+                            user=sender,
+                            client_address=client_address,
+                            protocol_state=protocol_state,
+                            size=size,
+                            recipient_count=recipient_count,
+                            instance_id=instance_id,
+                            is_sender_throttling=True,
+                            is_external_sender=is_external_sender)
+
+    if not action.startswith('DUNNO'):
+        return action
 
     # Apply recipient throttling to smtp sessions without sasl_username
     if not kwargs['sasl_username']:

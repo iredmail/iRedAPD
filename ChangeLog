@@ -6,6 +6,7 @@ iRedAPD-2.0:
           `libs/default_settings.py` for more details.
 
     * Improvements:
+        - It's now able to throttle based on external senders.
         - Handle systemd script while upgrading in tools/upgrade_iredapd.sh.
         - Return 'DISCARD' instead of 'REJECT' to Postfix so that blacklisted
           sender won't know it's blacklisted.
