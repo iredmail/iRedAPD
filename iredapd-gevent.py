@@ -138,14 +138,18 @@ def policy_handle(socket, address):
                 action = SMTP_ACTIONS['default']
                 logger.error('Unexpected error (#1): %s. Fallback to default action: %s' % (repr(e), action))
 
-            # Cleanup settings.GLOBAL_SESSION_TRACKING
-            if _protocol_state == 'END-OF-MESSAGE':
+            # Remove tracking data when:
+            #
+            #   - if session was rejected/discard/whitelisted ('OK') during
+            #     RCPT state (it never reach END-OF-MESSAGE state)
+            #   - if session is in last state (END-OF-MESSAGE)
+            if not action.startswith('DUNNO') or _protocol_state == 'END-OF-MESSAGE':
                 if _instance in settings.GLOBAL_SESSION_TRACKING:
                     settings.GLOBAL_SESSION_TRACKING.pop(_instance)
                 else:
                     # Remove expired/ghost data.
                     for i in settings.GLOBAL_SESSION_TRACKING:
-                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 120 < int(time.time()):
+                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 60 < int(time.time()):
                             settings.GLOBAL_SESSION_TRACKING
 
             _end_time = time.time()

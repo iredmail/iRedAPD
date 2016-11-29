@@ -136,6 +136,7 @@ class PolicyChannel(asynchat.async_chat):
             #   - if session was rejected/discard/whitelisted ('OK') during
             #     RCPT state (it never reach END-OF-MESSAGE state)
             #   - if session is in last state (END-OF-MESSAGE)
+            logger.info('Keys: ' + repr(settings.GLOBAL_SESSION_TRACKING.keys()))
             if not action.startswith('DUNNO') or _protocol_state == 'END-OF-MESSAGE':
                 if _instance in settings.GLOBAL_SESSION_TRACKING:
                     settings.GLOBAL_SESSION_TRACKING.pop(_instance)

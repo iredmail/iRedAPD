@@ -25,6 +25,7 @@ iRedAPD-2.0:
           rc_scripts/iredapd.service.
 
     * Fixed issues:
+        - Memory leak due to not clean up session tracking data.
         - plugins/amavisd_wblist.py: not apply inbound wblist if both sender
           and recipient are local virtual mail user.
           Thanks Tom <tom _at_ ansspc.com> for the report in forum.
