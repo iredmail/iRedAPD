@@ -111,7 +111,8 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
 
 
 def _client_address_passed_in_tracking(conn, client_address):
-    sql = """SELECT id FROM greylisting_tracking
+    sql = """SELECT id
+               FROM greylisting_tracking
               WHERE client_address=%s
                     AND passed=1
               LIMIT 1""" % sqlquote(client_address)
