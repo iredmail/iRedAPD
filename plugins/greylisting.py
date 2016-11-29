@@ -294,7 +294,7 @@ def _should_be_greylisted_by_tracking(conn,
             logger.error('Re-updated. It is safe to ignore above error message.')
         return True
     else:
-        logger.info('[%s] Client has passed the greylisting, accept this email.' % client_address)
+        logger.info('[%s] Client has passed the greylisting, accept this email and whitelist client for %d days.' % (client_address, settings.GREYLISTING_AUTH_TRIPLET_EXPIRE))
         if _record_expired > auth_triplet_expire:
             # Already updated expired date.
             pass
@@ -306,7 +306,7 @@ def _should_be_greylisted_by_tracking(conn,
                             AND client_address=%s""" % (auth_triplet_expire,
                                                         sender, recipient, client_address_sql)
 
-            logger.debug('[SQL] Update expired date (%d days from now on): \n%s' % (settings.GREYLISTING_AUTH_TRIPLET_EXPIRE, sql))
+            logger.debug('[SQL] Update expired date: \n%s' % sql)
             conn.execute(sql)
 
         return False
