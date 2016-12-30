@@ -397,10 +397,20 @@ for domain in domain_ips:
                 ip = ip.split('/', 1)[0]
 
         try:
-            conn.insert('greylisting_whitelists',
-                        account='@.',
-                        sender=ip,
-                        comment=comment)
+            # Check whether we already have this sender. used to avoid annoying
+            # warning message in PostgreSQL log file due to duplicate key.
+            qr = conn.select('greylisting_whitelists',
+                             vars={'account': '@.', 'sender': ip},
+                             what='id',
+                             where='account=$account AND sender=$sender',
+                             limit=1)
+
+            if not qr:
+                # Insert new whitelist
+                conn.insert('greylisting_whitelists',
+                            account='@.',
+                            sender=ip,
+                            comment=comment)
         except Exception, e:
             if e.__class__.__name__ == 'IntegrityError':
                 pass

@@ -437,14 +437,14 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
 
     _time = ''
     if start_time and end_time:
-        _time = '[%.4fs] ' % (end_time - start_time)
+        _time = ' [%.4fs]' % (end_time - start_time)
 
     # Log final action
-    logger.info('%s[%s] %s, %s, %s' % (_time,
-                                       smtp_session_data['client_address'],
-                                       smtp_session_data['protocol_state'],
-                                       _log_sender_to_rcpt,
-                                       action))
+    logger.info('%s %s, %s, %s%s' % (smtp_session_data['client_address'],
+                                     smtp_session_data['protocol_state'],
+                                     _log_sender_to_rcpt,
+                                     action,
+                                     _time))
 
     return None
 
