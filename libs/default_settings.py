@@ -129,7 +129,7 @@ ALLOWED_FORGED_SENDERS = []
 # Sample setting: allow local user `user@local_domain_1.com` and all users
 # under `local_domain_2.com` to send email as other users.
 #
-#   ALLOWED_LOGIN_MISMATCH_SENDERS = ['user@local_domain_1.com', 'local_domain_2.com']
+#   ALLOWED_LOGIN_MISMATCH_SENDERS = ['user@mydomain1.com', 'mydomain2.com']
 ALLOWED_LOGIN_MISMATCH_SENDERS = []
 
 # Strictly allow sender to send as one of user alias addresses. Default is True.

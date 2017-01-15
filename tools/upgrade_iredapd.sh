@@ -446,8 +446,11 @@ fi
 echo "* Copying new version to ${NEW_IREDAPD_ROOT_DIR}"
 cp -rf ${dir_new_version}/* ${NEW_IREDAPD_ROOT_DIR}
 
-echo "* Copy old config file: settings.py: ${IREDAPD_CONF_PY} -> ${NEW_IREDAPD_CONF}"
+echo "* Copy old config file: settings.py (${IREDAPD_CONF_PY} -> ${NEW_IREDAPD_CONF})"
 cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_CONF}
+
+echo "* Copy custom plugins: ${IREDAPD_ROOT_REAL_DIR}/plugins/custom_*.py."
+cp -rf ${IREDAPD_ROOT_REAL_DIR}/plugins/custom_* ${NEW_IREDAPD_ROOT_DIR}/plugins/ 2>/dev/null
 
 # Import settings from libs/default_settings.py
 if ! grep '^from libs.default_settings import' ${IREDAPD_CONF_PY} &>/dev/null; then

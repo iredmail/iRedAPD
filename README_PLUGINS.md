@@ -4,15 +4,37 @@ how it works:
 
 # For all plugins
 
-## Define your plugin priority in iRedAPD config file `settings.py`
+## Custom plugins
 
-Please define the priority of your plugin, so that iRedAPD can apply plugins
-in ideal order. If no priority defined, defaults to 0 (lowest).
+### Name your custom plugins with string `custom_` prefixed
+
+iRedAPD upgrade script will copy files/directories `plugins/custom_*` to new
+version while upgrading, so please name your custom plugins (or its dependence)
+with string `custom_` prefixed, for example, plugin `custom_spam_trap`,
+`custom_wblist`, etc.
+
+### Define plugin priority for your custom plugins
+
+Plugin priority is used to help iRedAPD apply plugins in ideal order. If no
+priority defined, defaults to 0 (lowest).
 
 Priorities of built-in plugins are defined in `libs/__init__.py`, parameter
 `PLUGIN_PRIORITIES`. You should define the priority of your own plugin in
 iRedAPD config file `/opt/iredapd/settings.py`, so that it won't be overriden
 after upgrading iRedAPD.
+
+Sample priorities (in `/opt/iredapd/settings.py`):
+
+```
+PLUGIN_PRIORITIES['custom_spam_trap'] = 100
+PLUGIN_PRIORITIES['custom_wblist'] = 50
+```
+
+You can also use different priority for builtin plugins. for example:
+
+```
+PLUGIN_PRIORITIES['reject_null_sender'] = 90
+```
 
 ## SMTP protocol state
 
