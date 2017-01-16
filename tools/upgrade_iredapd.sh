@@ -363,9 +363,9 @@ EOF
     # INDEX on `greylisting_tracking`: (client_address, passed)
     #
     (${mysql_conn} <<EOF
-SHOW CREATE TABLE greylisting_tracking \G
+SHOW INDEX FROM greylisting_tracking \G
 EOF
-) | grep 'Key_name: client_address_passed' &>/dev/null
+) | grep 'Key_name: client_address_passed$' &>/dev/null
 
     if [ X"$?" != X'0' ]; then
         ${mysql_conn} -e "CREATE INDEX client_address_passed ON greylisting_tracking (client_address, passed);"
