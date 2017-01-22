@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS `greylisting` (
 ) ENGINE=InnoDB;
 
 -- Enable greylisting by default.
-INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
+-- INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
 
 CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     `id`        BIGINT(20)      UNSIGNED AUTO_INCREMENT,

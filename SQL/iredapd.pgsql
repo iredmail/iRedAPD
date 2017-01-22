@@ -107,7 +107,7 @@ CREATE UNIQUE INDEX idx_greylisting_account_sender ON greylisting (account, send
 CREATE INDEX idx_greylisting_comment ON greylisting (comment);
 
 -- Enable greylisting by default.
-INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
+-- INSERT INTO greylisting (account, priority, sender, sender_priority, active) VALUES ('@.', 0, '@.', 0, 1);
 
 CREATE TABLE greylisting_whitelists (
     id      SERIAL PRIMARY KEY,
