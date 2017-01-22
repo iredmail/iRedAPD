@@ -20,6 +20,9 @@
 #	# Reference: http://www.postfix.org/access.5.html
 #	SPAM_TRAP_SMTP_ACTION = 'FILTER smtp:[127.0.0.1]:10028'
 #
+#       # Define whether we should block the sender email address
+#       SPAM_TRAP_BLOCK_SENDER = True
+#
 #	# Define the plugin priority. 100 is highest, 0 is lowest.
 #	PLUGIN_PRIORITIES['custom_spam_trap'] = 100
 #
@@ -27,20 +30,37 @@
 
 from libs.logger import logger
 from libs import SMTP_ACTIONS
+from libs import utils, wblist
 import settings
 
+_action = settings.SPAM_TRAP_SMTP_ACTION
+
+def _block_sender(sender):
+    if not settings.SPAM_TRAP_BLOCK_SENDER:
+        return (True, )
+
+    conn = utils.get_db_conn('amavisd')
+    qr = wblist.add_wblist(conn=conn,
+                           account='@.',    # server-wide block
+                           bl_senders=[sender],
+                           flush_before_import=False)
+
+    return qr
 
 def restriction(**kwargs):
+    sender = kwargs['sender']
     recipient = kwargs['recipient']
 
     if recipient in settings.SPAM_TRAP_ACCOUNTS:
         logger.debug('Spam trap recipient found: %s.' % recipient)
+        _block_sender(sender=sender)
         return settings.SPAM_TRAP_SMTP_ACTION
 
     for rcpt in settings.SPAM_TRAP_ACCOUNTS:
         if rcpt.endswith('@'):
             if recipient.startswith(rcpt):
                 logger.debug('Spam trap recipient found (matches: %s): %s.' % (rcpt, recipient))
+                _block_sender(sender=sender)
                 return settings.SPAM_TRAP_SMTP_ACTION
 
     return SMTP_ACTIONS['default']

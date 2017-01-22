@@ -1,6 +1,6 @@
 -- Throttling.
 -- Please check iRedAPD plugin `throttle` for more details.
-CREATE TABLE throttle (
+CREATE TABLE IF NOT EXISTS throttle (
     id          BIGINT(20) UNSIGNED AUTO_INCREMENT,
     account     VARCHAR(255)            NOT NULL,
 
@@ -45,7 +45,7 @@ CREATE TABLE throttle (
 --    tid=`throttle.id`,
 --    account=`[throttle_account]`  # e.g. @domain.com`, `@.domain.com`, `@.`
 --
-CREATE TABLE throttle_tracking (
+CREATE TABLE IF NOT EXISTS throttle_tracking (
     id          BIGINT(20) UNSIGNED AUTO_INCREMENT,
     -- foreign key of `throttle.id`
     tid         BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
@@ -116,10 +116,10 @@ CREATE TABLE throttle_tracking (
 --
 CREATE TABLE IF NOT EXISTS `greylisting` (
     `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
-    `account`   VARCHAR(255) NOT NULL DEFAULT '',
+    `account`   VARCHAR(100) NOT NULL DEFAULT '',
     `priority`  TINYINT(2) NOT NULL DEFAULT 0,
 
-    `sender`    VARCHAR(255) NOT NULL DEFAULT '',
+    `sender`    VARCHAR(100) NOT NULL DEFAULT '',
     `sender_priority`  TINYINT(2) NOT NULL DEFAULT 0,
 
     `comment`   VARCHAR(255) NOT NULL DEFAULT '',
@@ -137,8 +137,8 @@ INSERT INTO greylisting (account, priority, sender, sender_priority, active) VAL
 
 CREATE TABLE IF NOT EXISTS `greylisting_whitelists` (
     `id`        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
-    `account`   VARCHAR(255)    NOT NULL DEFAULT '',
-    `sender`    VARCHAR(255)    NOT NULL DEFAULT '',
+    `account`   VARCHAR(100)    NOT NULL DEFAULT '',
+    `sender`    VARCHAR(100)    NOT NULL DEFAULT '',
     `comment`   VARCHAR(255)    NOT NULL DEFAULT '',
     PRIMARY KEY (`id`),
     UNIQUE INDEX (`account`, `sender`),
@@ -162,8 +162,8 @@ CREATE TABLE IF NOT EXISTS `greylisting_whitelist_domains` (
 -- Old records should be removed with a cron job.
 CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     `id`                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `sender`            VARCHAR(255) NOT NULL,
-    `recipient`         VARCHAR(255) NOT NULL,
+    `sender`            VARCHAR(100) NOT NULL,
+    `recipient`         VARCHAR(100) NOT NULL,
     `client_address`    VARCHAR(40) NOT NULL,
 
     `sender_domain`     VARCHAR(255) NOT NULL DEFAULT '',
