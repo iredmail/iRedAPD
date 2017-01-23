@@ -22,14 +22,14 @@ iRedAPD-2.0:
         - tools/greylisting_admin.py::
             + able to specify IP address/network, email address as sender.
             + able to add/list per-account whitelists.
-        - Systemd script used to control iredapd service:
+        - Add systemd script used to control iredapd service:
           rc_scripts/iredapd.service.
 
     * Fixed issues:
-        - tools/spf_to_greylist_whitelists.py: inserts whitelists without
-          checking whether it exists, this causes annoying warning message in
-          PostgreSQL log file due to duplicate key.
         - Memory leak due to not clean up session tracking data.
+        - plugins/throttle.py: Throttle plugin cannot handle email which has
+          multiple recipients.
+          Thanks to Andrea <info _at_ nili.ca> for the report.
         - plugins/amavisd_wblist.py: not apply inbound wblist if both sender
           and recipient are local virtual mail user.
           Thanks Tom <tom _at_ ansspc.com> for the report in forum.
@@ -44,8 +44,9 @@ iRedAPD-2.0:
           ActiveSync client (e.g. Outlook).
           Thanks <alexeilevinzon _at gmail.com> for the report.
         - tools/wblist_admin.py cannot add/delete white/blacklists.
-        - Throttle plugin cannot handle email which has multiple recipients.
-          Thanks to Andrea <info _at_ nili.ca> for the report.
+        - tools/spf_to_greylist_whitelists.py: inserts whitelists without
+          checking whether it exists, this causes annoying warning message in
+          PostgreSQL log file due to duplicate key.
 
 iRedAPD-1.9.1:
     * Fixed issues:
