@@ -497,9 +497,12 @@ if [ -f "${DIR_RC_SCRIPTS}/iredapd" ]; then
     elif [ X"${DISTRO}" == X'OPENBSD' ]; then
         cp ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.openbsd ${DIR_RC_SCRIPTS}/iredapd
     fi
+
+    chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 else
     if [ X"${USE_SYSTEMD}" == X'YES' ]; then
-        ECHO_DEBUG "Create symbol link: ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service -> ${SYSTEMD_SERVICE_DIR}/iredapd.service."
+        echo "* Create symbol link: ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service -> ${SYSTEMD_SERVICE_DIR}/iredapd.service."
+        rm -f ${SYSTEMD_SERVICE_DIR}/iredapd.service &>/dev/null
         ln -s ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service ${SYSTEMD_SERVICE_DIR}/iredapd.service
         systemctl daemon-reload &>/dev/null
     fi
@@ -507,8 +510,6 @@ fi
 
 # For systems which use systemd
 systemctl daemon-reload &>/dev/null
-
-chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 
 #-----------------------------------------------
 # Post-upgrade
