@@ -247,7 +247,6 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
 
             # Verify username and password
             mysql -h ${_sql_server_address} \
-                  -P ${IREDAPD_DB_PORT} \
                   -u${_sql_root_username} \
                   -p${_sql_root_password} \
                   -e "show databases" >/dev/null
@@ -262,7 +261,6 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
 
         # Create database and tables.
         mysql -h ${_sql_server_address} \
-              -P ${IREDAPD_DB_PORT} \
               -u${_sql_root_username} \
               -p${_sql_root_password} <<EOF
 CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
@@ -316,7 +314,6 @@ fi
 # Update sql tables
 #
 mysql_conn="mysql -h${iredapd_db_server} \
-                  -P ${iredapd_db_port} \
                   -u${iredapd_db_user} \
                   -p${iredapd_db_password} \
                   ${iredapd_db_name}"

@@ -20,7 +20,9 @@
 #	# Reference: http://www.postfix.org/access.5.html
 #	SPAM_TRAP_SMTP_ACTION = 'FILTER smtp:[127.0.0.1]:10028'
 #
-#       # Define whether we should block the sender email address
+#       # Define whether we should block the sender email address.
+#       # If you want to block sender, you'd better set the plugin priority
+#       # lower than the `amavisd_wblist` plugin.
 #       SPAM_TRAP_BLOCK_SENDER = True
 #
 #	# Define the plugin priority. 100 is highest, 0 is lowest.
@@ -40,9 +42,10 @@ def _block_sender(sender):
         return (True, )
 
     conn = utils.get_db_conn('amavisd')
+    _s = utils.strip_mail_ext_address(mail=sender)
     qr = wblist.add_wblist(conn=conn,
                            account='@.',    # server-wide block
-                           bl_senders=[sender],
+                           bl_senders=[_s],
                            flush_before_import=False)
 
     return qr
