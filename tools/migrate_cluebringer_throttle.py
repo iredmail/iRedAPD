@@ -36,11 +36,11 @@ if backend in ['ldap', 'mysql']:
 elif backend in ['pgsql']:
     sql_dbn = 'postgres'
 
-if not (cluebringer_db_host \
-        and cluebringer_db_port \
-        and cluebringer_db_name \
-        and cluebringer_db_user \
-        and cluebringer_db_password):
+if not (cluebringer_db_host and
+        cluebringer_db_port and
+        cluebringer_db_name and
+        cluebringer_db_user and
+        cluebringer_db_password):
     # Not run cluebringer
     sys.exit("Incorrect database info, please update cluebringer_db_* parameters.")
 

@@ -11,7 +11,7 @@
 #       # python migrate_cluebringer_throttle.py
 
 cluebringer_db_host = '127.0.0.1'
-cluebringer_db_port = 5432
+cluebringer_db_port = 3306
 cluebringer_db_name = 'cluebringer'
 cluebringer_db_user = 'cluebringer'
 cluebringer_db_password = '0T2JIsDuX7yHWAakgIcSJt2i6LZk2I'
@@ -35,11 +35,11 @@ if backend in ['ldap', 'mysql']:
 elif backend in ['pgsql']:
     sql_dbn = 'postgres'
 
-if not (cluebringer_db_host \
-        and cluebringer_db_port \
-        and cluebringer_db_name \
-        and cluebringer_db_user \
-        and cluebringer_db_password):
+if not (cluebringer_db_host and
+        cluebringer_db_port and
+        cluebringer_db_name and
+        cluebringer_db_user and
+        cluebringer_db_password):
     # Not run cluebringer
     sys.exit("Incorrect database info, please update cluebringer_db_* parameters.")
 
