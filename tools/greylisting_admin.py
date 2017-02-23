@@ -245,7 +245,7 @@ elif action == 'list':
                              order='priority DESC, sender_priority DESC')
 
         if not qr:
-            logger.info('* No whitelists.')
+            logger.info('* No greylisting settings.')
             sys.exit()
 
         output_format = '%-8s %-34s -> %-30s'

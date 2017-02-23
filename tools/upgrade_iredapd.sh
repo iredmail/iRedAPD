@@ -95,20 +95,10 @@ fi
 
 export CRON_FILE_ROOT="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
 
-echo "* Detected Linux/BSD distribution: ${DISTRO}"
-
 # iRedAPD directory and config file.
 export IREDAPD_ROOT_DIR="/opt/iredapd"
 export IREDAPD_CONF_PY="${IREDAPD_ROOT_DIR}/settings.py"
 export IREDAPD_CONF_INI="${IREDAPD_ROOT_DIR}/settings.ini"
-
-if [ -L ${IREDAPD_ROOT_DIR} ]; then
-    export IREDAPD_ROOT_REAL_DIR="$(readlink ${IREDAPD_ROOT_DIR})"
-    echo "* Found iRedAPD directory: ${IREDAPD_ROOT_DIR}, symbol link of ${IREDAPD_ROOT_REAL_DIR}"
-else
-    echo "<<< ERROR >>> Directory is not a symbol link created by iRedMail. Exit."
-    exit 255
-fi
 
 # Remove all single quote and double quotes in string.
 strip_quotes()
@@ -123,8 +113,11 @@ strip_quotes()
 
 get_iredapd_setting()
 {
-    var="${1}"
-    value="$(grep "^${var}" ${IREDAPD_CONF_PY} | awk '{print $NF}' | strip_quotes)"
+    # Usage: get_iredapd_setting <path_to_config_file> <var_name>
+    conf_py="${1}"
+    var="${2}"
+
+    value="$(grep "^${var}" ${conf_py} | awk '{print $NF}' | strip_quotes)"
 
     echo "${value}"
 }
@@ -157,6 +150,44 @@ has_python_module()
         fi
     done
 }
+
+# Check /root/.my.cnf. This will make sql related changes much simpler.
+if [ -f ${IREDAPD_CONF_PY} ]; then
+    if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
+        if [ ! -f /root/.my.cnf ]; then
+            echo "<<< ERROR >>> File /root/.my.cnf not found."
+            echo "<<< ERROR >>> Please add mysql root user and password in it like below, then run this script again."
+            cat <<EOF
+
+[client]
+host=127.0.0.1
+port=3306
+user=root
+password="plain_password"
+
+EOF
+
+            exit 255
+        fi
+
+        # Check MySQL connection
+        mysql -e "SHOW DATABASES" &>/dev/null
+        if [ X"$?" != X'0' ]; then
+            echo "<<< ERROR >>> MySQL root user name or password is incorrect in /root/.my.cnf, please double check."
+            exit 255
+        fi
+    fi
+fi
+
+echo "* Detected Linux/BSD distribution: ${DISTRO}"
+
+if [ -L ${IREDAPD_ROOT_DIR} ]; then
+    export IREDAPD_ROOT_REAL_DIR="$(readlink ${IREDAPD_ROOT_DIR})"
+    echo "* Found iRedAPD directory: ${IREDAPD_ROOT_DIR}, symbol link of ${IREDAPD_ROOT_REAL_DIR}"
+else
+    echo "<<< ERROR >>> Directory is not a symbol link created by iRedMail. Exit."
+    exit 255
+fi
 
 add_missing_parameter()
 {
@@ -217,10 +248,10 @@ fi
 #
 # Require SQL root password to create `iredapd` database.
 #
+export IREDAPD_DB_NAME='iredapd'
 if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
     export IREDAPD_DB_SERVER='127.0.0.1'
     export IREDAPD_DB_USER='iredapd'
-    export IREDAPD_DB_NAME='iredapd'
     export IREDAPD_DB_PASSWD="$(echo $RANDOM | ${MD5_BIN} | awk '{print $1}')"
 
     cp -f ${PWD}/../SQL/iredapd.*sql /tmp/
@@ -230,39 +261,8 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
     if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
         export IREDAPD_DB_PORT='3306'
 
-        echo "Looks like you don't have 'iredapd' SQL database, please type root"
-        echo "username and password of your SQL server to create it now."
-        while :; do
-            echo -n "MySQL server address: [127.0.0.1] "
-            read _sql_server_address
-            if [ -z ${_sql_server_address} ]; then
-                _sql_server_address='127.0.0.1'
-            fi
-
-            echo -n "MySQL root username: "
-            read _sql_root_username
-
-            echo -n "MySQL root password: "
-            read _sql_root_password
-
-            # Verify username and password
-            mysql -h ${_sql_server_address} \
-                  -u${_sql_root_username} \
-                  -p${_sql_root_password} \
-                  -e "show databases" >/dev/null
-
-            if [ X"$?" == X'0' ]; then
-                export _sql_root_username _sql_root_password
-                break
-            else
-                echo "Username or password is wrong, please try again."
-            fi
-        done
-
         # Create database and tables.
-        mysql -h ${_sql_server_address} \
-              -u${_sql_root_username} \
-              -p${_sql_root_password} <<EOF
+        mysql <<EOF
 CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE ${IREDAPD_DB_NAME};
 SOURCE /tmp/iredapd.mysql;
@@ -300,11 +300,11 @@ fi
 #
 # Add missing/new SQL tables
 #
-export iredapd_db_server="$(get_iredapd_setting 'iredapd_db_server')"
-export iredapd_db_port="$(get_iredapd_setting 'iredapd_db_port')"
-export iredapd_db_name="$(get_iredapd_setting 'iredapd_db_name')"
-export iredapd_db_user="$(get_iredapd_setting 'iredapd_db_user')"
-export iredapd_db_password="$(get_iredapd_setting 'iredapd_db_password')"
+export iredapd_db_server="$(get_iredapd_setting ${IREDAPD_CONF_PY} 'iredapd_db_server')"
+export iredapd_db_port="$(get_iredapd_setting ${IREDAPD_CONF_PY} 'iredapd_db_port')"
+export iredapd_db_name="$(get_iredapd_setting ${IREDAPD_CONF_PY} 'iredapd_db_name')"
+export iredapd_db_user="$(get_iredapd_setting ${IREDAPD_CONF_PY} 'iredapd_db_user')"
+export iredapd_db_password="$(get_iredapd_setting ${IREDAPD_CONF_PY} 'iredapd_db_password')"
 
 if [ X"${DISTRO}" == X'OPENBSD' -a X"${iredapd_db_server}" == X'127.0.0.1' ]; then
     export iredapd_db_server='localhost'
@@ -313,10 +313,7 @@ fi
 #
 # Update sql tables
 #
-mysql_conn="mysql -h${iredapd_db_server} \
-                  -u${iredapd_db_user} \
-                  -p${iredapd_db_password} \
-                  ${iredapd_db_name}"
+mysql_conn="mysql ${iredapd_db_name}"
 psql_conn="psql -h ${iredapd_db_server} \
                 -p ${iredapd_db_port} \
                 -U ${iredapd_db_user} \
