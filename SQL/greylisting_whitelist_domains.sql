@@ -34,6 +34,10 @@ INSERT INTO greylisting_whitelist_domains (domain) VALUES ('outlook.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('paypal.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('pinterest.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('reddit.com');
+
+-- AT&T
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('sbcglobal.net');
+
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('sendgrid.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('sendgrid.net');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('serverfault.com');
