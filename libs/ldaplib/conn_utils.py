@@ -14,6 +14,7 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
 
     if not query_filter:
         query_filter = '(&' + \
+                       '(!(domainStatus=disabled))' + \
                        '(|(mail=%(account)s)(shadowAddress=%(account)s))' % {'account': account} + \
                        '(|' + \
                        '(objectClass=mailUser)' + \
@@ -211,7 +212,8 @@ def is_local_domain(conn, domain):
                            ['dn'])
         if qr:
             return True
+    except ldap.NO_SUCH_OBJECT:
+        return False
     except Exception, e:
         logger.error('<!> Error while querying alias domain: %s' % str(e))
-
-    return False
+        return False

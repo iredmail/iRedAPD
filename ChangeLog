@@ -1,3 +1,9 @@
+iRedAPD-2.1:
+    * Fixed issues:
+        - plugins/reject_sender_login_mismatch.py: [ldap backend] not check
+          domain status while getting account ldif data.
+          Thanks Ben Lin <ben_lin _at_ opl.com.tw> for the report.
+
 iRedAPD-2.0:
     * New plugins:
         - plugins/whitelist_outbound_recipient.py: used to automatically
