@@ -1,8 +1,10 @@
 iRedAPD-2.1:
     * Fixed issues:
-        - plugins/reject_sender_login_mismatch.py: [ldap backend] not check
-          domain status while getting account ldif data.
-          Thanks Ben Lin <ben_lin _at_ opl.com.tw> for the report.
+        - plugins/reject_sender_login_mismatch.py:
+            - should not consider backup mx domain name as local domain.
+              Thanks Znekar <znekar _at_ znekar.com> for the report in forum.
+            - [ldap] not check domain status while getting account ldif data.
+              Thanks Ben Lin <ben_lin _at_ opl.com.tw> for the report.
 
 iRedAPD-2.0:
     * New plugins:

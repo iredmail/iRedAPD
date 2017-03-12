@@ -161,7 +161,7 @@ def restriction(**kwargs):
                 sender_is_forged = True
             else:
                 # Check whether sender domain is hosted on localhost
-                if is_local_domain(conn=conn, domain=sender_domain):
+                if is_local_domain(conn=conn, domain=sender_domain, include_backupmx=False):
                     sender_is_forged = True
 
             if sender_is_forged:

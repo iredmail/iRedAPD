@@ -72,7 +72,7 @@ def get_primary_and_alias_domains(conn, domain):
         return []
 
 
-def is_local_domain(conn, domain):
+def is_local_domain(conn, domain, include_backupmx=True):
     if not utils.is_domain(domain):
         return False
 
@@ -82,6 +82,10 @@ def is_local_domain(conn, domain):
     try:
         filter_domains = '(&(objectClass=mailDomain)'
         filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (domain, domain)
+
+        if not include_backupmx:
+            filter_domains += '(!(domainBackupMX=yes))'
+
         filter_domains += ')'
 
         qr = conn.search_s(settings.ldap_basedn,
