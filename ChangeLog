@@ -1,4 +1,9 @@
 iRedAPD-2.1:
+    * Improvements:
+        + plugins/greylisting.py: if client passed greylisting service, remove
+          other tracking records from same IP immediately to keep database
+          small.
+
     * Fixed issues:
         - plugins/reject_sender_login_mismatch.py:
             - should not consider backup mx domain name as local domain.

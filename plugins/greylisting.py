@@ -296,6 +296,8 @@ def _should_be_greylisted_by_tracking(conn,
         return True
     else:
         logger.info('[%s] Client has passed the greylisting, accept this email and whitelist client for %d days.' % (client_address, settings.GREYLISTING_AUTH_TRIPLET_EXPIRE))
+
+        # Update expired time
         if _record_expired > auth_triplet_expire:
             # Already updated expired date.
             pass
@@ -308,7 +310,21 @@ def _should_be_greylisted_by_tracking(conn,
                                                         sender, recipient, client_address_sql)
 
             logger.debug('[SQL] Update expired date: \n%s' % sql)
-            conn.execute(sql)
+            try:
+                conn.execute(sql)
+            except Exception, e:
+                logger.error('Error while Updating expired date for passed client (ip: %s): %s' % (client_address, repr(e)))
+
+            # Remove other tracking records from same client IP address to save
+            # database space.
+            sql = """DELETE FROM greylisting_tracking
+                      WHERE client_address=%s AND passed=0""" % (client_address_sql)
+
+            logger.debug('[SQL] Remove other tracking records from same client IP address: \n%s' % sql)
+            try:
+                conn.execute(sql)
+            except Exception, e:
+                logger.error('Error while removing other tracking records from passed client (ip: %s): %s' % (client_address, repr(e)))
 
         return False
 
