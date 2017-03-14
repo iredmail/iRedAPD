@@ -21,7 +21,7 @@ RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy']
 
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
-    recipient = kwargs['recipient']
+    recipient = kwargs['recipient_without_ext']
     recipient_ldif = kwargs['recipient_ldif']
 
     if sasl_username == recipient:
@@ -44,7 +44,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default'] + ' (Access policy: %s, no restriction)' % MAILLIST_POLICY_PUBLIC
 
     conn = kwargs['conn_vmail']
-    sender = kwargs['sender']
+    sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
     recipient_domain = kwargs['recipient_domain']
 

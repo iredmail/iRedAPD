@@ -123,7 +123,7 @@ def restriction(**kwargs):
     sasl_username_user = sasl_username.split('@', 1)[0]
     sasl_username_domain = kwargs['sasl_username_domain']
 
-    sender = kwargs['sender']
+    sender = kwargs['sender_without_ext']
     sender_name = ''
     sender_domain = ''
     if sender:

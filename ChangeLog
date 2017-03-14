@@ -5,6 +5,7 @@ iRedAPD-2.1:
           small.
 
     * Fixed issues:
+        - Not strip address extension in sender/recipient mail address.
         - plugins/reject_sender_login_mismatch.py:
             - should not consider backup mx domain name as local domain.
               Thanks Znekar <znekar _at_ znekar.com> for the report in forum.

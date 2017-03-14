@@ -203,9 +203,9 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     # Get sender and recipient
-    sender = kwargs['sender']
+    sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
-    recipient = kwargs['recipient']
+    recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
 
     if kwargs['sasl_username']:

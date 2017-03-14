@@ -528,10 +528,10 @@ def restriction(**kwargs):
     conn = kwargs['conn_iredapd']
 
     # Use SASL username as sender. if not available, use sender in 'From:'.
-    sender = kwargs['sasl_username'] or kwargs['sender']
+    sender = kwargs['sasl_username'] or kwargs['sender_without_ext']
     sender_domain = kwargs['sasl_username_domain'] or kwargs['sender_domain']
 
-    recipient = kwargs['recipient']
+    recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
     client_address = kwargs['client_address']
 

@@ -57,10 +57,10 @@ def get_access_policy_and_more(conn, recipient):
 
 def restriction(**kwargs):
     conn = kwargs['conn_vmail']
-    sender = kwargs['sender']
+    sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
     sender_username = sender.split('@', 1)[0]
-    recipient = kwargs['recipient']
+    recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
 
     # used when recipient_domain is an alias domain

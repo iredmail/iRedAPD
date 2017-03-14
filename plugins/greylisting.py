@@ -313,7 +313,7 @@ def _should_be_greylisted_by_tracking(conn,
             try:
                 conn.execute(sql)
             except Exception, e:
-                logger.error('Error while Updating expired date for passed client (ip: %s): %s' % (client_address, repr(e)))
+                logger.error('[%s] Error while Updating expired date for passed client: %s' % (client_address, repr(e)))
 
             # Remove other tracking records from same client IP address to save
             # database space.
@@ -324,7 +324,7 @@ def _should_be_greylisted_by_tracking(conn,
             try:
                 conn.execute(sql)
             except Exception, e:
-                logger.error('Error while removing other tracking records from passed client (ip: %s): %s' % (client_address, repr(e)))
+                logger.error('[%s] Error while removing other tracking records from passed client: %s' % (client_address, repr(e)))
 
         return False
 
@@ -350,10 +350,10 @@ def restriction(**kwargs):
         logger.error('No valid database connection, fallback to default action.')
         return SMTP_ACTIONS['default']
 
-    sender = kwargs['sender']
+    sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
     sender_tld_domain = sender_domain.split('.')[-1]
-    recipient = kwargs['recipient']
+    recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
 
     policy_recipients = [recipient, '@' + recipient_domain, '@.']
