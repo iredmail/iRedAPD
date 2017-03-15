@@ -243,6 +243,23 @@ def restriction(**kwargs):
 
         elif settings.backend in ['mysql', 'pgsql']:
             if is_strict:
+                # Get per-user alias addresses
+                sql = """SELECT address
+                           FROM alias
+                          WHERE address='%s' AND alias_to='%s' AND isalias=1
+                          LIMIT 1""" % (real_sasl_username, sender)
+                logger.debug('[SQL] query per-user alias address: \n%s' % sql)
+
+                qr = conn.execute(sql)
+                sql_record = qr.fetchone()
+                logger.debug('SQL query result: %s' % str(sql_record))
+
+                if not sql_record:
+                    logger.debug('No per-user alias address found.')
+                else:
+                    logger.debug('Sender %s is an alias address of %s.' % (sender, real_sasl_username))
+                    return SMTP_ACTIONS['default']
+
                 # Get alias domains
                 sql = """SELECT alias_domain
                            FROM alias_domain
