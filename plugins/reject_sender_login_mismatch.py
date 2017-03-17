@@ -227,18 +227,16 @@ def restriction(**kwargs):
                 query_filter = '(|' + filter_user_alias + filter_list_member + filter_alias_member + ')'
                 success_msg = 'Sender (%s) is an user alias address or list/alias member (%s).' % (sasl_username, sender)
 
-            qr = conn_utils.get_account_ldif(
-                conn=conn,
-                account=sasl_username,
-                query_filter=query_filter,
-                attrs=['dn'],
-            )
+            qr = conn_utils.get_account_ldif(conn=conn,
+                                             account=sasl_username,
+                                             query_filter=query_filter,
+                                             attrs=['dn'])
             (dn, entry) = qr
             if dn:
                 logger.debug(success_msg)
                 return SMTP_ACTIONS['default']
             else:
-                logger.debug('Sender is either an user alias address or list/alias member.')
+                logger.debug('Sender is neither user alias address nor member of list/alias.')
                 return action_reject
 
         elif settings.backend in ['mysql', 'pgsql']:
