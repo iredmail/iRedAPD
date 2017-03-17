@@ -7,6 +7,8 @@ iRedAPD-2.1:
     * Fixed issues:
         - Not strip address extension in sender/recipient mail address.
         - plugins/reject_sender_login_mismatch.py:
+            - should not query alias domain when sender domain is same as
+              smtp auth username domain.
             - not check per-user alias addresses.
               Thanks Wraptor <nijs.thibaut _at_ gmail> for the report in forum.
             - should not consider backup mx domain name as local domain.

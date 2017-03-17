@@ -255,36 +255,37 @@ def restriction(**kwargs):
                 logger.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
-                    logger.debug('Sender %s is an alias address of %s.' % (sender, real_sasl_username))
+                    logger.debug('Sender %s is an alias address of smtp auth username %s.' % (sender, real_sasl_username))
                     return SMTP_ACTIONS['default']
                 else:
                     logger.debug('No per-user alias address found.')
 
                 # Get alias domains
-                sql = """SELECT alias_domain
-                           FROM alias_domain
-                          WHERE alias_domain='%s' AND target_domain='%s'
-                          LIMIT 1""" % (sender_domain, sasl_username_domain)
-                logger.debug('[SQL] query alias domains: \n%s' % sql)
+                if sender_domain != sasl_username_domain:
+                    sql = """SELECT alias_domain
+                               FROM alias_domain
+                              WHERE alias_domain='%s' AND target_domain='%s'
+                              LIMIT 1""" % (sender_domain, sasl_username_domain)
+                    logger.debug('[SQL] query alias domains: \n%s' % sql)
 
-                qr = conn.execute(sql)
-                sql_record = qr.fetchone()
-                logger.debug('SQL query result: %s' % str(sql_record))
+                    qr = conn.execute(sql)
+                    sql_record = qr.fetchone()
+                    logger.debug('SQL query result: %s' % str(sql_record))
 
-                if not sql_record:
-                    logger.debug('No alias domain found.')
-                else:
-                    logger.debug('Sender domain %s is an alias domain of %s.' % (sender_domain, sasl_username_domain))
-
-                    real_sasl_username = sasl_username_user + '@' + sasl_username_domain
-                    real_sender = sender_name + '@' + sasl_username_domain
-
-                    # sender_domain is one of alias domains
-                    if sender_name != sasl_username_user:
-                        logger.debug('Sender is not an user alias address.')
+                    if not sql_record:
+                        logger.debug('No alias domain found.')
                     else:
-                        logger.debug('Sender is an alias address of sasl username.')
-                        return SMTP_ACTIONS['default']
+                        logger.debug('Sender domain %s is an alias domain of %s.' % (sender_domain, sasl_username_domain))
+
+                        real_sasl_username = sasl_username_user + '@' + sasl_username_domain
+                        real_sender = sender_name + '@' + sasl_username_domain
+
+                        # sender_domain is one of alias domains
+                        if sender_name != sasl_username_user:
+                            logger.debug('Sender is not an user alias address.')
+                        else:
+                            logger.debug('Sender is an alias address of sasl username.')
+                            return SMTP_ACTIONS['default']
 
             if allow_list_member:
                 # Get alias members
