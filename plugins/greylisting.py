@@ -47,7 +47,8 @@ def _check_sender_type(sender):
 
 
 def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
-    """Check greylisting whitelists stored in table `greylisting_whitelists`,
+    """Check greylisting whitelists stored in table
+    `greylisting_whitelists` and `greylisting_whitelist_domain_spf`,
     returns True if is whitelisted, otherwise returns False.
 
     conn        -- sql connection cursor
@@ -57,21 +58,22 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
     ip_object   -- object of IP address type (get by ipaddress.ip_address())
     """
 
-    # query whitelists based on recipient
-    sql = """SELECT id, sender, comment
-               FROM greylisting_whitelists
-              WHERE account IN %s""" % sqllist(recipients)
+    for tbl in ['greylisting_whitelist_domain_spf', 'greylisting_whitelists']:
+        # query whitelists based on recipient
+        sql = """SELECT id, sender, comment
+                   FROM %s
+                  WHERE account IN %s""" % (tbl, sqllist(recipients))
 
-    logger.debug('[SQL] Query greylisting whitelists: \n%s' % sql)
-    qr = conn.execute(sql)
-    records = qr.fetchall()
+        logger.debug('[SQL] Query greylisting whitelists from `%s`: \n%s' % (tbl, sql))
+        qr = conn.execute(sql)
+        records = qr.fetchall()
 
-    # check whitelisted senders
-    whitelists = [str(v).lower() for (_, v, _) in records]
-    wl = set(senders) & set(whitelists)
-    if wl:
-        logger.info('[%s] Client is whitelisted for greylisting service: %s' % (client_address, ', '.join(wl)))
-        return True
+        # check whitelisted senders
+        whitelists = [str(v).lower() for (_, v, _) in records]
+        wl = set(senders) & set(whitelists)
+        if wl:
+            logger.info('[%s] Client is whitelisted for greylisting service: %s' % (client_address, ', '.join(wl)))
+            return True
 
     # check whitelisted cidr
     # Check IPv4.

@@ -24,7 +24,8 @@ USAGE = """Usage:
         Show ALL whitelisted sender domain names (in `greylisting_whitelist_domains`)
 
     --list-whitelists
-        Show ALL whitelisted sender addresses (in `greylisting_whitelists`)
+        Show ALL whitelisted sender addresses (in `greylisting_whitelists` and
+        `greylisting_whitelist_domain_spf`)
 
     --whitelist-domain
         Whitelist the IP addresses/networks in SPF record of specified sender
@@ -73,7 +74,7 @@ Sample usages:
 
         # python greylisting_admin.py --list-whitelist-domains
 
-    * List all whitelisted sender addresses (in SQL table `greylisting_whitelists`):
+    * List all whitelisted sender addresses:
 
         # python greylisting_admin.py --list-whitelists
 
@@ -284,11 +285,14 @@ elif action == 'list-whitelist-domains':
         logger.info(str(e))
 
 elif action == 'list-whitelists':
-    # show whitelisted senders in `greylisting_whitelists` table.
+    # show whitelisted senders in `greylisting_whitelists` and
+    # `greylisting_whitelist_domain_spf` tables.
     try:
+        qr_spf = []
         if rcpt == '@.':
             # Show global whitelists
             qr = conn.select('greylisting_whitelists', order='account ASC, sender ASC')
+            qr_spf = conn.select('greylisting_whitelist_domain_spf', order='account ASC, sender ASC')
         else:
             # Show per-account whitelists
             qr = conn.select('greylisting_whitelists',
@@ -299,6 +303,8 @@ elif action == 'list-whitelists':
         for r in qr:
             logger.info('%s -> %s, "%s"' % (r.sender, r.account, r.comment))
 
+        for r in qr_spf:
+            logger.info('%s -> %s, "%s"' % (r.sender, r.account, r.comment))
     except Exception, e:
         logger.info(str(e))
 elif action == 'add-whitelist':

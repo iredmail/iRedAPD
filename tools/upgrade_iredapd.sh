@@ -365,6 +365,28 @@ EOF
         ${mysql_conn} -e "CREATE INDEX client_address_passed ON greylisting_tracking (client_address, passed);"
     fi
 
+    #
+    # `greylisting_whitelist_domain_spf`
+    #
+    (${mysql_conn} <<EOF
+show tables;
+EOF
+) | grep 'greylisting_whitelist_domain_spf' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${mysql_conn} <<EOF
+CREATE TABLE IF NOT EXISTS greylisting_whitelist_domain_spf (
+    id        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
+    account   VARCHAR(100)    NOT NULL DEFAULT '',
+    sender    VARCHAR(100)    NOT NULL DEFAULT '',
+    comment   VARCHAR(255)    NOT NULL DEFAULT '',
+    PRIMARY KEY (id),
+    UNIQUE INDEX (account, sender),
+    INDEX (comment)
+) ENGINE=InnoDB;
+EOF
+    fi
+
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
 
@@ -388,6 +410,25 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
 "
 
         rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
+    fi
+
+    #
+    # `greylisting_whitelist_domain_spf`
+    #
+    ${psql_conn} -c "SELECT id FROM greylisting_whitelist_domain_spf LIMIT 1" &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${psql_conn} -c "
+CREATE TABLE greylisting_whitelist_domain_spf (
+    id      SERIAL PRIMARY KEY,
+    account VARCHAR(255)    NOT NULL DEFAULT '',
+    sender  VARCHAR(255)    NOT NULL DEFAULT '',
+    comment VARCHAR(255) NOT NULL DEFAULT ''
+);
+
+CREATE UNIQUE INDEX idx_greylisting_whitelist_domain_spf_account_sender ON greylisting_whitelist_domain_spf (account, sender);
+CREATE INDEX idx_greylisting_whitelist_domain_spf_comment ON greylisting_whitelist_domain_spf (comment);
+"
     fi
 
     #

@@ -379,6 +379,12 @@ for domain in domain_ips:
 
     # Delete old records
     try:
+        conn.delete('greylisting_whitelist_domain_spf',
+                    vars=sql_vars,
+                    where="comment=$comment")
+
+        # in iRedAPD-2.0 and earlier releases, results were stored in
+        # sql table `greylisting_whitelists`
         conn.delete('greylisting_whitelists',
                     vars=sql_vars,
                     where="comment=$comment")
@@ -399,7 +405,7 @@ for domain in domain_ips:
         try:
             # Check whether we already have this sender. used to avoid annoying
             # warning message in PostgreSQL log file due to duplicate key.
-            qr = conn.select('greylisting_whitelists',
+            qr = conn.select('greylisting_whitelist_domain_spf',
                              vars={'account': '@.', 'sender': ip},
                              what='id',
                              where='account=$account AND sender=$sender',
@@ -407,7 +413,7 @@ for domain in domain_ips:
 
             if not qr:
                 # Insert new whitelist
-                conn.insert('greylisting_whitelists',
+                conn.insert('greylisting_whitelist_domain_spf',
                             account='@.',
                             sender=ip,
                             comment=comment)
