@@ -145,7 +145,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
         # sids/senders are sorted by priority
         for sid in sender_ids:
             if (rid, sid, 'W') in wblists:
-                return SMTP_ACTIONS['accept'] + " wblist=(%d, %d, 'W')" % (rid, sid)
+                return SMTP_ACTIONS['default'] + " wblist=(%d, %d, 'W')" % (rid, sid)
 
             if (rid, sid, 'B') in wblists:
                 logger.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
@@ -185,7 +185,7 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
     for sid in sender_ids:
         for rid in recipient_ids:
             if (rid, sid, 'W') in wblists:
-                return SMTP_ACTIONS['accept'] + " outbound_wblist=(%d, %d, 'W')" % (rid, sid)
+                return SMTP_ACTIONS['default'] + " outbound_wblist=(%d, %d, 'W')" % (rid, sid)
 
             if (rid, sid, 'B') in wblists:
                 logger.info("Blacklisted: outbound_wblist=(%d, %d, 'B')" % (rid, sid))
