@@ -6,6 +6,7 @@ SMTP_ACTIONS = {
     'default': 'DUNNO',
     # Use 'OK' carefully, it will bypass other Postfix/iRedAPD restrictions.
     'accept': 'OK',
+    'whitelist': 'OK',
     # discard email without return error message to sender
     'discard': 'DISCARD Policy discard',
     # reject
