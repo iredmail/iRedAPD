@@ -207,9 +207,9 @@ def _should_be_greylisted_by_tracking(conn,
     now = int(time.time())
 
     # timeout in seconds
-    block_expired = now + settings.GREYLISTING_BLOCK_EXPIRE * 60
-    unauth_triplet_expire = now + settings.GREYLISTING_UNAUTH_TRIPLET_EXPIRE * 24 * 60 * 60
-    auth_triplet_expire = now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60 * 60
+    block_expired = now + int(settings.GREYLISTING_BLOCK_EXPIRE) * 60
+    unauth_triplet_expire = now + int(settings.GREYLISTING_UNAUTH_TRIPLET_EXPIRE) * 24 * 60 * 60
+    auth_triplet_expire = now + int(settings.GREYLISTING_AUTH_TRIPLET_EXPIRE) * 24 * 60 * 60
 
     sender = sqlquote(sender)
     sender_domain = sqlquote(sender_domain)
