@@ -62,6 +62,8 @@ MAILADDR_PRIORITIES = {
     'email': 10,
     'ip': 9,
     'wildcard_ip': 8,
+    'cidr_network': 7,      # '192.168.1.0/24'. used in iRedAPD plugin
+                            # `amavisd_wblist`
     'wildcard_addr': 7,     # r'user@*'. used in iRedAPD plugin `amavisd_wblist`
                             # as wildcard sender. e.g. 'user@*'
     'domain': 5,
@@ -144,13 +146,19 @@ def is_ipv6(s):
 
 
 def is_strict_ip(s):
-    if is_ipv4(s):
+    try:
+        ipaddress.ip_address(unicode(s))
         return True
-    elif is_ipv6(s):
+    except:
+        return False
+
+
+def is_cidr_network(s):
+    try:
+        ipaddress.ip_network(unicode(s))
         return True
-
-    return False
-
+    except:
+        return False
 
 def is_wildcard_ipv4(s):
     if re.match(regx_wildcard_ipv4, s):
@@ -220,29 +228,12 @@ def is_valid_amavisd_address(addr):
 
     elif is_strict_ip(addr):
         return 'ip'
+    elif is_cidr_network(addr):
+        return 'cidr_network'
     elif is_wildcard_ipv4(addr):
         return 'wildcard_ip'
 
     return False
-
-
-def sqllist(values):
-    """
-        >>> sqllist([1, 2, 3])
-        <sql: '(1, 2, 3)'>
-    """
-    items = []
-    items.append('(')
-    for i, v in enumerate(values):
-        if i != 0:
-            items.append(', ')
-
-        if isinstance(v, (int, long, float)):
-            items.append("""%s""" % v)
-        else:
-            items.append("""'%s'""" % v)
-    items.append(')')
-    return ''.join(items)
 
 
 def get_db_conn(db):

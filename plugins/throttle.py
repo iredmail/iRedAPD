@@ -148,7 +148,7 @@ from libs.logger import logger
 from web import sqlquote
 import settings
 from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4, wildcard_ipv4, sqllist, is_trusted_client
+from libs.utils import is_ipv4, wildcard_ipv4, is_trusted_client
 from libs.utils import is_valid_amavisd_address, pretty_left_seconds
 from libs.amavisd.core import get_valid_addresses_from_email
 
@@ -193,7 +193,7 @@ def apply_throttle(conn,
           FROM throttle
          WHERE kind=%s AND account IN %s
          ORDER BY priority DESC
-         """ % (sqlquote(throttle_kind), sqllist(possible_addrs))
+         """ % (sqlquote(throttle_kind), sqlquote(possible_addrs))
 
     logger.debug('[SQL] Query throttle setting:\n%s' % sql)
     qr = conn.execute(sql)

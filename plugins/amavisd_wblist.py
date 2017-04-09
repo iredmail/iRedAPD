@@ -36,15 +36,18 @@
 #   - @.domain.com: entire sender domain and all sub-domains
 #   - @.:           all senders
 #   - 192.168.1.2:  single sender ip address
-#   - 192.168.1.*, 192.168.*.2:  wildcard sender ip addresses.
+#   - 192.168.1.0/24:  CIDR network.
+#   - 192.168.1.*, 192.168.*.2:  wildcard sender ip addresses. [DEPRECATED]
 #                   NOTE: if you want to use wildcard IP address like
 #                   '192.*.1.2', '192.*.*.2', please set
 #                   'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
 #                   /opt/iredapd/settings.py.
 
 from libs.logger import logger
+from web import sqlquote
 from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4, wildcard_ipv4, sqllist
+from libs import ipaddress
+from libs.utils import is_ipv4, wildcard_ipv4
 from libs.amavisd import core as amavisd_lib
 import settings
 
@@ -55,6 +58,58 @@ if settings.backend == 'ldap':
 else:
     from libs.sql import is_local_domain
 
+
+def get_id_of_possible_cidr_network(conn, client_address):
+    """Return list of `mailaddr.id` which are CIDR network addresses."""
+    ids = []
+
+    if not client_address:
+        logger.debug('No client address.')
+        return ids
+
+    try:
+        _ip = ipaddress.ip_address(unicode(client_address))
+        if _ip.version == 4:
+            first_field = client_address.split('.')[0]
+            sql_cidr = first_field + r'.%%'
+        else:
+            return ids
+    except Exception, e:
+        return ids
+
+    sql = """SELECT id, email
+               FROM mailaddr
+              WHERE email LIKE %s
+           ORDER BY priority DESC""" % sqlquote(sql_cidr)
+    logger.debug('[SQL] Query CIDR network: \n%s' % sql)
+
+    try:
+        qr = conn.execute(sql)
+        qr_cidr = qr.fetchall()
+    except Exception, e:
+        logger.error('Error while querying CIDR network: %s, SQL: \n%s' % (repr(e), sql))
+        return ids
+
+    if qr_cidr:
+        _cidrs = [(int(r.id), r.email) for r in qr_cidr]
+
+        # Get valid CIDR.
+        _ip_networks = set()
+        for (_id, _cidr) in _cidrs:
+            # Verify whether client_address is in CIDR network
+            try:
+                _net = ipaddress.ip_network(unicode(_cidr))
+                _ip_networks.add((_id, _net))
+            except:
+                pass
+
+        if _ip_networks:
+            _ip = ipaddress.ip_address(unicode(client_address))
+            for (_id, _net) in _ip_networks:
+                if _ip in _net:
+                    ids.append(_id)
+
+    return ids
 
 def get_id_of_external_addresses(conn, addresses):
     '''Return list of `mailaddr.id` of external addresses.'''
@@ -68,7 +123,7 @@ def get_id_of_external_addresses(conn, addresses):
     sql = """SELECT id, email
                FROM mailaddr
               WHERE email IN %s
-           ORDER BY priority DESC""" % sqllist(addresses)
+           ORDER BY priority DESC""" % sqlquote(addresses)
     logger.debug('[SQL] Query external addresses: \n%s' % sql)
 
     try:
@@ -79,14 +134,14 @@ def get_id_of_external_addresses(conn, addresses):
         return ids
 
     if qr_addresses:
-        ids = [r.id for r in qr_addresses]
+        ids = [int(r.id) for r in qr_addresses]
 
     if not ids:
         # don't waste time if we don't even have senders stored in sql db.
         logger.debug('No record found in SQL database.')
         return []
     else:
-        logger.debug('Addresses (in `mailaddr`): %s' % str(qr_addresses))
+        logger.debug('Addresses (in `mailaddr`): %s' % repr(qr_addresses))
         return ids
 
 
@@ -97,7 +152,7 @@ def get_id_of_local_addresses(conn, addresses):
     sql = """SELECT id, email
                FROM users
               WHERE email IN %s
-           ORDER BY priority DESC""" % sqllist(addresses)
+           ORDER BY priority DESC""" % sqlquote(addresses)
     logger.debug('[SQL] Query local addresses: \n%s' % sql)
 
     ids = []
@@ -105,7 +160,7 @@ def get_id_of_local_addresses(conn, addresses):
         qr = conn.execute(sql)
         qr_addresses = qr.fetchall()
         if qr_addresses:
-            ids = [r.id for r in qr_addresses]
+            ids = [int(r.id) for r in qr_addresses]
     except Exception, e:
         logger.error('Error while executing SQL command: %s' % repr(e))
 
@@ -127,7 +182,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
     # Get wblist
     sql = """SELECT rid, sid, wb
                FROM wblist
-              WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
+              WHERE sid IN %s AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug('[SQL] Query inbound wblist (in `wblist`): \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
@@ -172,7 +227,7 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
     # Get wblist
     sql = """SELECT rid, sid, wb
                FROM outbound_wblist
-              WHERE sid IN %s AND rid IN %s""" % (sqllist(sender_ids), sqllist(recipient_ids))
+              WHERE sid IN %s AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug('[SQL] Query outbound wblist: \n%s' % sql)
     qr = conn.execute(sql)
     wblists = qr.fetchall()
@@ -244,6 +299,8 @@ def restriction(**kwargs):
     if is_ipv4(client_address):
         valid_senders += wildcard_ipv4(client_address)
 
+    # Get possible CIDR network
+
     logger.debug('Possible policy senders: %s' % str(valid_senders))
     logger.debug('Possible policy recipients: %s' % str(valid_recipients))
 
@@ -253,6 +310,9 @@ def restriction(**kwargs):
 
     if (not check_outbound) and is_local_domain(conn=conn_vmail, domain=sender_domain):
         check_outbound = True
+
+    id_of_client_cidr_networks = []
+    client_cidr_network_checked = False
 
     # Outbound
     if check_outbound:
@@ -264,8 +324,13 @@ def restriction(**kwargs):
         if id_of_local_addresses:
             id_of_ext_addresses = get_id_of_external_addresses(conn, valid_recipients)
 
+            id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
+            print 'result:', id_of_client_cidr_networks
+            print 3, id_of_client_cidr_networks
+            client_cidr_network_checked = True
+
         action = apply_outbound_wblist(conn,
-                                       sender_ids=id_of_local_addresses,
+                                       sender_ids=id_of_local_addresses + id_of_client_cidr_networks,
                                        recipient_ids=id_of_ext_addresses)
 
         if not action.startswith('DUNNO'):
@@ -291,8 +356,12 @@ def restriction(**kwargs):
         if id_of_local_addresses:
             id_of_ext_addresses = get_id_of_external_addresses(conn, valid_senders)
 
+            if not client_cidr_network_checked:
+                id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
+
+        print 4, id_of_client_cidr_networks
         action = apply_inbound_wblist(conn,
-                                      sender_ids=id_of_ext_addresses,
+                                      sender_ids=id_of_ext_addresses + id_of_client_cidr_networks,
                                       recipient_ids=id_of_local_addresses)
 
         if not action.startswith('DUNNO'):

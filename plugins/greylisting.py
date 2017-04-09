@@ -15,7 +15,7 @@ import time
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES, utils, ipaddress
-from libs.utils import sqllist, is_trusted_client
+from libs.utils import is_trusted_client
 import settings
 
 # Return 4xx with greylisting message to Postfix.
@@ -62,7 +62,7 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
         # query whitelists based on recipient
         sql = """SELECT id, sender, comment
                    FROM %s
-                  WHERE account IN %s""" % (tbl, sqllist(recipients))
+                  WHERE account IN %s""" % (tbl, sqlquote(recipients))
 
         logger.debug('[SQL] Query greylisting whitelists from `%s`: \n%s' % (tbl, sql))
         qr = conn.execute(sql)
@@ -147,7 +147,7 @@ def _should_be_greylisted_by_setting(conn,
     sql = """SELECT id, account, sender, sender_priority, active
                FROM greylisting
               WHERE account IN %s
-              ORDER BY priority DESC, sender_priority DESC""" % sqllist(recipients)
+              ORDER BY priority DESC, sender_priority DESC""" % sqlquote(recipients)
     logger.debug('[SQL] query greylisting settings: \n%s' % sql)
 
     qr = conn.execute(sql)
