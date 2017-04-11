@@ -35,9 +35,9 @@
 #   - @domain.com:  entire sender domain
 #   - @.domain.com: entire sender domain and all sub-domains
 #   - @.:           all senders
-#   - 192.168.1.2:  single sender ip address
-#   - 192.168.1.0/24:  CIDR network.
-#   - 192.168.1.*, 192.168.*.2:  wildcard sender ip addresses. [DEPRECATED]
+#   - 192.168.1.2: single sender ip address
+#   - 192.168.1.0/24: CIDR network.
+#   - 192.168.1.*, 192.168.*.2: wildcard sender ip addresses. [DEPRECATED]
 #                   NOTE: if you want to use wildcard IP address like
 #                   '192.*.1.2', '192.*.*.2', please set
 #                   'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
@@ -325,8 +325,6 @@ def restriction(**kwargs):
             id_of_ext_addresses = get_id_of_external_addresses(conn, valid_recipients)
 
             id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
-            print 'result:', id_of_client_cidr_networks
-            print 3, id_of_client_cidr_networks
             client_cidr_network_checked = True
 
         action = apply_outbound_wblist(conn,
@@ -359,7 +357,6 @@ def restriction(**kwargs):
             if not client_cidr_network_checked:
                 id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
 
-        print 4, id_of_client_cidr_networks
         action = apply_inbound_wblist(conn,
                                       sender_ids=id_of_ext_addresses + id_of_client_cidr_networks,
                                       recipient_ids=id_of_local_addresses)
