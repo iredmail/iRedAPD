@@ -37,9 +37,9 @@ def restriction(**kwargs):
     rdns_name = kwargs['smtp_session_data']['reverse_client_name']
 
     # Bypass outgoing emails.
-    #if kwargs['sasl_username']:
-    #    logger.debug('Found SASL username, bypass rDNS check for outbound.')
-    #    return SMTP_ACTIONS['default']
+    if kwargs['sasl_username']:
+        logger.debug('Found SASL username, bypass rDNS check for outbound.')
+        return SMTP_ACTIONS['default']
 
     if rdns_name == 'unknown':
         logger.debug('No reverse dns name, bypass.')
