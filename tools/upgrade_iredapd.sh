@@ -334,11 +334,25 @@ psql_conn="psql -h ${iredapd_db_server} \
                 -d ${iredapd_db_name}"
 
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
-    echo "* Check SQL tables, and add missed ones - if there's any"
-    ${mysql_conn} <<EOF
-SOURCE ${PWD}/../SQL/iredapd.mysql;
-SOURCE /tmp/iredapd/blacklist_rdns.sql;
+    cp -f ${PWD}/../SQL/iredapd.mysql /tmp/
+
+    #
+    # `greylisting_whitelist_domains`
+    #
+    (${mysql_conn} <<EOF
+show tables;
 EOF
+) | grep 'greylisting_whitelist_domains' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
+        chmod 0555 /tmp/greylisting_whitelist_domains.sql
+
+        ${mysql_conn} <<EOF
+SOURCE /tmp/iredapd.mysql;
+SOURCE /tmp/greylisting_whitelist_domains.sql;
+EOF
+    fi
 
     #
     # alter some columns to BIGINT(20): throttle.{msg_size,max_quota,max_msgs}
@@ -359,6 +373,38 @@ EOF
 
     if [ X"$?" != X'0' ]; then
         ${mysql_conn} -e "CREATE INDEX client_address_passed ON greylisting_tracking (client_address, passed);"
+    fi
+
+    #
+    # `greylisting_whitelist_domain_spf`
+    #
+    (${mysql_conn} <<EOF
+show tables;
+EOF
+) | grep 'greylisting_whitelist_domain_spf' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${mysql_conn} <<EOF
+SOURCE /tmp/iredapd.mysql;
+EOF
+    fi
+
+    #
+    # `blacklist_rdns`
+    #
+    (${mysql_conn} <<EOF
+show tables;
+EOF
+) | grep 'blacklist_rdns' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        cp -f ${PWD}/../SQL/blacklist_rdns.sql /tmp/
+        chmod 0555 /tmp/blacklist_rdns.sql
+
+        ${mysql_conn} <<EOF
+SOURCE /tmp/iredapd.mysql;
+SOURCE /tmp/blacklist_rdns.sql;
+EOF
     fi
 
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
