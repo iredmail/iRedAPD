@@ -302,7 +302,7 @@ GRANT ALL ON greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitel
 
 GRANT ALL ON throttle, throttle_tracking TO ${IREDAPD_DB_USER};
 GRANT ALL ON throttle_id_seq, throttle_tracking_id_seq TO ${IREDAPD_DB_USER};
-GRANT ALL ON blacklist_rdns TO ${IREDAPD_DB_USER};
+GRANT ALL ON blacklist_rdns,blacklist_rdns_id_seq TO ${IREDAPD_DB_USER};
 EOF
 
         su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
@@ -337,6 +337,7 @@ if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     echo "* Check SQL tables, and add missed ones - if there's any"
     ${mysql_conn} <<EOF
 SOURCE ${PWD}/../SQL/iredapd.mysql;
+SOURCE /tmp/iredapd/blacklist_rdns.sql;
 EOF
 
     #
@@ -410,6 +411,9 @@ CREATE INDEX idx_greylisting_whitelist_domain_spf_comment ON greylisting_whiteli
     ${psql_conn} -c "SELECT id FROM blacklist_rdns LIMIT 1" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
+        cp -f ${PWD}/../SQL/blacklist_rdns.sql /tmp/
+        chmod 0555 /tmp/blacklist_rdns.sql
+
         ${psql_conn} -c "
 CREATE TABLE blacklist_rdns (
     id      SERIAL PRIMARY KEY,
@@ -417,7 +421,10 @@ CREATE TABLE blacklist_rdns (
 );
 
 CREATE UNIQUE INDEX idx_blacklist_rdns_rdns ON blacklist_rdns (rdns);
+\i /tmp/blacklist_rdns.sql;
 "
+
+        rm -f /tmp/blacklist_rdns.sql &>/dev/null
     fi
 
     #
