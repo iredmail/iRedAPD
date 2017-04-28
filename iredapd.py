@@ -71,25 +71,28 @@ class PolicyChannel(asynchat.async_chat):
             line = self.buffer.pop()
             logger.debug("smtp session: " + line)
             if '=' in line:
-                (key, value) = line.split('=', 1)
+                (k, v) = line.split('=', 1)
 
-                if key in SMTP_SESSION_ATTRIBUTES:
-                    if key in ['sender', 'recipient', 'sasl_username']:
-                        # convert to lower cases.
-                        v = value.lower()
+                if k in SMTP_SESSION_ATTRIBUTES:
+                    if k in ['sender', 'recipient', 'sasl_username',
+                             'reverse_client_name']:
+                        # Convert to lower cases.
+                        v = v.lower()
+                        self.smtp_session_data[k] = v
 
+                    if k in ['sender', 'recipient', 'sasl_username']:
                         if v:
                             if not utils.is_email(v):
                                 # Don't waste time on invalid email addresses.
-                                action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (key, v)
+                                action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (k, v)
                                 self.push('action=' + action + '\n')
 
-                        self.smtp_session_data[key] = v
+                        self.smtp_session_data[k] = v
 
                         # Add sender_domain, recipient_domain, sasl_username_domain
-                        self.smtp_session_data[key + '_domain'] = v.split('@', 1)[-1]
+                        self.smtp_session_data[k + '_domain'] = v.split('@', 1)[-1]
                     else:
-                        self.smtp_session_data[key] = value
+                        self.smtp_session_data[k] = v
                 else:
                     logger.debug('Drop invalid smtp session input: %s' % line)
 

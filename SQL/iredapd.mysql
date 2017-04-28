@@ -208,3 +208,10 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     INDEX (`rcpt_domain`),
     INDEX client_address_passed (`client_address`, `passed`)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `blacklist_rdns` (
+    `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
+    `rdns`      VARCHAR(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX (`rdns`)
+) ENGINE=InnoDB;

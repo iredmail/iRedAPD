@@ -180,3 +180,9 @@ CREATE UNIQUE INDEX idx_greylisting_tracking_key    ON greylisting_tracking (sen
 CREATE INDEX idx_greylisting_tracking_sender_domain ON greylisting_tracking (sender_domain);
 CREATE INDEX idx_greylisting_tracking_rcpt_domain   ON greylisting_tracking (rcpt_domain);
 CREATE INDEX idx_greylisting_tracking_client_address_passed ON greylisting_tracking (client_address, passed);
+
+CREATE TABLE `blacklist_rdns` (
+    id      SERIAL PRIMARY KEY,
+    rdns    VARCHAR(255) NOT NULL DEFAULT ''
+);
+CREATE INDEX idx_blacklist_rdns_rdns ON blacklist_rdns (rdns);

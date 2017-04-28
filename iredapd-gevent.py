@@ -81,25 +81,31 @@ def policy_handle(socket, address):
                 logger.debug("smtp session: " + line)
 
                 if '=' in line:
-                    (key, value) = line.split('=', 1)
+                    (k, v) = line.split('=', 1)
 
-                    if key in SMTP_SESSION_ATTRIBUTES:
-                        if key in ['sender', 'recipient', 'sasl_username']:
+                    if k in SMTP_SESSION_ATTRIBUTES:
+                        if k in ['sender', 'recipient', 'sasl_username',
+                                 'reverse_client_name']:
+                            # Convert to lower cases.
+                            v = v.lower()
+                            smtp_session_data[k] = v
+
+                        if k in ['sender', 'recipient', 'sasl_username']:
                             # convert to lower cases.
-                            v = value.lower()
+                            v = v.lower()
                             if v:
                                 if not utils.is_email(v):
                                     # Don't waste time on invalid email addresses.
-                                    action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (key, v)
+                                    action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (k, v)
                                     socket.send('action=' + action + '\n\n')
                                     continue
 
-                            smtp_session_data[key] = v
+                            smtp_session_data[k] = v
 
                             # Add sender_domain, recipient_domain, sasl_username_domain
-                            smtp_session_data[key + '_domain'] = v.split('@', 1)[-1]
+                            smtp_session_data[k + '_domain'] = v.split('@', 1)[-1]
                         else:
-                            smtp_session_data[key] = value
+                            smtp_session_data[k] = v
                     else:
                         logger.debug('Drop invalid smtp session input: %s' % line)
 

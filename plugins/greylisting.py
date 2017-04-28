@@ -348,10 +348,6 @@ def restriction(**kwargs):
 
     conn = kwargs['conn_iredapd']
 
-    if not conn:
-        logger.error('No valid database connection, fallback to default action.')
-        return SMTP_ACTIONS['default']
-
     sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
     sender_tld_domain = sender_domain.split('.')[-1]
