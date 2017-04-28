@@ -37,6 +37,7 @@ SMTP_ACTIONS = {
 PLUGIN_PRIORITIES = {
     'reject_null_sender': 100,
     'reject_to_hostname': 100,
+    'blacklist_rdns': 99,
     'reject_sender_login_mismatch': 90,
     'greylisting': 80,
     'ldap_force_change_password_in_days': 70,
