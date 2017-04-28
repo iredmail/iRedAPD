@@ -245,6 +245,10 @@ if ! echo ${PWD} | grep 'iRedAPD.*/tools' >/dev/null; then
     exit 255
 fi
 
+mkdir /tmp/iredapd/ 2>/dev/null
+cp -f ${PWD}/../SQL/*sql /tmp/iredapd
+chmod -R 0555 /tmp/iredapd
+
 #
 # Require SQL root password to create `iredapd` database.
 #
@@ -254,8 +258,9 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
     export IREDAPD_DB_USER='iredapd'
     export IREDAPD_DB_PASSWD="$(echo $RANDOM | ${MD5_BIN} | awk '{print $1}')"
 
-    cp -f ${PWD}/../SQL/iredapd.*sql /tmp/
-    chmod 0555 /tmp/iredapd.*sql
+    mkdir /tmp/iredapd/ 2>/dev/null
+    cp -f ${PWD}/../SQL/*sql /tmp/iredapd
+    chmod -R 0555 /tmp/iredapd
 
     # Check backend.
     if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
@@ -265,7 +270,12 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
         mysql <<EOF
 CREATE DATABASE IF NOT EXISTS ${IREDAPD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE ${IREDAPD_DB_NAME};
-SOURCE /tmp/iredapd.mysql;
+
+SOURCE /tmp/iredapd/iredapd.mysql;
+SOURCE /tmp/iredapd/enable_global_greylisting.sql;
+SOURCE /tmp/iredapd/greylisting_whitelist_domains.sql;
+SOURCE /tmp/iredapd/blacklist_rdns.sql;
+
 GRANT ALL ON ${IREDAPD_DB_NAME}.* TO "${IREDAPD_DB_USER}"@"localhost" IDENTIFIED BY "${IREDAPD_DB_PASSWD}";
 FLUSH PRIVILEGES;
 EOF
@@ -280,8 +290,11 @@ ALTER DATABASE ${IREDAPD_DB_NAME} OWNER TO ${IREDAPD_DB_USER};
 
 \c ${IREDAPD_DB_NAME};
 
--- Import SQL template
-\i /tmp/iredapd.pgsql;
+-- Import SQL templates
+\i /tmp/iredapd/iredapd.pgsql;
+\i /tmp/iredapd/enable_global_greylisting.sql;
+\i /tmp/iredapd/greylisting_whitelist_domains.sql;
+\i /tmp/iredapd/blacklist_rdns.sql;
 
 -- Grant permissions
 GRANT ALL ON greylisting, greylisting_tracking, greylisting_whitelists, greylisting_whitelist_domains TO ${IREDAPD_DB_USER};
@@ -289,12 +302,13 @@ GRANT ALL ON greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitel
 
 GRANT ALL ON throttle, throttle_tracking TO ${IREDAPD_DB_USER};
 GRANT ALL ON throttle_id_seq, throttle_tracking_id_seq TO ${IREDAPD_DB_USER};
+GRANT ALL ON blacklist_rdns TO ${IREDAPD_DB_USER};
 EOF
 
         su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
     fi
 
-    rm -f /tmp/iredapd.*sql
+    rm -rf /tmp/iredapd
 fi
 
 #
@@ -320,29 +334,10 @@ psql_conn="psql -h ${iredapd_db_server} \
                 -d ${iredapd_db_name}"
 
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
-    #
-    # `greylisting_whitelist_domains`
-    #
-    (${mysql_conn} <<EOF
-show tables;
+    echo "* Check SQL tables, and add missed ones - if there's any"
+    ${mysql_conn} <<EOF
+SOURCE ${PWD}/../SQL/iredapd.mysql;
 EOF
-) | grep 'greylisting_whitelist_domains' &>/dev/null
-
-    if [ X"$?" != X'0' ]; then
-        cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
-        chmod 0555 /tmp/greylisting_whitelist_domains.sql
-
-        ${mysql_conn} <<EOF
-CREATE TABLE IF NOT EXISTS greylisting_whitelist_domains (
-    id        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
-    domain    VARCHAR(255)    NOT NULL DEFAULT '',
-    PRIMARY KEY (id),
-    UNIQUE INDEX (domain)
-) ENGINE=InnoDB;
-USE ${iredapd_db_name};
-SOURCE /tmp/greylisting_whitelist_domains.sql;
-EOF
-    fi
 
     #
     # alter some columns to BIGINT(20): throttle.{msg_size,max_quota,max_msgs}
@@ -363,28 +358,6 @@ EOF
 
     if [ X"$?" != X'0' ]; then
         ${mysql_conn} -e "CREATE INDEX client_address_passed ON greylisting_tracking (client_address, passed);"
-    fi
-
-    #
-    # `greylisting_whitelist_domain_spf`
-    #
-    (${mysql_conn} <<EOF
-show tables;
-EOF
-) | grep 'greylisting_whitelist_domain_spf' &>/dev/null
-
-    if [ X"$?" != X'0' ]; then
-        ${mysql_conn} <<EOF
-CREATE TABLE IF NOT EXISTS greylisting_whitelist_domain_spf (
-    id        BIGINT(20)      UNSIGNED AUTO_INCREMENT,
-    account   VARCHAR(100)    NOT NULL DEFAULT '',
-    sender    VARCHAR(100)    NOT NULL DEFAULT '',
-    comment   VARCHAR(255)    NOT NULL DEFAULT '',
-    PRIMARY KEY (id),
-    UNIQUE INDEX (account, sender),
-    INDEX (comment)
-) ENGINE=InnoDB;
-EOF
     fi
 
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
@@ -428,6 +401,22 @@ CREATE TABLE greylisting_whitelist_domain_spf (
 
 CREATE UNIQUE INDEX idx_greylisting_whitelist_domain_spf_account_sender ON greylisting_whitelist_domain_spf (account, sender);
 CREATE INDEX idx_greylisting_whitelist_domain_spf_comment ON greylisting_whitelist_domain_spf (comment);
+"
+    fi
+
+    #
+    # `blacklist_rdns`
+    #
+    ${psql_conn} -c "SELECT id FROM blacklist_rdns LIMIT 1" &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${psql_conn} -c "
+CREATE TABLE blacklist_rdns (
+    id      SERIAL PRIMARY KEY,
+    rdns    VARCHAR(255) NOT NULL DEFAULT ''
+);
+
+CREATE UNIQUE INDEX idx_blacklist_rdns_rdns ON blacklist_rdns (rdns);
 "
     fi
 
