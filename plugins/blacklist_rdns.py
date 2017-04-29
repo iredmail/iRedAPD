@@ -9,7 +9,7 @@
 #
 #   - '.domain.co.uk'
 #
-#       matches 'domain.com.uk' and all reverse DNS names which end with
+#       matches 'domain.co.uk' and all reverse DNS names which end with
 #       '.domain.co.uk'. for example:
 #
 #                 domain.co.uk
@@ -23,7 +23,7 @@
 #
 #   sql> INSERT INTO blacklist_rdns (rdns) VALUES ('mail.domain.co.uk');
 #
-# *) Block all rDNS names which end with '.dynamic.163data.com.cn':
+# *) Block rDNS name 'dynamic.163.com.cn' and all names which end with it:
 #
 #   sql> INSERT INTO blacklist_rdns (rdns) VALUES ('.dynamic.163data.com.cn')
 
