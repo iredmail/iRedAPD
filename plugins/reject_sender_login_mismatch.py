@@ -165,7 +165,7 @@ def restriction(**kwargs):
                     sender_is_forged = True
 
             if sender_is_forged:
-                return SMTP_ACTIONS['reject'] + ' not logged in'
+                return SMTP_ACTIONS['reject_forged_sender']
             else:
                 logger.debug('Sender domain is not hosted locally.')
                 return SMTP_ACTIONS['default']

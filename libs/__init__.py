@@ -12,10 +12,11 @@ SMTP_ACTIONS = {
     # reject
     'reject': 'REJECT Policy rejection',
     # reject with reason
+    'reject_forged_sender': 'REJECT Forged sender domain',
+    'reject_sender_login_mismatch': 'REJECT Sender is not same as SMTP authenticate username',
     'reject_blacklisted': 'REJECT Blacklisted',
     'reject_not_authorized': 'REJECT Not authorized',
     'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
-    'reject_sender_login_mismatch': 'REJECT Sender is not same as SMTP authenticate username',
     'reject_blacklisted_rdns': 'REJECT Blacklisted (reverse DNS name of server IP address)',
     # Throttling
     'reject_exceed_msg_size': 'REJECT Quota exceeded (size of single mail message)',
