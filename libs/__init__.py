@@ -12,7 +12,7 @@ SMTP_ACTIONS = {
     # reject
     'reject': 'REJECT Policy rejection',
     # reject with reason
-    'reject_forged_sender': 'REJECT Forged sender domain',
+    'reject_forged_sender': 'REJECT SMTP AUTH is required, or it is a spam with forged sender domain',
     'reject_sender_login_mismatch': 'REJECT Sender is not same as SMTP authenticate username',
     'reject_blacklisted': 'REJECT Blacklisted',
     'reject_not_authorized': 'REJECT Not authorized',
