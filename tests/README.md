@@ -1,6 +1,8 @@
 # Test iRedAPD
 
-## 
+## Requirements
+
+* pytest
 
 ## Preparations
 
@@ -17,4 +19,11 @@ Restarting iRedAPD service is required.
 
 ```
 vmail_db_password = 'xxxx'
+```
+
+## Run tests
+
+```
+cd /opt/iredapd/tests
+bash main.sh
 ```

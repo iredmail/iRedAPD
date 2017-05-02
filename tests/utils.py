@@ -162,7 +162,6 @@ def delete_alias(alias=tdata.alias):
                 where='address=$alias AND is_list=1')
 
 def assign_user_as_alias_member(user=tdata.user):
-    web.config.debug=True
     conn.insert('forwardings',
                 address=tdata.alias,
                 forwarding=user,
