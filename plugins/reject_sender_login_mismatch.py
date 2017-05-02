@@ -243,8 +243,8 @@ def restriction(**kwargs):
             if is_strict:
                 # Get per-user alias addresses
                 sql = """SELECT address
-                           FROM alias
-                          WHERE address='%s' AND alias_to='%s' AND is_alias=1
+                           FROM forwardings
+                          WHERE address='%s' AND forwarding='%s' AND is_alias=1
                           LIMIT 1""" % (sender, real_sasl_username)
                 logger.debug('[SQL] query per-user alias address: \n%s' % sql)
 
@@ -287,21 +287,19 @@ def restriction(**kwargs):
 
             if allow_list_member:
                 # Get alias members
-                sql = """SELECT goto
-                           FROM alias
-                          WHERE address='%s'
-                          LIMIT 1""" % (real_sender)
-                logger.debug('[SQL] query members of alias account (%s): \n%s' % (real_sender, sql))
+                sql = """SELECT forwarding
+                           FROM forwardings
+                          WHERE address='%s' AND forwarding='%s' AND is_list=1
+                          LIMIT 1""" % (real_sender, real_sasl_username)
+                logger.debug('[SQL] query members of mail alias account (%s): \n%s' % (real_sender, sql))
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
-                    members = sql_record[0].split(',')
-                    if (sasl_username in members) or (real_sasl_username in members):
-                        logger.debug('SASL username (%s) is a member of mail alias (%s).' % (sasl_username, sender))
-                        return SMTP_ACTIONS['default']
+                    logger.debug('SASL username (%s) is a member of mail alias (%s).' % (sasl_username, sender))
+                    return SMTP_ACTIONS['default']
                 else:
                     logger.debug('No such mail alias account.')
 
