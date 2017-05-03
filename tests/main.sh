@@ -11,15 +11,10 @@ fi
 # Make sure custom config file exists.
 touch ${ROOTDIR}/tsettings.py
 
-modules='test_reject_sender_login_mismatch.py'
+modules="
+    test_reject_null_sender.py
+    test_reject_sender_login_mismatch.py
+    test_cleanup.py
+"
 
-retval=0
-for mod in ${modules}; do
-    pytest $mod
-
-    _retval="$?"
-    [ X"${_retval}" == X'0' ]  || retval="${_retval}"
-done
-
-# Cleanup sql records used for testing.
-[ X"${retval}" == X'0' ] && pytest test_cleanup.py
+pytest ${modules}

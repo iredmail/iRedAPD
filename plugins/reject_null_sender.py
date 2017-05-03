@@ -25,6 +25,6 @@ def restriction(**kwargs):
 
     if sasl_username and (not sender):
         logger.info('Possible spam (authenticated as %s but sender address is null).' % sasl_username)
-        return SMTP_ACTIONS['reject']
+        return SMTP_ACTIONS['reject_null_sender']
 
     return SMTP_ACTIONS['default']
