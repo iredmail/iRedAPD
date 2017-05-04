@@ -77,7 +77,7 @@ MAILLIST_POLICY_SUBDOMAIN = 'subdomain'
 # Only members are allowed
 MAILLIST_POLICY_MEMBERSONLY = 'membersonly'
 # Only moderators/allowed are allowed
-MAILLIST_POLICY_ALLOWEDONLY = 'moderatorsonly'
+MAILLIST_POLICY_MODERATORS = 'moderatorsonly'
 # Only members and moderators are allowed
 MAILLIST_POLICY_MEMBERSANDMODERATORSONLY = 'membersandmoderatorsonly'
 

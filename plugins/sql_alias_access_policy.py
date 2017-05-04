@@ -15,7 +15,7 @@ from libs import MAILLIST_POLICY_PUBLIC
 from libs import MAILLIST_POLICY_DOMAIN
 from libs import MAILLIST_POLICY_SUBDOMAIN
 from libs import MAILLIST_POLICY_MEMBERSONLY
-from libs import MAILLIST_POLICY_ALLOWEDONLY
+from libs import MAILLIST_POLICY_MODERATORS
 from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
 
@@ -37,22 +37,69 @@ def is_allowed_alias_domain_user(sender,
     return False
 
 
-def get_access_policy_and_more(conn, recipient):
-    # Get access policy directly.
-    sql = '''SELECT accesspolicy, goto, moderators
+def get_access_policy(conn, mail):
+    """Returns access policy (string) of mail alias account, returns None if
+    account doesn't exist."""
+    _policy = None
+
+    sql = """SELECT accesspolicy
                FROM alias
               WHERE address='%s'
-                    AND islist=1
-                    AND active=1
-              LIMIT 1
-    ''' % (recipient)
+              LIMIT 1""" % (mail)
+
     logger.debug('[SQL] query access policy: \n%s' % sql)
 
     qr = conn.execute(sql)
-    sql_record = qr.fetchone()
-    logger.debug('SQL query result: %s' % str(sql_record))
+    record = qr.fetchone()
+    logger.debug('SQL query result: %s' % str(record))
 
-    return sql_record
+    if record:
+        _policy = str(record[0]).lower()
+
+    return _policy
+
+
+def get_members(conn, mail):
+    """Return a list of members of mail alias account."""
+    _members = []
+
+    # Get access policy directly.
+    sql = """SELECT forwarding
+               FROM forwardings
+              WHERE address='%s' AND is_list=1""" % (mail)
+
+    logger.debug('[SQL] query alias members: \n%s' % sql)
+
+    qr = conn.execute(sql)
+    records = qr.fetchall()
+    logger.debug('SQL query result: %s' % str(records))
+
+    if records:
+        for i in records:
+            _members.append(str(i[0]).lower())
+
+    return _members
+
+def get_moderators(conn, mail):
+    """Return a list of moderators of mail alias account."""
+    _moderators = []
+
+    # Get access policy directly.
+    sql = """SELECT moderator
+               FROM alias_moderators
+              WHERE address='%s'""" % (mail)
+
+    logger.debug('[SQL] query moderators: \n%s' % sql)
+
+    qr = conn.execute(sql)
+    records = qr.fetchall()
+    logger.debug('SQL query result: %s' % str(records))
+
+    if records:
+        for i in records:
+            _moderators.append(str(i[0]).lower())
+
+    return _moderators
 
 
 def restriction(**kwargs):
@@ -62,14 +109,15 @@ def restriction(**kwargs):
     sender_username = sender.split('@', 1)[0]
     recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
+    real_recipient = recipient
 
     # used when recipient_domain is an alias domain
     real_recipient_domain = recipient_domain
 
-    policy_record = get_access_policy_and_more(conn, recipient)
+    policy = get_access_policy(conn=conn, mail=recipient)
 
     # Recipient account doesn't exist.
-    if not policy_record:
+    if not policy:
         # Check whether recipient domain is an alias domain
         sql = '''SELECT target_domain
                    FROM alias_domain
@@ -80,7 +128,7 @@ def restriction(**kwargs):
         logger.debug('[SQL] Check whether recipient domain is an alias domain: \n%s' % sql)
         _qr = conn.execute(sql)
         _sql_record = _qr.fetchone()
-        logger.debug('[SQL] query result: %s' % str(_sql_record))
+        logger.debug('[SQL] Query result: %s' % str(_sql_record))
 
         if not _sql_record:
             logger.debug('Recipient domain is not an alias domain.')
@@ -90,30 +138,21 @@ def restriction(**kwargs):
         real_recipient_domain = _sql_record[0].lower()
         real_recipient = recipient.split('@', 1)[0] + '@' + real_recipient_domain
 
-        # Get policy_record
-        policy_record = get_access_policy_and_more(conn, real_recipient)
-        if not policy_record:
+        policy = get_access_policy(conn=conn, mail=real_recipient)
+        if not policy:
             return SMTP_ACTIONS['default'] + ' (Recipient domain is an alias domain, but recipient is not a mail alias account)'
 
-    policy = str(policy_record[0]).lower()
     if not policy:
-        policy = 'public'
+        return SMTP_ACTIONS['default'] + ' (Recipient is not a mail alias account)'
 
-    # Use 'moderatorsonly' instead of 'allowedonly'
-    if policy == 'allowedonly':
-        policy = 'moderatorsonly'
-
-    # Log access policy and description
     logger.debug('Access policy: %s' % policy)
 
     if policy == MAILLIST_POLICY_PUBLIC:
-        return SMTP_ACTIONS['default']
+        return SMTP_ACTIONS['default'] + ' (Access policy is public)'
 
-    members = [str(v.lower()) for v in str(policy_record[1]).split(',')]
-    moderators = [str(v.lower()) for v in str(policy_record[2]).split(',')]
-
-    logger.debug('members: %s' % ', '.join(members))
-    logger.debug('moderators: %s' % ', '.join(moderators))
+    # Use 'moderatorsonly' instead of 'allowedonly' (historical value)
+    if policy == 'allowedonly':
+        policy = MAILLIST_POLICY_MODERATORS
 
     # All alias domains of recipient domain
     rcpt_alias_domains = []
@@ -121,63 +160,56 @@ def restriction(**kwargs):
     # Get alias domains.
     sql = """SELECT alias_domain
                FROM alias_domain
-              WHERE
-                    alias_domain='%s'
-                    AND target_domain='%s'
+              WHERE alias_domain='%s' AND target_domain='%s'
               LIMIT 1
               """ % (sender_domain, real_recipient_domain)
-    logger.debug('[SQL] query alias domains: \n%s' % sql)
+    logger.debug('[SQL] query alias domain: \n%s' % sql)
 
-    qr = conn.execute(sql)
-    sql_record = qr.fetchone()
+    _qr = conn.execute(sql)
+    _record = _qr.fetchone()
 
-    if sql_record:
-        logger.debug('SQL query result: %s' % str(sql_record))
-        rcpt_alias_domains.append(str(sql_record[0]))
+    if _record:
+        logger.debug('SQL query result: %s' % str(_record))
+        rcpt_alias_domains.append(str(_record[0]))
     else:
         logger.debug('No alias domain.')
+
+    members = []
+    moderators = []
+    if policy in (MAILLIST_POLICY_MEMBERSONLY, MAILLIST_POLICY_MEMBERSANDMODERATORSONLY):
+        members = get_members(conn=conn, mail=real_recipient)
+        logger.debug('Members: %s' % ', '.join(members))
+
+    if policy in (MAILLIST_POLICY_MODERATORS, MAILLIST_POLICY_MEMBERSANDMODERATORSONLY):
+        moderators = get_moderators(conn=conn, mail=real_recipient)
+        logger.debug('Moderators: %s' % ', '.join(moderators))
 
     if policy == MAILLIST_POLICY_DOMAIN:
         # Bypass all users under the same domain.
         if sender_domain == recipient_domain \
+           or sender_domain == real_recipient_domain \
            or sender_domain in rcpt_alias_domains:
             return SMTP_ACTIONS['default']
-        else:
-            return SMTP_ACTIONS['reject_not_authorized']
 
     elif policy == MAILLIST_POLICY_SUBDOMAIN:
         # Bypass all users under the same domain or sub domains.
         if sender_domain == recipient_domain \
            or sender_domain == real_recipient_domain \
-           or sender.endswith('.' + recipient_domain):
+           or sender.endswith('.' + recipient_domain) \
+           or sender.endswith('.' + real_recipient_domain):
             logger.debug('Sender domain is same as recipient domain or is sub-domain.')
             return SMTP_ACTIONS['default']
         elif sender_domain in rcpt_alias_domains:
-            logger.debug('Sender domain is one of recipient alias domain.')
+            logger.debug('Sender domain is one of recipient alias domains.')
             return SMTP_ACTIONS['default']
         else:
             # Check whether sender domain is subdomain of primary/alias recipient domains
             for d in rcpt_alias_domains:
                 if sender.endswith('.' + d):
-                    logger.debug('Sender domain is sub-domain of recipient alias domain (%s).' % d)
+                    logger.debug('Sender domain is sub-domain of recipient alias domains: %s' % d)
                     return SMTP_ACTIONS['default']
 
-        return SMTP_ACTIONS['reject_not_authorized']
-
-    elif policy == MAILLIST_POLICY_MEMBERSONLY:
-        # Bypass all members.
-        if sender in members \
-           or is_allowed_alias_domain_user(sender,
-                                           sender_username,
-                                           sender_domain,
-                                           recipient_domain,
-                                           rcpt_alias_domains,
-                                           members):
-            return SMTP_ACTIONS['default']
-
-        return SMTP_ACTIONS['reject_not_authorized']
-
-    elif policy == MAILLIST_POLICY_ALLOWEDONLY:
+    elif policy == MAILLIST_POLICY_MODERATORS:
         # Bypass all moderators.
         if sender in moderators \
            or '*@' + sender_domain in moderators \
@@ -189,7 +221,16 @@ def restriction(**kwargs):
                                            moderators):
             return SMTP_ACTIONS['default']
 
-        return SMTP_ACTIONS['reject_not_authorized']
+    elif policy == MAILLIST_POLICY_MEMBERSONLY:
+        # Bypass all members.
+        if sender in members \
+           or is_allowed_alias_domain_user(sender,
+                                           sender_username,
+                                           sender_domain,
+                                           recipient_domain,
+                                           rcpt_alias_domains,
+                                           members):
+            return SMTP_ACTIONS['default']
 
     elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
         # Bypass both members and moderators.
@@ -203,8 +244,8 @@ def restriction(**kwargs):
                                            rcpt_alias_domains,
                                            members + moderators):
             return SMTP_ACTIONS['default']
-
-        return SMTP_ACTIONS['reject_not_authorized']
     else:
         # Bypass all if policy is not defined in this plugin.
-        return SMTP_ACTIONS['default'] + ' (Policy is not defined: %s)' % policy
+        return SMTP_ACTIONS['default'] + ' (Unsupported policy: %s. Bypass.)' % policy
+
+    return SMTP_ACTIONS['reject_not_authorized']

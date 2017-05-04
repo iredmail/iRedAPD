@@ -3,6 +3,7 @@ import web
 
 import settings
 from libs.logger import logger
+from libs import MAILLIST_POLICY_PUBLIC
 from tests import tdata
 
 web.config.debug = False
@@ -51,7 +52,7 @@ def set_smtp_session(**kw):
     d['recipient_count'] = '0'
     d['client_address'] = '192.168.1.1'
     #d['client_name'] = 'another.domain.tld'
-    #d['reverse_client_name'] = 'another.domain.tld'
+    d['reverse_client_name'] = 'another.domain.tld'
     d['instance'] = '123.456.7'
     #d['sasl_method'] = 'plain'
     #d['sasl_username'] = 'postmaster@a.cn'
@@ -93,6 +94,15 @@ def delete_domain(domain=tdata.domain):
     conn.delete('domain',
                 vars=tdata.sql_vars,
                 where='domain=$domain')
+    conn.delete('alias',
+                vars=tdata.sql_vars,
+                where='domain=$domain')
+    conn.delete('alias_moderators',
+                vars=tdata.sql_vars,
+                where='domain=$domain')
+    conn.delete('forwardings',
+                vars=tdata.sql_vars,
+                where='domain=$domain')
 
 def add_alias_domain(domain=tdata.alias_domain):
     delete_alias_domain()
@@ -114,6 +124,7 @@ def add_user(user=tdata.user):
     conn.insert('forwardings',
                 address=tdata.user,
                 forwarding=tdata.user,
+                domain=user.split('@', 1)[-1],
                 is_forwarding=1)
 
 def delete_user(user=tdata.user):
@@ -145,12 +156,15 @@ def add_per_user_alias_address(user=tdata.user):
     conn.insert('forwardings',
                 address=tdata.user_alias,
                 forwarding=user,
+                domain=user.split('@', 1)[-1],
                 is_alias=1)
 
-def add_alias(alias=tdata.user):
+def add_alias(alias=tdata.user, policy=MAILLIST_POLICY_PUBLIC):
     delete_alias()
     conn.insert('alias',
-                address=tdata.alias)
+                address=tdata.alias,
+                accesspolicy=policy,
+                domain=alias.split('@', 1)[-1])
 
 def delete_alias(alias=tdata.alias):
     conn.delete('alias',
@@ -161,8 +175,25 @@ def delete_alias(alias=tdata.alias):
                 vars=tdata.sql_vars,
                 where='address=$alias AND is_list=1')
 
-def assign_user_as_alias_member(user=tdata.user):
+def assign_alias_member(member=tdata.user, alias=tdata.alias):
     conn.insert('forwardings',
-                address=tdata.alias,
-                forwarding=user,
+                address=alias,
+                forwarding=member,
+                domain=alias.split('@', 1)[-1],
                 is_list=1)
+
+def assign_alias_moderator(moderator=tdata.user, alias=tdata.alias):
+    conn.insert('alias_moderators',
+                address=alias,
+                moderator=moderator,
+                domain=alias.split('@', 1)[-1])
+
+def remove_alias_member(member=tdata.user, alias=tdata.alias):
+    conn.delete('forwardings',
+                vars={'member': member, 'alias': alias},
+                where='address=$alias AND forwarding=$member')
+
+def remove_alias_moderator(moderator=tdata.user, alias=tdata.alias):
+    conn.delete('alias_moderators',
+                vars={'moderator': moderator, 'alias': alias},
+                where='address=$alias AND moderator=$moderator')

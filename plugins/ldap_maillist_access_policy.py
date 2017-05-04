@@ -9,7 +9,7 @@ from libs import MAILLIST_POLICY_PUBLIC
 from libs import MAILLIST_POLICY_DOMAIN
 from libs import MAILLIST_POLICY_SUBDOMAIN
 from libs import MAILLIST_POLICY_MEMBERSONLY
-from libs import MAILLIST_POLICY_ALLOWEDONLY
+from libs import MAILLIST_POLICY_MODERATORS
 from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
 from libs.ldaplib import conn_utils
@@ -154,7 +154,7 @@ def restriction(**kwargs):
 
         return SMTP_ACTIONS['reject_not_authorized']
 
-    elif policy == MAILLIST_POLICY_ALLOWEDONLY:
+    elif policy == MAILLIST_POLICY_MODERATORS:
         # If sender is hosted on local server, check per-user alias addresses
         # and alias domains.
 

@@ -27,7 +27,7 @@ def test_not_local_sender():
     s = utils.set_smtp_session(**d)
     action = utils.send_policy(s)
 
-    assert action == SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
+    assert action == SMTP_ACTIONS['default']
 
 def test_sender_same_as_sasl_username():
     # Test outbound: sender == sasl_username
@@ -116,7 +116,7 @@ if settings.backend != 'ldap':
         utils.add_alias_domain()
         utils.add_user()
         utils.add_alias()
-        utils.assign_user_as_alias_member()
+        utils.assign_alias_member()
 
         d = {}
         d['sender'] = tdata.alias
