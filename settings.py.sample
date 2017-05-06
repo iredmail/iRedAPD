@@ -28,7 +28,7 @@ log_level = 'info'
 backend = 'mysql'
 
 # Enabled plugins.
-plugins = ['reject_null_sender', 'blacklist_rdns', 'reject_sender_login_mismatch', 'greylisting', 'throttle', 'amavisd_wblist', 'sql_alias_access_policy']
+plugins = ['reject_null_sender', 'wblist_rdns', 'reject_sender_login_mismatch', 'greylisting', 'throttle', 'amavisd_wblist', 'sql_alias_access_policy']
 
 # For LDAP backend.
 #

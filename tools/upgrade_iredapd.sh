@@ -274,7 +274,7 @@ USE ${IREDAPD_DB_NAME};
 SOURCE /tmp/iredapd/iredapd.mysql;
 SOURCE /tmp/iredapd/enable_global_greylisting.sql;
 SOURCE /tmp/iredapd/greylisting_whitelist_domains.sql;
-SOURCE /tmp/iredapd/blacklist_rdns.sql;
+SOURCE /tmp/iredapd/wblist_rdns.sql;
 
 GRANT ALL ON ${IREDAPD_DB_NAME}.* TO "${IREDAPD_DB_USER}"@"localhost" IDENTIFIED BY "${IREDAPD_DB_PASSWD}";
 FLUSH PRIVILEGES;
@@ -294,7 +294,7 @@ ALTER DATABASE ${IREDAPD_DB_NAME} OWNER TO ${IREDAPD_DB_USER};
 \i /tmp/iredapd/iredapd.pgsql;
 \i /tmp/iredapd/enable_global_greylisting.sql;
 \i /tmp/iredapd/greylisting_whitelist_domains.sql;
-\i /tmp/iredapd/blacklist_rdns.sql;
+\i /tmp/iredapd/wblist_rdns.sql;
 
 -- Grant permissions
 GRANT ALL ON greylisting, greylisting_tracking, greylisting_whitelists, greylisting_whitelist_domains TO ${IREDAPD_DB_USER};
@@ -302,7 +302,7 @@ GRANT ALL ON greylisting_id_seq, greylisting_tracking_id_seq, greylisting_whitel
 
 GRANT ALL ON throttle, throttle_tracking TO ${IREDAPD_DB_USER};
 GRANT ALL ON throttle_id_seq, throttle_tracking_id_seq TO ${IREDAPD_DB_USER};
-GRANT ALL ON blacklist_rdns,blacklist_rdns_id_seq TO ${IREDAPD_DB_USER};
+GRANT ALL ON wblist_rdns,wblist_rdns_id_seq TO ${IREDAPD_DB_USER};
 EOF
 
         su - ${PGSQL_SYS_USER} -c "echo 'localhost:*:*:${IREDAPD_DB_USER}:${IREDAPD_DB_PASSWD}' >> ~/.pgpass"
@@ -390,20 +390,20 @@ EOF
     fi
 
     #
-    # `blacklist_rdns`
+    # `wblist_rdns`
     #
     (${mysql_conn} <<EOF
 show tables;
 EOF
-) | grep 'blacklist_rdns' &>/dev/null
+) | grep 'wblist_rdns' &>/dev/null
 
     if [ X"$?" != X'0' ]; then
-        cp -f ${PWD}/../SQL/blacklist_rdns.sql /tmp/
-        chmod 0555 /tmp/blacklist_rdns.sql
+        cp -f ${PWD}/../SQL/wblist_rdns.sql /tmp/
+        chmod 0555 /tmp/wblist_rdns.sql
 
         ${mysql_conn} <<EOF
 SOURCE /tmp/iredapd.mysql;
-SOURCE /tmp/blacklist_rdns.sql;
+SOURCE /tmp/wblist_rdns.sql;
 EOF
     fi
 
@@ -452,25 +452,28 @@ CREATE INDEX idx_greylisting_whitelist_domain_spf_comment ON greylisting_whiteli
     fi
 
     #
-    # `blacklist_rdns`
+    # `wblist_rdns`
     #
-    ${psql_conn} -c "SELECT id FROM blacklist_rdns LIMIT 1" &>/dev/null
+    ${psql_conn} -c "SELECT id FROM wblist_rdns LIMIT 1" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
-        cp -f ${PWD}/../SQL/blacklist_rdns.sql /tmp/
-        chmod 0555 /tmp/blacklist_rdns.sql
+        cp -f ${PWD}/../SQL/wblist_rdns.sql /tmp/
+        chmod 0555 /tmp/wblist_rdns.sql
 
         ${psql_conn} -c "
-CREATE TABLE blacklist_rdns (
+CREATE TABLE wblist_rdns (
     id      SERIAL PRIMARY KEY,
-    rdns    VARCHAR(255) NOT NULL DEFAULT ''
+    -- reverse DNS name of sender IP address
+    rdns    VARCHAR(255) NOT NULL DEFAULT '',
+    -- W=whitelist, B=blacklist
+    wb      VARCHAR(10) NOT NULL DEFAULT 'B'
 );
-
-CREATE UNIQUE INDEX idx_blacklist_rdns_rdns ON blacklist_rdns (rdns);
-\i /tmp/blacklist_rdns.sql;
+CREATE UNIQUE INDEX idx_wblist_rdns_rdns ON wblist_rdns (rdns);
+CREATE INDEX idx_wblist_rdns_wb ON wblist_rdns (wb);
+\i /tmp/wblist_rdns.sql;
 "
 
-        rm -f /tmp/blacklist_rdns.sql &>/dev/null
+        rm -f /tmp/wblist_rdns.sql &>/dev/null
     fi
 
     #

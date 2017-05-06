@@ -209,9 +209,13 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     INDEX client_address_passed (`client_address`, `passed`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS `blacklist_rdns` (
+CREATE TABLE IF NOT EXISTS `wblist_rdns` (
     `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
+    -- reverse DNS name of sender IP address
     `rdns`      VARCHAR(255) NOT NULL DEFAULT '',
+    -- W=whitelist, B=blacklist
+    `wb`        VARCHAR(10) NOT NULL DEFAULT 'B',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX (`rdns`)
+    UNIQUE INDEX (`rdns`),
+    INDEX (`wb`)
 ) ENGINE=InnoDB;

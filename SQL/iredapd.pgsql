@@ -181,8 +181,12 @@ CREATE INDEX idx_greylisting_tracking_sender_domain ON greylisting_tracking (sen
 CREATE INDEX idx_greylisting_tracking_rcpt_domain   ON greylisting_tracking (rcpt_domain);
 CREATE INDEX idx_greylisting_tracking_client_address_passed ON greylisting_tracking (client_address, passed);
 
-CREATE TABLE blacklist_rdns (
+CREATE TABLE wblist_rdns (
     id      SERIAL PRIMARY KEY,
-    rdns    VARCHAR(255) NOT NULL DEFAULT ''
+    -- reverse DNS name of sender IP address
+    rdns    VARCHAR(255) NOT NULL DEFAULT '',
+    -- W=whitelist, B=blacklist
+    wb      VARCHAR(10) NOT NULL DEFAULT 'B'
 );
-CREATE UNIQUE INDEX idx_blacklist_rdns_rdns ON blacklist_rdns (rdns);
+CREATE UNIQUE INDEX idx_wblist_rdns_rdns ON wblist_rdns (rdns);
+CREATE INDEX idx_wblist_rdns_wb ON wblist_rdns (wb);

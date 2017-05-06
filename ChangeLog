@@ -1,7 +1,7 @@
 iRedAPD-2.1:
     * New plugins:
-        + plugins/blacklist_rdns.py: blacklisting based on reverse DNS name of
-          client IP address.
+        + plugins/wblist_rdns.py: whitelisting and blacklisting based on
+          reverse DNS name of sender server IP address.
           Sponsored development by Daniel Senie <dts _at_ amaranth.com>.
 
     * Improvements:

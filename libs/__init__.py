@@ -18,7 +18,7 @@ SMTP_ACTIONS = {
     'reject_blacklisted': 'REJECT Blacklisted',
     'reject_not_authorized': 'REJECT Not authorized',
     'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
-    'reject_blacklisted_rdns': 'REJECT Blacklisted (reverse DNS name of server IP address)',
+    'reject_blacklisted_rdns': 'REJECT Blacklisted reverse DNS name of server IP address',
     # Throttling
     'reject_exceed_msg_size': 'REJECT Quota exceeded (size of single mail message)',
     'reject_exceed_max_msgs': 'REJECT Quota exceeded (number of mails in total)',
@@ -39,7 +39,7 @@ SMTP_ACTIONS = {
 PLUGIN_PRIORITIES = {
     'reject_null_sender': 100,
     'reject_to_hostname': 100,
-    'blacklist_rdns': 99,
+    'wblist_rdns': 99,
     'reject_sender_login_mismatch': 90,
     'greylisting': 80,
     'ldap_force_change_password_in_days': 70,

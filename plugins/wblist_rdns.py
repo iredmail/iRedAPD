@@ -1,5 +1,6 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
-# Purpose: Blacklisting based on reverse DNS (rDNS) name of client IP address.
+# Purpose: Whitelisting and blacklisting a sender server based on reverse DNS
+#          (rDNS) name of its IP address.
 
 # Valid rDNS formats:
 #
@@ -21,11 +22,19 @@
 #
 # *) Block rDNS name 'mail.domain.co.uk':
 #
-#   sql> INSERT INTO blacklist_rdns (rdns) VALUES ('mail.domain.co.uk');
+#   sql> INSERT INTO wblist_rdns (rdns, wb) VALUES ('mail.domain.co.uk', 'B');
 #
 # *) Block rDNS name 'dynamic.163.com.cn' and all names which end with it:
 #
-#   sql> INSERT INTO blacklist_rdns (rdns) VALUES ('.dynamic.163data.com.cn')
+#   sql> INSERT INTO wblist_rdns (rdns, wb) VALUES ('.dynamic.163data.com.cn', 'B')
+#
+# *) Whitelist rDNS name 'mx.example.com':
+#
+#   sql> INSERT INTO wblist_rdns (rdns, wb) VALUES ('mx.example.com', 'W');
+#
+# *) Whitelist rDNS name 'example.com' and all names which end with it:
+#
+#   sql> INSERT INTO wblist_rdns (rdns, wb) VALUES ('.example.com', 'W');
 
 from web import sqlquote
 from libs.logger import logger
@@ -58,14 +67,30 @@ def restriction(**kwargs):
 
     logger.debug('All policy rDNS names: %s' % repr(_policy_rdns_names))
 
-    # Query matched rDNS names
     conn = kwargs['conn_iredapd']
 
-    sql = """SELECT rdns FROM blacklist_rdns WHERE rdns IN %s LIMIT 1""" % sqlquote(_policy_rdns_names)
-    logger.debug('[SQL] Query matched rDNS names: \n%s' % sql)
+    # Query whitelist
+    sql = """SELECT rdns
+               FROM wblist_rdns
+              WHERE rdns IN %s AND wb='W'
+              LIMIT 1""" % sqlquote(_policy_rdns_names)
+    logger.debug('[SQL] Query whitelisted rDNS names: \n%s' % sql)
     qr = conn.execute(sql)
     record = qr.fetchone()
     if record:
-        return SMTP_ACTIONS['reject_blacklisted_rdns']
+        # better use 'DUNNO' instead of 'OK'
+        return SMTP_ACTIONS['default']
+
+    # Query blacklist
+    sql = """SELECT rdns
+               FROM wblist_rdns
+              WHERE rdns IN %s AND wb='B'
+              LIMIT 1""" % sqlquote(_policy_rdns_names)
+    logger.debug('[SQL] Query blacklisted rDNS names: \n%s' % sql)
+    qr = conn.execute(sql)
+    record = qr.fetchone()
+    if record:
+        rdns = str(record[0]).lower()
+        return SMTP_ACTIONS['reject_blacklisted_rdns'] + ' (' + rdns + ')'
 
     return SMTP_ACTIONS['default']
