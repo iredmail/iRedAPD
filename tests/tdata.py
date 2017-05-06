@@ -21,6 +21,9 @@ sql_vars = {'domain': domain,
             'ext_domain': ext_domain,
             'ext_user': ext_user}
 
+# rDNS names
+rdns_subdomain_name = '.rdns.com'
+rdns_exact_name = 'test' + rdns_subdomain_name
 
 #########################################
 # DO NOT TOUCH LINES BELOW

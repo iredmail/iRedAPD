@@ -14,6 +14,7 @@ touch ${ROOTDIR}/tsettings.py
 plugins="
     reject_null_sender
     reject_sender_login_mismatch
+    wblist_rdns
     sql_alias_access_policy
 "
 

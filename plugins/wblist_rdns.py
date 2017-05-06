@@ -78,6 +78,9 @@ def restriction(**kwargs):
     qr = conn.execute(sql)
     record = qr.fetchone()
     if record:
+        rdns = str(record[0]).lower()
+        logger.debug('[SQL] Found matched whitelist rdns: %s' % rdns)
+
         # better use 'DUNNO' instead of 'OK'
         return SMTP_ACTIONS['default']
 

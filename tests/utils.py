@@ -197,3 +197,25 @@ def remove_alias_moderator(moderator=tdata.user, alias=tdata.alias):
     conn.delete('alias_moderators',
                 vars={'moderator': moderator, 'alias': alias},
                 where='address=$alias AND moderator=$moderator')
+
+def add_wblist_rdns_whitelist(rdns):
+    remove_wblist_rdns_whitelist(rdns=rdns)
+    conn_iredapd.insert('wblist_rdns',
+                        rdns=rdns,
+                        wb='W')
+
+def remove_wblist_rdns_whitelist(rdns):
+    conn_iredapd.delete('wblist_rdns',
+                        vars={'rdns': rdns},
+                        where="rdns=$rdns AND wb='W'")
+
+def add_wblist_rdns_blacklist(rdns):
+    remove_wblist_rdns_blacklist(rdns=rdns)
+    conn_iredapd.insert('wblist_rdns',
+                        rdns=rdns,
+                        wb='B')
+
+def remove_wblist_rdns_blacklist(rdns):
+    conn_iredapd.delete('wblist_rdns',
+                        vars={'rdns': rdns},
+                        where="rdns=$rdns AND wb='B'")
