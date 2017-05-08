@@ -60,7 +60,7 @@
 #   *) IP address:  192.168.1.1
 #   *) IP network:  192.168.1.*
 #   *) Catch-all for email address: '@.' (note, the dot is required)
-#   *) Catch-all for IP address: '@ip'
+#   *) Catch-all for IP address: '@ip' (applies to per ip address)
 #
 # Priorities of different thorttle address (larger digital number has higher priority):
 #
