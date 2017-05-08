@@ -13,6 +13,8 @@ iRedAPD-2.1:
           small.
 
     * Fixed issues:
+        - plugins/throttle.py: restriction rule based on '@ip' doesn't work.
+          Thanks raz <raz _at_ dtnt.com> for the report in forum.
         - Not strip address extension in sender/recipient mail address.
         - plugins/reject_sender_login_mismatch.py:
             - should not query alias domain when sender domain is same as

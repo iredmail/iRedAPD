@@ -536,12 +536,10 @@ cp -rf ${IREDAPD_ROOT_REAL_DIR}/plugins/custom_* ${NEW_IREDAPD_ROOT_DIR}/plugins
 if ! grep '^from libs.default_settings import' ${IREDAPD_CONF_PY} &>/dev/null; then
     echo "* Update settings.py to import settings from libs/default_settings.py."
     cat > ${NEW_IREDAPD_CONF}_tmp <<EOF
-############################################################
-# DO NOT TOUCH BELOW LINE.
-#
-# Import default settings from libs/default_settings.py (don't touch this file).
+################################################################
+# DO NOT MODIFY THIS LINE, IT'S USED TO IMPORT DEFAULT SETTINGS.
 from libs.default_settings import *
-############################################################
+################################################################
 EOF
 
     cat ${NEW_IREDAPD_CONF} >> ${NEW_IREDAPD_CONF}_tmp

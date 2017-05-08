@@ -235,6 +235,8 @@ def apply_throttle(conn,
         t_setting_keys[(_id, _account)] = []
         t_setting_ids[_id] = _account
 
+        tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sqlquote(client_address)))
+
         if continue_check_msg_size and _msg_size > 0:
             continue_check_msg_size = False
             t_settings['msg_size'] = {'value': _msg_size,
