@@ -13,7 +13,7 @@ from libs import ipaddress
 import settings
 
 # Mail address. +, = is used in SRS rewritten addresses.
-regx_email = r'''[\w\-][\w\-\.\+\=\/]*@[\w\-][\w\-\.]*\.[a-zA-Z0-9\-]{2,15}'''
+regx_email = r'''[\w\-\#][\w\-\.\+\=\/\#]*@[\w\-][\w\-\.]*\.[a-zA-Z0-9\-]{2,15}'''
 cmp_email = re.compile(regx_email, re.IGNORECASE | re.DOTALL)
 
 # Domain name
@@ -116,7 +116,7 @@ def is_email(s):
         return False
 
     # Not contain invalid characters and match regular expression
-    if not set(s) & set(r'~!#$%^&*()\/ ') and cmp_email.match(s):
+    if not set(s) & set(r'~!$%^&*()\/ ') and cmp_email.match(s):
         return True
 
     return False
