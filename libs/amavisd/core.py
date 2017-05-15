@@ -2,31 +2,6 @@ from libs.logger import logger
 from libs import utils
 
 
-def get_valid_addresses_from_email(email):
-    # Return list valid Amavisd senders/recipients from an email address
-    # - Sample user: user@sub2.sub1.com.cn
-    # - Valid Amavisd senders:
-    #   -> user@sub2.sub1.com.cn
-    #   -> @sub2.sub1.com.cn
-    #   -> @.sub2.sub1.com.cn
-    #   -> @.sub1.com.cn
-    #   -> @.com.cn
-    #   -> @.cn
-    (username, email_domain) = email.split('@', 1)
-    splited_domain_parts = email_domain.split('.')
-
-    # Default senders (user@domain.ltd):
-    # ['@.', 'user@domain.ltd', @domain.ltd']
-    valid_addresses = ['@.', email]
-    for counter in range(len(splited_domain_parts)):
-        # Append domain and sub-domain.
-        subd = '.'.join(splited_domain_parts)
-        valid_addresses += ['@' + subd, '@.' + subd]
-        splited_domain_parts.pop(0)
-
-    return valid_addresses
-
-
 # TODO [?] No need to verify accounts in plugin, libs/xxx/modeler.py
 #      already handle it.
 # TODO query all: '@.', '@domain.com', '@.domain.com', 'user@domain.com'

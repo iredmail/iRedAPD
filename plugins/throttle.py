@@ -148,9 +148,8 @@ from libs.logger import logger
 from web import sqlquote
 import settings
 from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4, wildcard_ipv4, is_trusted_client
+from libs.utils import is_ipv4, wildcard_ipv4, is_trusted_client, get_policy_addresses_from_email
 from libs.utils import is_valid_amavisd_address, pretty_left_seconds
-from libs.amavisd.core import get_valid_addresses_from_email
 
 SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
 
@@ -171,7 +170,7 @@ def apply_throttle(conn,
     possible_addrs = [client_address, '@ip']
 
     if user:
-        possible_addrs += get_valid_addresses_from_email(user)
+        possible_addrs += get_policy_addresses_from_email(mail=user)
 
     sql_user = sqlquote(user)
 

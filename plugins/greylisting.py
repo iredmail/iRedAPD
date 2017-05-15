@@ -15,7 +15,7 @@ import time
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES, utils, ipaddress
-from libs.utils import is_trusted_client
+from libs.utils import is_trusted_client, get_policy_addresses_from_email
 import settings
 
 # Return 4xx with greylisting message to Postfix.
@@ -354,7 +354,7 @@ def restriction(**kwargs):
     recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
 
-    policy_recipients = [recipient, '@' + recipient_domain, '@.']
+    policy_recipients = get_policy_addresses_from_email(mail=recipient)
     policy_senders = [sender,                   # email address
                       '@' + sender_domain,      # sender domain
                       '@.' + sender_domain,     # sender sub-domains

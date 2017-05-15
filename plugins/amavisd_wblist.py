@@ -47,7 +47,7 @@ from libs.logger import logger
 from web import sqlquote
 from libs import SMTP_ACTIONS
 from libs import ipaddress
-from libs.utils import is_ipv4, wildcard_ipv4
+from libs.utils import is_ipv4, wildcard_ipv4, get_policy_addresses_from_email
 from libs.amavisd import core as amavisd_lib
 import settings
 
@@ -281,8 +281,8 @@ def restriction(**kwargs):
         logger.debug('SKIP: Sender is same as recipient.')
         return SMTP_ACTIONS['default']
 
-    valid_senders = amavisd_lib.get_valid_addresses_from_email(sender)
-    valid_recipients = amavisd_lib.get_valid_addresses_from_email(recipient)
+    valid_senders = get_policy_addresses_from_email(mail=sender)
+    valid_recipients = get_policy_addresses_from_email(mail=recipient)
 
     if not kwargs['sasl_username']:
         # Sender 'username@*'

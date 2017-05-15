@@ -16,6 +16,8 @@ iRedAPD-2.1:
         - '#user@domain.com' is not treated as valid email address.
           Thanks Ben Suffolk <ben _at_ vanilla.net> for the report.
         - Not strip address extension in sender/recipient mail address.
+        - plugins/greylisting.py: not check sub-domain settings.
+          Thanks mptg <info _at_ marcingolanski.pl> for the report in forum.
         - plugins/throttle.py: restriction rule based on '@ip' doesn't work.
           Thanks raz <raz _at_ dtnt.com> for the report in forum.
         - plugins/reject_sender_login_mismatch.py:

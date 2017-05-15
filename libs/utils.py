@@ -185,6 +185,34 @@ def is_wildcard_addr(s):
     return False
 
 
+def get_policy_addresses_from_email(mail):
+    # Return list valid policy addresses from a given email address
+    #
+    # - Sample input: mail=user@sub2.sub1.com.cn
+    # - Valid policy addresses:
+    #   * user@sub2.sub1.com.cn
+    #   * @sub2.sub1.com.cn
+    #   * @.sub2.sub1.com.cn
+    #   * @.sub1.com.cn
+    #   * @.com.cn
+    #   * @.cn
+    #   * @.        # catch-all
+    (_username, _domain) = mail.split('@', 1)
+    splited_domain_parts = _domain.split('.')
+
+    # Default senders (user@domain.ltd):
+    # ['@.', 'user@domain.ltd', @domain.ltd']
+    valid_addresses = [mail, '@' + _domain, '@.']
+
+    for counter in range(len(splited_domain_parts)):
+        # Append domain and sub-domain.
+        subd = '.'.join(splited_domain_parts)
+        valid_addresses.append('@.' + subd)
+        splited_domain_parts.pop(0)
+
+    return valid_addresses
+
+
 def is_valid_amavisd_address(addr):
     # Valid address format:
     #
