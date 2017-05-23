@@ -417,6 +417,12 @@ for domain in domain_ips:
                             account='@.',
                             sender=ip,
                             comment=comment)
+
+                # Clean up `greylisting_tracking` table
+                conn.delete('greylisting_tracking',
+                            vars={'ip': ip},
+                            where='client_address=$ip')
+
         except Exception, e:
             if e.__class__.__name__ == 'IntegrityError':
                 pass

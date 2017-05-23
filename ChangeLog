@@ -5,6 +5,8 @@ iRedAPD-2.1:
           Sponsored development by Daniel Senie <dts _at_ amaranth.com>.
 
     * Improvements:
+        + tools/spf_to_greylist_whitelists.py: clean up 'greylisting_tracking'
+          table if certain ip is whitelisted.
         + plugins/amavisd_wblist.py: able to use CIDR as white/blacklists. e.g.
           192.168.1.0/24, 2002::1234:abcd:ffff:c0a8:101/64.
           Sponsored development by Daniel Senie <dts _at_ amaranth.com>.
