@@ -28,8 +28,10 @@ for p in ${plugins}; do
     systemctl daemon-reload &>/dev/null
     service iredapd restart
 
-    py.test test_${p}.py
-    #[ X"$?" == X'0' ] || exit 255
+    # py.test command line arguments
+    #  -s   shortcut for --capture=no.
+    #  -x   exit instantly on first error or failed test.
+    py.test -s -x test_${p}.py
 done
 
 # Cleanup SQL records generated during testing
