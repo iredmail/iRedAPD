@@ -99,6 +99,8 @@ export CRON_FILE_ROOT="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
 export IREDAPD_ROOT_DIR="/opt/iredapd"
 export IREDAPD_CONF_PY="${IREDAPD_ROOT_DIR}/settings.py"
 export IREDAPD_CONF_INI="${IREDAPD_ROOT_DIR}/settings.ini"
+# Used in iRedMail cluster and iRedMail-Pro edition.
+export IREDAPD_CUSTOM_CONF="${IREDAPD_ROOT_DIR}/custom_settings.py"
 
 # Remove all single quote and double quotes in string.
 strip_quotes()
@@ -517,6 +519,7 @@ dir_new_version="$(dirname ${PWD})"
 name_new_version="$(basename ${dir_new_version})"
 NEW_IREDAPD_ROOT_DIR="/opt/${name_new_version}"
 NEW_IREDAPD_CONF="${NEW_IREDAPD_ROOT_DIR}/settings.py"
+NEW_IREDAPD_CUSTOM_CONF="${NEW_IREDAPD_ROOT_DIR}/custom_settings.py"
 
 if [ ! -d ${NEW_IREDAPD_ROOT_DIR} ]; then
     echo "* Create directory ${NEW_IREDAPD_ROOT_DIR}."
@@ -528,6 +531,7 @@ cp -rf ${dir_new_version}/* ${NEW_IREDAPD_ROOT_DIR}
 
 echo "* Copy old config file: settings.py (${IREDAPD_CONF_PY} -> ${NEW_IREDAPD_CONF})"
 cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_CONF}
+cp -p ${IREDAPD_CUSTOM_CONF} ${NEW_IREDAPD_CUSTOM_CONF}
 
 echo "* Copy custom plugins: ${IREDAPD_ROOT_REAL_DIR}/plugins/custom_*.py."
 cp -rf ${IREDAPD_ROOT_REAL_DIR}/plugins/custom_* ${NEW_IREDAPD_ROOT_DIR}/plugins/ 2>/dev/null
