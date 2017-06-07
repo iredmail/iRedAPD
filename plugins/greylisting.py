@@ -386,6 +386,15 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     if _client_address_passed_in_tracking(conn=conn, client_address=client_address):
+        # Update expire time
+        _now = int(time.time())
+        _new_expire_time = _now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60 * 60
+        _sql = """UPDATE greylisting_tracking
+                     SET record_expired=%d
+                   WHERE client_address=%s AND passed=1""" % (_new_expire_time, sqlquote(client_address))
+        logger.debug('[SQL] Update expire time of passed client: \n%s' % _sql)
+        conn.execute(_sql)
+
         return SMTP_ACTIONS['default']
 
     # check greylisting tracking.
