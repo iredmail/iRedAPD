@@ -58,6 +58,8 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
     ip_object   -- object of IP address type (get by ipaddress.ip_address())
     """
 
+    whitelist_records = []
+
     for tbl in ['greylisting_whitelist_domain_spf', 'greylisting_whitelists']:
         # query whitelists based on recipient
         sql = """SELECT id, sender, comment
@@ -67,6 +69,7 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
         logger.debug('[SQL] Query greylisting whitelists from `%s`: \n%s' % (tbl, sql))
         qr = conn.execute(sql)
         records = qr.fetchall()
+        whitelist_records += records
 
         # check whitelisted senders
         whitelists = [str(v).lower() for (_, v, _) in records]
@@ -74,12 +77,14 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
         if wl:
             logger.info('[%s] Client is whitelisted for greylisting service: %s' % (client_address, ', '.join(wl)))
             return True
+        else:
+            logger.debug('[%s] No whitelist found.' % (client_address))
 
     # check whitelisted cidr
     # Check IPv4.
     if ip_object.version == 4:
         _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
-        for r in records:
+        for r in whitelist_records:
             (_id, _cidr, _comment) = r
 
             # Make sure _cidr is IPv4 network and in 'same' IP range.
@@ -94,7 +99,7 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
                     logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
     elif ip_object.version == 6:
         # Check IPv6.
-        for r in records:
+        for r in whitelist_records:
             (_id, _cidr, _comment) = r
 
             # Make sure _cidr is IPv6 network
