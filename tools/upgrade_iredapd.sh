@@ -531,7 +531,9 @@ cp -rf ${dir_new_version}/* ${NEW_IREDAPD_ROOT_DIR}
 
 echo "* Copy old config file: settings.py (${IREDAPD_CONF_PY} -> ${NEW_IREDAPD_CONF})"
 cp -p ${IREDAPD_CONF_PY} ${NEW_IREDAPD_CONF}
-cp -p ${IREDAPD_CUSTOM_CONF} ${NEW_IREDAPD_CUSTOM_CONF}
+
+[ -f ${IREDAPD_CUSTOM_CONF} ] && \
+    cp -p ${IREDAPD_CUSTOM_CONF} ${NEW_IREDAPD_CUSTOM_CONF}
 
 echo "* Copy custom plugins: ${IREDAPD_ROOT_REAL_DIR}/plugins/custom_*.py."
 cp -rf ${IREDAPD_ROOT_REAL_DIR}/plugins/custom_* ${NEW_IREDAPD_ROOT_DIR}/plugins/ 2>/dev/null
