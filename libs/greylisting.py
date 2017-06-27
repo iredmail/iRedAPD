@@ -104,7 +104,7 @@ def add_whitelist_domain(conn, domain):
 
     return (True, )
 
-def delete_whitelist_domain(conn, domain):
+def remove_whitelisted_domain(conn, domain):
     # Insert domain into sql table `iredapd.greylisting_whitelist_domains`
     if not utils.is_domain(domain):
         return (False, 'INVALID_DOMAIN')

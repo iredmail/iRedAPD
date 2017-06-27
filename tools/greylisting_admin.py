@@ -230,7 +230,7 @@ elif action == 'whitelist-domain':
 
 elif action == 'remove-whitelist-domain':
     logger.info('* Remove whitelisted sender domain: %s' % sender_domain)
-    lib_gl.remove_whitelisted_domain(conn=conn2, domain=sender_domain)
+    lib_gl.remove_whitelisted_domain(domain=sender_domain, conn=conn2)
 
 elif action == 'list':
     # show existing greylisting settings.
