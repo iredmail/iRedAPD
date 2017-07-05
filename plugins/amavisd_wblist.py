@@ -48,7 +48,6 @@ from web import sqlquote
 from libs import SMTP_ACTIONS
 from libs import ipaddress
 from libs.utils import is_ipv4, wildcard_ipv4, get_policy_addresses_from_email
-from libs.amavisd import core as amavisd_lib
 import settings
 
 REQUIRE_AMAVISD_DB = True
@@ -292,14 +291,13 @@ def restriction(**kwargs):
         else:
             valid_senders.append(sender_username + '@*')
 
-    # Append original IP address and all possible wildcast IP addresses
+    # Append original IP address
     client_address = kwargs['client_address']
-
     valid_senders.append(client_address)
+
+    # Append all possible wildcast IP addresses
     if is_ipv4(client_address):
         valid_senders += wildcard_ipv4(client_address)
-
-    # Get possible CIDR network
 
     logger.debug('Possible policy senders: %s' % str(valid_senders))
     logger.debug('Possible policy recipients: %s' % str(valid_recipients))

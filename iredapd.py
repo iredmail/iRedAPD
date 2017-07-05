@@ -74,12 +74,13 @@ class PolicyChannel(asynchat.async_chat):
                 (k, v) = line.split('=', 1)
 
                 if k in SMTP_SESSION_ATTRIBUTES:
+                    # Convert to lower cases.
                     if k in ['sender', 'recipient', 'sasl_username',
                              'reverse_client_name']:
-                        # Convert to lower cases.
                         v = v.lower()
                         self.smtp_session_data[k] = v
 
+                    # Verify email address format
                     if k in ['sender', 'recipient', 'sasl_username']:
                         if v:
                             if not utils.is_email(v):
