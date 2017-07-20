@@ -1,3 +1,7 @@
+iRedAPD-2.2:
+    * Fixed issues:
+        - Don't return disabled domain as a local domain.
+
 iRedAPD-2.1:
     * New plugins:
         + plugins/wblist_rdns.py: whitelisting and blacklisting based on

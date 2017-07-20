@@ -4,7 +4,7 @@ from libs.logger import logger
 from libs import utils
 
 def is_local_domain(conn, domain, include_backupmx=True):
-    """Check whether given domain name is hosted on localhost.
+    """Check whether given domain name is hosted on localhost and not disabled.
 
     @conn -- SQL connection cursor
     @domain -- a domain name
@@ -27,7 +27,7 @@ def is_local_domain(conn, domain, include_backupmx=True):
 
         sql = """SELECT domain
                    FROM domain
-                  WHERE domain=%s %s
+                  WHERE domain=%s AND active=1 %s
                   LIMIT 1""" % (sql_quote_domain, sql_backupmx)
         logger.debug('[SQL] query local domain (%s): \n%s' % (domain, sql))
 
@@ -38,10 +38,13 @@ def is_local_domain(conn, domain, include_backupmx=True):
         if sql_record:
             return True
 
-        sql = """SELECT alias_domain
-                   FROM alias_domain
-                  WHERE alias_domain=%s OR target_domain=%s
-                  LIMIT 1""" % (sql_quote_domain, sql_quote_domain)
+        sql = """SELECT alias_domain.alias_domain
+                   FROM alias_domain,domain
+                  WHERE domain.active=1
+                        AND domain.domain=alias_domain.target_domain
+                        AND alias_domain.alias_domain=%s
+                  LIMIT 1""" % sql_quote_domain
+
         logger.debug('[SQL] query alias domains (%s): \n%s' % (domain, sql))
 
         qr = conn.execute(sql)
