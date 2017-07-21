@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS `custom_relay` (
 #        WHERE account IN %(accounts)s
 #              AND ((min_size  = 0        AND max_size >= %(size)d)
 #                OR (min_size <= %(size)d AND max_size >= %(size)d)
-#                OR (min_size  < %(size)d AND max_size  = 0))
+#                OR (min_size  < %(size)d AND max_size  = 0)
+#                OR (min_size = 0 AND max_size = 0))
 #     ORDER BY priority ASC
 #        LIMIT 1
 #
@@ -127,7 +128,8 @@ def restriction(**kwargs):
         WHERE account IN %(accounts)s
               AND ((min_size  = 0        AND max_size >= %(size)d)
                 OR (min_size <= %(size)d AND max_size >= %(size)d)
-                OR (min_size  < %(size)d AND max_size  = 0))
+                OR (min_size  < %(size)d AND max_size  = 0)
+                OR (min_size = 0 AND max_size = 0))
      ORDER BY priority ASC
         LIMIT 1
         """ % {'size': size, 'accounts': sqlquote(policy_accounts)}
