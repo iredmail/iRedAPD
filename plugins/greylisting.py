@@ -22,40 +22,16 @@ import settings
 action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
 
 
-def _check_sender_type(sender):
-    # Return string of sender type: email, ipv4, ipv6, cidr, domain, subdomain, catchall, unknown
-    if sender == '@.':
-        return 'catchall'
-
-    if '@' in sender:
-        if sender.startswith('@.'):
-            if utils.is_domain(sender.lstrip('@.')):
-                return 'subdomain'
-        elif sender.startswith('@'):
-            if utils.is_domain(sender.lstrip('@')):
-                return 'domain'
-        elif utils.is_email(sender):
-            return 'email'
-    elif '/' in sender:
-        return 'cidr'
-    elif utils.is_ipv4(sender):
-        return 'ipv4'
-    elif utils.is_ipv6(sender):
-        return 'ipv6'
-
-    return 'unknown'
-
-
 def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
     """Check greylisting whitelists stored in table
     `greylisting_whitelists` and `greylisting_whitelist_domain_spf`,
     returns True if is whitelisted, otherwise returns False.
 
-    conn        -- sql connection cursor
-    senders     -- list of senders we should check greylisting
-    recipient   -- full email address of recipient
-    client_address -- client IP address
-    ip_object   -- object of IP address type (get by ipaddress.ip_address())
+    @conn -- sql connection cursor
+    @senders -- list of senders we should check greylisting
+    @recipient -- full email address of recipient
+    @client_address -- client IP address
+    @ip_object -- object of IP address type (get by ipaddress.ip_address())
     """
 
     whitelist_records = []
@@ -375,7 +351,7 @@ def restriction(**kwargs):
     _ip_object = ipaddress.ip_address(unicode(client_address))
 
     # Check greylisting whitelists
-    if _is_whitelisted(conn,
+    if _is_whitelisted(conn=conn,
                        senders=policy_senders,
                        recipients=policy_recipients,
                        client_address=client_address,
