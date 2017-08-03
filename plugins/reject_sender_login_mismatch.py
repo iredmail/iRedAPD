@@ -156,7 +156,7 @@ def restriction(**kwargs):
 
             sender_is_forged = False
             if sender_domain == recipient_domain:
-                # domain is hosted locally, sender must login first.
+                # sender domain is hosted locally, sender must login first.
                 logger.debug('Sender is forged address (sender domain == recipient domain).')
                 sender_is_forged = True
             else:
