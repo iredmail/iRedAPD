@@ -1,6 +1,10 @@
 iRedAPD-2.2:
     * Fixed issues:
         - Don't return disabled domain as a local domain.
+        - If client is sending email from trusted networks without SMTP AUTH,
+          it's not considered as an internal sender and no outbound throttling
+          applied.
+          Thanks Ahmad M. Al-Masry <Ahmad.AlMasry _at_ iah.ps> for the report.
 
 iRedAPD-2.1:
     * New plugins:

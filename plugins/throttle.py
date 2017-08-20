@@ -555,9 +555,17 @@ def restriction(**kwargs):
         if is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
+    # If no smtp auth (sasl_username=<empty>), and not sent from trusted
+    # clients, consider it as external sender.
     is_external_sender = True
     if kwargs['sasl_username']:
+        logger.debug('Found sasl_username, consider this sender as an internal sender.')
         is_external_sender = False
+    else:
+        if not settings.THROTTLE_BYPASS_MYNETWORKS:
+            if is_trusted_client(client_address):
+                logger.debug('Client is sending from trusted network without SMTP AUTH, consider this sender as an internal sender.')
+                is_external_sender = False
 
     # Apply sender throttling to only sasl auth users.
     logger.debug('Check sender throttling.')
