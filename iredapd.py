@@ -240,6 +240,7 @@ def main():
     os.chmod(settings.log_file, 0o700)
 
     # Run as daemon user
+    os.setgid(gid)
     os.setuid(uid)
 
     # Create a global dict used to track smtp session data.
