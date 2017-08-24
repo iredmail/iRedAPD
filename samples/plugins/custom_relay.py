@@ -2,7 +2,11 @@
 # Purpose: Return different relayhost for outgoing emails based on sender
 #          domain and message size.
 
-# Required SQL table in `vmail` database
+# Usage:
+#
+#   * Create required SQL table
+#       - For SQL backends, please create it in `vmail` database
+#       - For LDAP backends, please create it in `iredapd` database
 """
 CREATE TABLE IF NOT EXISTS `custom_relay` (
     `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
@@ -18,6 +22,13 @@ CREATE TABLE IF NOT EXISTS `custom_relay` (
     INDEX (`max_size`)
 ) ENGINE=InnoDB;
 """
+#
+#   * Add a new parameter in iRedAPD config file /opt/iredapd/settings.py:
+#
+#       CUSTOM_RELAY_DEFAULT_RELAY = 'smtp-amavis:[127.0.0.1]:10024'
+#
+#     This parameter controls which content-filter program we should use if
+#     email recipient is hosted locally.
 
 ###################
 # SQL columns:
@@ -87,18 +98,24 @@ CREATE TABLE IF NOT EXISTS `custom_relay` (
 #                          VALUES ('@iredmail.org', 10, 20971521, 0, 'smtp:[server-2.com]:25');
 
 from web import sqlquote
+
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import utils
+import settings
+
+if settings.backend == 'ldap':
+    from libs.ldaplib.conn_utils import is_local_domain
+else:
+    from libs.sql import is_local_domain
 
 SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
 
-# SQL table name. The one we store the custom relay settings.
-_sql_db_custom_relay = 'custom_relay'
-
-# SQL db name. The one which contains `custom_relay` table.
-# You can create the `custom_relay` sql table in `vmail`, `iredapd`.
-_sql_db = 'vmail'
+# Get relay for local recipient
+try:
+    relay_for_local_recipient = settings.CUSTOM_RELAY_DEFAULT_RELAY
+except:
+    relay_for_local_recipient = 'smtp-amavis:[127.0.0.1]:10024'
 
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
@@ -116,20 +133,26 @@ def restriction(**kwargs):
     policy_accounts = [sasl_username] + utils.get_policy_addresses_from_email(sasl_username)
 
     # Get db cursor
-    if _sql_db == 'iredapd':
-        conn = kwargs['conn_iredapd']
+    conn_vmail = kwargs['conn_vmail']
+    if settings.backend == 'ldap':
+        conn_relay = kwargs['conn_iredapd']
     else:
-        conn = kwargs['conn_vmail']
+        conn_relay = kwargs['conn_vmail']
+
+    # Check whether recipient domain is hosted locally
+    recipient_domain = kwargs['recipient_domain']
+    if is_local_domain(conn=conn_vmail, domain=recipient_domain, include_backupmx=True):
+        return 'FILTER %s' % relay_for_local_recipient
 
     # Query sql db to get highest custom relayhost.
     sql = """
         SELECT relayhost
-         FROM custom_relay
-        WHERE account IN %(accounts)s
-              AND ((min_size  = 0        AND max_size >= %(size)d)
-                OR (min_size <= %(size)d AND max_size >= %(size)d)
-                OR (min_size  < %(size)d AND max_size  = 0)
-                OR (min_size = 0 AND max_size = 0))
+          FROM custom_relay
+         WHERE account IN %(accounts)s
+               AND ((min_size  = 0        AND max_size >= %(size)d)
+                    OR (min_size <= %(size)d AND max_size >= %(size)d)
+                    OR (min_size  < %(size)d AND max_size  = 0)
+                    OR (min_size = 0 AND max_size = 0))
      ORDER BY priority ASC
         LIMIT 1
         """ % {'size': size, 'accounts': sqlquote(policy_accounts)}
@@ -137,7 +160,7 @@ def restriction(**kwargs):
     logger.debug('[SQL] Query custom relayhost with highest priority: \n%s' % sql)
 
     try:
-        qr = conn.execute(sql)
+        qr = conn_relay.execute(sql)
         qr_relay = qr.fetchone()[0]
 
         logger.debug('[SQL] Query result: %s' % qr_relay)
