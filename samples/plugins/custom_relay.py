@@ -142,6 +142,7 @@ def restriction(**kwargs):
     # Check whether recipient domain is hosted locally
     recipient_domain = kwargs['recipient_domain']
     if is_local_domain(conn=conn_vmail, domain=recipient_domain, include_backupmx=True):
+        logger.debug('Recipient domain is locally hosted, use default relay: %s' % relay_for_local_recipient)
         return 'FILTER %s' % relay_for_local_recipient
 
     # Query sql db to get highest custom relayhost.
