@@ -7,7 +7,7 @@ Type=forking
 PIDFile=/run/iredapd.pid
 ExecStart=/usr/bin/python /opt/iredapd/iredapd.py
 KillMode=control-group
-KillSignal=SIGQUIT
+KillSignal=SIGTERM
 TimeoutStopSec=5
 PrivateTmp=true
 
