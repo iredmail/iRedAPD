@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `custom_relay` (
 #
 #   * Add a new parameter in iRedAPD config file /opt/iredapd/settings.py:
 #
-#       CUSTOM_RELAY_DEFAULT_RELAY = 'smtp-amavis:[127.0.0.1]:10024'
+#       CUSTOM_RELAY_DEFAULT_RELAY = 'smtp-amavis:[127.0.0.1]:10025'
 #
 #     This parameter controls which content-filter program we should use if
 #     email recipient is hosted locally.
@@ -109,16 +109,17 @@ if settings.backend == 'ldap':
 else:
     from libs.sql import is_local_domain
 
-SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
+SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
 
 # Get relay for local recipient
 try:
     relay_for_local_recipient = settings.CUSTOM_RELAY_DEFAULT_RELAY
 except:
-    relay_for_local_recipient = 'smtp-amavis:[127.0.0.1]:10024'
+    relay_for_local_recipient = 'smtp-amavis:[127.0.0.1]:10025'
 
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
+    sasl_username_domain = kwargs['sasl_username_domain']
 
     if not sasl_username:
         logger.debug('SKIP, not an email sent from an authenticated user (no sasl_username found).')
@@ -140,41 +141,47 @@ def restriction(**kwargs):
         conn_relay = kwargs['conn_vmail']
 
     recipient_domain = kwargs['recipient_domain']
-    if is_local_domain(conn=conn_vmail, domain=recipient_domain, include_backupmx=True):
-        logger.debug('Recipient domain (%s) is locally hosted, use default relay: %s' % (recipient_domain, relay_for_local_recipient))
-        return 'FILTER %s' % relay_for_local_recipient
-    else:
+    if kwargs['smtp_session_data']['protocol_state'] == 'RCPT':
+        if sasl_username_domain == recipient_domain:
+            logger.debug('SASL username domain is same as recipient domain (%s), use default relay: %s' % (recipient_domain, relay_for_local_recipient))
+            return 'FILTER %s' % relay_for_local_recipient
+
+        if is_local_domain(conn=conn_vmail, domain=recipient_domain, include_backupmx=True):
+            logger.debug('Recipient domain (%s) is locally hosted, use default relay: %s' % (recipient_domain, relay_for_local_recipient))
+            return 'FILTER %s' % relay_for_local_recipient
+
+    if kwargs['smtp_session_data']['protocol_state'] == 'END-OF-MESSAGE':
         logger.debug('Recipient domain (%s) is NOT locally hosted.' % relay_for_local_recipient)
 
-    # Query sql db to get highest custom relayhost.
-    sql = """
-        SELECT relayhost
-          FROM custom_relay
-         WHERE account IN %(accounts)s
-               AND ((min_size  = 0        AND max_size >= %(size)d)
-                    OR (min_size <= %(size)d AND max_size >= %(size)d)
-                    OR (min_size  < %(size)d AND max_size  = 0)
-                    OR (min_size = 0 AND max_size = 0))
-     ORDER BY priority ASC
-        LIMIT 1
-        """ % {'size': size, 'accounts': sqlquote(policy_accounts)}
+        # Query sql db to get highest custom relayhost.
+        sql = """
+            SELECT relayhost
+              FROM custom_relay
+             WHERE account IN %(accounts)s
+                   AND ((min_size  = 0        AND max_size >= %(size)d)
+                        OR (min_size <= %(size)d AND max_size >= %(size)d)
+                        OR (min_size  < %(size)d AND max_size  = 0)
+                        OR (min_size = 0 AND max_size = 0))
+         ORDER BY priority ASC
+            LIMIT 1
+            """ % {'size': size, 'accounts': sqlquote(policy_accounts)}
 
-    logger.debug('[SQL] Query custom relayhost with highest priority: \n%s' % sql)
+        logger.debug('[SQL] Query custom relayhost with highest priority: \n%s' % sql)
 
-    try:
-        qr = conn_relay.execute(sql)
-        qr_relay = qr.fetchone()[0]
+        try:
+            qr = conn_relay.execute(sql)
+            qr_relay = qr.fetchone()[0]
 
-        logger.debug('[SQL] Query result: %s' % qr_relay)
-    except Exception, e:
-        logger.error('Error while querying custom relayhost (fallback to default action): %s' % repr(e))
-        return SMTP_ACTIONS['default']
+            logger.debug('[SQL] Query result: %s' % qr_relay)
+        except Exception, e:
+            logger.error('Error while querying custom relayhost (fallback to default action): %s' % repr(e))
+            return SMTP_ACTIONS['default']
 
-    if qr_relay:
-        logger.debug('Return custom relayhost: %s' % qr_relay)
-        return 'FILTER %s' % qr_relay
-    else:
-        logger.debug('No custom relayhost, return default action.')
-        return SMTP_ACTIONS['default']
+        if qr_relay:
+            logger.debug('Return custom relayhost: %s' % qr_relay)
+            return 'FILTER %s' % qr_relay
+        else:
+            logger.debug('No custom relayhost, return default action.')
+            return SMTP_ACTIONS['default']
 
     return SMTP_ACTIONS['default']
