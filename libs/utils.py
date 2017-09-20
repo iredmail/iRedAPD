@@ -8,7 +8,8 @@ import socket
 from sqlalchemy import create_engine
 
 from libs.logger import logger
-from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES, SMTP_ACTIONS
+from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
+from libs import SMTP_ACTIONS, TCP_REPLIES
 from libs import ipaddress
 import settings
 
@@ -99,6 +100,20 @@ def apply_plugin(plugin, **kwargs):
     action = SMTP_ACTIONS['default']
 
     logger.debug('--> Apply plugin: %s' % plugin.__name__)
+    try:
+        action = plugin.restriction(**kwargs)
+        logger.debug('<-- Result: %s' % action)
+    except:
+        err_msg = get_traceback()
+        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, err_msg))
+
+    return action
+
+
+def apply_tcp_table_plugin(plugin, **kwargs):
+    action = TCP_REPLIES['default']
+
+    logger.debug('--> Apply tcp table plugin: %s' % plugin.__name__)
     try:
         action = plugin.restriction(**kwargs)
         logger.debug('<-- Result: %s' % action)
@@ -468,11 +483,12 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
     return None
 
 
-def load_enabled_plugins():
+def load_enabled_plugins(plugins=None):
     """Load and import enabled plugins."""
     plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/../plugins'
 
     loaded_plugins = []
+    loaded_tcp_table_plugin = None
 
     # Import priorities of built-in plugins.
     _plugin_priorities = PLUGIN_PRIORITIES
@@ -480,17 +496,34 @@ def load_enabled_plugins():
     # Import priorities of custom plugins, or custom priorities of built-in plugins
     _plugin_priorities.update(settings.PLUGIN_PRIORITIES)
 
+    if not plugins:
+        plugins = settings.plugins
+
+    if 'custom_tcp_table' in plugins:
+        plugins.remove('custom_tcp_table')
+
+        # Load tcp table plugin
+        plugin_file = os.path.join(plugin_dir, 'custom_tcp_table.py')
+        if not os.path.isfile(plugin_file):
+            logger.debug('Plugin custom_tcp_table does not exist, SKIP.')
+        else:
+            try:
+                logger.info('Loading plugin custom_tcp_table')
+                loaded_tcp_table_plugin = __import__('custom_tcp_table')
+            except Exception, e:
+                logger.error('Error while loading plugin custom_tcp_table: %s' % repr(e))
+
     # If enabled plugin doesn't have a priority pre-defined, set it to 0 (lowest)
-    _plugins_without_priority = [i for i in settings.plugins if i not in _plugin_priorities]
+    _plugins_without_priority = [i for i in plugins if i not in _plugin_priorities]
     for _p in _plugins_without_priority:
         _plugin_priorities[_p] = 0
 
     # a list of {priority: name}
     pnl = []
-    for p in settings.plugins:
+    for p in plugins:
         plugin_file = os.path.join(plugin_dir, p + '.py')
         if not os.path.isfile(plugin_file):
-            logger.info('Plugin %s (%s) does not exist.' % (p, plugin_file))
+            logger.error('Plugin %s (%s) does not exist.' % (p, plugin_file))
             continue
 
         priority = _plugin_priorities[p]
@@ -507,7 +540,7 @@ def load_enabled_plugins():
             loaded_plugins.append(__import__(plugin))
             logger.info('Loading plugin (priority: %s): %s' % (_plugin_priorities[plugin], plugin))
         except Exception, e:
-            logger.error('Error while loading plugin (%s): %s' % (plugin, str(e)))
+            logger.error('Error while loading plugin (%s): %s' % (plugin, repr(e)))
 
     # Get list of LDAP query attributes
     sender_search_attrlist = []
@@ -529,6 +562,7 @@ def load_enabled_plugins():
                 pass
 
     return {'loaded_plugins': loaded_plugins,
+            'loaded_tcp_table_plugin': loaded_tcp_table_plugin,
             'sender_search_attrlist': sender_search_attrlist,
             'recipient_search_attrlist': recipient_search_attrlist}
 

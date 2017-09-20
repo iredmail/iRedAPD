@@ -21,7 +21,7 @@ del _pyc
 # Import config file (settings.py) and modules
 import settings
 from libs import __version__, daemon, utils
-from libs import SMTP_ACTIONS, SMTP_SESSION_ATTRIBUTES
+from libs import SMTP_ACTIONS, TCP_REPLIES, SMTP_SESSION_ATTRIBUTES
 from libs.logger import logger
 
 # Plugin directory.
@@ -44,6 +44,7 @@ class PolicyChannel(asynchat.async_chat):
                  sock,
                  db_conns=None,
                  plugins=None,
+                 tcp_table_plugin=None,
                  sender_search_attrlist=None,
                  recipient_search_attrlist=None):
         asynchat.async_chat.__init__(self, sock)
@@ -53,6 +54,7 @@ class PolicyChannel(asynchat.async_chat):
 
         self.db_conns = db_conns
         self.plugins = plugins
+        self.tcp_table_plugin = tcp_table_plugin
         self.sender_search_attrlist = sender_search_attrlist
         self.recipient_search_attrlist = recipient_search_attrlist
 
@@ -69,8 +71,8 @@ class PolicyChannel(asynchat.async_chat):
         if self.buffer:
             # Format received data
             line = self.buffer.pop()
-            logger.debug("smtp session: " + line)
             if '=' in line:
+                logger.debug("smtp session: " + line)
                 (k, v) = line.split('=', 1)
 
                 if k in SMTP_SESSION_ATTRIBUTES:
@@ -96,6 +98,26 @@ class PolicyChannel(asynchat.async_chat):
                         self.smtp_session_data[k] = v
                 else:
                     logger.debug('Drop invalid smtp session input: %s' % line)
+
+            elif line.startswith('get '):
+                logger.debug('tcp request: ' + line)
+
+                if not self.tcp_table_plugin:
+                    logger.debug('No tcp table plugin loaded, SKIP.')
+                    self.push(TCP_REPLIES['default'] + '\n')
+                else:
+                    rcpt = line.split(' ', 1)[-1]
+
+                    try:
+                        d = {'rcpt': rcpt}
+                        reply = utils.apply_tcp_table_plugin(self.tcp_table_plugin, **d)
+                        logger.debug('tcp request: reply => ' + reply)
+                        self.push(reply)
+                    except Exception, e:
+                        logger.error('tcp request: Error while applying plugin: ' + repr(e))
+                        self.push(TCP_REPLIES['default'] + '\n')
+
+                logger.debug('tcp request: session ended')
 
         elif self.smtp_session_data:
             # Track how long a request takes
@@ -188,6 +210,7 @@ class DaemonSocket(asyncore.dispatcher):
         # Load enabled plugins.
         qr = utils.load_enabled_plugins()
         self.loaded_plugins = qr['loaded_plugins']
+        self.loaded_tcp_table_plugin = qr['loaded_tcp_table_plugin']
 
         # Get list of LDAP query attributes
         self.sender_search_attrlist = qr['sender_search_attrlist']
@@ -202,6 +225,7 @@ class DaemonSocket(asyncore.dispatcher):
             PolicyChannel(sock,
                           db_conns=self.db_conns,
                           plugins=self.loaded_plugins,
+                          tcp_table_plugin=self.loaded_tcp_table_plugin,
                           sender_search_attrlist=self.sender_search_attrlist,
                           recipient_search_attrlist=self.recipient_search_attrlist)
         except Exception, e:

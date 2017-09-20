@@ -26,6 +26,23 @@ SMTP_ACTIONS = {
     'greylisting': '451 4.7.1',
 }
 
+# Default replies for Postfix tcp table.
+# Reference: http://www.postfix.org/tcp_table.5.html
+TCP_REPLIES = {
+    # In case of a lookup request, the requested data does not exist.
+    # In case of an update request, the request was rejected. The text
+    # describes the nature of the problem.
+    'default': '500 No result',
+
+    # This indicates an error condition. The text describes the nature
+    # of the problem. The client should retry the request later.
+    'error': '400 Error ',
+
+    # The request was successful. In the case of a lookup request,
+    # the text contains an encoded version of the requested data.
+    'found': '200 ',
+}
+
 # Plugin priorities.
 #
 # * With pre-defined priorities, the order defined in `plugins = []` setting
