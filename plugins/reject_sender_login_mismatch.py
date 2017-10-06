@@ -93,6 +93,7 @@
 #
 # *) Restart iRedAPD service.
 
+from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_trusted_client
@@ -244,8 +245,8 @@ def restriction(**kwargs):
                 # Get per-user alias addresses
                 sql = """SELECT address
                            FROM forwardings
-                          WHERE address='%s' AND forwarding='%s' AND is_alias=1
-                          LIMIT 1""" % (sender, real_sasl_username)
+                          WHERE address=%s AND forwarding=%s AND is_alias=1
+                          LIMIT 1""" % (sqlquote(sender), sqlquote(real_sasl_username))
                 logger.debug('[SQL] query per-user alias address: \n%s' % sql)
 
                 qr = conn.execute(sql)
@@ -262,8 +263,8 @@ def restriction(**kwargs):
                 if sender_domain != sasl_username_domain:
                     sql = """SELECT alias_domain
                                FROM alias_domain
-                              WHERE alias_domain='%s' AND target_domain='%s'
-                              LIMIT 1""" % (sender_domain, sasl_username_domain)
+                              WHERE alias_domain=%s AND target_domain=%s
+                              LIMIT 1""" % (sqlquote(sender_domain), sqlquote(sasl_username_domain))
                     logger.debug('[SQL] query alias domains: \n%s' % sql)
 
                     qr = conn.execute(sql)
@@ -289,8 +290,8 @@ def restriction(**kwargs):
                 # Get alias members
                 sql = """SELECT forwarding
                            FROM forwardings
-                          WHERE address='%s' AND forwarding='%s' AND is_list=1
-                          LIMIT 1""" % (real_sender, real_sasl_username)
+                          WHERE address=%s AND forwarding=%s AND is_list=1
+                          LIMIT 1""" % (sqlquote(real_sender), sqlquote(real_sasl_username))
                 logger.debug('[SQL] query members of mail alias account (%s): \n%s' % (real_sender, sql))
 
                 qr = conn.execute(sql)

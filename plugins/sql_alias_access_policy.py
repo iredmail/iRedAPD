@@ -9,6 +9,7 @@
 #   - moderatorsOnly:   Only moderators are allowed.
 #   - membersAndModeratorsOnly: Only members and moderators are allowed.
 
+from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import MAILLIST_POLICY_PUBLIC
@@ -44,8 +45,8 @@ def get_access_policy(conn, mail):
 
     sql = """SELECT accesspolicy
                FROM alias
-              WHERE address='%s'
-              LIMIT 1""" % (mail)
+              WHERE address=%s
+              LIMIT 1""" % sqlquote(mail)
 
     logger.debug('[SQL] query access policy: \n%s' % sql)
 
@@ -66,7 +67,7 @@ def get_members(conn, mail):
     # Get access policy directly.
     sql = """SELECT forwarding
                FROM forwardings
-              WHERE address='%s' AND is_list=1""" % (mail)
+              WHERE address=%s AND is_list=1""" % sqlquote(mail)
 
     logger.debug('[SQL] query alias members: \n%s' % sql)
 
@@ -87,7 +88,7 @@ def get_moderators(conn, mail):
     # Get access policy directly.
     sql = """SELECT moderator
                FROM alias_moderators
-              WHERE address='%s'""" % (mail)
+              WHERE address=%s""" % sqlquote(mail)
 
     logger.debug('[SQL] query moderators: \n%s' % sql)
 
@@ -121,9 +122,9 @@ def restriction(**kwargs):
         # Check whether recipient domain is an alias domain
         sql = '''SELECT target_domain
                    FROM alias_domain
-                  WHERE alias_domain = '%s'
+                  WHERE alias_domain=%s
                   LIMIT 1
-                  ''' % recipient_domain
+                  ''' % sqlquote(recipient_domain)
 
         logger.debug('[SQL] Check whether recipient domain is an alias domain: \n%s' % sql)
         _qr = conn.execute(sql)
@@ -160,9 +161,9 @@ def restriction(**kwargs):
     # Get alias domains.
     sql = """SELECT alias_domain
                FROM alias_domain
-              WHERE alias_domain='%s' AND target_domain='%s'
+              WHERE alias_domain=%s AND target_domain=%s
               LIMIT 1
-              """ % (sender_domain, real_recipient_domain)
+              """ % (sqlquote(sender_domain), sqlquote(real_recipient_domain))
     logger.debug('[SQL] query alias domain: \n%s' % sql)
 
     _qr = conn.execute(sql)

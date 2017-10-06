@@ -24,6 +24,7 @@
 #     message.
 
 import datetime
+from web import sqlquote
 from libs.logger import logger
 import settings
 from libs import SMTP_ACTIONS
@@ -44,7 +45,7 @@ def restriction(**kwargs):
         return 'DUNNO User or domain is allowed to never change password.'
 
     # Get `mailbox.passwordlastchange`.
-    sql = """SELECT passwordlastchange FROM mailbox WHERE username='%s' LIMIT 1""" % sasl_username
+    sql = """SELECT passwordlastchange FROM mailbox WHERE username=%s LIMIT 1""" % sqlquote(sasl_username)
     logger.debug('SQL to get mailbox.passwordlastchange of sender (%s): %s' % (sasl_username, sql))
 
     conn = kwargs['conn_vmail']

@@ -1,6 +1,7 @@
 iRedAPD-2.2:
     * Fixed issues:
-        - iRedAPd was not ran as 'iredapd' group.
+        - Not escape dangerous characters in SQL queries.
+        - iRedAPD was not ran as 'iredapd' group.
         - Don't return disabled domain as a local domain.
         - If client is sending email from trusted networks without SMTP AUTH,
           it's not considered as an internal sender and no outbound throttling
