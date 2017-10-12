@@ -566,7 +566,8 @@ cd /opt && ln -s ${name_new_version} iredapd
 export USE_SYSTEMD='NO'
 if which systemctl &>/dev/null; then
     export USE_SYSTEMD='YES'
-    export SYSTEMD_SERVICE_DIR='/etc/systemd/system/multi-user.target.wants/'
+    export SYSTEMD_SERVICE_DIR='/lib/systemd/system'
+    export SYSTEMD_SERVICE_USER_DIR='/etc/systemd/system/multi-user.target.wants/'
 fi
 
 # Always copy init rc script.
@@ -586,9 +587,10 @@ if [ -f "${DIR_RC_SCRIPTS}/iredapd" ]; then
 else
     if [ X"${USE_SYSTEMD}" == X'YES' ]; then
         echo "* Create symbol link: ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service -> ${SYSTEMD_SERVICE_DIR}/iredapd.service."
-        rm -f ${SYSTEMD_SERVICE_DIR}/iredapd.service &>/dev/null
+        rm -f ${SYSTEMD_SERVICE_DIR}/iredapd.service ${SYSTEMD_SERVICE_USER_DIR}/iredapd.service &>/dev/null
         ln -s ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service ${SYSTEMD_SERVICE_DIR}/iredapd.service
         systemctl daemon-reload &>/dev/null
+        systemctl enable iredapd.service >/dev/null
     fi
 fi
 
