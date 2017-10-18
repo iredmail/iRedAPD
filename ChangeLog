@@ -1,5 +1,8 @@
 iRedAPD-2.2:
     * Fixed issues:
+        - plugins/amavisd_wblist.py: didn't apply wblist if recipient is an
+          alias domain.
+          Thanks tom cotton <tom _at_ ansspc.com> for the report in forum.
         - Not escape dangerous characters in SQL queries.
         - iRedAPD was not ran as 'iredapd' group.
         - Don't return disabled domain as a local domain.

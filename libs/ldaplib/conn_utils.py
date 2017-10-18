@@ -72,7 +72,10 @@ def get_primary_and_alias_domains(conn, domain):
         return []
 
 
-def is_local_domain(conn, domain, include_backupmx=True):
+def is_local_domain(conn,
+                    domain,
+                    include_alias_domain=True,
+                    include_backupmx=True):
     if not utils.is_domain(domain):
         return False
 
@@ -80,8 +83,12 @@ def is_local_domain(conn, domain, include_backupmx=True):
         return True
 
     try:
-        filter_domains = '(&(objectClass=mailDomain)'
-        filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (domain, domain)
+        filter_domains = '(&(objectClass=mailDomain)(accountStatus=active)'
+
+        if include_alias_domain:
+            filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (domain, domain)
+        else:
+            filter_domains += '(domainName=%s)' % domain
 
         if not include_backupmx:
             filter_domains += '(!(domainBackupMX=yes))'
@@ -99,3 +106,38 @@ def is_local_domain(conn, domain, include_backupmx=True):
     except Exception, e:
         logger.error('<!> Error while querying alias domain: %s' % str(e))
         return False
+
+
+def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
+    """Query target domain of given alias domain name."""
+    alias_domain = str(alias_domain).lower()
+    if not utils.is_domain(alias_domain):
+        logger.debug('Given alias_domain %s is not an valid domain name.' % alias_domain)
+        return None
+
+    try:
+        _filter = '(&(objectClass=mailDomain)(accountStatus=active)'
+        _filter += '(domainAliasName=%s)'
+
+        if not include_backupmx:
+            _filter += '(!(domainBackupMX=yes))'
+
+        _filter += ')'
+
+        logger.debug('[LDAP] query target domain of given alias domain (%s).' % alias_domain)
+        qr = conn.search_s(settings.ldap_basedn,
+                           1,   # 1 == ldap.SCOPE_ONELEVEL
+                           _filter,
+                           ['domainName'])
+
+        if qr:
+            logger.debug('result: %s' % str(qr))
+            (_dn, _ldif) = qr[0]
+            _domain = _ldif['domainName'][0]
+            return _domain
+    except ldap.NO_SUCH_OBJECT:
+        pass
+    except Exception, e:
+        logger.error('<!> Error while querying alias domain: %s' % str(e))
+
+    return None

@@ -55,7 +55,7 @@ REQUIRE_AMAVISD_DB = True
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import is_local_domain
 else:
-    from libs.sql import is_local_domain
+    from libs.sql import is_local_domain, get_alias_target_domain
 
 
 def get_id_of_possible_cidr_network(conn, client_address):
@@ -299,6 +299,16 @@ def restriction(**kwargs):
     if is_ipv4(client_address):
         valid_senders += wildcard_ipv4(client_address)
 
+    alias_target_sender_domain = get_alias_target_domain(alias_domain=sender_domain, conn=conn_vmail)
+    if alias_target_sender_domain:
+        _mail = sender.split('@', 1)[0] + '@' + alias_target_sender_domain
+        valid_senders += get_policy_addresses_from_email(mail=_mail)
+
+    alias_target_rcpt_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
+    if alias_target_rcpt_domain:
+        _mail = recipient.split('@', 1)[0] + '@' + alias_target_rcpt_domain
+        valid_recipients += get_policy_addresses_from_email(mail=_mail)
+
     logger.debug('Possible policy senders: %s' % str(valid_senders))
     logger.debug('Possible policy recipients: %s' % str(valid_recipients))
 
@@ -306,7 +316,8 @@ def restriction(**kwargs):
     if (not check_outbound) and kwargs['sasl_username']:
         check_outbound = True
 
-    if (not check_outbound) and is_local_domain(conn=conn_vmail, domain=sender_domain):
+    sender_domain_is_local = is_local_domain(conn=conn_vmail, domain=sender_domain, include_alias_domain=False)
+    if (not check_outbound) and (alias_target_sender_domain or sender_domain_is_local):
         check_outbound = True
 
     id_of_client_cidr_networks = []
@@ -340,7 +351,8 @@ def restriction(**kwargs):
         # Local user sends to another user in same domain
         check_inbound = True
 
-    if (not check_inbound) and is_local_domain(conn=conn_vmail, domain=recipient_domain):
+    rcpt_domain_is_local = is_local_domain(conn=conn_vmail, domain=recipient_domain, include_alias_domain=False)
+    if (not check_inbound) and (alias_target_rcpt_domain or rcpt_domain_is_local):
         # Local user sends to another local user in different domain
         check_inbound = True
 
