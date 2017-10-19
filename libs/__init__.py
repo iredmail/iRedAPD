@@ -49,7 +49,6 @@ TCP_REPLIES = {
 #   doesn't matter at all, so that we can apply plugins in ideal order.
 #
 # * It's better to run plugins which doesn't require SQL/LDAP connection first.
-#
 #               +-----------------------------------+
 # * Plugin with | larger number has higher priority | and will be applied first.
 #               +-----------------------------------+
