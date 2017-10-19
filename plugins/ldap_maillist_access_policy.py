@@ -122,7 +122,8 @@ def restriction(**kwargs):
 
         return SMTP_ACTIONS['reject_not_authorized']
 
-    elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
+    elif policy in ['allowedonly', MAILLIST_POLICY_MEMBERSANDMODERATORSONLY]:
+        # 'allowedonly' is policy name used by old iRedAPD.
         # Get both members and moderators.
         _f = '(|' + \
              '(&(memberOfGroup=%s)(|(objectClass=mailUser)(objectClass=mailExternalUser)))' % recipient + \
