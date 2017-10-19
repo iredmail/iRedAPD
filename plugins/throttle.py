@@ -151,6 +151,11 @@ from libs import SMTP_ACTIONS
 from libs.utils import is_ipv4, wildcard_ipv4, is_trusted_client, get_policy_addresses_from_email
 from libs.utils import is_valid_amavisd_address, pretty_left_seconds
 
+if settings.backend == 'ldap':
+    from libs.ldaplib.conn_utils import get_alias_target_domain
+else:
+    from libs.sql import get_alias_target_domain
+
 SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
 
 # Connect to iredapd database
@@ -159,6 +164,7 @@ REQUIRE_IREDAPD_DB = True
 
 # Apply throttle setting and return smtp action.
 def apply_throttle(conn,
+                   conn_vmail,
                    user,
                    client_address,
                    protocol_state,
@@ -171,6 +177,12 @@ def apply_throttle(conn,
 
     if user:
         possible_addrs += get_policy_addresses_from_email(mail=user)
+
+        (_username, _domain) = user.split('@', 1)
+        alias_target_sender_domain = get_alias_target_domain(alias_domain=_domain, conn=conn_vmail)
+        if alias_target_sender_domain:
+            _mail = _username + '@' + alias_target_sender_domain
+            possible_addrs += get_policy_addresses_from_email(mail=_mail)
 
     sql_user = sqlquote(user)
 
@@ -527,6 +539,7 @@ def apply_throttle(conn,
 
 def restriction(**kwargs):
     conn = kwargs['conn_iredapd']
+    conn_vmail = kwargs['conn_vmail']
 
     # Use SASL username as sender. if not available, use sender in 'From:'.
     sender = kwargs['sasl_username'] or kwargs['sender_without_ext']
@@ -570,6 +583,7 @@ def restriction(**kwargs):
     # Apply sender throttling to only sasl auth users.
     logger.debug('Check sender throttling.')
     action = apply_throttle(conn=conn,
+                            conn_vmail=conn_vmail,
                             user=sender,
                             client_address=client_address,
                             protocol_state=protocol_state,
@@ -583,9 +597,13 @@ def restriction(**kwargs):
         return action
 
     # Apply recipient throttling to smtp sessions without sasl_username
-    if not kwargs['sasl_username']:
+    if kwargs['sasl_username']:
+        # Both sender and recipient are local.
+        logger.debug('Bypass recipient throttling (found sasl_username).')
+    else:
         logger.debug('Check recipient throttling.')
         action = apply_throttle(conn=conn,
+                                conn_vmail=conn_vmail,
                                 user=recipient,
                                 client_address=client_address,
                                 protocol_state=protocol_state,
@@ -596,7 +614,5 @@ def restriction(**kwargs):
 
         if not action.startswith('DUNNO'):
             return action
-    else:
-        logger.debug('Bypass recipient throttling (found sasl_username).')
 
     return SMTP_ACTIONS['default']

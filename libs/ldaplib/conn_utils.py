@@ -111,13 +111,14 @@ def is_local_domain(conn,
 def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
     """Query target domain of given alias domain name."""
     alias_domain = str(alias_domain).lower()
+
     if not utils.is_domain(alias_domain):
         logger.debug('Given alias_domain %s is not an valid domain name.' % alias_domain)
         return None
 
     try:
         _filter = '(&(objectClass=mailDomain)(accountStatus=active)'
-        _filter += '(domainAliasName=%s)'
+        _filter += '(domainAliasName=%s)' % alias_domain
 
         if not include_backupmx:
             _filter += '(!(domainBackupMX=yes))'
@@ -125,13 +126,14 @@ def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
         _filter += ')'
 
         logger.debug('[LDAP] query target domain of given alias domain (%s).' % alias_domain)
+        logger.debug('[LDAP] query filter: (%s)' % _filter)
         qr = conn.search_s(settings.ldap_basedn,
                            1,   # 1 == ldap.SCOPE_ONELEVEL
                            _filter,
                            ['domainName'])
 
+        logger.debug('result: %s' % str(qr))
         if qr:
-            logger.debug('result: %s' % str(qr))
             (_dn, _ldif) = qr[0]
             _domain = _ldif['domainName'][0]
             return _domain

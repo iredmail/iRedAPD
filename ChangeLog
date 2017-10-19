@@ -1,5 +1,7 @@
 iRedAPD-2.2:
     * Fixed issues:
+        - plugins/throttle.py: didn't apply throttle setting if recipient is an
+          alias domain.
         - plugins/amavisd_wblist.py: didn't apply wblist if recipient is an
           alias domain.
           Thanks tom cotton <tom _at_ ansspc.com> for the report in forum.

@@ -53,7 +53,7 @@ import settings
 REQUIRE_AMAVISD_DB = True
 
 if settings.backend == 'ldap':
-    from libs.ldaplib.conn_utils import is_local_domain
+    from libs.ldaplib.conn_utils import is_local_domain, get_alias_target_domain
 else:
     from libs.sql import is_local_domain, get_alias_target_domain
 
