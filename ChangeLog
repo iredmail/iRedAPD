@@ -1,5 +1,11 @@
 iRedAPD-2.2:
     * Fixed issues:
+        - tools/upgrade_iredapd.sh: syntax error while creating 'wblist_rdns'
+          SQL table with PostgreSQL command line.
+          Thanks Nameless <nonsenseisay _at_ protonmail.com> for the report in
+          forum.
+        - plugins/ldap_maillist_access_policy.py: didn't handle deprecated
+          policy name 'allowedonly'. it's still used by old iRedMail.
         - plugins/throttle.py: didn't apply throttle setting if recipient is an
           alias domain.
         - plugins/amavisd_wblist.py: didn't apply wblist if recipient is an

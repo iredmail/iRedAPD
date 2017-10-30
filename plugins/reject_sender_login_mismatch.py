@@ -166,6 +166,9 @@ def restriction(**kwargs):
                     sender_is_forged = True
 
             if sender_is_forged:
+                # TODO
+                # 1) Query DNS to get SPF of sender domain
+                # 2) If client IP matches SPF records, bypass it.
                 return SMTP_ACTIONS['reject_forged_sender']
             else:
                 logger.debug('Sender domain is not hosted locally.')

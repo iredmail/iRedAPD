@@ -462,7 +462,7 @@ CREATE INDEX idx_greylisting_whitelist_domain_spf_comment ON greylisting_whiteli
         cp -f ${PWD}/../SQL/wblist_rdns.sql /tmp/
         chmod 0555 /tmp/wblist_rdns.sql
 
-        ${psql_conn} -c "
+        ${psql_conn} <<EOF
 CREATE TABLE wblist_rdns (
     id      SERIAL PRIMARY KEY,
     -- reverse DNS name of sender IP address
@@ -473,7 +473,7 @@ CREATE TABLE wblist_rdns (
 CREATE UNIQUE INDEX idx_wblist_rdns_rdns ON wblist_rdns (rdns);
 CREATE INDEX idx_wblist_rdns_wb ON wblist_rdns (wb);
 \i /tmp/wblist_rdns.sql;
-"
+EOF
 
         rm -f /tmp/wblist_rdns.sql &>/dev/null
     fi
