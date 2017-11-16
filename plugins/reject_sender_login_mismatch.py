@@ -95,7 +95,7 @@
 
 from web import sqlquote
 from libs.logger import logger
-from libs import SMTP_ACTIONS
+from libs import SMTP_ACTIONS, dnsspf
 from libs.utils import is_trusted_client
 import settings
 
@@ -142,37 +142,43 @@ def restriction(**kwargs):
     if not sasl_username:
         logger.debug('Not an authenticated sender (no sasl_username).')
 
-        # Bypass localhost.
+        # Bypass trusted networks.
         # NOTE: if sender sent email through SOGo, smtp session may not
-        #       have sasl_username.
+        #       have `sasl_username`.
         if is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
         if not check_forged_sender:
             return SMTP_ACTIONS['default']
+
+        # Bypass allowed forged sender.
+        if sender in allowed_forged_sender or sender_domain in allowed_forged_sender:
+            return SMTP_ACTIONS['default']
+
+        sender_is_forged = False
+        if sender_domain == recipient_domain:
+            # sender domain is hosted locally, sender must login first.
+            logger.debug('Sender is forged address (sender domain == recipient domain).')
+            sender_is_forged = True
         else:
-            # Bypass allowed forged sender.
-            if sender in allowed_forged_sender or sender_domain in allowed_forged_sender:
-                return SMTP_ACTIONS['default']
-
-            sender_is_forged = False
-            if sender_domain == recipient_domain:
-                # sender domain is hosted locally, sender must login first.
-                logger.debug('Sender is forged address (sender domain == recipient domain).')
+            # Check whether sender domain is hosted on localhost
+            if is_local_domain(conn=conn, domain=sender_domain, include_backupmx=False):
                 sender_is_forged = True
-            else:
-                # Check whether sender domain is hosted on localhost
-                if is_local_domain(conn=conn, domain=sender_domain, include_backupmx=False):
-                    sender_is_forged = True
 
-            if sender_is_forged:
-                # TODO
-                # 1) Query DNS to get SPF of sender domain
-                # 2) If client IP matches SPF records, bypass it.
-                return SMTP_ACTIONS['reject_forged_sender']
+        if sender_is_forged:
+            if settings.CHECK_SPF_IF_LOGIN_MISMATCH:
+                logger.debug('Check whether client is allowed smtp server against DNS SPF record.')
+                # Query DNS to get IP addresses/networks listed in SPF
+                # record of sender domain, reject if not match.
+                if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
+                    return SMTP_ACTIONS['default']
+                else:
+                    return SMTP_ACTIONS['reject_forged_sender']
             else:
-                logger.debug('Sender domain is not hosted locally.')
-                return SMTP_ACTIONS['default']
+                return SMTP_ACTIONS['reject_forged_sender']
+        else:
+            logger.debug('Sender domain is not hosted locally.')
+            return SMTP_ACTIONS['default']
 
     # Check emails sent by authenticated users.
     logger.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))

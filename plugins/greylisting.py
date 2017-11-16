@@ -57,37 +57,31 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
             logger.debug('[%s] No whitelist found.' % (client_address))
 
     # check whitelisted cidr
+    _cidrs = []
     # Check IPv4.
     if ip_object.version == 4:
+        # if `ip=a.b.c.d`, ip prefix = `a.b.`
         _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
-        for r in whitelist_records:
-            (_id, _cidr, _comment) = r
 
-            # Make sure _cidr is IPv4 network and in 'same' IP range.
-            if _cidr.startswith(_cidr_prefix) and '.0/' in _cidr:
-                _net = ()
-                try:
-                    _net = ipaddress.ip_network(unicode(_cidr))
-                    if ip_object in _net:
-                        logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
-                        return True
-                except Exception, e:
-                    logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
+        # Make sure _cidr is IPv4 network and in 'same' IP range.
+        _cidrs = [(_id, _cidr, _comment)
+                  for (_id, _cidr, _comment) in whitelist_records
+                  if (_cidr.startswith(_cidr_prefix) and '.0/' in _cidr)]
     elif ip_object.version == 6:
-        # Check IPv6.
-        for r in whitelist_records:
-            (_id, _cidr, _comment) = r
+        _cidrs = [(_id, _cidr, _comment)
+                  for (_id, _cidr, _comment) in whitelist_records
+                  if (':' in _cidr and '/' in _cidr)]
 
-            # Make sure _cidr is IPv6 network
-            if ':' in _cidr and '/' in _cidr:
-                _net = ()
-                try:
-                    _net = ipaddress.ip_network(unicode(_cidr))
-                    if ip_object in _net:
-                        logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
-                        return True
-                except Exception, e:
-                    logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
+    if _cidrs:
+        _net = ()
+        for (_id, _cidr, _comment) in _cidrs:
+            try:
+                _net = ipaddress.ip_network(unicode(_cidr))
+                if ip_object in _net:
+                    logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
+                    return True
+            except Exception, e:
+                logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
 
     logger.debug('No whitelist found.')
     return False

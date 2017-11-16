@@ -1,4 +1,10 @@
 iRedAPD-2.2:
+    * Improvements:
+        + plugins/reject_sender_login_mismatch.py: If login mismatch (From: vs
+          SASL username), bypass sender if sender server is listed in DNS SPF
+          record.
+          Sponsored development by Kacper Guzik <kacper.guzik _at_ zenbox.pl>.
+
     * Fixed issues:
         - tools/upgrade_iredapd.sh: syntax error while creating 'wblist_rdns'
           SQL table with PostgreSQL command line.

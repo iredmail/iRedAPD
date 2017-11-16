@@ -124,6 +124,10 @@ CHECK_FORGED_SENDER = True
 # Sample: ALLOWED_FORGED_SENDERS = ['user@mydomain.com', 'mydomain.com']
 ALLOWED_FORGED_SENDERS = []
 
+# Check DNS SPF record of sender domain if sender login mismatch.
+# This is useful if sender also sends email from a email service vendor.
+CHECK_SPF_IF_LOGIN_MISMATCH = False
+
 # Allow sender login mismatch for specified senders or sender domains.
 #
 # Sample setting: allow local user `user@local_domain_1.com` and all users
@@ -154,9 +158,8 @@ GREYLISTING_TRAINING_MODE = False
 # retires too soon (in less than specified minutes). Defaults to 15 minutes.
 GREYLISTING_BLOCK_EXPIRE = 15
 
-# Disable greylisting for how long (in DAYS) for clients which passed
-# greylisting (retried and delivered). It's also used to clean up old
-# greylisting tracking records. Defaults to 30 days.
+# If sender server passed greylisting, whitelist it for given DAYS.
+# Older triplets will be cleaned up from SQL database. Defaults to 30 days.
 GREYLISTING_AUTH_TRIPLET_EXPIRE = 30
 
 # Time (in DAYS) to keep tracking records if client didn't pass the
