@@ -172,10 +172,8 @@ def restriction(**kwargs):
                 # record of sender domain, reject if not match.
                 if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
                     return SMTP_ACTIONS['default']
-                else:
-                    return SMTP_ACTIONS['reject_forged_sender']
-            else:
-                return SMTP_ACTIONS['reject_forged_sender']
+
+            return SMTP_ACTIONS['reject_forged_sender']
         else:
             logger.debug('Sender domain is not hosted locally.')
             return SMTP_ACTIONS['default']
