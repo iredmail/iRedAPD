@@ -274,13 +274,13 @@ def is_allowed_server_in_spf(sender_domain, ip):
     queried_domains = qr['queried_domains']
 
     if not _spf:
-        logger.info('[SPF] No valid DNS SPF record, treat as disallowed server.')
+        logger.info('[SPF] Domain %s does not have an valid DNS SPF record, client %s is treated as disallowed server.' % (sender_domain, ip))
         return False
 
     qr = parse_spf(domain=sender_domain, spf=_spf, queried_domains=queried_domains)
     _ips = qr['ips']
     if ip in _ips:
-        logger.info('[SPF] Given IP (%s) is one of IP addresses explicitly listed in SPF.' % ip)
+        logger.info('[SPF] Given IP (%s) is one of IP addresses explicitly listed in DNS SPF record of domain %s.' % (ip, sender_domain))
         return True
 
     _ip_object = ipaddress.ip_address(unicode(ip))
@@ -299,10 +299,10 @@ def is_allowed_server_in_spf(sender_domain, ip):
             try:
                 _network = ipaddress.ip_network(unicode(_cidr))
                 if _ip_object in _network:
-                    logger.info('[SPF] Given IP (%s) is one of IP networks listed in SPF.' % ip)
+                    logger.info('[SPF] Given IP (%s) is one of IP networks listed in DNS SPF record of domain.' % (ip, sender_domain))
                     return True
             except Exception, e:
                 logger.debug('[SPF] Error while checking IP %s with network %s: %s' % (ip, _cidr, repr(e)))
 
-    logger.info('[SPF] Given IP (%s) is not listed in SPF. Treated as disallowed server.' % ip)
+    logger.info('[SPF] Given IP (%s) is not listed in DNS SPF record of domain %s, treated as disallowed server.' % (ip, sender_domain))
     return False
