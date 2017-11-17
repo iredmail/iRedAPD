@@ -147,7 +147,17 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
                 or tag.startswith('+ip4:') \
                 or tag.startswith('ip6:') \
                 or tag.startswith('+ip6:'):
-            ips.add(v)
+            # Some sysadmin uses invalid syntaxes like 'ipv:*', we'd better not
+            # store them.
+            try:
+                ipaddress.ip_address(unicode(v))
+                ips.add(v)
+            except:
+                try:
+                    ipaddress.ip_network(unicode(v))
+                    ips.add(v)
+                except:
+                    logger.debug("%s is invalid ip address or network." % tag)
         elif tag.startswith('a:') or tag.startswith('+a:'):
             a.add(v)
         elif tag.startswith('mx:') or tag.startswith('+mx:'):
@@ -304,5 +314,5 @@ def is_allowed_server_in_spf(sender_domain, ip):
             except Exception, e:
                 logger.debug('[SPF] Error while checking IP %s with network %s: %s' % (ip, _cidr, repr(e)))
 
-    logger.info('[SPF] IP %s is not listed in DNS SPF record of domain %s, treated as disallowed server.' % (ip, sender_domain))
+    logger.info('[SPF] IP %s is NOT listed in DNS SPF record of domain %s, treated as disallowed server.' % (ip, sender_domain))
     return False
