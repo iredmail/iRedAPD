@@ -25,14 +25,14 @@ def query_a(domains, queried_domains=None, returned_ips=None):
             if qr:
                 for r in qr:
                     _ip = str(r)
-                    logger.debug('[%s] A: %s' % (domain, _ip))
+                    logger.debug('[SPF][%s] A: %s' % (domain, _ip))
 
                     ips.add(_ip)
                     returned_ips.add(_ip)
 
             queried_domains.add('a:' + domain)
         except Exception, e:
-            logger.debug('Error while querying DNS A record %s: %s' % (domain, repr(e)))
+            logger.debug('[SPF]Error while querying DNS A record %s: %s' % (domain, repr(e)))
 
     return {'ips': ips,
             'queried_domains': queried_domains,
@@ -62,7 +62,7 @@ def query_mx(domains, queried_domains=None, returned_ips=None):
             if qr:
                 for r in qr:
                     hostname = str(r).split()[-1].rstrip('.')
-                    logger.debug('[%s] MX: %s' % (domain, hostname))
+                    logger.debug('[SPF][%s] MX: %s' % (domain, hostname))
                     if utils.is_domain(hostname):
                         hostnames.add(hostname)
 
@@ -110,7 +110,7 @@ def query_spf(domain, queried_domains=None):
                 spf = r
                 break
     except Exception, e:
-        logger.debug('Error while querying DNS SPF record %s: %s' % (domain, repr(e)))
+        logger.debug('[SPF] Error while querying DNS SPF record %s: %s' % (domain, repr(e)))
 
     queried_domains.add('spf:' + domain)
 
@@ -165,7 +165,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if included_domains:
         included_domains = [i for i in included_domains if 'spf:' + i not in queried_domains]
 
-        logger.debug("[%s] 'spf:' tag in SPF: %s" % (domain, ', '.join(included_domains)))
+        logger.debug("[SPF][%s] 'spf:' tag in SPF: %s" % (domain, ', '.join(included_domains)))
         qr = query_spf_of_included_domains(included_domains,
                                            queried_domains=queried_domains,
                                            returned_ips=returned_ips)
@@ -179,7 +179,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if a:
         a = [i for i in a if 'a:' + i not in queried_domains]
 
-        logger.debug("[%s] 'a:' tag in SPF: %s" % (domain, ', '.join(a)))
+        logger.debug("[SPF][%s] 'a:' tag in SPF: %s" % (domain, ', '.join(a)))
         qr = query_a(a, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_a = qr['ips']
@@ -191,7 +191,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if mx:
         mx = [i for i in mx if 'mx:' + i not in queried_domains]
 
-        logger.debug("[%s] 'mx:' tag in SPF: %s" % (domain, ', '.join(mx)))
+        logger.debug("[SPF][%s] 'mx:' tag in SPF: %s" % (domain, ', '.join(mx)))
         qr = query_mx(mx, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_mx = qr['ips']
@@ -201,6 +201,25 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
         ips.update(ips_mx)
 
     queried_domains.add('spf:' + domain)
+
+    if ips:
+        new_ips = list(ips)
+
+        # Remove host bit in IPv4 address: x.x.x.Y/zz -> x.x.x.Y (Y != 0)
+        for (_index, _ip) in enumerate(new_ips):
+            if ':' not in _ip:
+                # IPv4
+                _last_ip_field = _ip.split('.')[-1]
+
+                if ('/' in _last_ip_field) and (not _last_ip_field.startswith('0/')):
+                    # IPv4 network or IPv4 with host bit
+                    new_ips[_index] = _ip.split('/', 1)[0]
+
+        ips = set(new_ips)
+
+        logger.debug("[SPF][%s] All IP addresses/networks in SPF: %s" % (domain, ', '.join(ips)))
+    else:
+        logger.debug("[SPF][%s] No IP addresses/networks in SPF." % domain)
 
     return {'ips': ips,
             'queried_domains': queried_domains,
@@ -224,9 +243,9 @@ def query_spf_of_included_domains(domains, queried_domains=None, returned_ips=No
         queried_domains = qr['queried_domains']
 
         if spf:
-            logger.debug('[include %s] %s' % (domain, spf))
+            logger.debug('[SPF][include %s] %s' % (domain, spf))
         else:
-            logger.debug('[include %s] empty' % domain)
+            logger.debug('[SPF][include %s] empty' % domain)
 
         qr = parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
 
@@ -255,11 +274,13 @@ def is_allowed_server_in_spf(sender_domain, ip):
     queried_domains = qr['queried_domains']
 
     if not _spf:
+        logger.debug('[SPF] No valid DNS SPF record, treat as disallowed server.')
         return False
 
     qr = parse_spf(domain=sender_domain, spf=_spf, queried_domains=queried_domains)
     _ips = qr['ips']
     if ip in _ips:
+        logger.debug('[SPF] Given IP (%s) is one of IP addresses explicitly listed in SPF.' % ip)
         return True
 
     _ip_object = ipaddress.ip_address(unicode(ip))
@@ -278,8 +299,10 @@ def is_allowed_server_in_spf(sender_domain, ip):
             try:
                 _network = ipaddress.ip_network(unicode(_cidr))
                 if _ip_object in _network:
+                    logger.debug('[SPF] Given IP (%s) is one of IP networks listed in SPF.' % ip)
                     return True
             except Exception, e:
-                logger.debug('Error while checking IP %s with network %s: %s' % (ip, _cidr, repr(e)))
+                logger.debug('[SPF]Error while checking IP %s with network %s: %s' % (ip, _cidr, repr(e)))
 
+    logger.debug('[SPF] Given IP (%s) is not listed in SPF. Treated as disallowed server.' % ip)
     return False

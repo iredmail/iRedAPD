@@ -162,15 +162,6 @@ for domain in domain_ips:
 
     # Insert new records
     for ip in domain_ips[domain]:
-        # Remove host bit in IPv4 address: x.x.x.Y/zz -> x.x.x.Y
-        if ':' not in ip:
-            # IPv4
-            _last_ip_field = ip.split('.')[-1]
-
-            if ('/' in _last_ip_field) and (not _last_ip_field.startswith('0/')):
-                # IPv4 network or IPv4 with host bit
-                ip = ip.split('/', 1)[0]
-
         try:
             # Check whether we already have this sender. used to avoid annoying
             # warning message in PostgreSQL log file due to duplicate key.
