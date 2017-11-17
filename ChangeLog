@@ -3,6 +3,10 @@ iRedAPD-2.2:
         + plugins/reject_sender_login_mismatch.py: If login mismatch (From: vs
           SASL username), bypass sender if sender server is listed in DNS SPF
           record.
+
+          This is disabled by default, set `CHECK_SPF_IF_LOGIN_MISMATCH = True`
+          in iRedAPD config file and restart iredapd service to enable it.
+
           Sponsored development by Kacper Guzik <kacper.guzik _at_ zenbox.pl>.
 
     * Fixed issues:
