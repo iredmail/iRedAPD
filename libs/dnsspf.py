@@ -175,7 +175,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if included_domains:
         included_domains = [i for i in included_domains if 'spf:' + i not in queried_domains]
 
-        logger.debug("[SPF][%s] 'spf:' tag in SPF: %s" % (domain, ', '.join(included_domains)))
+        logger.debug("[SPF][%s] 'spf:' tag: %s" % (domain, ', '.join(included_domains)))
         qr = query_spf_of_included_domains(included_domains,
                                            queried_domains=queried_domains,
                                            returned_ips=returned_ips)
@@ -189,7 +189,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if a:
         a = [i for i in a if 'a:' + i not in queried_domains]
 
-        logger.debug("[SPF][%s] 'a:' tag in SPF: %s" % (domain, ', '.join(a)))
+        logger.debug("[SPF][%s] 'a:' tag: %s" % (domain, ', '.join(a)))
         qr = query_a(a, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_a = qr['ips']
@@ -201,7 +201,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if mx:
         mx = [i for i in mx if 'mx:' + i not in queried_domains]
 
-        logger.debug("[SPF][%s] 'mx:' tag in SPF: %s" % (domain, ', '.join(mx)))
+        logger.debug("[SPF][%s] 'mx:' tag: %s" % (domain, ', '.join(mx)))
         qr = query_mx(mx, queried_domains=queried_domains, returned_ips=returned_ips)
 
         ips_mx = qr['ips']
@@ -227,9 +227,9 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
 
         ips = set(new_ips)
 
-        logger.debug("[SPF][%s] All IP addresses/networks in SPF: %s" % (domain, ', '.join(ips)))
+        logger.debug("[SPF][%s] All IP addresses/networks: %s" % (domain, ', '.join(ips)))
     else:
-        logger.debug("[SPF][%s] No IP addresses/networks in SPF." % domain)
+        logger.debug("[SPF][%s] No valid IP addresses/networks." % domain)
 
     return {'ips': ips,
             'queried_domains': queried_domains,
