@@ -310,7 +310,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
                 _network = ipaddress.ip_network(unicode(_cidr))
 
                 if _ip_object in _network:
-                    logger.info('[SPF] IP (%s) is one of IP networks listed in DNS SPF record of domain %s.' % (ip, sender_domain))
+                    logger.info('[SPF] IP (%s) is in IP network (%s) listed in DNS SPF record of domain %s.' % (ip, _cidr, sender_domain))
                     return True
             except Exception, e:
                 logger.debug('[SPF] Error while checking IP %s with network %s: %s' % (ip, _cidr, repr(e)))
