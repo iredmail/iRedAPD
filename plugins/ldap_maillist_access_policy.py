@@ -16,7 +16,7 @@ from libs.ldaplib import conn_utils
 import settings
 
 REQUIRE_LOCAL_RECIPIENT = True
-RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy']
+RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy', 'enabledService']
 
 
 def restriction(**kwargs):
@@ -37,6 +37,11 @@ def restriction(**kwargs):
 
     # Get access policy
     policy = recipient_ldif.get('accessPolicy', [MAILLIST_POLICY_PUBLIC])[0].lower()
+
+    if 'mlmmj' in recipient_ldif.get('enabledService', []):
+        if policy in [MAILLIST_POLICY_MEMBERSONLY, MAILLIST_POLICY_MODERATORS, MAILLIST_POLICY_MEMBERSANDMODERATORSONLY]:
+            logger.debug("Recipient is a mlmmj mailing list, bypass since members are not stored in LDAP.")
+            return SMTP_ACTIONS['default']
 
     # Log access policy
     logger.debug('Access policy of mailing list (%s): %s' % (recipient, policy))
@@ -85,13 +90,15 @@ def restriction(**kwargs):
         if policy == MAILLIST_POLICY_DOMAIN:
             # Bypass all users under the same domain.
             if sender_domain in valid_rcpt_domains:
-                return SMTP_ACTIONS['default'] + ' (Sender bypasses access policy: %s (%s))' % (MAILLIST_POLICY_DOMAIN, sender_domain)
+                logger.info('Sender domain (%s) is allowed by access policy of mailing list: %s.' % (sender_domain, policy))
+                return SMTP_ACTIONS['default']
 
         elif policy == MAILLIST_POLICY_SUBDOMAIN:
             # Bypass all users under the same domain and all sub domains.
             for d in valid_rcpt_domains:
                 if sender_domain == d or sender_domain.endswith('.' + d):
-                    return SMTP_ACTIONS['default'] + ' (Sender bypasses access policy: %s (%s))' % (MAILLIST_POLICY_SUBDOMAIN, d)
+                    logger.info('Sender domain (%s) is allowed by access policy of mailing list: %s.' % (d, policy))
+                    return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
 
@@ -118,7 +125,8 @@ def restriction(**kwargs):
                 allowed_senders += _ldif.get(k, [])
 
         if sender in allowed_senders:
-            return SMTP_ACTIONS['default'] + ' (Sender bypasses access policy: %s (%s))' % (MAILLIST_POLICY_MEMBERSONLY, sender)
+            logger.info('Sender (%s) is allowed by access policy of mailing list: %s.' % (sender, policy))
+            return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
 
@@ -147,7 +155,8 @@ def restriction(**kwargs):
                     allowed_senders += _ldif.get(k, [])
 
             if sender in allowed_senders:
-                return SMTP_ACTIONS['default'] + ' (Sender bypasses access policy: %s (%s))' % (MAILLIST_POLICY_MEMBERSANDMODERATORSONLY, sender)
+                logger.info('Sender (%s) is allowed by access policy of mailing list: %s.' % (sender, policy))
+                return SMTP_ACTIONS['default']
         except Exception, e:
             _msg = 'Error while querying allowed senders of mailing list (access policy: %s): %s' % (MAILLIST_POLICY_MEMBERSANDMODERATORSONLY, repr(e))
             logger.error(_msg)
@@ -244,7 +253,8 @@ def restriction(**kwargs):
                         allowed_senders += [d for d in _all_domains]
 
         if sender in allowed_senders or sender_domain in allowed_senders:
-            return SMTP_ACTIONS['default'] + ' (Sender is allowed)'
+            logger.info('Sender (%s) is allowed by access policy of mailing list: %s.' % (sender, policy))
+            return SMTP_ACTIONS['default']
         else:
             return SMTP_ACTIONS['reject_not_authorized']
 
