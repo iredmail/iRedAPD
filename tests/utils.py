@@ -97,7 +97,7 @@ def delete_domain(domain=tdata.domain):
     conn.delete('alias',
                 vars=tdata.sql_vars,
                 where='domain=$domain')
-    conn.delete('alias_moderators',
+    conn.delete('moderators',
                 vars=tdata.sql_vars,
                 where='domain=$domain')
     conn.delete('forwardings',
@@ -183,7 +183,7 @@ def assign_alias_member(member=tdata.user, alias=tdata.alias):
                 is_list=1)
 
 def assign_alias_moderator(moderator=tdata.user, alias=tdata.alias):
-    conn.insert('alias_moderators',
+    conn.insert('moderators',
                 address=alias,
                 moderator=moderator,
                 domain=alias.split('@', 1)[-1])
@@ -194,7 +194,7 @@ def remove_alias_member(member=tdata.user, alias=tdata.alias):
                 where='address=$alias AND forwarding=$member')
 
 def remove_alias_moderator(moderator=tdata.user, alias=tdata.alias):
-    conn.delete('alias_moderators',
+    conn.delete('moderators',
                 vars={'moderator': moderator, 'alias': alias},
                 where='address=$alias AND moderator=$moderator')
 

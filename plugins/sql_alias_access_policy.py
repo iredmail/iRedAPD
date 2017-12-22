@@ -87,7 +87,7 @@ def get_moderators(conn, mail):
 
     # Get access policy directly.
     sql = """SELECT moderator
-               FROM alias_moderators
+               FROM moderators
               WHERE address=%s""" % sqlquote(mail)
 
     logger.debug('[SQL] query moderators: \n%s' % sql)
