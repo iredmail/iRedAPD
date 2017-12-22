@@ -1,5 +1,7 @@
 iRedAPD-2.2:
     * Improvements:
+        + plugins/ldap_maillist_access_policy.py: supports access policy of
+          mlmmj mailing list.
         + plugins/reject_sender_login_mismatch.py: If login mismatch (From: vs
           SASL username), bypass sender if sender server is listed in DNS SPF
           record.

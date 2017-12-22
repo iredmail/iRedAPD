@@ -39,7 +39,7 @@ def restriction(**kwargs):
     policy = recipient_ldif.get('accessPolicy', [MAILLIST_POLICY_PUBLIC])[0].lower()
 
     if 'mlmmj' in recipient_ldif.get('enabledService', []):
-        if policy in [MAILLIST_POLICY_MEMBERSONLY, MAILLIST_POLICY_MODERATORS, MAILLIST_POLICY_MEMBERSANDMODERATORSONLY]:
+        if policy == MAILLIST_POLICY_MEMBERSONLY:
             logger.debug("Recipient is a mlmmj mailing list, bypass since members are not stored in LDAP.")
             return SMTP_ACTIONS['default']
 
