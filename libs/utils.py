@@ -461,6 +461,11 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
     sender = smtp_session_data.get('sender', '')
     recipient = smtp_session_data.get('recipient', '')
 
+    client_name = smtp_session_data.get('client_name', '')
+    reverse_client_name = smtp_session_data.get('reverse_client_name', '')
+    if reverse_client_name:
+        reverse_client_name = '[%s]' % reverse_client_name
+
     if sasl_username:
         if sasl_username == sender:
             _log_sender_to_rcpt = '%s => %s' % (sasl_username, recipient)
@@ -474,11 +479,13 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
         _time = ' [%.4fs]' % (end_time - start_time)
 
     # Log final action
-    logger.info('[%s] %s, %s, %s%s' % (smtp_session_data['client_address'],
-                                       smtp_session_data['protocol_state'],
-                                       _log_sender_to_rcpt,
-                                       action,
-                                       _time))
+    logger.info('[%s][%s][%s] %s, %s, %s%s' % (smtp_session_data['client_address'],
+                                               client_name,
+                                               reverse_client_name,
+                                               smtp_session_data['protocol_state'],
+                                               _log_sender_to_rcpt,
+                                               action,
+                                               _time))
 
     return None
 
