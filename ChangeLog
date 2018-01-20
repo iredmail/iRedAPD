@@ -11,6 +11,8 @@ iRedAPD-2.2:
 
           Sponsored development by Kacper Guzik <kacper.guzik _at_ zenbox.pl>.
 
+        + Log client hostname, reverse hostname, helo hostname.
+
     * Fixed issues:
         - Not verify ip address/network specified in DNS SPF record with
           ip4/+ip4/ip6/+ip6 tag.
