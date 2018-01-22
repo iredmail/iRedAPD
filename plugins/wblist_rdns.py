@@ -94,6 +94,7 @@ def restriction(**kwargs):
     record = qr.fetchone()
     if record:
         rdns = str(record[0]).lower()
-        return SMTP_ACTIONS['reject_blacklisted_rdns'] + ' (' + rdns + ')'
+        logger.info('Reverse client hostname is blacklisted: ' + rdns)
+        return SMTP_ACTIONS['reject_blacklisted']
 
     return SMTP_ACTIONS['default']
