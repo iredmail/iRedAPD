@@ -20,9 +20,7 @@ SMTP_ACTIONS = {
     'reject_message_size_exceeded': 'REJECT Message size exceed (maybe caused by big attachment file)',
     'reject_blacklisted_rdns': 'REJECT Blacklisted reverse DNS name of server IP address',
     # Throttling
-    'reject_exceed_msg_size': 'REJECT Quota exceeded (size of single mail message)',
-    'reject_exceed_max_msgs': 'REJECT Quota exceeded (number of mails in total)',
-    'reject_exceed_max_quota': 'REJECT Quota exceeded (accumulated message size)',
+    'reject_quota_exceeded': 'REJECT Quota exceeded',
     'greylisting': '451 4.7.1',
 }
 

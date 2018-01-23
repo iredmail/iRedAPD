@@ -383,12 +383,14 @@ def apply_throttle(conn,
             _real_max_msgs_cur_msgs = max_msgs_cur_msgs + settings.GLOBAL_SESSION_TRACKING[instance_id]['processed']
 
             if _real_max_msgs_cur_msgs >= max_msgs > 0:
-                logger.info('[%s] [%s] Exceeds %s throttle for max_msgs, current: %d. (%s)' % (client_address,
-                                                                                               user,
-                                                                                               throttle_type,
-                                                                                               max_msgs_cur_msgs,
-                                                                                               throttle_info))
-                return SMTP_ACTIONS['reject_exceed_max_msgs']
+                logger.info('[%s] [%s] Quota exceeded: %s throttle for max_msgs, current: %d. (%s)' % (
+                    client_address,
+                    user,
+                    throttle_type,
+                    max_msgs_cur_msgs,
+                    throttle_info))
+
+                return SMTP_ACTIONS['reject_quota_exceeded']
             else:
                 # Show the time tracking record is about to expire
                 _left_seconds = _init_time + _period - _last_time
@@ -413,12 +415,14 @@ def apply_throttle(conn,
 
             # Check message size
             if size > msg_size > 0:
-                logger.info('[%s] [%s] Exceeds %s throttle for msg_size, current: %d (bytes). (%s)' % (client_address,
-                                                                                                       user,
-                                                                                                       throttle_type,
-                                                                                                       size,
-                                                                                                       throttle_info))
-                return SMTP_ACTIONS['reject_exceed_msg_size']
+                logger.info('[%s] [%s] Quota exceeded: %s throttle for msg_size, current: %d (bytes). (%s)' % (
+                    client_address,
+                    user,
+                    throttle_type,
+                    size,
+                    throttle_info))
+
+                return SMTP_ACTIONS['reject_quota_exceeded']
             else:
                 # Show the time tracking record is about to expire
                 _left_seconds = _init_time + _period - _last_time
@@ -448,12 +452,14 @@ def apply_throttle(conn,
                 _cur_quota = 0
 
             if _cur_quota > max_quota > 0:
-                logger.info('[%s] [%s] Exceeds %s throttle for max_quota, current: %d. (%s)' % (client_address,
-                                                                                                user,
-                                                                                                throttle_type,
-                                                                                                _cur_quota,
-                                                                                                throttle_info))
-                return SMTP_ACTIONS['reject_exceed_max_quota']
+                logger.info('[%s] [%s] Quota exceeded: %s throttle for max_quota, current: %d. (%s)' % (
+                    client_address,
+                    user,
+                    throttle_type,
+                    _cur_quota,
+                    throttle_info))
+
+                return SMTP_ACTIONS['reject_quota_exceeded']
             else:
                 # Show the time tracking record is about to expire
                 _left_seconds = _init_time + _period - _last_time
