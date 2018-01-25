@@ -93,3 +93,33 @@ def get_alias_target_domain(alias_domain, conn):
         return target_domain
     else:
         return None
+
+
+def get_access_policy(mail, account_type, conn):
+    """Get access policy of (mlmmj) mailing list or mail alias account.
+
+    Returns access policy (string) or None if account doesn't exist."""
+    _policy = None
+
+    if account_type == 'alias':
+        table = 'alias'
+    elif account_type == 'maillist':
+        table = 'maillists'
+    else:
+        return _policy
+
+    sql = """SELECT accesspolicy
+               FROM %s
+              WHERE address=%s
+              LIMIT 1""" % (table, sqlquote(mail))
+
+    logger.debug('[SQL] query access policy: \n%s' % sql)
+
+    qr = conn.execute(sql)
+    record = qr.fetchone()
+    logger.debug('SQL query result: %s' % str(record))
+
+    if record:
+        _policy = str(record[0]).lower()
+
+    return _policy

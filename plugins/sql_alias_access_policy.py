@@ -19,6 +19,8 @@ from libs import MAILLIST_POLICY_MEMBERSONLY
 from libs import MAILLIST_POLICY_MODERATORS
 from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
+from libs.sql import get_access_policy, get_alias_target_domain
+
 
 def is_allowed_alias_domain_user(sender,
                                  sender_username,
@@ -36,28 +38,6 @@ def is_allowed_alias_domain_user(sender,
             return True
 
     return False
-
-
-def get_access_policy(conn, mail):
-    """Returns access policy (string) of mail alias account, returns None if
-    account doesn't exist."""
-    _policy = None
-
-    sql = """SELECT accesspolicy
-               FROM alias
-              WHERE address=%s
-              LIMIT 1""" % sqlquote(mail)
-
-    logger.debug('[SQL] query access policy: \n%s' % sql)
-
-    qr = conn.execute(sql)
-    record = qr.fetchone()
-    logger.debug('SQL query result: %s' % str(record))
-
-    if record:
-        _policy = str(record[0]).lower()
-
-    return _policy
 
 
 def get_members(conn, mail):
@@ -115,31 +95,20 @@ def restriction(**kwargs):
     # used when recipient_domain is an alias domain
     real_recipient_domain = recipient_domain
 
-    policy = get_access_policy(conn=conn, mail=recipient)
+    policy = get_access_policy(mail=recipient, account_type='alias', conn=conn)
 
     # Recipient account doesn't exist.
     if not policy:
-        # Check whether recipient domain is an alias domain
-        sql = '''SELECT target_domain
-                   FROM alias_domain
-                  WHERE alias_domain=%s
-                  LIMIT 1
-                  ''' % sqlquote(recipient_domain)
-
-        logger.debug('[SQL] Check whether recipient domain is an alias domain: \n%s' % sql)
-        _qr = conn.execute(sql)
-        _sql_record = _qr.fetchone()
-        logger.debug('[SQL] Query result: %s' % str(_sql_record))
-
-        if not _sql_record:
+        _target_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn)
+        if not _target_domain:
             logger.debug('Recipient domain is not an alias domain.')
             return SMTP_ACTIONS['default'] + ' Recipient is not a mail alias account or no access policy'
 
         # Reset recipient and recipient domain
-        real_recipient_domain = _sql_record[0].lower()
+        real_recipient_domain = _target_domain
         real_recipient = recipient.split('@', 1)[0] + '@' + real_recipient_domain
 
-        policy = get_access_policy(conn=conn, mail=real_recipient)
+        policy = get_access_policy(mail=real_recipient, account_type='alias', conn=conn)
         if not policy:
             return SMTP_ACTIONS['default'] + ' (Recipient domain is an alias domain, but recipient is not a mail alias account)'
 

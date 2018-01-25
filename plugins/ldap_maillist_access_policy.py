@@ -38,15 +38,16 @@ def restriction(**kwargs):
     # Get access policy
     policy = recipient_ldif.get('accessPolicy', [MAILLIST_POLICY_PUBLIC])[0].lower()
 
-    if 'mlmmj' in recipient_ldif.get('enabledService', []):
-        if policy == MAILLIST_POLICY_MEMBERSONLY:
-            logger.debug("Recipient is a mlmmj mailing list, bypass since members are not stored in LDAP.")
-            return SMTP_ACTIONS['default']
-
     # Log access policy
     logger.debug('Access policy of mailing list (%s): %s' % (recipient, policy))
+
     if policy == MAILLIST_POLICY_PUBLIC:
         return SMTP_ACTIONS['default'] + ' (Access policy: %s, no restriction)' % MAILLIST_POLICY_PUBLIC
+
+    if 'mlmmj' in recipient_ldif.get('enabledService', []):
+        if policy in [MAILLIST_POLICY_MEMBERSONLY, MAILLIST_POLICY_MODERATORS]:
+            logger.debug('Recipient is a mlmmj mailing list, let mlmmj handle the ACL.')
+            return SMTP_ACTIONS['default']
 
     conn = kwargs['conn_vmail']
     sender = kwargs['sender_without_ext']

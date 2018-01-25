@@ -60,6 +60,7 @@ PLUGIN_PRIORITIES = {
     'sql_force_change_password_in_days': 70,
     'throttle': 60,
     'ldap_maillist_access_policy': 50,
+    'sql_ml_access_policy': 51,
     'sql_alias_access_policy': 50,
     'amavisd_wblist': 40,
     'whitelist_outbound_recipient': 10,

@@ -98,14 +98,15 @@ def get_traceback():
 
 def apply_plugin(plugin, **kwargs):
     action = SMTP_ACTIONS['default']
+    plugin_name = plugin.__name__
 
-    logger.debug('--> Apply plugin: %s' % plugin.__name__)
+    logger.debug('--> Apply plugin: %s' % plugin_name)
     try:
         action = plugin.restriction(**kwargs)
         logger.debug('<-- Result: %s' % action)
     except:
         err_msg = get_traceback()
-        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, err_msg))
+        logger.error('<!> Error while applying plugin "%s": %s' % (plugin_name, err_msg))
 
     return action
 
@@ -480,21 +481,26 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
 
     # Log final action
     if smtp_session_data['protocol_state'] == 'RCPT':
-        logger.info('[%s] %s, %s, %s [client_name=%s, reverse_client_name=%s, helo=%s, process_time=%s]' % (
+        logger.info('[%s] %s, %s, %s [sasl_username=%s, sender=%s, client_name=%s, reverse_client_name=%s, helo=%s, encryption_protocol=%s, process_time=%s]' % (
             smtp_session_data['client_address'],
             protocol_state,
             _log_sender_to_rcpt,
             action,
+            sasl_username,
+            sender,
             client_name,
             reverse_client_name,
             helo,
+            smtp_session_data.get('encryption_protocol', ''),
             _time))
     else:
-        logger.info('[%s] %s, %s, %s [process_time=%s]' % (
+        logger.info('[%s] %s, %s, %s [recipient_count=%s, size=%s, process_time=%s]' % (
             smtp_session_data['client_address'],
             protocol_state,
             _log_sender_to_rcpt,
             action,
+            smtp_session_data.get('recipient_count', '0'),
+            smtp_session_data.get('size', '0'),
             _time))
 
     return None
