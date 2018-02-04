@@ -219,20 +219,6 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     queried_domains.add('spf:' + domain)
 
     if ips:
-        new_ips = list(ips)
-
-        # Remove host bit in IPv4 address: x.x.x.Y/zz -> x.x.x.Y (Y != 0)
-        for (_index, _ip) in enumerate(new_ips):
-            if ':' not in _ip:
-                # IPv4
-                _last_ip_field = _ip.split('.')[-1]
-
-                if ('/' in _last_ip_field) and (not _last_ip_field.startswith('0/')):
-                    # IPv4 network or IPv4 with host bit
-                    new_ips[_index] = _ip.split('/', 1)[0]
-
-        ips = set(new_ips)
-
         logger.debug("[SPF][%s] All IP addresses/networks: %s" % (domain, ', '.join(ips)))
     else:
         logger.debug("[SPF][%s] No valid IP addresses/networks." % domain)
