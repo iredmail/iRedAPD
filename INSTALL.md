@@ -171,6 +171,17 @@ touch /var/log/iredapd/iredapd.log
 chown -R iredapd:iredapd /var/log/iredapd
 ```
 
+* Run command `crontab -e -u root` to add cron jobs for root user:
+
+```
+# iRedAPD: Clean up expired tracking records hourly.
+1   *   *   *   *   python /opt/iredapd/tools/cleanup_db.py >/dev/null
+
+# iRedAPD: Convert SPF DNS record of specified domain names to IP
+#          addresses/networks hourly.
+2   *   *   *   *   python /opt/iredapd/tools/spf_to_greylist_whitelists.py >/dev/null
+```
+
 * Make iRedAPD start when boot your server.
 
 ```shell
