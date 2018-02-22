@@ -52,7 +52,7 @@
 # Eg: You can enforce that user@domain.com does not send more than 1000 mails
 # or 1GB of mail (whichever limit is hit first) in 5 minute.
 #
-# Possible throttling address:
+# Valid throttling address format:
 #
 #   *) Full email address: user@domain.com
 #   *) Domain name (with a prefixed '@'): @domain.com
@@ -92,6 +92,18 @@
 #       `msg_size` setting in per-domain (`@domain.com`) and/or global (`@.`)
 #       throttle settings.
 #
+
+# -------------
+# Different throttle types (SQL column `throttle.kind`):
+#
+#   - inbound: email sent from other mail servers.
+#   - outbound: emails sent by authenticated users.
+#   - external: emails sent from other mail servers.
+#
+# Difference between `inbound` and `external`:
+#   - `inbound` is set based on sender addresses which are your local users.
+#   - `external` is set based on sender addresses which are NOT your local users.
+
 ####################################
 # Sample sender throttle settings:
 #
