@@ -50,6 +50,7 @@ from libs import ipaddress
 from libs.utils import is_ipv4, wildcard_ipv4, get_policy_addresses_from_email
 import settings
 
+SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
 REQUIRE_AMAVISD_DB = True
 
 if settings.backend == 'ldap':
@@ -200,9 +201,6 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
         for sid in sender_ids:
             if (rid, sid, 'W') in wblists:
                 logger.info("Whitelisted: wblist=(%d, %d, 'W')" % (rid, sid))
-
-                # Use SMTP_ACTIONS['whitelist'] instead of 'default', 'accept'
-                # for incoming emails.
                 return SMTP_ACTIONS['whitelist'] + " wblist=(%d, %d, 'W')" % (rid, sid)
 
             if (rid, sid, 'B') in wblists:

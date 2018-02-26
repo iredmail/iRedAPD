@@ -4,6 +4,10 @@ how it works:
 
 # For all plugins
 
+If plugin needs to return `OK` (e.g. whitelisting), please do __NOT__ return
+`OK` in Postfix protocol state `RCPT`, it may cause spam issues. Instead,
+run your plugin in Postfix protocol state `END-OF-MESSAGE`.
+
 ## Custom plugins
 
 ### Name your custom plugins with string `custom_` prefixed

@@ -1,11 +1,10 @@
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
-__version__ = '2.2'
+__version__ = '2.3'
 
 
 SMTP_ACTIONS = {
     'default': 'DUNNO',
     # Use 'OK' carefully, it will bypass other Postfix/iRedAPD restrictions.
-    'accept': 'OK',
     'whitelist': 'OK',
     # discard email without return error message to sender
     'discard': 'DISCARD Policy discard',

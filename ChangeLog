@@ -1,3 +1,8 @@
+iRedAPD-2.3:
+    * Fixed issues:
+        - Run plugin 'amavisd_wblist' in Postfix protocol state
+          'END-OF-MESSAGE' instead of 'RCPT' to avoid possible spam issue.
+
 iRedAPD-2.2:
     * Improvements:
         + plugins/ldap_maillist_access_policy.py: supports access policy of
