@@ -43,6 +43,9 @@ def restriction(**kwargs):
 
     if policy == MAILLIST_POLICY_PUBLIC:
         return SMTP_ACTIONS['default'] + ' (Access policy: %s, no restriction)' % MAILLIST_POLICY_PUBLIC
+    elif policy == 'allowedonly':
+        # 'allowedonly' is policy name used by old iRedAPD releases.
+        policy = MAILLIST_POLICY_MODERATORS
 
     if 'mlmmj' in recipient_ldif.get('enabledService', []):
         if policy in [MAILLIST_POLICY_MEMBERSONLY, MAILLIST_POLICY_MODERATORS]:
@@ -131,8 +134,7 @@ def restriction(**kwargs):
 
         return SMTP_ACTIONS['reject_not_authorized']
 
-    elif policy in ['allowedonly', MAILLIST_POLICY_MEMBERSANDMODERATORSONLY]:
-        # 'allowedonly' is policy name used by old iRedAPD.
+    elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
         # Get both members and moderators.
         _f = '(|' + \
              '(&(memberOfGroup=%s)(|(objectClass=mailUser)(objectClass=mailExternalUser)))' % recipient + \
