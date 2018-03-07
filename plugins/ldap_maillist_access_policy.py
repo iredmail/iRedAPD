@@ -217,7 +217,7 @@ def restriction(**kwargs):
             logger.debug('base dn: %s' % _basedn)
             logger.debug('search scope: ONELEVEL')
             logger.debug('search filter: %s' % _f)
-            logger.debug('search attributes: %s' % ', '.join(search_attrs))
+            logger.debug('search attributes: %s' % ', '.join(_search_attrs))
 
             qr = conn.search_s(_basedn, 1, _f, _search_attrs)
             logger.debug('query result: %s' % str(qr))
@@ -240,7 +240,7 @@ def restriction(**kwargs):
             logger.debug('base dn: %s' % _basedn)
             logger.debug('search scope: ONELEVEL')
             logger.debug('search filter: %s' % _f)
-            logger.debug('search attributes: %s' % ', '.join(search_attrs))
+            logger.debug('search attributes: %s' % ', '.join(_search_attrs))
 
             qr = conn.search_s(_basedn, 1, _f, _search_attrs)
             logger.debug('result: %s' % str(qr))
