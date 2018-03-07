@@ -35,6 +35,13 @@ def restriction(**kwargs):
     if 'mailList' not in recipient_ldif['objectClass']:
         return SMTP_ACTIONS['default'] + ' (Recipient is not a mailing list account)'
 
+    # Reject if mailing list is disabled.
+    # NOTE: Postfix doesn't query account status of mailing list, so we need
+    #       to do it here.
+    if recipient_ldif.get('accountStatus', []) != ['active']:
+        logger.debug('Recipient (mailing list) is disabled, message rejected.')
+        return SMTP_ACTIONS['reject']
+
     # Get access policy
     policy = recipient_ldif.get('accessPolicy', [MAILLIST_POLICY_PUBLIC])[0].lower()
 
