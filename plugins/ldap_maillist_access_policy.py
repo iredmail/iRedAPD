@@ -16,7 +16,10 @@ from libs.ldaplib import conn_utils
 import settings
 
 REQUIRE_LOCAL_RECIPIENT = True
-RECIPIENT_SEARCH_ATTRLIST = ['listAllowedUser', 'accessPolicy', 'enabledService']
+RECIPIENT_SEARCH_ATTRLIST = [
+    'accountStatus', 'listAllowedUser',
+    'accessPolicy', 'enabledService',
+]
 
 
 def restriction(**kwargs):
