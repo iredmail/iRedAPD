@@ -35,6 +35,9 @@ INSERT INTO greylisting_whitelist_domains (domain) VALUES ('paypal.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('pinterest.com');
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('reddit.com');
 
+-- salesforce
+INSERT INTO greylisting_whitelist_domains (domain) VALUES ('salesforce.com');
+
 -- AT&T
 INSERT INTO greylisting_whitelist_domains (domain) VALUES ('sbcglobal.net');
 
