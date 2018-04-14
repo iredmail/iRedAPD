@@ -615,7 +615,7 @@ def restriction(**kwargs):
         return action
 
     # Apply recipient throttling to smtp sessions without sasl_username
-    if kwargs['sasl_username']:
+    if kwargs['sasl_username'] and settings.THROTTLE_BYPASS_LOCAL_RECIPIENT:
         # Both sender and recipient are local.
         logger.debug('Bypass recipient throttling (found sasl_username).')
     else:

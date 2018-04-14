@@ -1,4 +1,8 @@
 iRedAPD-2.3:
+    * Improvements:
+        - plugins/throttle.py: Apply throttling if both sender and recipient
+          are hosted locally.
+
     * Fixed issues:
         - Plugin 'ldap_maillist_access_policy'
             - It treats member as moderator.
