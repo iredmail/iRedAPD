@@ -4,6 +4,8 @@ iRedAPD-2.3:
           are hosted locally.
 
     * Fixed issues:
+        - systemd service cannot start if iRedAPD needs to access some local or
+          remote mount point while starting.
         - Plugin 'ldap_maillist_access_policy'
             - It treats member as moderator.
             - Not reject message if account is disabled.
