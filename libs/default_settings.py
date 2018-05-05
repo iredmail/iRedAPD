@@ -215,5 +215,6 @@ WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING = False
 # Don't apply throttle settings on senders specified in `MYNETWORKS`.
 THROTTLE_BYPASS_MYNETWORKS = False
 
-# Don't apply throttle settings if both sender/recipient are hosted locally.
+# Don't apply throttle settings if both sender/recipient are hosted locally
+# (they don't have to be in same domain)
 THROTTLE_BYPASS_LOCAL_RECIPIENT = True

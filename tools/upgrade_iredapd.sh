@@ -721,6 +721,11 @@ fi
 #------------------------------
 # Clean up.
 #
+if [ -e /tmp/iredapd ]; then
+    echo "* Remove /tmp/iredapd"
+    rm -rf /tmp/iredapd &>/dev/null
+fi
+
 echo "* Remove all *.pyc files."
 cd ${IREDAPD_ROOT_DIR} && find . -name '*.pyc' | xargs rm -f {} &>/dev/null
 
