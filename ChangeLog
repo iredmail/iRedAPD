@@ -1,7 +1,12 @@
 iRedAPD-2.3:
     * Improvements:
-        - plugins/throttle.py: Apply throttling if both sender and recipient
-          are hosted locally.
+        + plugins/throttle.py:
+            + New parameter THROTTLE_BYPASS_SAME_DOMAIN: if set to True,
+              do not apply recipient throttling if both sender and recipient
+              are in same domain. Defaults to True.
+            + New parameter THROTTLE_BYPASS_LOCAL_RECIPIENT: if set to True,
+              do not apply recipient throttling if both sender and recipient
+              are hosted locally. Defaults to True.
 
     * Fixed issues:
         - systemd service cannot start if iRedAPD needs to access some local or
