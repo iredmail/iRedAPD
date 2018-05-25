@@ -176,8 +176,8 @@ CREATE TABLE IF NOT EXISTS `greylisting_whitelist_domain_spf` (
 -- Old records should be removed with a cron job.
 CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     `id`                BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `sender`            VARCHAR(100) NOT NULL,
-    `recipient`         VARCHAR(100) NOT NULL,
+    `sender`            VARCHAR(255) NOT NULL,
+    `recipient`         VARCHAR(255) NOT NULL,
     `client_address`    VARCHAR(40) NOT NULL,
 
     `sender_domain`     VARCHAR(255) NOT NULL DEFAULT '',
