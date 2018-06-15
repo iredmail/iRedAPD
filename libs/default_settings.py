@@ -126,7 +126,7 @@ ALLOWED_FORGED_SENDERS = []
 
 # Check DNS SPF record of sender domain if sender login mismatch.
 # This is useful if sender also sends email from a email service vendor.
-CHECK_SPF_IF_LOGIN_MISMATCH = False
+CHECK_SPF_IF_LOGIN_MISMATCH = True
 
 # Allow sender login mismatch for specified senders or sender domains.
 #

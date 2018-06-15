@@ -1,5 +1,8 @@
 iRedAPD-2.3:
     * Improvements:
+        + Set `CHECK_SPF_IF_LOGIN_MISMATCH = True` by default. If sender
+          address is configured as forged, check DNS SPF record of sender
+          domain and bypass if client is listed in SPF record.
         + plugins/throttle.py:
             + New parameter THROTTLE_BYPASS_SAME_DOMAIN: if set to True,
               do not apply recipient throttling if both sender and recipient
