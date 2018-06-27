@@ -28,10 +28,11 @@
 #      salesforce.com, you can bypass these addresses in this setting.
 #      Default value is empty (no allowed forged sender).
 #
-#       ALLOWED_FORGED_SENDERS = ['user@local_domain1.com', 'local_domain2.com']
+#       ALLOWED_FORGED_SENDERS = ['user@domain1.com', 'domain2.com', 'support@*']
 #
-#      With above setting, if sender is 'user@local.com', this plugin won't
-#      reject it.
+#      With above setting, if sender is 'user@domain1.com', or any user under
+#      'domain2.com', or any user with username 'support' in the email address,
+#      this plugin won't reject it.
 #
 #   Settings applied on message sent by authenticated user:
 #
@@ -152,7 +153,9 @@ def restriction(**kwargs):
             return SMTP_ACTIONS['default']
 
         # Bypass allowed forged sender.
-        if sender in allowed_forged_sender or sender_domain in allowed_forged_sender:
+        if sender in allowed_forged_sender or \
+           sender_domain in allowed_forged_sender or \
+           sender_name + '@*' in allowed_forged_sender:
             return SMTP_ACTIONS['default']
 
         sender_is_forged = False
