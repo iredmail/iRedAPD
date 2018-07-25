@@ -1,6 +1,5 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
-import sys
 import ldap
 from libs.logger import logger
 import settings
@@ -16,7 +15,6 @@ class Modeler:
             logger.debug('LDAP connection initialied success.')
         except Exception, e:
             logger.error('LDAP initialized failed: %s.' % str(e))
-            sys.exit()
 
         # Bind to ldap server.
         try:
@@ -24,10 +22,8 @@ class Modeler:
             logger.debug('LDAP bind success.')
         except ldap.INVALID_CREDENTIALS:
             logger.error('LDAP bind failed: incorrect bind dn or password.')
-            sys.exit()
         except Exception, e:
             logger.error('LDAP bind failed: %s.' % str(e))
-            sys.exit()
 
         self.conns = conns
         self.conns['conn_vmail'] = self.conn
