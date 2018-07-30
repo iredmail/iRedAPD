@@ -14,6 +14,7 @@ iRedAPD-2.3:
               are hosted locally. Defaults to True.
 
     * Fixed issues:
+        - Not use 'utf8' as default SQL charset.
         - Do not exit iRedAPD service if ldap service is not reachable.
         - systemd service cannot start if iRedAPD needs to access some local or
           remote mount point while starting.
