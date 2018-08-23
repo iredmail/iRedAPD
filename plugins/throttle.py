@@ -260,7 +260,7 @@ def apply_throttle(conn,
 
         tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sqlquote(client_address)))
 
-        if continue_check_msg_size and _msg_size == 0:
+        if continue_check_msg_size and _msg_size >= 0:
             continue_check_msg_size = False
             t_settings['msg_size'] = {'value': _msg_size,
                                       'period': _period,
@@ -275,7 +275,7 @@ def apply_throttle(conn,
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'msg_size=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['msg_size']
 
-        if continue_check_max_msgs and _max_msgs == 0:
+        if continue_check_max_msgs and _max_msgs >= 0:
             continue_check_max_msgs = False
             t_settings['max_msgs'] = {'value': _max_msgs,
                                       'period': _period,
@@ -290,7 +290,7 @@ def apply_throttle(conn,
             tracking_sql_where.add('(tid=%d AND account=%s)' % (_id, sql_user))
             throttle_info += 'max_msgs=%(value)d/id=%(tid)d/account=%(account)s; ' % t_settings['max_msgs']
 
-        if continue_check_max_quota and _max_quota == 0:
+        if continue_check_max_quota and _max_quota >= 0:
             continue_check_max_quota = False
             t_settings['max_quota'] = {'value': _max_quota,
                                        'period': _period,
