@@ -31,26 +31,28 @@
 #
 # if email has multiple recipients:
 #
-#   *) Postfix send policy request at RCPT state for each recipient. Policy
-#      server knows the recipient address, but not `recipient_count`.
+#   *) Postfix sends policy request at RCPT state for each recipient, this
+#      means iRedAPD gets only __ONE__ recipient address in RCPT state.
 #
-#   *) Postfix send ONLY ONE policy request at END-OF-MESSAGE state. Policy
-#      server doesn't know the recipient address, but knows `recipient_count`.
+#   *) Postfix sends only __ONE__ policy request at END-OF-MESSAGE state. In
+#      this state, iRedAPD doesn't get any recipient address, but gets a number
+#      of recipient count (`recipient_count=`).
 #
-#   *) If some recipients were rejected at RCPT state, Postfix will correctly
-#      store the number of final recipients in `recipient_count`.
+#   *) If some recipients are rejected at RCPT state, Postfix will correctly
+#      store the count of final recipients in `recipient_count`.
 
 # Technical details of throttle plugin
 # -------------
 #
-# Currently you may throttle based on:
+# Currently you can throttle based on:
 #
 #   - amount of mails sent over a given period of time
 #   - accumulated mail size sent over a given period of time
 #   - size of singe message
 #
-# Eg: You can enforce that user@domain.com does not send more than 1000 mails
-# or 1GB of mail (whichever limit is hit first) in 5 minute.
+# For example, you can enforce that user `user@domain.com` is not able to send
+# more than 1000 mails and / or 1GB of mail in 5 minutes, the first reached
+# limit wins.
 #
 # Valid throttling address format:
 #
