@@ -50,7 +50,7 @@ from libs import ipaddress
 from libs.utils import is_ipv4, wildcard_ipv4, get_policy_addresses_from_email
 import settings
 
-SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
+SMTP_PROTOCOL_STATE = ['RCPT']
 REQUIRE_AMAVISD_DB = True
 
 if settings.backend == 'ldap':
