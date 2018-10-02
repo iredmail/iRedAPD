@@ -4,6 +4,12 @@ import traceback
 import re
 import time
 import socket
+import subprocess
+import smtplib
+
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
 
 from sqlalchemy import create_engine
 
@@ -578,3 +584,90 @@ def get_required_db_conns():
     return {'conn_vmail': conn_vmail,
             'conn_amavisd': conn_amavisd,
             'conn_iredapd': conn_iredapd}
+
+
+def sendmail_with_cmd(from_address, recipients, message_text):
+    """Send email with `sendmail` command (defined in CMD_SENDMAIL).
+
+    :param recipients: a list/set/tuple of recipient email addresses, or a
+                       string of a single mail address.
+    :param message_text: encoded mail message.
+    :param from_address: the From: address used while sending email.
+    """
+    if isinstance(recipients, (list, tuple, set)):
+        recipients = ','.join(recipients)
+
+    cmd = [settings.CMD_SENDMAIL, '-f', from_address, recipients]
+
+    try:
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        p.stdin.write(message_text)
+        p.stdin.close()
+        p.wait()
+
+        return (True, )
+    except Exception, e:
+        return (False, repr(e))
+
+
+def sendmail(subject, mail_body, from_address=None, recipients=None):
+    """Send email through smtp or with command `sendmail`.
+
+    :param recipients: a list/set/tuple of recipient email addresses.
+    :param message_text: encoded mail message.
+    :param from_address: the From: address used while sending email.
+    """
+    server = settings.NOTIFICATION_SMTP_SERVER
+    port = settings.NOTIFICATION_SMTP_PORT
+    user = settings.NOTIFICATION_SMTP_USER
+    password = settings.NOTIFICATION_SMTP_PASSWORD
+    starttls = settings.NOTIFICATION_SMTP_STARTTLS
+    debug_level = settings.NOTIFICATION_SMTP_DEBUG_LEVEL
+
+    if not from_address:
+        from_address = user
+
+    if not recipients:
+        recipients = settings.NOTIFICATION_RECIPIENTS
+
+    #
+    # Generate mail message
+    #
+    msg = MIMEMultipart('alternative')
+
+    _smtp_sender = settings.NOTIFICATION_SMTP_USER
+    _smtp_sender_name = settings.NOTIFICATION_SENDER_NAME
+    if _smtp_sender_name:
+        msg['From'] = '%s <%s>' % (Header(_smtp_sender_name, 'utf-8'), _smtp_sender)
+    else:
+        msg['From'] = _smtp_sender
+
+    msg['To'] = ','.join(recipients)
+    msg['Subject'] = Header(subject, 'utf-8')
+    msg_body_plain = MIMEText(mail_body, 'plain', 'utf-8')
+    msg.attach(msg_body_plain)
+
+    # Get full email as a string.
+    message_text = msg.as_string()
+
+    if server and port and user and password:
+        # Send email through standard smtp protocol
+        try:
+            s = smtplib.SMTP(server, port)
+            s.set_debuglevel(debug_level)
+
+            if starttls:
+                s.ehlo()
+                s.starttls()
+                s.ehlo()
+
+            s.login(user, password)
+            s.sendmail(from_address, recipients, message_text)
+            s.quit()
+            return (True, )
+        except Exception, e:
+            return (False, repr(e))
+    else:
+        return sendmail_with_cmd(from_address=from_address,
+                                 recipients=recipients,
+                                 message_text=message_text)

@@ -222,3 +222,24 @@ THROTTLE_BYPASS_LOCAL_RECIPIENT = True
 # Don't apply any throttling if both sender/recipient are hosted locally AND
 # under same domain.
 THROTTLE_BYPASS_SAME_DOMAIN = True
+
+# ----------------
+# Send mail
+#
+# Path to command `sendmail`. e.g. `/usr/sbin/sendmail`.
+# Leave it empty to let system detect the path.
+CMD_SENDMAIL = '/usr/sbin/sendmail'
+
+# Recipients of notification email
+NOTIFICATION_RECIPIENTS = ['root']
+
+# SMTP server address, port, username, password used to send notification mail.
+NOTIFICATION_SMTP_SERVER = 'localhost'
+NOTIFICATION_SMTP_PORT = 587
+NOTIFICATION_SMTP_STARTTLS = True
+NOTIFICATION_SMTP_USER = 'no-reply@localhost.localdomain'
+NOTIFICATION_SMTP_PASSWORD = ''
+NOTIFICATION_SMTP_DEBUG_LEVEL = 0
+
+# The short description or full name of this smtp user. e.g. 'No Reply'
+NOTIFICATION_SENDER_NAME = 'No Reply'

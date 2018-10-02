@@ -161,9 +161,7 @@ import time
 from libs.logger import logger
 from web import sqlquote
 import settings
-from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4, wildcard_ipv4, is_trusted_client, get_policy_addresses_from_email
-from libs.utils import is_valid_amavisd_address, pretty_left_seconds
+from libs import SMTP_ACTIONS, utils
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import get_alias_target_domain
@@ -190,18 +188,18 @@ def apply_throttle(conn,
     possible_addrs = [client_address, '@ip']
 
     if user:
-        possible_addrs += get_policy_addresses_from_email(mail=user)
+        possible_addrs += utils.get_policy_addresses_from_email(mail=user)
 
         (_username, _domain) = user.split('@', 1)
         alias_target_sender_domain = get_alias_target_domain(alias_domain=_domain, conn=conn_vmail)
         if alias_target_sender_domain:
             _mail = _username + '@' + alias_target_sender_domain
-            possible_addrs += get_policy_addresses_from_email(mail=_mail)
+            possible_addrs += utils.get_policy_addresses_from_email(mail=_mail)
 
     sql_user = sqlquote(user)
 
-    if is_ipv4(client_address):
-        possible_addrs += wildcard_ipv4(client_address)
+    if utils.is_ipv4(client_address):
+        possible_addrs += utils.wildcard_ipv4(client_address)
 
     if is_sender_throttling:
         throttle_type = 'sender'
@@ -316,7 +314,7 @@ def apply_throttle(conn,
     # Update track_key.
     for (_, v) in t_settings.items():
         t_account = v['account']
-        addr_type = is_valid_amavisd_address(t_account)
+        addr_type = utils.is_valid_amavisd_address(t_account)
 
         if addr_type in ['ip', 'catchall_ip']:
             # Track based on IP address
@@ -404,6 +402,19 @@ def apply_throttle(conn,
                     max_msgs_cur_msgs,
                     throttle_info))
 
+                # Construct and send notification email
+                try:
+                    _subject = 'Throttle quota exceeded: %s, max_mssages=%d' % (user, max_msgs)
+                    _body = '- User: ' + user + '\n'
+                    _body += '- Throttle type: ' + throttle_kind + '\n'
+                    _body += '- Client IP address: ' + client_address + '\n'
+                    _body += '- Limit of max messages: %d\n' % max_msgs
+                    _body += '- Throttle setting(s): ' + throttle_info + '\n'
+
+                    utils.sendmail(subject=_subject, mail_body=_body)
+                except Exception, e:
+                    logger.error('Error while sending notification email: %s' % repr(e))
+
                 return SMTP_ACTIONS['reject_quota_exceeded']
             else:
                 # Show the time tracking record is about to expire
@@ -416,7 +427,7 @@ def apply_throttle(conn,
                     max_msgs_cur_msgs,
                     max_msgs,
                     _period,
-                    pretty_left_seconds(_left_seconds)))
+                    utils.pretty_left_seconds(_left_seconds)))
 
     elif protocol_state == 'END-OF-MESSAGE':
         # Check `msg_size`
@@ -436,6 +447,19 @@ def apply_throttle(conn,
                     size,
                     throttle_info))
 
+                # Construct and send notification email
+                try:
+                    _subject = 'Throttle quota exceeded: %s, mssage_size=%d bytes' % (user, size)
+                    _body = '- User: ' + user + '\n'
+                    _body += '- Throttle type: ' + throttle_kind + '\n'
+                    _body += '- Client IP address: ' + client_address + '\n'
+                    _body += '- Limit of single message size: %d bytes\n' % msg_size
+                    _body += '- Throttle setting(s): ' + throttle_info + '\n'
+
+                    utils.sendmail(subject=_subject, mail_body=_body)
+                except Exception, e:
+                    logger.error('Error while sending notification email: %s' % repr(e))
+
                 return SMTP_ACTIONS['reject_quota_exceeded']
             else:
                 # Show the time tracking record is about to expire
@@ -448,7 +472,7 @@ def apply_throttle(conn,
                     size,
                     msg_size,
                     _period,
-                    pretty_left_seconds(_left_seconds)))
+                    utils.pretty_left_seconds(_left_seconds)))
 
         # Check `max_quota`
         if 'max_quota' in t_settings:
@@ -473,6 +497,19 @@ def apply_throttle(conn,
                     _cur_quota,
                     throttle_info))
 
+                # Construct and send notification email
+                try:
+                    _subject = 'Throttle quota exceeded: %s, max_quota=%d bytes' % (user, max_quota)
+                    _body = '- User: ' + user + '\n'
+                    _body += '- Throttle type: ' + throttle_kind + '\n'
+                    _body += '- Client IP address: ' + client_address + '\n'
+                    _body += '- Limit of max message quota: %d bytes\n' % max_quota
+                    _body += '- Throttle setting(s): ' + throttle_info + '\n'
+
+                    utils.sendmail(subject=_subject, mail_body=_body)
+                except Exception, e:
+                    logger.error('Error while sending notification email: %s' % repr(e))
+
                 return SMTP_ACTIONS['reject_quota_exceeded']
             else:
                 # Show the time tracking record is about to expire
@@ -485,7 +522,7 @@ def apply_throttle(conn,
                     _cur_quota,
                     max_quota,
                     _period,
-                    pretty_left_seconds(_left_seconds)))
+                    utils.pretty_left_seconds(_left_seconds)))
 
         # Update tracking record.
         #
@@ -585,7 +622,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     if settings.THROTTLE_BYPASS_MYNETWORKS:
-        if is_trusted_client(client_address):
+        if utils.is_trusted_client(client_address):
             return SMTP_ACTIONS['default']
 
     # If no smtp auth (sasl_username=<empty>), and not sent from trusted
@@ -596,7 +633,7 @@ def restriction(**kwargs):
         is_external_sender = False
     else:
         if not settings.THROTTLE_BYPASS_MYNETWORKS:
-            if is_trusted_client(client_address):
+            if utils.is_trusted_client(client_address):
                 logger.debug('Client is sending from trusted network without SMTP AUTH, consider this sender as an internal sender.')
                 is_external_sender = False
 
