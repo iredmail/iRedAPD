@@ -38,7 +38,10 @@ CREATE TABLE throttle_tracking (
 
     -- Track initial and last tracking time
     init_time   BIGINT NOT NULL DEFAULT 0, -- The time we initial the throttling.
-    last_time   BIGINT NOT NULL DEFAULT 0 -- The time we last track the throttling.
+    last_time   BIGINT NOT NULL DEFAULT 0, -- The time we last track the throttling.
+    -- the last time we sent notification email to postmaster when user
+    -- exceeded throttle setting
+    last_notify_time   BIGINT NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_tid_account ON throttle_tracking (tid, account);

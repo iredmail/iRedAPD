@@ -6,6 +6,7 @@ iRedAPD-2.3:
         + plugins/reject_sender_login_mismatch.py:
             + Able to bypass wildcard address 'user@*'.
         + plugins/throttle.py:
+            + Send notification email to admins when someone exceeded quota.
             + New parameter THROTTLE_BYPASS_SAME_DOMAIN: if set to True,
               do not apply recipient throttling if both sender and recipient
               are in same domain. Defaults to True.

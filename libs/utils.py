@@ -272,7 +272,8 @@ def get_db_conn(db):
                                        int(settings.__dict__[db + '_db_port']),
                                        settings.__dict__[db + '_db_name'])
 
-        uri += '?charset=utf8'
+        if settings.backend == 'mysql':
+            uri += '?charset=utf8'
 
         conn = create_engine(uri,
                              pool_size=settings.SQL_CONNECTION_POOL_SIZE,

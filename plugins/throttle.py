@@ -174,6 +174,62 @@ SMTP_PROTOCOL_STATE = ['RCPT', 'END-OF-MESSAGE']
 REQUIRE_IREDAPD_DB = True
 
 
+def __sendmail(conn,
+               user,
+               client_address,
+               throttle_tracking_id,
+               throttle_name,
+               throttle_value,
+               throttle_kind,
+               throttle_info,
+               throttle_value_unit=None):
+    """Construct and send notification email."""
+    # conn: SQL connection cursor
+    # user: user email address
+    # client_address: client IP address
+    # throttle_tracking_id: value of sql column `throttle_tracking.id`
+    # throttle_name: name of throttle settings: msg_size, max_quota, max_msgs
+    # throttle_value: value throttle setting
+    # throttle_kind: one of throttle kinds: inbound, outbound
+    # throttle_info: detailed throttle setting
+    # throttle_value_unit: unit of throttle setting. e.g 'bytes' for max_quota
+    #                      and msg_size.
+    if not throttle_value_unit:
+        throttle_value_unit = ''
+
+    try:
+        _subject = 'Throttle quota exceeded: %s, %s=%d %s' % (user, throttle_name, throttle_value, throttle_value_unit)
+        _body = '- User: ' + user + '\n'
+        _body += '- Client IP address: ' + client_address + '\n'
+        _body += '- Throttle type: ' + throttle_kind + '\n'
+        _body += '- Throttle setting: ' + throttle_name + '\n'
+        _body += '- Limit: %d %s\n' % (throttle_value, throttle_value_unit)
+        _body += '- Detailed setting: ' + throttle_info + '\n'
+
+        utils.sendmail(subject=_subject, mail_body=_body)
+        logger.info('Sent notification email to admin(s) to report quota exceed: user=%s, %s=%d.' % (user, throttle_name, throttle_value))
+
+        if throttle_tracking_id:
+            _now = int(time.time())
+
+            # Update last_notify_time.
+            _sql = """UPDATE throttle_tracking
+                         SET last_notify_time=%d
+                       WHERE id=%d;
+                       """ % (_now, throttle_tracking_id)
+
+            try:
+                conn.execute(_sql)
+                logger.debug('Updated last notify time.')
+            except Exception, e:
+                logger.error('Error while updating last notify time of quota exceed: %s.' % (repr(e)))
+
+        return (True, )
+    except Exception, e:
+        logger.error('Error while sending notification email: %s' % repr(e))
+        return (False, repr(e))
+
+
 # Apply throttle setting and return smtp action.
 def apply_throttle(conn,
                    conn_vmail,
@@ -266,6 +322,7 @@ def apply_throttle(conn,
                                       'period': _period,
                                       'tid': _id,
                                       'account': _account,
+                                      'tracking_id': None,
                                       'track_key': [],
                                       'expired': False,
                                       'cur_msgs': 0,
@@ -281,6 +338,7 @@ def apply_throttle(conn,
                                       'period': _period,
                                       'tid': _id,
                                       'account': _account,
+                                      'tracking_id': None,
                                       'track_key': [],
                                       'expired': False,
                                       'cur_msgs': 0,
@@ -296,6 +354,7 @@ def apply_throttle(conn,
                                        'period': _period,
                                        'tid': _id,
                                        'account': _account,
+                                       'tracking_id': None,
                                        'track_key': [],
                                        'expired': False,
                                        'cur_msgs': 0,
@@ -328,7 +387,7 @@ def apply_throttle(conn,
 
     # Get throttle tracking data.
     # Construct SQL query WHERE statement
-    sql = """SELECT id, tid, account, cur_msgs, cur_quota, init_time, last_time
+    sql = """SELECT id, tid, account, cur_msgs, cur_quota, init_time, last_time, last_notify_time
                FROM throttle_tracking
               WHERE %s
               """ % ' OR '.join(tracking_sql_where)
@@ -343,7 +402,7 @@ def apply_throttle(conn,
     tracking_ids = {}
 
     for rcd in tracking_records:
-        (_id, _tid, _account, _cur_msgs, _cur_quota, _init_time, _last_time) = rcd
+        (_id, _tid, _account, _cur_msgs, _cur_quota, _init_time, _last_time, _last_notify_time) = rcd
 
         tracking_ids[(_tid, _account)] = _id
 
@@ -354,10 +413,12 @@ def apply_throttle(conn,
         t_setting_account = t_setting_ids[_tid]
         for t_name in t_setting_keys.get((_tid, t_setting_account)):
             if t_name in t_settings:
+                t_settings[t_name]['tracking_id'] = _id
                 t_settings[t_name]['cur_msgs'] = _cur_msgs
                 t_settings[t_name]['cur_quota'] = _cur_quota
                 t_settings[t_name]['init_time'] = _init_time
                 t_settings[t_name]['last_time'] = _last_time
+                t_settings[t_name]['last_notify_time'] = _last_notify_time
 
     logger.debug('Tracking IDs: %s' % str(tracking_ids))
 
@@ -386,9 +447,11 @@ def apply_throttle(conn,
         if 'max_msgs' in t_settings:
             max_msgs = t_settings['max_msgs']['value']
 
+            _tracking_id = t_settings['max_msgs']['tracking_id']
             _period = int(t_settings['max_msgs'].get('period', 0))
             _init_time = int(t_settings['max_msgs'].get('init_time', 0))
             _last_time = int(t_settings['max_msgs'].get('last_time', 0))
+            _last_notify_time = int(t_settings['max_msgs'].get('last_notify_time', 0))
 
             # Get the real cur_msgs (if mail contains multiple recipients, we
             # need to count them all)
@@ -402,18 +465,18 @@ def apply_throttle(conn,
                     max_msgs_cur_msgs,
                     throttle_info))
 
-                # Construct and send notification email
-                try:
-                    _subject = 'Throttle quota exceeded: %s, max_mssages=%d' % (user, max_msgs)
-                    _body = '- User: ' + user + '\n'
-                    _body += '- Throttle type: ' + throttle_kind + '\n'
-                    _body += '- Client IP address: ' + client_address + '\n'
-                    _body += '- Limit of max messages: %d\n' % max_msgs
-                    _body += '- Throttle setting(s): ' + throttle_info + '\n'
-
-                    utils.sendmail(subject=_subject, mail_body=_body)
-                except Exception, e:
-                    logger.error('Error while sending notification email: %s' % repr(e))
+                # Send notification email if matches any of:
+                # 1: first exceed
+                # 2: last notify time is not between _init_time and (_init_time + _period)
+                if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
+                    __sendmail(conn=conn,
+                               user=user,
+                               client_address=client_address,
+                               throttle_tracking_id=_tracking_id,
+                               throttle_name='max_msgs',
+                               throttle_value=max_msgs,
+                               throttle_kind=throttle_kind,
+                               throttle_info=throttle_info)
 
                 return SMTP_ACTIONS['reject_quota_exceeded']
             else:
@@ -437,6 +500,7 @@ def apply_throttle(conn,
             _period = int(t_settings['msg_size'].get('period', 0))
             _init_time = int(t_settings['msg_size'].get('init_time', 0))
             _last_time = int(t_settings['msg_size'].get('last_time', 0))
+            _last_notify_time = int(t_settings['msg_size'].get('last_notify_time', 0))
 
             # Check message size
             if size > msg_size > 0:
@@ -446,6 +510,16 @@ def apply_throttle(conn,
                     throttle_type,
                     size,
                     throttle_info))
+
+                if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
+                    __sendmail(conn=conn,
+                               user=user,
+                               client_address=client_address,
+                               throttle_name='msg_size',
+                               throttle_value=msg_size,
+                               throttle_kind=throttle_kind,
+                               throttle_info=throttle_info,
+                               throttle_value_unit='bytes')
 
                 # Construct and send notification email
                 try:
@@ -497,18 +571,15 @@ def apply_throttle(conn,
                     _cur_quota,
                     throttle_info))
 
-                # Construct and send notification email
-                try:
-                    _subject = 'Throttle quota exceeded: %s, max_quota=%d bytes' % (user, max_quota)
-                    _body = '- User: ' + user + '\n'
-                    _body += '- Throttle type: ' + throttle_kind + '\n'
-                    _body += '- Client IP address: ' + client_address + '\n'
-                    _body += '- Limit of max message quota: %d bytes\n' % max_quota
-                    _body += '- Throttle setting(s): ' + throttle_info + '\n'
-
-                    utils.sendmail(subject=_subject, mail_body=_body)
-                except Exception, e:
-                    logger.error('Error while sending notification email: %s' % repr(e))
+                if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
+                    __sendmail(conn=conn,
+                               user=user,
+                               client_address=client_address,
+                               throttle_name='max_quota',
+                               throttle_value=max_quota,
+                               throttle_kind=throttle_kind,
+                               throttle_info=throttle_info,
+                               throttle_value_unit='bytes')
 
                 return SMTP_ACTIONS['reject_quota_exceeded']
             else:
@@ -539,7 +610,7 @@ def apply_throttle(conn,
                     # Update existing tracking records
                     tracking_id = tracking_ids[(tid, k)]
 
-                    if not (tracking_id in sql_updates):
+                    if tracking_id not in sql_updates:
                         sql_updates[tracking_id] = []
 
                     _sql = []

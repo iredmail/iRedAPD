@@ -228,7 +228,7 @@ remove_parameter()
     unset var
 }
 
-# Copy config file
+# Detect config file
 if [ -f ${IREDAPD_CONF_PY} ]; then
     echo "* Found iRedAPD config file: ${IREDAPD_CONF_PY}"
 elif [ -f ${IREDAPD_CONF_INI} ]; then
@@ -354,6 +354,8 @@ EOF
 SOURCE /tmp/iredapd.mysql;
 SOURCE /tmp/greylisting_whitelist_domains.sql;
 EOF
+
+        rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
     fi
 
     #
@@ -406,6 +408,22 @@ EOF
         ${mysql_conn} <<EOF
 SOURCE /tmp/iredapd.mysql;
 SOURCE /tmp/wblist_rdns.sql;
+EOF
+
+        rm -f /tmp/wblist_rdns.sql &>/dev/null
+    fi
+
+    #
+    # iRedAPD-2.3: new column `throttle_tracking.last_notify_time`
+    #
+    (${mysql_conn} <<EOF
+DESC throttle_tracking;
+EOF
+) | grep 'last_notify_time' &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${mysql_conn} <<EOF
+ALTER TABLE throttle_tracking ADD COLUMN last_notify_time INT(10) UNSIGNED NOT NULL DEFAULT 0;
 EOF
     fi
 
@@ -485,6 +503,14 @@ EOF
 
     if [ X"$?" != X'0' ]; then
         ${psql_conn} -c "CREATE INDEX idx_greylisting_tracking_client_address_passed ON greylisting_tracking (client_address, passed);"
+    fi
+
+    #
+    # iRedAPD-2.3: new column `throttle_tracking.last_notify_time`
+    #
+    ${psql_conn} -c "\d+ throttle_tracking" | grep 'last_notify_time' &>/dev/null
+    if [ X"$?" != X'0' ]; then
+        ${psql_conn} -c "ALTER TABLE throttle_tracking ADD COLUMN last_notify_time BIGINT NOT NULL DEFAULT 0;"
     fi
 fi
 

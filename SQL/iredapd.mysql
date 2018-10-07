@@ -62,6 +62,9 @@ CREATE TABLE IF NOT EXISTS throttle_tracking (
     -- Track initial and last tracking time
     init_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we initial the throttling.
     last_time   INT(10) UNSIGNED        NOT NULL DEFAULT 0, -- The time we last track the throttling.
+    -- the last time we sent notification email to postmaster when user
+    -- exceeded throttle setting
+    last_notify_time   INT(10) UNSIGNED NOT NULL DEFAULT 0,
 
     PRIMARY KEY (id),
     FOREIGN KEY (tid) REFERENCES throttle (id),
