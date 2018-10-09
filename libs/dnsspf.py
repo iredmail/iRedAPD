@@ -145,10 +145,22 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
         elif tag.startswith('redirect='):
             d = tag.split('=', 1)[-1]
             included_domains.add(d)
-        elif tag.startswith('ip4:') \
-                or tag.startswith('+ip4:') \
-                or tag.startswith('ip6:') \
-                or tag.startswith('+ip6:'):
+        elif tag.startswith('ip4:') or tag.startswith('+ip4:'):
+            if '.0/' in v:
+                try:
+                    ipaddress.ip_network(unicode(v))
+                    ips.add(v)
+                except:
+                    logger.debug("%s is invalid ip address or network." % tag)
+            elif '/' in v:
+                v = v.split('/', 1)[0]
+                try:
+                    ipaddress.ip_address(unicode(v))
+                    ips.add(v)
+                except:
+                    logger.debug("%s is invalid ip address or network." % tag)
+
+        elif tag.startswith('ip6:') or tag.startswith('+ip6:'):
             # Some sysadmin uses invalid syntaxes like 'ipv:*', we'd better not
             # store them.
             try:

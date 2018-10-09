@@ -15,6 +15,8 @@ iRedAPD-2.3:
               are hosted locally. Defaults to True.
 
     * Fixed issues:
+        - Doesn't recognize IP address like 'xx.xx.xx.xx/yy' while querying
+          SPF DNS record.
         - plugin/throttle.py: explict unlimited setting doesn't work.
         - Not use 'utf8' as default SQL charset.
         - Do not exit iRedAPD service if ldap service is not reachable.
