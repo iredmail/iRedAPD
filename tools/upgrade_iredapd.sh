@@ -593,6 +593,7 @@ export USE_SYSTEMD='NO'
 if which systemctl &>/dev/null; then
     export USE_SYSTEMD='YES'
     export SYSTEMD_SERVICE_DIR='/lib/systemd/system'
+    export SYSTEMD_SERVICE_DIR2='/etc/systemd/system'
     export SYSTEMD_SERVICE_USER_DIR='/etc/systemd/system/multi-user.target.wants/'
 fi
 
@@ -612,8 +613,12 @@ if [ -f "${DIR_RC_SCRIPTS}/iredapd" ]; then
     chmod 0755 ${DIR_RC_SCRIPTS}/iredapd
 else
     if [ X"${USE_SYSTEMD}" == X'YES' ]; then
-        echo "* Create symbol link: ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service -> ${SYSTEMD_SERVICE_DIR}/iredapd.service."
-        rm -f ${SYSTEMD_SERVICE_DIR}/iredapd.service ${SYSTEMD_SERVICE_USER_DIR}/iredapd.service &>/dev/null
+        echo "* Remove existing systemd service files."
+        rm -f ${SYSTEMD_SERVICE_DIR}/iredapd.service &>/dev/null
+        rm -f ${SYSTEMD_SERVICE_DIR2}/iredapd.service &>/dev/null
+        rm -f ${SYSTEMD_SERVICE_USER_DIR}/iredapd.service &>/dev/null
+
+        echo "* Copy systemd service file: ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service -> ${SYSTEMD_SERVICE_DIR}/iredapd.service."
         cp -f ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service ${SYSTEMD_SERVICE_DIR}/iredapd.service
         chmod -R 0640 ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service
         systemctl daemon-reload &>/dev/null
