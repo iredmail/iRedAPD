@@ -620,7 +620,7 @@ else
 
         echo "* Copy systemd service file: ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service -> ${SYSTEMD_SERVICE_DIR}/iredapd.service."
         cp -f ${IREDAPD_ROOT_DIR}/rc_scripts/iredapd.service ${SYSTEMD_SERVICE_DIR}/iredapd.service
-        chmod -R 0640 ${SYSTEMD_SERVICE_DIR}/iredapd.service
+        chmod -R 0644 ${SYSTEMD_SERVICE_DIR}/iredapd.service
         systemctl daemon-reload &>/dev/null
         systemctl enable iredapd.service >/dev/null
     fi
