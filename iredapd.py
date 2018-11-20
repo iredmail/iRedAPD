@@ -77,8 +77,7 @@ class PolicyChannel(asynchat.async_chat):
 
                 if k in SMTP_SESSION_ATTRIBUTES:
                     # Convert to lower cases.
-                    if k in ['sender', 'recipient', 'sasl_username',
-                             'reverse_client_name']:
+                    if k in ['sender', 'recipient', 'sasl_username', 'reverse_client_name']:
                         v = v.lower()
                         self.smtp_session_data[k] = v
 

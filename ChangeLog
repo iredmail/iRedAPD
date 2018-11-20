@@ -1,10 +1,10 @@
 iRedAPD-2.3:
     * Improvements:
-        + Set `CHECK_SPF_IF_LOGIN_MISMATCH = True` by default. If sender
-          address is configured as forged, check DNS SPF record of sender
-          domain and bypass if client is listed in SPF record.
         + plugins/reject_sender_login_mismatch.py:
             + Able to bypass wildcard address 'user@*'.
+            + Set `CHECK_SPF_IF_LOGIN_MISMATCH = True` by default. If sender
+              address is considerred as forged, check DNS SPF record of sender
+              domain and bypass if client is listed in SPF record.
         + plugins/throttle.py:
             + Send notification email to admins when someone exceeded quota.
             + New parameter THROTTLE_BYPASS_SAME_DOMAIN: if set to True,
