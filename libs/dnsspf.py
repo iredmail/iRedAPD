@@ -160,7 +160,11 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
                 except:
                     logger.debug("%s is invalid ip address or network." % tag)
             else:
-                ips.add(v)
+                try:
+                    ipaddress.ip_address(unicode(v))
+                    ips.add(v)
+                except:
+                    logger.debug("%s is invalid ip address." % tag)
 
         elif tag.startswith('ip6:') or tag.startswith('+ip6:'):
             # Some sysadmin uses invalid syntaxes like 'ipv:*', we'd better not
