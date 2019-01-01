@@ -1,3 +1,9 @@
+iRedAPD-2.4:
+    * Fixed issues:
+        - tools/spf_to_greylist_whitelists.py: not correctly return valid IP
+          address.
+          Thanks Kacper Guzik <kacper.guzik _at_ zenbox _dot_ pl> for the report.
+
 iRedAPD-2.3:
     * Improvements:
         + plugins/reject_sender_login_mismatch.py:
