@@ -34,7 +34,7 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
     @ip_object -- object of IP address type (get by ipaddress.ip_address())
     """
 
-    whitelist_records = []
+    whitelists = []
 
     for tbl in ['greylisting_whitelist_domain_spf', 'greylisting_whitelists']:
         # query whitelists based on recipient
@@ -45,43 +45,46 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
         logger.debug('[SQL] Query greylisting whitelists from `%s`: \n%s' % (tbl, sql))
         qr = conn.execute(sql)
         records = qr.fetchall()
-        whitelist_records += records
+        logger.debug('[SQL] Result: %s' % repr(records))
 
         # check whitelisted senders
-        whitelists = [str(v).lower() for (_, v, _) in records]
-        wl = set(senders) & set(whitelists)
-        if wl:
-            logger.info('[%s] Client is whitelisted for greylisting service: %s' % (client_address, ', '.join(wl)))
+        _wls = [str(v).lower() for (_, v, _) in records]
+        whitelists += _wls
+
+        if client_address in _wls:
+            logger.info('[%s] Client address is explictly whitelisted for greylisting service.' % (client_address))
+            return True
+
+        _wl_senders = set(senders) & set(_wls)
+        if _wl_senders:
+            logger.info('[%s] Sender address is explictly whitelisted for greylisting service: %s' % (client_address, ', '.join(_wl_senders)))
             return True
         else:
-            logger.debug('[%s] No whitelist found.' % (client_address))
+            logger.debug('[%s] Not explictly whitelisted.' % (client_address))
 
     # check whitelisted cidr
     _cidrs = []
+
     # Check IPv4.
     if ip_object.version == 4:
         # if `ip=a.b.c.d`, ip prefix = `a.b.`
         _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
 
         # Make sure _cidr is IPv4 network and in 'same' IP range.
-        _cidrs = [(_id, _cidr, _comment)
-                  for (_id, _cidr, _comment) in whitelist_records
-                  if (_cidr.startswith(_cidr_prefix) and '.0/' in _cidr)]
+        _cidrs = [_cidr for _cidr in whitelists if (_cidr.startswith(_cidr_prefix) and '.0/' in _cidr)]
     elif ip_object.version == 6:
-        _cidrs = [(_id, _cidr, _comment)
-                  for (_id, _cidr, _comment) in whitelist_records
-                  if (':' in _cidr and '/' in _cidr)]
+        _cidrs = [_cidr for _cidr in whitelists if (':' in _cidr and '/' in _cidr)]
 
     if _cidrs:
         _net = ()
-        for (_id, _cidr, _comment) in _cidrs:
+        for _cidr in _cidrs:
             try:
                 _net = ipaddress.ip_network(unicode(_cidr))
                 if ip_object in _net:
-                    logger.info('[%s] Client is whitelisted for greylisting service: (id=%d, sender=%s, comment="%s")' % (client_address, _id, _cidr, _comment))
+                    logger.info('[%s] Client network is whitelisted for greylisting service: cidr=%s' % (client_address, _cidr))
                     return True
             except Exception, e:
-                logger.debug('Not an valid IP network: (id=%d, sender=%s, comment="%s"), error: %s' % (_id, _cidr, _comment, str(e)))
+                logger.debug('Not an valid IP network: sender=%s, error=%s' % (_cidr, repr(e)))
 
     logger.debug('No whitelist found.')
     return False
