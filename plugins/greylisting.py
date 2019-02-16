@@ -22,7 +22,11 @@ import settings
 action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
 
 
-def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
+def _is_whitelisted(conn,
+                    senders,
+                    recipients,
+                    client_address,
+                    ip_object):
     """Check greylisting whitelists stored in table
     `greylisting_whitelists` and `greylisting_whitelist_domain_spf`,
     returns True if is whitelisted, otherwise returns False.
@@ -38,34 +42,34 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
 
     for tbl in ['greylisting_whitelist_domain_spf', 'greylisting_whitelists']:
         # query whitelists based on recipient
-        sql = """SELECT id, sender, comment
+        sql = """SELECT sender
                    FROM %s
                   WHERE account IN %s""" % (tbl, sqlquote(recipients))
 
         logger.debug('[SQL] Query greylisting whitelists from `%s`: \n%s' % (tbl, sql))
         qr = conn.execute(sql)
         records = qr.fetchall()
-        logger.debug('[SQL] Result: %s' % repr(records))
 
-        # check whitelisted senders
-        _wls = [str(v).lower() for (_, v, _) in records]
-        whitelists += _wls
+        _wls = [str(v[0]).lower() for v in records]
 
+        # check whether sender (email/domain/ip) is explicitly whitelisted
         if client_address in _wls:
-            logger.info('[%s] Client address is explictly whitelisted for greylisting service.' % (client_address))
+            logger.info('[%s] Client IP is explictly whitelisted for greylisting service.' % (client_address))
             return True
 
         _wl_senders = set(senders) & set(_wls)
         if _wl_senders:
             logger.info('[%s] Sender address is explictly whitelisted for greylisting service: %s' % (client_address, ', '.join(_wl_senders)))
             return True
-        else:
-            logger.debug('[%s] Not explictly whitelisted.' % (client_address))
 
-    # check whitelisted cidr
+        whitelists += _wls
+
+    logger.debug('[%s] Client is not explictly whitelisted.' % (client_address))
+
+    # IPv4/v6 CIDR networks
     _cidrs = []
 
-    # Check IPv4.
+    # Gather CIDR networks
     if ip_object.version == 4:
         # if `ip=a.b.c.d`, ip prefix = `a.b.`
         _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
@@ -73,7 +77,10 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
         # Make sure _cidr is IPv4 network and in 'same' IP range.
         _cidrs = [_cidr for _cidr in whitelists if (_cidr.startswith(_cidr_prefix) and '.0/' in _cidr)]
     elif ip_object.version == 6:
-        _cidrs = [_cidr for _cidr in whitelists if (':' in _cidr and '/' in _cidr)]
+        # if `ip=a:b:c:...`, ip prefix = `a:b:`
+        _cidr_prefix = ':'.join(client_address.split(':', 2)[:2]) + ':'
+
+        _cidrs = [_cidr for _cidr in whitelists if _cidr.startswith(_cidr_prefix) and ':/' in _cidr]
 
     if _cidrs:
         _net = ()
@@ -81,7 +88,7 @@ def _is_whitelisted(conn, senders, recipients, client_address, ip_object):
             try:
                 _net = ipaddress.ip_network(unicode(_cidr))
                 if ip_object in _net:
-                    logger.info('[%s] Client network is whitelisted for greylisting service: cidr=%s' % (client_address, _cidr))
+                    logger.info('[%s] Client network is whitelisted: cidr=%s' % (client_address, _cidr))
                     return True
             except Exception, e:
                 logger.debug('Not an valid IP network: sender=%s, error=%s' % (_cidr, repr(e)))

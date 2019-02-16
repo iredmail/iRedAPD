@@ -1,3 +1,10 @@
+iRedAPD-2.5:
+    * Improvements:
+        + plugins/greylisting.py: slight performance improvement while
+          checking whitelists:
+            - don't query unused SQL columns
+            - reduce matched IPv6 CIDR networks
+
 iRedAPD-2.4:
     * Fixed issues:
         - tools/spf_to_greylist_whitelists.py: not correctly return valid IP
