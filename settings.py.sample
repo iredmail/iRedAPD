@@ -58,3 +58,7 @@ iredapd_db_port = '3306'
 iredapd_db_name = 'iredapd'
 iredapd_db_user = 'iredapd'
 iredapd_db_password = 'password'
+
+# Required by SRS (Sender Rewrite Scheme)
+srs_secret = ''
+srs_domain = ''

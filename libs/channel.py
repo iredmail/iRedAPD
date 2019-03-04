@@ -1,0 +1,263 @@
+import time
+import asynchat
+import asyncore
+import socket
+
+import settings
+from libs import SMTP_ACTIONS, TCP_REPLIES, SMTP_SESSION_ATTRIBUTES
+from libs import utils, srslib
+from libs.logger import logger
+
+if settings.backend == 'ldap':
+    from libs.ldaplib.modeler import Modeler
+    from libs.ldaplib.conn_utils import is_local_domain
+
+elif settings.backend in ['mysql', 'pgsql']:
+    from libs.sql.modeler import Modeler
+    from libs.sql import is_local_domain
+
+
+srs = srslib.SRS(secret=settings.srs_secret)
+
+
+class DaemonSocket(asyncore.dispatcher):
+    """Create socket daemon"""
+    def __init__(self, local_addr, db_conns, policy_channel):
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.set_reuse_addr()
+        self.bind(local_addr)
+        self.listen(5)
+        ip, port = local_addr
+        self.db_conns = db_conns
+        self.policy_channel = policy_channel
+
+        # Load enabled plugins.
+        qr = utils.load_enabled_plugins()
+        self.loaded_plugins = qr['loaded_plugins']
+
+        # Get list of LDAP query attributes
+        self.sender_search_attrlist = qr['sender_search_attrlist']
+        self.recipient_search_attrlist = qr['recipient_search_attrlist']
+        del qr
+
+    def handle_accept(self):
+        sock, remote_addr = self.accept()
+        #logger.debug("Connect from %s, port %s." % remote_addr)
+
+        if self.policy_channel == 'policy':
+            try:
+                Policy(sock,
+                       db_conns=self.db_conns,
+                       plugins=self.loaded_plugins,
+                       sender_search_attrlist=self.sender_search_attrlist,
+                       recipient_search_attrlist=self.recipient_search_attrlist)
+            except Exception, e:
+                logger.error('Error while applying policy channel: %s' % repr(e))
+        elif self.policy_channel == 'srs_sender':
+            try:
+                SRS(sock, db_conns=self.db_conns, rewrite_address_type='sender')
+            except Exception, e:
+                logger.error('Error while applying srs (sender): %s' % repr(e))
+
+        elif self.policy_channel == 'srs_recipient':
+            try:
+                SRS(sock, db_conns=self.db_conns, rewrite_address_type='recipient')
+            except Exception, e:
+                logger.error('Error while applying srs (recipient): %s' % repr(e))
+
+
+class Policy(asynchat.async_chat):
+    """Process each smtp policy request"""
+    def __init__(self,
+                 sock,
+                 db_conns=None,
+                 plugins=None,
+                 sender_search_attrlist=None,
+                 recipient_search_attrlist=None):
+        asynchat.async_chat.__init__(self, sock)
+        self.buffer = []
+        self.smtp_session_data = {}
+        self.set_terminator('\n')
+
+        self.db_conns = db_conns
+        self.plugins = plugins
+        self.sender_search_attrlist = sender_search_attrlist
+        self.recipient_search_attrlist = recipient_search_attrlist
+
+    def push(self, msg):
+        try:
+            asynchat.async_chat.push(self, msg + '\n')
+        except Exception, e:
+            logger.error('Error while pushing message: %s. Msg: %s' % (repr(e), repr(msg)))
+
+    def collect_incoming_data(self, data):
+        self.buffer.append(data)
+
+    def found_terminator(self):
+        if self.buffer:
+            # Format received data
+            line = self.buffer.pop()
+            if '=' in line:
+                logger.debug("[policy] " + line)
+                (k, v) = line.split('=', 1)
+
+                if k in SMTP_SESSION_ATTRIBUTES:
+                    # Convert to lower cases.
+                    if k in ['sender', 'recipient', 'sasl_username', 'reverse_client_name']:
+                        v = v.lower()
+                        self.smtp_session_data[k] = v
+
+                    # Verify email address format
+                    if k in ['sender', 'recipient', 'sasl_username']:
+                        if v:
+                            if not utils.is_email(v):
+                                # Don't waste time on invalid email addresses.
+                                action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (k, v)
+                                self.push('action=' + action + '\n')
+
+                        self.smtp_session_data[k] = v
+
+                        # Add sender_domain, recipient_domain, sasl_username_domain
+                        self.smtp_session_data[k + '_domain'] = v.split('@', 1)[-1]
+                    else:
+                        self.smtp_session_data[k] = v
+                else:
+                    logger.debug('[policy] Drop invalid smtp session input: %s' % line)
+
+        elif self.smtp_session_data:
+            # Track how long a request takes
+            _start_time = time.time()
+
+            # Gather data at RCPT , data will be used at END-OF-MESSAGE
+            _instance = self.smtp_session_data['instance']
+            _protocol_state = self.smtp_session_data['protocol_state']
+
+            if _protocol_state == 'RCPT':
+                if _instance not in settings.GLOBAL_SESSION_TRACKING:
+                    # add timestamp of tracked smtp instance, so that we can
+                    # remove them after instance finished.
+                    _tracking_expired = int(time.time())
+
+                    # @processed: count of processed smtp sessions
+                    settings.GLOBAL_SESSION_TRACKING[_instance] = {'processed': 0,
+                                                                   'expired': _tracking_expired}
+                else:
+                    settings.GLOBAL_SESSION_TRACKING[_instance]['processed'] += 1
+
+            # Call modeler and apply plugins
+            try:
+                modeler = Modeler(conns=self.db_conns)
+                result = modeler.handle_data(
+                    smtp_session_data=self.smtp_session_data,
+                    plugins=self.plugins,
+                    sender_search_attrlist=self.sender_search_attrlist,
+                    recipient_search_attrlist=self.recipient_search_attrlist,
+                )
+                if result:
+                    action = result
+                else:
+                    logger.error('No result returned by modeler, fallback to default action: %s' % str(action))
+                    action = SMTP_ACTIONS['default']
+            except Exception, e:
+                action = SMTP_ACTIONS['default']
+                logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
+
+            # Remove tracking data when:
+            #
+            #   - if session was rejected/discard/whitelisted ('OK') during
+            #     RCPT state (it never reach END-OF-MESSAGE state)
+            #   - if session is in last state (END-OF-MESSAGE)
+            if (not action.startswith('DUNNO')) or (_protocol_state == 'END-OF-MESSAGE'):
+                if _instance in settings.GLOBAL_SESSION_TRACKING:
+                    settings.GLOBAL_SESSION_TRACKING.pop(_instance)
+                else:
+                    # Remove expired/ghost data.
+                    for i in settings.GLOBAL_SESSION_TRACKING:
+                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 60 < int(time.time()):
+                            settings.GLOBAL_SESSION_TRACKING
+
+            self.push('action=' + action + '\n')
+            logger.debug('Session ended.')
+
+            _end_time = time.time()
+            utils.log_policy_request(smtp_session_data=self.smtp_session_data,
+                                     action=action,
+                                     start_time=_start_time,
+                                     end_time=_end_time)
+        else:
+            action = SMTP_ACTIONS['default']
+            logger.debug("replying: " + action)
+            self.push('action=' + action + '\n')
+            logger.debug("Session ended")
+
+
+class SRS(asynchat.async_chat):
+    """Process request from Postfix tcp table."""
+    def __init__(self,
+                 sock,
+                 db_conns=None,
+                 rewrite_address_type='sender'):
+        asynchat.async_chat.__init__(self, sock)
+        self.buffer = []
+        self.set_terminator('\n')
+        self.db_conns = db_conns
+        self.log_prefix = '[srs][' + rewrite_address_type + '] '
+
+    def push(self, msg):
+        try:
+            asynchat.async_chat.push(self, msg + '\n')
+        except Exception, e:
+            logger.error('Error while pushing message: %s. Msg: %s' % (repr(e), repr(msg)))
+
+    def collect_incoming_data(self, data):
+        self.buffer.append(data)
+
+    def found_terminator(self):
+        if self.buffer:
+            line = self.buffer.pop()
+            logger.debug(self.log_prefix + 'input: ' + line)
+
+            if line == '''get ""''':
+                logger.debug(self.log_prefix + 'get null sender.')
+                self.push(TCP_REPLIES['default'])
+            elif line.startswith('get '):
+                addr = line.split(' ', 1)[-1]
+                logger.debug(self.log_prefix + 'address: ' + addr)
+                if utils.is_email(addr):
+                    domain = addr.split('@', 1)[-1]
+                    logger.debug(self.log_prefix + 'domain: ' + domain)
+
+                    _is_local_domain = False
+                    try:
+                        conn_vmail = self.db_conns['conn_vmail']
+                        _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
+                    except Exception, e:
+                        logger.error(self.log_prefix + 'Error while verifying domain: ' + repr(e))
+
+                    if _is_local_domain:
+                        # Don't rewrite local domain
+                        logger.debug(self.log_prefix + 'found local domain, not rewrited.')
+                        self.push(TCP_REPLIES['default'])
+                    else:
+                        # Rewrite
+                        if self.rewrite_address_type == 'sender':
+                            new_addr = srs.forward(addr, settings.srs_domain)
+                            logger.debug(self.log_prefix + 'rewrited: {} -> {}'.format(addr, new_addr))
+                            self.push(TCP_REPLIES['found'] + new_addr)
+                        else:
+                            if srslib.is_srs_address(addr, strict=True):
+                                new_addr = srs.reverse(addr)
+                                logger.debug(self.log_prefix + 'rewrited: {} -> {}'.format(addr, new_addr))
+                                self.push(TCP_REPLIES['found'] + new_addr)
+                            else:
+                                logger.debug(self.log_prefix + 'not an valid SRS address, not reverse/rewrite.')
+                                self.push(TCP_REPLIES['default'])
+                else:
+                    logger.debug(self.log_prefix + 'not an valid email address, skip.')
+                    self.push(TCP_REPLIES['default'])
+            else:
+                logger.debug(self.log_prefix + 'get unexpected line: ' + line)
+                self.push(TCP_REPLIES['default'])
+
+            logger.debug(self.log_prefix + 'tcp_table request ended.')

@@ -20,6 +20,10 @@ from libs import regxes
 from libs import ipaddress
 import settings
 
+if settings.backend == 'ldap':
+    import ldap
+
+
 # Priority used in SQL table `amavisd.mailaddr` and iRedAPD plugin `throttle`.
 # 0 is the lowest priority.
 # Reference: http://www.amavis.org/README.lookups.txt
@@ -572,12 +576,24 @@ def load_enabled_plugins(plugins=None):
 
 def get_required_db_conns():
     """Establish SQL database connections."""
-    if settings.backend in ['mysql', 'pgsql']:
-        conn_vmail = get_db_conn('vmail')
+    if settings.backend == 'ldap':
+        try:
+            conn_vmail = ldap.ldapobject.ReconnectLDAPObject(settings.ldap_uri)
+            logger.debug('LDAP connection initialied success.')
+        except Exception, e:
+            logger.error('LDAP initialized failed: %s.' % str(e))
+
+        # Bind to ldap server.
+        try:
+            conn_vmail.bind_s(settings.ldap_binddn, settings.ldap_bindpw)
+            logger.debug('LDAP bind success.')
+        except ldap.INVALID_CREDENTIALS:
+            logger.error('LDAP bind failed: incorrect bind dn or password.')
+        except Exception, e:
+            logger.error('LDAP bind failed: %s.' % str(e))
     else:
-        # we don't have ldap connection pool, a connection object will be
-        # created in libs/ldaplib/modeler.py.
-        conn_vmail = None
+        # settings.backend in ['mysql', 'pgsql']
+        conn_vmail = get_db_conn('vmail')
 
     conn_amavisd = get_db_conn('amavisd')
     conn_iredapd = get_db_conn('iredapd')

@@ -83,28 +83,28 @@ def is_local_domain(conn,
         return True
 
     try:
-        filter_domains = '(&(objectClass=mailDomain)(accountStatus=active)'
+        _filter = '(&(objectClass=mailDomain)(accountStatus=active)'
 
         if include_alias_domain:
-            filter_domains += '(|(domainName=%s)(domainAliasName=%s))' % (domain, domain)
+            _filter += '(|(domainName=%s)(domainAliasName=%s))' % (domain, domain)
         else:
-            filter_domains += '(domainName=%s)' % domain
+            _filter += '(domainName=%s)' % domain
 
         if not include_backupmx:
-            filter_domains += '(!(domainBackupMX=yes))'
+            _filter += '(!(domainBackupMX=yes))'
 
-        filter_domains += ')'
+        _filter += ')'
 
         qr = conn.search_s(settings.ldap_basedn,
                            1,   # 1 == ldap.SCOPE_ONELEVEL
-                           filter_domains,
+                           _filter,
                            ['dn'])
         if qr:
             return True
     except ldap.NO_SUCH_OBJECT:
         return False
     except Exception, e:
-        logger.error('<!> Error while querying alias domain: %s' % str(e))
+        logger.error('<!> Error while querying local domain: %s' % str(e))
         return False
 
 

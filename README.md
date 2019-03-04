@@ -3,7 +3,10 @@
 * iRedAPD is a simple [Postfix policy server](http://www.postfix.org/SMTPD_POLICY_README.html), written in Python, with plugin support.
 * iRedAPD listens on port `7777`, runs as a low-privileged user (`iredapd` by default).
 * The latest iRedAPD works with OpenLDAP, MySQL/MariaDB and PostgreSQL backends.
-* License: GPL v3 (except file libs/daemon.py, BSD style as mentioned in this file by file author).
+* License: GPL v3. Few files are in different licenses, shipped in iRedAPD for
+  easier setup, but not license change.
+    * file `libs/daemon.py` is BSD license.
+    * file `libs/srslib.py` is Apache License, Version 2.0.
 * Author: Zhang Huangbin <zhb _at_ iredmail.org>.
 
 **NOTES**:
@@ -13,6 +16,8 @@
   this tutorial if you already have iRedMail running. Standalone installation
   guide is `INSTALL.md`.
 * You can manage iRedAPD with iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
+
+iRedAPD is released under GPL v3.
 
 # Manage iRedAPD with command line tools
 

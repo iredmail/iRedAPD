@@ -1,6 +1,5 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
-import ldap
 from libs.logger import logger
 import settings
 from libs import SMTP_ACTIONS, utils
@@ -9,31 +8,8 @@ from libs.ldaplib import conn_utils
 
 class Modeler:
     def __init__(self, conns):
-        # Initialize ldap connection.
-        try:
-            self.conn = ldap.initialize(settings.ldap_uri)
-            logger.debug('LDAP connection initialied success.')
-        except Exception, e:
-            logger.error('LDAP initialized failed: %s.' % str(e))
-
-        # Bind to ldap server.
-        try:
-            self.conn.bind_s(settings.ldap_binddn, settings.ldap_bindpw)
-            logger.debug('LDAP bind success.')
-        except ldap.INVALID_CREDENTIALS:
-            logger.error('LDAP bind failed: incorrect bind dn or password.')
-        except Exception, e:
-            logger.error('LDAP bind failed: %s.' % str(e))
-
         self.conns = conns
-        self.conns['conn_vmail'] = self.conn
-
-    def __del__(self):
-        try:
-            self.conn.unbind_s()
-            logger.debug('Close LDAP connection.')
-        except Exception, e:
-            logger.error('Error while closing connection: %s' % str(e))
+        self.conn = self.conns['conn_vmail']
 
     def handle_data(self,
                     smtp_session_data,
