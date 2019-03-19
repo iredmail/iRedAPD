@@ -75,7 +75,7 @@ def _is_whitelisted(conn,
         _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
 
         # Make sure _cidr is IPv4 network and in 'same' IP range.
-        _cidrs = [_cidr for _cidr in whitelists if (_cidr.startswith(_cidr_prefix) and '.0/' in _cidr)]
+        _cidrs = [_cidr for _cidr in whitelists if (_cidr.startswith(_cidr_prefix) and '/' in _cidr)]
     elif ip_object.version == 6:
         # if `ip=a:b:c:...`, ip prefix = `a:b:`
         _cidr_prefix = ':'.join(client_address.split(':', 2)[:2]) + ':'
