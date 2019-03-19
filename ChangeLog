@@ -1,9 +1,17 @@
 iRedAPD-2.5:
+    * New feature:
+        + SRS (Sender Rewrite Scheme) support.
+
     * Improvements:
         + plugins/greylisting.py: slight performance improvement while
           checking whitelists:
             - don't query unused SQL columns
             - reduce matched IPv6 CIDR networks
+
+    * Fixed issues:
+        - tools/spf_to_greylist_whitelists.py: not treat x.x.x.Y/x as a valid
+          IPv4 CIDR range (Y != 0).
+          Thanks Tomaž Brišnik for the report.
 
 iRedAPD-2.4:
     * Fixed issues:

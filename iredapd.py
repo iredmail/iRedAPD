@@ -41,18 +41,24 @@ def main():
                 "%s:%d." % (__version__, settings.backend,
                             settings.listen_address, int(settings.listen_port)))
     local_addr = (settings.listen_address, int(settings.listen_port))
-    DaemonSocket(local_addr, db_conns, 'policy')
+    DaemonSocket(local_addr=local_addr,
+                 db_conns=db_conns,
+                 policy_channel='policy')
 
-    if (settings.srs_secret and settings.srs_domain):
+    if (settings.srs_secrets and settings.srs_domain):
         logger.info("Starting SRS sender rewriting channel, listening on "
-                    "%s:%d." % (settings.listen_address, 7778))
-        local_addr = (settings.listen_address, 7778)
-        DaemonSocket(local_addr, db_conns, 'srs_sender')
+                    "%s:%d." % (settings.listen_address, settings.srs_forward_port))
+        local_addr = (settings.listen_address, settings.srs_forward_port)
+        DaemonSocket(local_addr=local_addr,
+                     db_conns=db_conns,
+                     policy_channel='srs_sender')
 
         logger.info("Starting SRS recipient rewriting channel, listening on "
-                    "%s:%d." % (settings.listen_address, 7779))
-        local_addr = (settings.listen_address, 7779)
-        DaemonSocket(local_addr, db_conns, 'srs_recipient')
+                    "%s:%d." % (settings.listen_address, settings.srs_reverse_port))
+        local_addr = (settings.listen_address, settings.srs_reverse_port)
+        DaemonSocket(local_addr=local_addr,
+                     db_conns=db_conns,
+                     policy_channel='srs_recipient')
     else:
         logger.error('No SRS secret string and domain in settings.py, SRS is not loaded.')
 

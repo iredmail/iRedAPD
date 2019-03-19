@@ -6,6 +6,8 @@ from libs.default_settings import *
 # Listen address and port.
 listen_address = '127.0.0.1'
 listen_port = 7777
+srs_forward_port = 7778
+srs_reverse_port = 7779
 
 # Run as a low privileged user.
 run_as_user = 'iredapd'
@@ -59,6 +61,13 @@ iredapd_db_name = 'iredapd'
 iredapd_db_user = 'iredapd'
 iredapd_db_password = 'password'
 
-# Required by SRS (Sender Rewrite Scheme)
-srs_secret = ''
+# SRS (Sender Rewrite Scheme)
+#
+# The secret key(s) used to generate cryptographic hash.
+# The first secret key is used for generating and verifying hash in SRS
+# address. If you have old keys, you can append them also for verification only.
+srs_secrets = []
+
+# Rewrite address will be 'xxx@<srs_domain>', so please make sure `srs_domain`
+# is a resolvable mail domain name pointed to your server.
 srs_domain = ''

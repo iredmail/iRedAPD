@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 
 from libs.logger import logger
 from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
-from libs import SMTP_ACTIONS, TCP_REPLIES
+from libs import SMTP_ACTIONS
 from libs import regxes
 from libs import ipaddress
 import settings
@@ -88,20 +88,6 @@ def apply_plugin(plugin, **kwargs):
     except:
         err_msg = get_traceback()
         logger.error('<!> Error while applying plugin "%s": %s' % (plugin_name, err_msg))
-
-    return action
-
-
-def apply_tcp_table_plugin(plugin, **kwargs):
-    action = TCP_REPLIES['default']
-
-    logger.debug('--> Apply tcp table plugin: %s' % plugin.__name__)
-    try:
-        action = plugin.restriction(**kwargs)
-        logger.debug('<-- Result: %s' % action)
-    except:
-        err_msg = get_traceback()
-        logger.error('<!> Error while applying plugin "%s": %s' % (plugin.__name__, err_msg))
 
     return action
 
