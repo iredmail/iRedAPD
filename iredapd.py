@@ -60,7 +60,7 @@ def main():
                      db_conns=db_conns,
                      policy_channel='srs_recipient')
     else:
-        logger.error('No SRS secret string and domain in settings.py, SRS is not loaded.')
+        logger.info('No SRS domain and/or secret strings in settings.py, not loaded.')
 
     # Rotate log file.
     if settings.LOGROTATE_TYPE == 'size':
