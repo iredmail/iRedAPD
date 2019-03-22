@@ -47,15 +47,15 @@ def main():
 
     if (settings.srs_secrets and settings.srs_domain):
         logger.info("Starting SRS sender rewriting channel, listening on "
-                    "%s:%d." % (settings.listen_address, settings.srs_forward_port))
-        local_addr = (settings.listen_address, settings.srs_forward_port)
+                    "%s:%d." % (settings.listen_address, int(settings.srs_forward_port)))
+        local_addr = (settings.listen_address, int(settings.srs_forward_port))
         DaemonSocket(local_addr=local_addr,
                      db_conns=db_conns,
                      policy_channel='srs_sender')
 
         logger.info("Starting SRS recipient rewriting channel, listening on "
-                    "%s:%d." % (settings.listen_address, settings.srs_reverse_port))
-        local_addr = (settings.listen_address, settings.srs_reverse_port)
+                    "%s:%d." % (settings.listen_address, int(settings.srs_reverse_port)))
+        local_addr = (settings.listen_address, int(settings.srs_reverse_port))
         DaemonSocket(local_addr=local_addr,
                      db_conns=db_conns,
                      policy_channel='srs_recipient')

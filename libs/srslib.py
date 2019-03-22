@@ -19,7 +19,6 @@
 
 #from typing import List, Tuple, Union
 import base64
-import datetime
 import hashlib
 import hmac
 import re
@@ -115,7 +114,7 @@ class SRS(object):
     """
     self._TS_REVERSE = {}
     for i in range(len(self._TS_ALPHABET)):
-        self._TS_ALPHABET[i] = i
+        self._TS_REVERSE[self._TS_ALPHABET[i]] = i
 
     self._secret = self._to_bytes(secret)
     self._prev_secrets = [self._to_bytes(s) for s in prev_secrets]

@@ -5,7 +5,11 @@ from libs.default_settings import *
 
 # Listen address and port.
 listen_address = '127.0.0.1'
+# Port for normal Postfix policy requests.
 listen_port = 7777
+# Ports for SRS (Sender Rewriting Scheme).
+# - `srs_forward_port` is used in Postfix parameter `sender_canonical_maps`.
+# - `recipient_canonical_maps` is used in Postfix parameter `recipient_canonical_maps`.
 srs_forward_port = 7778
 srs_reverse_port = 7779
 
@@ -61,13 +65,13 @@ iredapd_db_name = 'iredapd'
 iredapd_db_user = 'iredapd'
 iredapd_db_password = 'password'
 
-# SRS (Sender Rewrite Scheme)
+# SRS (Sender Rewriting Scheme)
 #
+# Rewrite address will be 'xxx@<srs_domain>', so please make sure `srs_domain`
+# is a resolvable mail domain name and pointed to your server.
+srs_domain = ''
+
 # The secret key(s) used to generate cryptographic hash.
-# The first secret key is used for generating and verifying hash in SRS
+# The first secret key is used for generating AND verifying hash in SRS
 # address. If you have old keys, you can append them also for verification only.
 srs_secrets = []
-
-# Rewrite address will be 'xxx@<srs_domain>', so please make sure `srs_domain`
-# is a resolvable mail domain name pointed to your server.
-srs_domain = ''
