@@ -232,11 +232,11 @@ class SRS(asynchat.async_chat):
                     _splited_parts = domain.split('.')
                     _length = len(_splited_parts)
                     for i in range(_length):
-                        _part1 = _splited_parts[_length-1:]
+                        _part1 = '.'.join(_splited_parts[_length-1:])
                         _part2 = '.' + _part1
                         possible_domains.update([_part1, _part2])
 
-                    if (possible_domains & settings.srs_exclude_domains):
+                    if (possible_domains & srs_exclude_domains):
                         logger.debug(self.log_prefix + 'Domain is in srs_exclude_domains, bypassed.')
                         self.push(TCP_REPLIES['not_exist'] + 'Domain is in srs_exclude_domains, bypassed.')
                     else:
