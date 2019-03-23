@@ -232,7 +232,7 @@ class SRS(asynchat.async_chat):
                     _splited_parts = domain.split('.')
                     _length = len(_splited_parts)
                     for i in range(_length):
-                        _part1 = '.'.join(_splited_parts[_length-1:])
+                        _part1 = '.'.join(_splited_parts[-i:])
                         _part2 = '.' + _part1
                         possible_domains.update([_part1, _part2])
 
