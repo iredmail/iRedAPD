@@ -18,6 +18,7 @@ elif settings.backend in ['mysql', 'pgsql']:
 
 
 fqdn = socket.getfqdn()
+srs_exclude_domains = set(settings.srs_exclude_domains)
 
 
 class DaemonSocket(asyncore.dispatcher):
@@ -227,49 +228,61 @@ class SRS(asynchat.async_chat):
                 if utils.is_email(addr):
                     domain = addr.split('@', 1)[-1]
 
-                    if self.rewrite_address_type == 'sender':
-                        # if domain is hostname, virtual mail domain or srs_domain, do not rewrite.
-                        if domain == settings.srs_domain:
-                            logger.debug(self.log_prefix + 'Domain is srs_domain, bypassed.')
-                            self.push(TCP_REPLIES['not_exist'] + 'Domain is srs_domain, bypassed.')
-                        elif domain == fqdn:
-                            logger.debug(self.log_prefix + 'Domain is server hostname, bypassed.')
-                            self.push(TCP_REPLIES['not_exist'] + 'Domain is server hostname, bypassed.')
-                        else:
-                            _is_local_domain = False
-                            try:
-                                conn_vmail = self.db_conns['conn_vmail']
-                                _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
-                            except Exception, e:
-                                logger.error(self.log_prefix + 'Error while verifying domain: {0}'.format(e))
+                    possible_domains = set()
+                    _splited_parts = domain.split('.')
+                    _length = len(_splited_parts)
+                    for i in range(_length):
+                        _part1 = _splited_parts[_length-1:]
+                        _part2 = '.' + _part1
+                        possible_domains.update([_part1, _part2])
 
-                            if _is_local_domain:
-                                logger.debug(self.log_prefix + 'Domain is a local (virtual) mail domain, bypassed.')
-                                self.push(TCP_REPLIES['not_exist'] + 'Domain is a local (virtual) mail domain, bypassed.')
-                            else:
-                                try:
-                                    new_addr = str(self.srslib_instance.forward(addr, settings.srs_domain))
-                                except Exception, e:
-                                    logger.error(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
-
-                                logger.info(self.log_prefix + 'rewrited: {0} -> {1}'.format(addr, new_addr))
-                                self.push(TCP_REPLIES['success'] + new_addr)
+                    if (possible_domains & settings.srs_exclude_domains):
+                        logger.debug(self.log_prefix + 'Domain is in srs_exclude_domains, bypassed.')
+                        self.push(TCP_REPLIES['not_exist'] + 'Domain is in srs_exclude_domains, bypassed.')
                     else:
-                        # if address is not srs address, do not reverse.
-                        _is_srs_address = self.srslib_instance.is_srs_address(addr, strict=True)
+                        if self.rewrite_address_type == 'sender':
+                            # if domain is hostname, virtual mail domain or srs_domain, do not rewrite.
+                            if domain == settings.srs_domain:
+                                logger.debug(self.log_prefix + 'Domain is srs_domain, bypassed.')
+                                self.push(TCP_REPLIES['not_exist'] + 'Domain is srs_domain, bypassed.')
+                            elif domain == fqdn:
+                                logger.debug(self.log_prefix + 'Domain is server hostname, bypassed.')
+                                self.push(TCP_REPLIES['not_exist'] + 'Domain is server hostname, bypassed.')
+                            else:
+                                _is_local_domain = False
+                                try:
+                                    conn_vmail = self.db_conns['conn_vmail']
+                                    _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
+                                except Exception, e:
+                                    logger.error(self.log_prefix + 'Error while verifying domain: {0}'.format(e))
 
-                        if _is_srs_address:
-                            # Reverse
-                            try:
-                                new_addr = str(self.srslib_instance.reverse(addr))
-                            except Exception, e:
-                                logger.error(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
+                                if _is_local_domain:
+                                    logger.debug(self.log_prefix + 'Domain is a local (virtual) mail domain, bypassed.')
+                                    self.push(TCP_REPLIES['not_exist'] + 'Domain is a local (virtual) mail domain, bypassed.')
+                                else:
+                                    try:
+                                        new_addr = str(self.srslib_instance.forward(addr, settings.srs_domain))
+                                    except Exception, e:
+                                        logger.error(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
 
-                            logger.info(self.log_prefix + 'reversed: {0} -> {1}'.format(addr, new_addr))
-                            self.push(TCP_REPLIES['success'] + new_addr)
+                                    logger.info(self.log_prefix + 'rewrited: {0} -> {1}'.format(addr, new_addr))
+                                    self.push(TCP_REPLIES['success'] + new_addr)
                         else:
-                            logger.debug(self.log_prefix + 'Not a valid SRS address, bypassed.')
-                            self.push(TCP_REPLIES['not_exist'] + 'Not a valid SRS address, bypassed.')
+                            # if address is not srs address, do not reverse.
+                            _is_srs_address = self.srslib_instance.is_srs_address(addr, strict=True)
+
+                            if _is_srs_address:
+                                # Reverse
+                                try:
+                                    new_addr = str(self.srslib_instance.reverse(addr))
+                                except Exception, e:
+                                    logger.error(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
+
+                                logger.info(self.log_prefix + 'reversed: {0} -> {1}'.format(addr, new_addr))
+                                self.push(TCP_REPLIES['success'] + new_addr)
+                            else:
+                                logger.debug(self.log_prefix + 'Not a valid SRS address, bypassed.')
+                                self.push(TCP_REPLIES['not_exist'] + 'Not a valid SRS address, bypassed.')
                 else:
                     logger.debug(self.log_prefix + 'Not a valid email address, bypassed.')
                     self.push(TCP_REPLIES['not_exist'] + 'Not a valid email address, bypassed.')
