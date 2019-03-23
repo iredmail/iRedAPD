@@ -126,10 +126,18 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy python-webpy
 
 * Open /opt/iredapd/settings.py and set correct values:
 
+    iRedAPD will listen on 3 network ports by default:
+
+    - `7777`: for general smtp access policy, greylisting, throttling, etc.
+    - `7778`: for (SRS) sender address rewriting
+    - `7779`: for (SRS) recipient address rewriting
+
 ```python
 # Listen address and port.
 listen_address = "127.0.0.1"
 listen_port = "7777"
+srs_forward_port = "7778"
+srs_reverse_port = "7779"
 
 # Daemon user.
 run_as_user = "iredapd"
@@ -211,19 +219,27 @@ pkg_scripts=“ ... iredapd”
 # /etc/rc.d/iredapd restart
 ```
 
-# Configure Postfix to use iRedAPD as policy server
+# Configure Postfix to use iRedAPD as SMTP policy server
+
+Note: Restarting Postfix service is required after you modified its config
+files (`/etc/postfix/main.cf` and `/etc/postfix/master.cf`).
+
+## Use iRedAPD as SMTP policy server
 
 In Postfix config file `/etc/postfix/main.cf` (it’s
-`/usr/local/etc/postfix/main.cf` on FreeBSD), modify parameter
-`smtpd_recipient_restrictions =` to enable iRedAPD like below:
+`/usr/local/etc/postfix/main.cf` on FreeBSD), update parameter
+`smtpd_recipient_restrictions` and `smtpd_end_of_data_restrictions` like below
+to enable iRedAPD:
 
 ```
 smtpd_recipient_restrictions =
     ...
-    check_policy_service inet:127.0.0.1:7777,  # <-- Insert this line before "permit_mynetworks"
+    check_policy_service inet:127.0.0.1:7777,
     permit_mynetworks,
-    permit_sasl_authenticated,
     ...
+
+smtpd_end_of_data_restrictions =
+    check_policy_service inet:127.0.0.1:7777
 ```
 
 **WARNING**:
@@ -234,26 +250,26 @@ smtpd_recipient_restrictions =
   also list them in iRedAPD config file `/opt/iredapd/settings.py`, parameter
   `MYNETWORKS =`.
 
-Restart Postfix service to enable iRedAPD.
+## Use iRedAPD as SRS (Sender Rewriting Scheme) policy server
+
+In Postfix config file `/etc/postfix/main.cf` (it’s
+`/usr/local/etc/postfix/main.cf` on FreeBSD), add 4 new parameters:
+
+```
+sender_canonical_maps = tcp:127.0.0.1:7778
+sender_canonical_classes = envelope_sender
+recipient_canonical_maps = tcp:127.0.0.1:7779
+recipient_canonical_classes= envelope_recipient,header_recipient
+```
+
+## Restart Postfix service to enable iRedAPD
 
 ```shell
-# — on Linux
-# /etc/init.d/postfix restart
+# -- on Linux and FreeBSD
+# service postfix restart
 
-# —— on FreeBSD
-# /usr/local/etc/rc.d/postfix restart
-
-# —— on OpenBSD
-# /etc/rc.d/postfix restart
-```
-
-Since iRedAPD-`1.4.4`, it works with Postfix parameter
-`smtpd_end_of_data_restrictions`. So if you need plugins which should be
-applied in smtp protocol state `END-OF-MESSAGE`, please enable iRedAPD like
-below:
-
-```
-smtpd_end_of_data_restrictions = check_policy_service inet:127.0.0.1:7777
+# -- on OpenBSD
+# rcctl restart postfix
 ```
 
 # Rotate iRedAPD log file with logrotate
@@ -261,17 +277,12 @@ smtpd_end_of_data_restrictions = check_policy_service inet:127.0.0.1:7777
 * on Linux, please add logrotate config file `/etc/logrotate.d/iredapd` to rotate iRedAPD log file:
 
 ```
-/var/log/iredapd.log {
+/var/log/iredapd/iredapd.log {
     compress
+    delaycompress
     daily
     rotate 30
     missingok
-
-    # Use bzip2 for compress.
-    compresscmd /usr/bin/bzip2
-    uncompresscmd /usr/bin/bunzip2
-    compressoptions -9
-    compressext .bz2
 
     # Used on RHEL/CentOS.
     postrotate
@@ -288,13 +299,13 @@ smtpd_end_of_data_restrictions = check_policy_service inet:127.0.0.1:7777
 * on FreeBSD, please append below line in `/etc/newsyslog.conf` to rotate iRedAPD log file:
 
 ```
-/var/log/iredapd.log    root:wheel   640  7     *    24    Z /var/run/iredapd.pid
+/var/log/iredapd/iredapd.log    root:wheel   640  7     *    24    Z /var/run/iredapd.pid
 ```
 
 * on OpenBSD, please append below line in `/etc/newsyslog.conf` to rotate iRedAPD log file:
 
 ```
-/var/log/iredapd.log    root:wheel   640  7     *    24    Z “/etc/rc.d/iredapd restart >/dev/null"
+/var/log/iredapd/iredapd.log    root:wheel   640  7     *    24    Z “/etc/rc.d/iredapd restart >/dev/null"
 ```
 
 # Troubleshooting & Debug
