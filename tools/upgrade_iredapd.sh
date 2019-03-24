@@ -353,7 +353,7 @@ if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     existing_sql_tables="$(${mysql_conn} -e "show tables")"
 
     echo "* Add new SQL tables - if there's any"
-    ${mysql_conn} -e "SOURCE ${IREDAPD_ROOT_DIR}/SQL/iredapd.mysql"
+    ${mysql_conn} -e "SOURCE /tmp/iredapd.mysql"
 
     #
     # `greylisting_whitelist_domains`
