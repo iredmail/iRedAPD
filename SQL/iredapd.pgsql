@@ -193,3 +193,9 @@ CREATE TABLE wblist_rdns (
 );
 CREATE UNIQUE INDEX idx_wblist_rdns_rdns ON wblist_rdns (rdns);
 CREATE INDEX idx_wblist_rdns_wb ON wblist_rdns (wb);
+
+CREATE TABLE srs_exclude_domains (
+    id      SERIAL PRIMARY KEY,
+    domain  VARCHAR(255) NOT NULL DEFAULT ''
+);
+CREATE UNIQUE INDEX idx_srs_exclude_domains_domain ON srs_exclude_domains (domain);

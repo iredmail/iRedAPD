@@ -93,6 +93,18 @@ else
     exit 255
 fi
 
+if [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
+    export HOSTNAME="$(hostname)"
+else
+    export HOSTNAME="$(hostname -f)"
+fi
+
+if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
+    export RANDOM_STRING='eval </dev/urandom tr -dc A-Za-z0-9 | (head -c $1 &>/dev/null || head -c 30)'
+else
+    export RANDOM_STRING='eval echo $RANDOM | md5'
+fi
+
 export CRON_FILE_ROOT="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
 
 # iRedAPD directory and config file.
@@ -338,23 +350,19 @@ psql_conn="psql -h ${iredapd_db_server} \
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     cp -f ${PWD}/../SQL/iredapd.mysql /tmp/
 
+    existing_sql_tables="$(${mysql_conn} -e "show tables")"
+
+    echo "* Add new SQL tables - if there's any"
+    ${mysql_conn} -e "SOURCE ${IREDAPD_ROOT_DIR}/SQL/iredapd.mysql"
+
     #
     # `greylisting_whitelist_domains`
     #
-    (${mysql_conn} <<EOF
-show tables;
-EOF
-) | grep 'greylisting_whitelist_domains' &>/dev/null
-
+    echo "${existing_sql_tables}" | grep '\<greylisting_whitelist_domains\>' &>/dev/null
     if [ X"$?" != X'0' ]; then
         cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
         chmod 0555 /tmp/greylisting_whitelist_domains.sql
-
-        ${mysql_conn} <<EOF
-SOURCE /tmp/iredapd.mysql;
-SOURCE /tmp/greylisting_whitelist_domains.sql;
-EOF
-
+        ${mysql_conn} -e "SOURCE /tmp/greylisting_whitelist_domains.sql"
         rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
     fi
 
@@ -380,36 +388,13 @@ EOF
     fi
 
     #
-    # `greylisting_whitelist_domain_spf`
-    #
-    (${mysql_conn} <<EOF
-show tables;
-EOF
-) | grep 'greylisting_whitelist_domain_spf' &>/dev/null
-
-    if [ X"$?" != X'0' ]; then
-        ${mysql_conn} <<EOF
-SOURCE /tmp/iredapd.mysql;
-EOF
-    fi
-
-    #
     # `wblist_rdns`
     #
-    (${mysql_conn} <<EOF
-show tables;
-EOF
-) | grep 'wblist_rdns' &>/dev/null
-
+    echo "${existing_sql_tables}" | grep '\<wblist_rdns\>' &>/dev/null
     if [ X"$?" != X'0' ]; then
         cp -f ${PWD}/../SQL/wblist_rdns.sql /tmp/
         chmod 0555 /tmp/wblist_rdns.sql
-
-        ${mysql_conn} <<EOF
-SOURCE /tmp/iredapd.mysql;
-SOURCE /tmp/wblist_rdns.sql;
-EOF
-
+        ${mysql_conn} -e "SOURCE /tmp/wblist_rdns.sql"
         rm -f /tmp/wblist_rdns.sql &>/dev/null
     fi
 
@@ -512,6 +497,22 @@ EOF
     if [ X"$?" != X'0' ]; then
         ${psql_conn} -c "ALTER TABLE throttle_tracking ADD COLUMN last_notify_time BIGINT NOT NULL DEFAULT 0;"
     fi
+
+    #
+    # `srs_exclude_domains`
+    #
+    ${psql_conn} -c "SELECT id FROM srs_exclude_domains LIMIT 1" &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        ${psql_conn} <<EOF
+CREATE TABLE srs_exclude_domains (
+    id      SERIAL PRIMARY KEY,
+    domain  VARCHAR(255) NOT NULL DEFAULT ''
+);
+CREATE UNIQUE INDEX idx_srs_exclude_domains_domain ON srs_exclude_domains (domain);
+EOF
+    fi
+
 fi
 
 #
@@ -661,6 +662,15 @@ if ! grep '^iredapd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
     add_missing_parameter 'iredapd_db_name' "${IREDAPD_DB_NAME}"
     add_missing_parameter 'iredapd_db_user' "${IREDAPD_DB_USER}"
     add_missing_parameter 'iredapd_db_password' "${IREDAPD_DB_PASSWD}"
+fi
+
+# SRS parameters
+if ! grep '^srs_' ${NEW_IREDAPD_CONF} &>/dev/null; then
+    # Add required settings.
+    add_missing_parameter 'srs_forward_port' "7778"
+    add_missing_parameter 'srs_reverse_port' "7779"
+    add_missing_parameter 'srs_domain' "${HOSTNAME}"
+    add_missing_parameter 'srs_secrets' "['$(${RANDOM_STRING})']"
 fi
 
 # replace old parameter names: sql_[XX] -> vmail_db_[XX]

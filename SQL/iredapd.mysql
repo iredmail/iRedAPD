@@ -222,3 +222,10 @@ CREATE TABLE IF NOT EXISTS `wblist_rdns` (
     UNIQUE INDEX (`rdns`),
     INDEX (`wb`)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `srs_exclude_domains` (
+    `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
+    `domain`      VARCHAR(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX (`domain`)
+) ENGINE=InnoDB;

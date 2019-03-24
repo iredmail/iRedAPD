@@ -3,6 +3,8 @@ import asynchat
 import asyncore
 import socket
 
+from web import sqlquote
+
 import settings
 from libs import SMTP_ACTIONS, TCP_REPLIES, SMTP_SESSION_ATTRIBUTES
 from libs import utils, srslib
@@ -18,7 +20,6 @@ elif settings.backend in ['mysql', 'pgsql']:
 
 
 fqdn = socket.getfqdn()
-srs_exclude_domains = set(settings.srs_exclude_domains)
 
 
 class DaemonSocket(asyncore.dispatcher):
@@ -217,6 +218,86 @@ class SRS(asynchat.async_chat):
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
+    def srs_forward(self, addr, domain):
+        reply = TCP_REPLIES['not_exist']
+
+        # if domain is hostname, virtual mail domain or srs_domain, do not rewrite.
+        if domain == settings.srs_domain:
+            reply = TCP_REPLIES['not_exist'] + 'Domain is srs_domain, bypassed.'
+            return reply
+        elif domain == fqdn:
+            reply = TCP_REPLIES['not_exist'] + 'Domain is server hostname, bypassed.'
+            return reply
+        else:
+            _is_local_domain = False
+            try:
+                conn_vmail = self.db_conns['conn_vmail']
+                _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
+            except Exception, e:
+                logger.error(self.log_prefix + 'Error while verifying domain: {0}'.format(e))
+
+            if _is_local_domain:
+                reply = TCP_REPLIES['not_exist'] + 'Domain is a local mail domain, bypassed.'
+                return reply
+            else:
+                possible_domains = []
+                _splited_parts = domain.split('.')
+                _length = len(_splited_parts)
+                for i in range(_length):
+                    _part1 = '.'.join(_splited_parts[-i:])
+                    _part2 = '.' + _part1
+                    possible_domains += [_part1, _part2]
+
+                conn_iredapd = self.db_conns['conn_iredapd']
+                sql = """SELECT id FROM srs_exclude_domains WHERE domain IN %s LIMIT 1""" % sqlquote(list(possible_domains))
+                logger.debug(self.log_prefix + '[SQL] Query srs_exclude_domains:\n{0}'.format(sql))
+
+                sql_record = None
+                try:
+                    qr = conn_iredapd.execute(sql)
+                    sql_record = qr.fetchone()
+                    logger.debug(self.log_prefix + '[SQL] Query result: \n{0}'.format(sql_record))
+                except Exception, e:
+                    logger.error(self.log_prefix + 'Error while querying SQL: {0}'.format(e))
+                    reply = TCP_REPLIES['error'] + 'Error while querying SQL: {0}'.format(e)
+                    return reply
+
+                if sql_record:
+                    reply = TCP_REPLIES['not_exist'] + 'Domain is explicitly excluded, bypassed.'
+                    return reply
+                else:
+                    try:
+                        new_addr = str(self.srslib_instance.forward(addr, settings.srs_domain))
+                        logger.info(self.log_prefix + 'rewrited: {0} -> {1}'.format(addr, new_addr))
+                        reply = TCP_REPLIES['success'] + new_addr
+                        return reply
+                    except Exception, e:
+                        logger.error(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
+                        reply = TCP_REPLIES['error'] + 'while generating forward address: {0}'.format(e)
+                        return reply
+
+        return reply
+
+    def srs_reverse(self, addr):
+        reply = TCP_REPLIES['not_exist']
+
+        # if address is not srs address, do not reverse.
+        _is_srs_address = self.srslib_instance.is_srs_address(addr, strict=True)
+
+        if _is_srs_address:
+            # Reverse
+            try:
+                new_addr = str(self.srslib_instance.reverse(addr))
+                logger.info(self.log_prefix + 'reversed: {0} -> {1}'.format(addr, new_addr))
+                reply = TCP_REPLIES['success'] + new_addr
+            except Exception, e:
+                logger.error(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
+                reply = TCP_REPLIES['error'] + 'while generating reverse address: {0}'.format(e)
+        else:
+            reply = TCP_REPLIES['not_exist'] + 'Not a valid SRS address, bypassed.'
+
+        return reply
+
     def found_terminator(self):
         if self.buffer:
             line = self.buffer.pop()
@@ -228,67 +309,17 @@ class SRS(asynchat.async_chat):
                 if utils.is_email(addr):
                     domain = addr.split('@', 1)[-1]
 
-                    possible_domains = set()
-                    _splited_parts = domain.split('.')
-                    _length = len(_splited_parts)
-                    for i in range(_length):
-                        _part1 = '.'.join(_splited_parts[-i:])
-                        _part2 = '.' + _part1
-                        possible_domains.update([_part1, _part2])
-
-                    if (possible_domains & srs_exclude_domains):
-                        logger.debug(self.log_prefix + 'Domain is in srs_exclude_domains, bypassed.')
-                        self.push(TCP_REPLIES['not_exist'] + 'Domain is in srs_exclude_domains, bypassed.')
+                    if self.rewrite_address_type == 'sender':
+                        reply = self.srs_forward(addr=addr, domain=domain)
+                        logger.debug(self.log_prefix + reply)
+                        self.push(reply)
                     else:
-                        if self.rewrite_address_type == 'sender':
-                            # if domain is hostname, virtual mail domain or srs_domain, do not rewrite.
-                            if domain == settings.srs_domain:
-                                logger.debug(self.log_prefix + 'Domain is srs_domain, bypassed.')
-                                self.push(TCP_REPLIES['not_exist'] + 'Domain is srs_domain, bypassed.')
-                            elif domain == fqdn:
-                                logger.debug(self.log_prefix + 'Domain is server hostname, bypassed.')
-                                self.push(TCP_REPLIES['not_exist'] + 'Domain is server hostname, bypassed.')
-                            else:
-                                _is_local_domain = False
-                                try:
-                                    conn_vmail = self.db_conns['conn_vmail']
-                                    _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
-                                except Exception, e:
-                                    logger.error(self.log_prefix + 'Error while verifying domain: {0}'.format(e))
-
-                                if _is_local_domain:
-                                    logger.debug(self.log_prefix + 'Domain is a local (virtual) mail domain, bypassed.')
-                                    self.push(TCP_REPLIES['not_exist'] + 'Domain is a local (virtual) mail domain, bypassed.')
-                                else:
-                                    try:
-                                        new_addr = str(self.srslib_instance.forward(addr, settings.srs_domain))
-                                    except Exception, e:
-                                        logger.error(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
-
-                                    logger.info(self.log_prefix + 'rewrited: {0} -> {1}'.format(addr, new_addr))
-                                    self.push(TCP_REPLIES['success'] + new_addr)
-                        else:
-                            # if address is not srs address, do not reverse.
-                            _is_srs_address = self.srslib_instance.is_srs_address(addr, strict=True)
-
-                            if _is_srs_address:
-                                # Reverse
-                                try:
-                                    new_addr = str(self.srslib_instance.reverse(addr))
-                                except Exception, e:
-                                    logger.error(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
-
-                                logger.info(self.log_prefix + 'reversed: {0} -> {1}'.format(addr, new_addr))
-                                self.push(TCP_REPLIES['success'] + new_addr)
-                            else:
-                                logger.debug(self.log_prefix + 'Not a valid SRS address, bypassed.')
-                                self.push(TCP_REPLIES['not_exist'] + 'Not a valid SRS address, bypassed.')
+                        reply = self.srs_reverse(addr=addr)
+                        logger.debug(self.log_prefix + reply)
+                        self.push(reply)
                 else:
                     logger.debug(self.log_prefix + 'Not a valid email address, bypassed.')
                     self.push(TCP_REPLIES['not_exist'] + 'Not a valid email address, bypassed.')
             else:
                 logger.debug(self.log_prefix + 'Unexpected input: {0}'.format(line))
                 self.push(TCP_REPLIES['not_exist'] + 'Unexpected input: {0}'.format(line))
-        #else:
-        #    logger.debug(self.log_prefix + 'Empty input.')
-        #    self.push(TCP_REPLIES['not_exist'] + 'Empty input.')
