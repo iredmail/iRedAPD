@@ -116,7 +116,10 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy python-webpy
 # chmod +x /etc/init.d/iredapd
 ```
 
-* Create a new config file by copying sample config. **WARNING**: config file contains LDAP/SQL username and password, please don't make it world readable.
+* Create a new config file by copying sample config.
+
+    __WARNING__: Config file contains SQL/LDAP username and password, please
+    don't make it world-readable.
 
 ```shell
 # cp /opt/iredapd/settings.py.sample /opt/iredapd/settings.py
@@ -124,7 +127,7 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy python-webpy
 # chmod 0400 /opt/iredapd/settings.py
 ```
 
-* Open /opt/iredapd/settings.py and set correct values:
+* Open `/opt/iredapd/settings.py` and set correct values:
 
     iRedAPD will listen on 3 network ports by default:
 
@@ -157,6 +160,9 @@ backend = "ldap"
 
 # Enabled plugins.
 plugins = ['reject_null_sender', 'amavisd_wblist', 'ldap_maillist_access_policy']
+
+srs_domain = 'my.full.hostname'
+srs_secrets = ['7d86deed2cdee17baa8cf216348efe05']
 
 # For OpenLDAP backend. Not used by MySQL and PostgreSQL backends.
 ldap_uri = “ldap://127.0.0.1:389”

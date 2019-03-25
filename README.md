@@ -1,9 +1,8 @@
 # Introduction
 
 * iRedAPD is a simple [Postfix policy server](http://www.postfix.org/SMTPD_POLICY_README.html),
-  written in Python, with plugin support.
-* iRedAPD listens on port `7777`, runs as a low-privileged user (`iredapd` by
-  default).
+  written in Python and runs as a low-privileged user (`iredapd` by default),
+  with plugin support.
 * The latest iRedAPD works with OpenLDAP, MySQL/MariaDB and PostgreSQL backends.
 * __License: GPL v3__, except few files are in different licenses, shipped in
   iRedAPD for easier setup, but not license change.
@@ -17,6 +16,10 @@
 * iRedAPD is installed and enabled in iRedMail by default, you don’t need
   this tutorial if you already have iRedMail running. For standard installation
   please check document `INSTALL.md`.
+* iRedAPD listens on 3 ports by default:
+    - `7777`: normal smtp policy service
+    - `7778`: SRS (Sender Rewriting Scheme) for sender address rewriting
+    - `7779`: SRS (Sender Rewriting Scheme) for recipient address rewriting
 * You can manage iRedAPD with iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
 
 # Manage iRedAPD with command line tools
