@@ -31,6 +31,10 @@ def query_a(domains, queried_domains=None, returned_ips=None):
                     returned_ips.add(_ip)
 
             queried_domains.add('a:' + domain)
+        except resolver.NoAnswer:
+            pass
+        except resolver.NXDOMAIN:
+            pass
         except Exception, e:
             logger.debug('[SPF]Error while querying DNS A record %s: %s' % (domain, repr(e)))
 
@@ -111,6 +115,10 @@ def query_spf(domain, queried_domains=None):
             if r.startswith('v=spf1'):
                 spf = r
                 break
+    except resolver.NoAnswer:
+        pass
+    except resolver.NXDOMAIN:
+        pass
     except Exception, e:
         logger.debug('[SPF] Error while querying DNS SPF record %s: %s' % (domain, repr(e)))
 
