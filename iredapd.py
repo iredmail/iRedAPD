@@ -62,14 +62,6 @@ def main():
     else:
         logger.info('No SRS domain and/or secret strings in settings.py, not loaded.')
 
-    # Rotate log file.
-    if settings.LOGROTATE_TYPE == 'size':
-        logger.info("Log rotation type: size (%d MB), backup copies: %d." % ((settings.LOGROTATE_SIZE / 1024 / 1024),
-                                                                             settings.LOGROTATE_COPIES))
-    elif settings.LOGROTATE_TYPE == 'time':
-        logger.info("Log rotation type: time, interval: %s, backup copies: %d." % (settings.LOGROTATE_INTERVAL,
-                                                                                   settings.LOGROTATE_COPIES))
-
     # Run this program as daemon.
     try:
         daemon.daemonize(noClose=True)

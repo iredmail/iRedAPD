@@ -1,33 +1,10 @@
-# Rotate log file based on file size or time: size, time. Default is 'time'.
-LOGROTATE_TYPE = 'time'
+# Syslog server address.
+# use '/dev/log' if it logs locally.
+SYSLOG_SERVER = '/dev/log'
+SYSLOG_PORT = 514
 
-# Save how many copies of rotated log files. Default is 12.
-LOGROTATE_COPIES = 12
-
-# Rotate when log file reaches specified file size. Default is 100MB (104857600)
-# Used when rotate type is 'size'.
-LOGROTATE_SIZE = 104857600
-
-# Rotate interval. Used when rotate type is 'time'.
-# Reference:
-# https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler
-#
-#   Value	Type of interval
-#   'S'         Seconds
-#   'M'         Minutes
-#   'H'         Hours
-#   'D'         Days
-#   'W0', 'W1', ... 'W6'    Weekday (W0 is Monday, W6 is Sunday)
-#   'midnight'	Roll over at midnight
-#
-# Format: [interval]-[type_of_internval]. Samples:
-#   - 30 minutes:       '30-M'
-#   - 1 hour:           '1-H'
-#   - 1 day:            '1-D'
-#   - every Sunday:     'W6'    # (W0 is Monday)
-#   - every midnight:   '1-midnight'
-#   - every 3 midnight: '3-midnight'
-LOGROTATE_INTERVAL = 'W6'
+# Syslog facility
+SYSLOG_FACILITY = 'local5'
 
 # Priority for third-party plugins, or override pre-defined priorities in
 # libs/__init__.py.
