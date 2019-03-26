@@ -78,10 +78,6 @@ def main():
     uid = p.pw_uid
     gid = p.pw_gid
 
-    # Set log file owner
-    os.chown(settings.log_file, uid, gid)
-    os.chmod(settings.log_file, 0o700)
-
     # Run as daemon user
     os.setgid(gid)
     os.setuid(uid)

@@ -1,0 +1,1 @@
+/var/log/iredapd/iredapd.log     root:wheel   600  7     *    24    Z    /var/run/iredapd.pid

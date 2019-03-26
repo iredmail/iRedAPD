@@ -250,13 +250,13 @@ class SRS(asynchat.async_chat):
 
                 conn_iredapd = self.db_conns['conn_iredapd']
                 sql = """SELECT id FROM srs_exclude_domains WHERE domain IN %s LIMIT 1""" % sqlquote(list(possible_domains))
-                logger.debug(self.log_prefix + '[SQL] Query srs_exclude_domains:\n{0}'.format(sql))
+                logger.debug(self.log_prefix + '[SQL] Query srs_exclude_domains: {0}'.format(sql))
 
                 sql_record = None
                 try:
                     qr = conn_iredapd.execute(sql)
                     sql_record = qr.fetchone()
-                    logger.debug(self.log_prefix + '[SQL] Query result: \n{0}'.format(sql_record))
+                    logger.debug(self.log_prefix + '[SQL] Query result: {0}'.format(sql_record))
                 except Exception, e:
                     logger.error(self.log_prefix + 'Error while querying SQL: {0}'.format(e))
                     reply = TCP_REPLIES['error'] + 'Error while querying SQL: {0}'.format(e)

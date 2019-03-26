@@ -19,10 +19,6 @@ run_as_user = 'iredapd'
 # Path to pid file.
 pid_file = '/var/run/iredapd.pid'
 
-# Path to log file.
-# Set 'log_file = /dev/null' if you don't want to keep the log.
-log_file = '/var/log/iredapd/iredapd.log'
-
 # Log level: info, debug.
 log_level = 'info'
 

@@ -14,8 +14,18 @@
 #       # cd /opt/iRedAPD-xxx/tools/
 #       # bash upgrade_iredapd.sh
 
-export SYS_ROOT_USER='root'
-export SYS_ROOT_GROUP='root'
+tmprootdir="$(dirname $0)"
+echo ${tmprootdir} | grep '^/' >/dev/null 2>&1
+if [ X"$?" == X"0" ]; then
+    export ROOTDIR="${tmprootdir}"
+else
+    export ROOTDIR="$(pwd)"
+fi
+
+export SYS_USER_ROOT='root'
+export SYS_GROUP_ROOT='root'
+export SYS_USER_SYSLOG='root'
+export SYS_GROUP_SYSLOG='root'
 
 export IREDAPD_DAEMON_USER='iredapd'
 export IREDAPD_DAEMON_GROUP='iredapd'
@@ -36,6 +46,8 @@ export MD5_BIN='md5sum'
 
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     export DIR_RC_SCRIPTS='/etc/init.d'
+    export SYSLOG_CONF_DIR='/etc/rsyslog.d'
+    export LOGROTATE_DIR='/etc/logrotate.d'
     if [ -f /etc/redhat-release ]; then
         # RHEL/CentOS
         export DISTRO='RHEL'
@@ -44,6 +56,10 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
+        # Syslog
+        export SYS_USER_SYSLOG='syslog'
+        export SYS_GROUP_SYSLOG='adm'
+
         if [ -f '/usr/share/apache2/iredadmin/settings.py' ]; then
             export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
         elif [ -f '/opt/www/iredadmin/settings.py' ]; then
@@ -53,6 +69,9 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     elif [ -f /etc/debian_version ]; then
         # Debian
         export DISTRO='DEBIAN'
+        # Syslog
+        export SYS_GROUP_SYSLOG='adm'
+
         if [ -f '/usr/share/apache2/iredadmin/settings.py' ]; then
             export IREDADMIN_CONF_PY='/usr/share/apache2/iredadmin/settings.py'
         elif [ -f '/opt/www/iredadmin/settings.py' ]; then
@@ -71,8 +90,11 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     fi
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DISTRO='FREEBSD'
-    export SYS_ROOT_GROUP='wheel'
+    export SYS_GROUP_ROOT='wheel'
+    export SYS_GROUP_SYSLOG='wheel'
     export PGSQL_SYS_USER='pgsql'
+    export SYSLOG_CONF_DIR='/usr/local/etc/syslog.d'
+    export LOGROTATE_DIR='/usr/local/etc/newsyslog.conf.d'
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
@@ -80,7 +102,8 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export MD5_BIN='md5'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
-    export SYS_ROOT_GROUP='wheel'
+    export SYS_GROUP_ROOT='wheel'
+    export SYS_GROUP_SYSLOG='wheel'
     export PGSQL_SYS_USER='_postgresql'
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
@@ -105,7 +128,7 @@ else
     export RANDOM_STRING='eval echo $RANDOM | md5'
 fi
 
-export CRON_FILE_ROOT="${CRON_SPOOL_DIR}/${SYS_ROOT_USER}"
+export CRON_FILE_ROOT="${CRON_SPOOL_DIR}/${SYS_USER_ROOT}"
 
 # iRedAPD directory and config file.
 export IREDAPD_ROOT_DIR="/opt/iredapd"
@@ -253,14 +276,13 @@ else
 fi
 
 # Check whether current directory is iRedAPD
-export PWD="$(pwd)"
-if ! echo ${PWD} | grep 'iRedAPD.*/tools' >/dev/null; then
+if ! echo ${ROOTDIR} | grep 'iRedAPD.*/tools' >/dev/null; then
     echo "<<< ERROR >>> Cannot find new version of iRedAPD in current directory. Exit."
     exit 255
 fi
 
 mkdir /tmp/iredapd/ 2>/dev/null
-cp -f ${PWD}/../SQL/*sql /tmp/iredapd
+cp -f ${ROOTDIR}/../SQL/*sql /tmp/iredapd
 chmod -R 0555 /tmp/iredapd
 
 #
@@ -273,7 +295,7 @@ if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
     export IREDAPD_DB_PASSWD="$(echo $RANDOM | ${MD5_BIN} | awk '{print $1}')"
 
     mkdir /tmp/iredapd/ 2>/dev/null
-    cp -f ${PWD}/../SQL/*sql /tmp/iredapd
+    cp -f ${ROOTDIR}/../SQL/*sql /tmp/iredapd
     chmod -R 0555 /tmp/iredapd
 
     # Check backend.
@@ -348,7 +370,7 @@ psql_conn="psql -h ${iredapd_db_server} \
                 -d ${iredapd_db_name}"
 
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
-    cp -f ${PWD}/../SQL/iredapd.mysql /tmp/
+    cp -f ${ROOTDIR}/../SQL/iredapd.mysql /tmp/
 
     existing_sql_tables="$(${mysql_conn} -e "show tables")"
 
@@ -360,7 +382,7 @@ if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     #
     echo "${existing_sql_tables}" | grep '\<greylisting_whitelist_domains\>' &>/dev/null
     if [ X"$?" != X'0' ]; then
-        cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
+        cp -f ${ROOTDIR}/../SQL/greylisting_whitelist_domains.sql /tmp/
         chmod 0555 /tmp/greylisting_whitelist_domains.sql
         ${mysql_conn} -e "SOURCE /tmp/greylisting_whitelist_domains.sql"
         rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
@@ -392,7 +414,7 @@ EOF
     #
     echo "${existing_sql_tables}" | grep '\<wblist_rdns\>' &>/dev/null
     if [ X"$?" != X'0' ]; then
-        cp -f ${PWD}/../SQL/wblist_rdns.sql /tmp/
+        cp -f ${ROOTDIR}/../SQL/wblist_rdns.sql /tmp/
         chmod 0555 /tmp/wblist_rdns.sql
         ${mysql_conn} -e "SOURCE /tmp/wblist_rdns.sql"
         rm -f /tmp/wblist_rdns.sql &>/dev/null
@@ -421,7 +443,7 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     ${psql_conn} -c "SELECT id FROM greylisting_whitelist_domains LIMIT 1" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
-        cp -f ${PWD}/../SQL/greylisting_whitelist_domains.sql /tmp/
+        cp -f ${ROOTDIR}/../SQL/greylisting_whitelist_domains.sql /tmp/
         chmod 0555 /tmp/greylisting_whitelist_domains.sql
 
         ${psql_conn} -c "
@@ -462,7 +484,7 @@ CREATE INDEX idx_greylisting_whitelist_domain_spf_comment ON greylisting_whiteli
     ${psql_conn} -c "SELECT id FROM wblist_rdns LIMIT 1" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
-        cp -f ${PWD}/../SQL/wblist_rdns.sql /tmp/
+        cp -f ${ROOTDIR}/../SQL/wblist_rdns.sql /tmp/
         chmod 0555 /tmp/wblist_rdns.sql
 
         ${psql_conn} <<EOF
@@ -542,7 +564,7 @@ fi
 # Upgrade to new version
 #
 # Copy current directory to web DocumentRoot
-dir_new_version="$(dirname ${PWD})"
+dir_new_version="$(dirname ${ROOTDIR})"
 name_new_version="$(basename ${dir_new_version})"
 NEW_IREDAPD_ROOT_DIR="/opt/${name_new_version}"
 NEW_IREDAPD_CONF="${NEW_IREDAPD_ROOT_DIR}/settings.py"
@@ -579,8 +601,8 @@ EOF
     mv ${NEW_IREDAPD_CONF}_tmp ${NEW_IREDAPD_CONF}
 fi
 
-echo "* Set correct owner and permission for ${NEW_IREDAPD_ROOT_DIR}: ${SYS_ROOT_USER}:${SYS_ROOT_GROUP}, 0500."
-chown -R ${SYS_ROOT_USER}:${SYS_ROOT_GROUP} ${NEW_IREDAPD_ROOT_DIR}
+echo "* Set correct owner and permission for ${NEW_IREDAPD_ROOT_DIR}: ${SYS_USER_ROOT}:${SYS_GROUP_ROOT}, 0500."
+chown -R ${SYS_USER_ROOT}:${SYS_GROUP_ROOT} ${NEW_IREDAPD_ROOT_DIR}
 chmod -R 0500 ${NEW_IREDAPD_ROOT_DIR}
 
 echo "* Set permission for iRedAPD config file: ${NEW_IREDAPD_CONF} -> 0400."
@@ -716,17 +738,48 @@ fi
 
 # Move old log files to log directory.
 mv /var/log/iredapd.log* ${IREDAPD_LOG_DIR} &>/dev/null
+touch ${IREDAPD_LOG_FILE}
 
 # Always set correct owner and permission, so that we can rotate the log files.
-chown -R ${IREDAPD_DAEMON_USER}:${IREDAPD_DAEMON_GROUP} ${IREDAPD_LOG_DIR}
-chmod -R 0700 ${IREDAPD_LOG_DIR}
+chown -R ${SYS_USER_SYSLOG}:${SYS_GROUP_SYSLOG} ${IREDAPD_LOG_DIR}
+chmod -R 0750 ${IREDAPD_LOG_DIR}
 
-# Always reset log file.
-perl -pi -e 's#^(log_file).*#${1} = "$ENV{IREDAPD_LOG_FILE}"#' ${IREDAPD_CONF_PY}
+# syslog and log rotation
+if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
+    # rsyslog
+    cp -f ${ROOTDIR}/../samples/rsyslog.d/iredapd.conf ${SYSLOG_CONF_DIR}/1-iredmail-iredapd.conf
+    chown ${SYS_USER_ROOT}:${SYS_GROUP_ROOT} ${SYSLOG_CONF_DIR}/1-iredmail-iredapd.conf
+    chmod 0644 ${SYSLOG_CONF_DIR}/1-iredmail-iredapd.conf
+    service rsyslog restart >/dev/null
 
-# Remove old logrotate config file.
-# Linux
-[ -f /etc/logrotate.d/iredapd ] && rm -f /etc/logrotate.d/iredapd
+    # log rotation
+    cp -f ${ROOTDIR}/../samples/logrotate.d/iredapd ${LOGROTATE_DIR}/iredapd
+    chmod 0644 ${LOGROTATE_DIR}/iredapd
+elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
+    # syslog
+    cp -f ${ROOTDIR}/../samples/freebsd/syslog.d/iredapd.conf ${SYSLOG_CONF_DIR}/iredapd.conf
+    chown ${SYS_USER_ROOT}:${SYS_GROUP_ROOT} ${SYSLOG_CONF_DIR}/iredapd.conf
+    chmod 0644 ${SYSLOG_CONF_DIR}/iredapd.conf
+    service syslogd restart >/dev/null
+
+    # log rotation
+    cp -f ${ROOTDIR}/../samples/freebsd/newsyslog.d/iredapd ${LOGROTATE_DIR}/iredapd
+    chmod 0644 ${LOGROTATE_DIR}/iredapd
+elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
+    if ! grep "${IREDAPD_LOG_FILE}" /etc/syslog.conf &>/dev/null; then
+        # '!!' means abort further evaluation after first match
+        echo '' >> /etc/syslog.conf
+        echo '!!iredapd' >> /etc/syslog.conf
+        echo "local5.*        ${IREDAPD_LOG_FILE}" >> /etc/syslog.conf
+    fi
+
+    if ! grep "${IREDAPD_LOG_FILE}" /etc/newsyslog.conf &>/dev/null; then
+        cat >> /etc/newsyslog.conf <<EOF
+${IREDAPD_LOG_FILE}    ${SYS_USER_SYSLOG}:${SYS_GROUP_SYSLOG}   600  7     *    24    Z
+EOF
+    fi
+fi
+
 # FreeBSD & OpenBSD
 [ -f /etc/newsyslog.conf ] && perl -pi -e 's|^(/var/log/iredapd.log.)|#${1}|' /etc/newsyslog.conf
 

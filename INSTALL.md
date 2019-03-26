@@ -148,9 +148,6 @@ run_as_user = "iredapd"
 # Path to pid file.
 pid_file = "/var/run/iredapd.pid"
 
-# Log file.
-log_file = "/var/log/iredapd/iredapd.log"
-
 # Log level: info, warning, error, debug.
 # 'info' is recommended for product use.
 log_level = "info"
