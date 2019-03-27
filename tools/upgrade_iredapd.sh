@@ -695,6 +695,13 @@ if ! grep '^srs_' ${NEW_IREDAPD_CONF} &>/dev/null; then
     add_missing_parameter 'srs_secrets' "['$(${RANDOM_STRING})']"
 fi
 
+# On FreeBSD, syslog socket is /var/run/log.
+if [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
+    if ! grep '^SYSLOG_SERVER' ${NEW_IREDAPD_CONF} &>/dev/null; then
+        add_missing_parameter 'SYSLOG_SERVER' "/var/run/log"
+    fi
+fi
+
 # replace old parameter names: sql_[XX] -> vmail_db_[XX]
 if grep '^sql_server' ${IREDAPD_CONF_PY} &>/dev/null; then
     perl -pi -e 's#^(sql_db)#vmail_db_name#g' ${IREDAPD_CONF_PY}
