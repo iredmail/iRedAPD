@@ -755,6 +755,10 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     # log rotation
     cp -f ${ROOTDIR}/../samples/logrotate.d/iredapd ${LOGROTATE_DIR}/iredapd
     chmod 0644 ${LOGROTATE_DIR}/iredapd
+
+    if [ -x /sbin/service ]; then
+        perl -pi -e 's#/usr/sbin/service#/sbin/service#g' ${LOGROTATE_DIR}/iredapd
+    fi
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     # syslog
     cp -f ${ROOTDIR}/../samples/freebsd/syslog.d/iredapd.conf ${SYSLOG_CONF_DIR}/iredapd.conf
