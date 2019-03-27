@@ -1,3 +1,8 @@
+iRedAPD-2.6:
+    * Switch logging to syslog.
+    * Fixed issues:
+        - tools/spf_to_greylist_whitelists.py: not support '+include:' tag.
+
 iRedAPD-2.5:
     * New feature:
         + SRS (Sender Rewrite Scheme) support.

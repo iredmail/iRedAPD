@@ -148,7 +148,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     for tag in tags:
         v = tag.split(':', 1)[-1]
 
-        if tag.startswith('include:'):
+        if tag.startswith('include:') or tag.startswith('+include:'):
             included_domains.add(v)
         elif tag.startswith('redirect='):
             d = tag.split('=', 1)[-1]
