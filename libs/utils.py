@@ -476,12 +476,11 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
     return None
 
 
-def load_enabled_plugins(plugins=None):
+def load_enabled_plugins(plugins):
     """Load and import enabled plugins."""
     plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/../plugins'
 
     loaded_plugins = []
-    loaded_tcp_table_plugin = None
 
     # Import priorities of built-in plugins.
     _plugin_priorities = PLUGIN_PRIORITIES
@@ -491,20 +490,6 @@ def load_enabled_plugins(plugins=None):
 
     if not plugins:
         plugins = settings.plugins
-
-    if 'custom_tcp_table' in plugins:
-        plugins.remove('custom_tcp_table')
-
-        # Load tcp table plugin
-        plugin_file = os.path.join(plugin_dir, 'custom_tcp_table.py')
-        if not os.path.isfile(plugin_file):
-            logger.debug('Plugin custom_tcp_table does not exist, SKIP.')
-        else:
-            try:
-                logger.info('Loading plugin custom_tcp_table')
-                loaded_tcp_table_plugin = __import__('custom_tcp_table')
-            except Exception, e:
-                logger.error('Error while loading plugin custom_tcp_table: %s' % repr(e))
 
     # If enabled plugin doesn't have a priority pre-defined, set it to 0 (lowest)
     _plugins_without_priority = [i for i in plugins if i not in _plugin_priorities]
@@ -555,7 +540,6 @@ def load_enabled_plugins(plugins=None):
                 pass
 
     return {'loaded_plugins': loaded_plugins,
-            'loaded_tcp_table_plugin': loaded_tcp_table_plugin,
             'sender_search_attrlist': sender_search_attrlist,
             'recipient_search_attrlist': recipient_search_attrlist}
 

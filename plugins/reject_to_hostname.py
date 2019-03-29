@@ -17,8 +17,9 @@ def restriction(*args, **kwargs):
     if is_trusted_client(kwargs['client_address']):
         return SMTP_ACTIONS['default']
 
+    recipient = kwargs['recipient']
     rcpt_domain = kwargs['recipient_domain']
-    if rcpt_domain == server_hostname:
+    if (rcpt_domain == server_hostname) and (not r:
         return SMTP_ACTIONS['reject_not_authorized']
 
     return SMTP_ACTIONS['default']

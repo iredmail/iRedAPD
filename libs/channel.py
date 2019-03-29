@@ -24,7 +24,7 @@ fqdn = socket.getfqdn()
 
 class DaemonSocket(asyncore.dispatcher):
     """Create socket daemon"""
-    def __init__(self, local_addr, db_conns, policy_channel):
+    def __init__(self, local_addr, db_conns, policy_channel, plugins=None):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
@@ -34,14 +34,18 @@ class DaemonSocket(asyncore.dispatcher):
         self.db_conns = db_conns
         self.policy_channel = policy_channel
 
-        # Load enabled plugins.
-        qr = utils.load_enabled_plugins()
-        self.loaded_plugins = qr['loaded_plugins']
+        self.loaded_plugins = []
+        # Get list of LDAP attributes used for account queries
+        self.sender_search_attrlist = []
+        self.recipient_search_attrlist = []
 
-        # Get list of LDAP query attributes
-        self.sender_search_attrlist = qr['sender_search_attrlist']
-        self.recipient_search_attrlist = qr['recipient_search_attrlist']
-        del qr
+        # Load enabled plugins.
+        if plugins:
+            qr = utils.load_enabled_plugins(plugins=plugins)
+            self.loaded_plugins = qr['loaded_plugins']
+            self.sender_search_attrlist = qr['sender_search_attrlist']
+            self.recipient_search_attrlist = qr['recipient_search_attrlist']
+            del qr
 
     def handle_accept(self):
         sock, remote_addr = self.accept()

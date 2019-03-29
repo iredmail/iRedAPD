@@ -43,7 +43,8 @@ def main():
     local_addr = (settings.listen_address, int(settings.listen_port))
     DaemonSocket(local_addr=local_addr,
                  db_conns=db_conns,
-                 policy_channel='policy')
+                 policy_channel='policy',
+                 plugins=settings.plugins)
 
     if (settings.srs_secrets and settings.srs_domain):
         logger.info("Starting SRS sender rewriting channel, listening on "
