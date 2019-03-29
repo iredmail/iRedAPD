@@ -19,7 +19,8 @@ def restriction(*args, **kwargs):
 
     recipient = kwargs['recipient']
     rcpt_domain = kwargs['recipient_domain']
-    if (rcpt_domain == server_hostname) and (not r:
-        return SMTP_ACTIONS['reject_not_authorized']
+    if rcpt_domain == server_hostname:
+        if not (recipient.startswith('srs0=') or recipient.startswith('srs1=')):
+            return SMTP_ACTIONS['reject_not_authorized']
 
     return SMTP_ACTIONS['default']
