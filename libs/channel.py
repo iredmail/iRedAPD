@@ -258,8 +258,8 @@ class SRS(asynchat.async_chat):
                     sql_record = qr.fetchone()
                     logger.debug(self.log_prefix + '[SQL] Query result: {0}'.format(sql_record))
                 except Exception, e:
-                    logger.error(self.log_prefix + 'Error while querying SQL: {0}'.format(e))
-                    reply = TCP_REPLIES['error'] + 'Error while querying SQL: {0}'.format(e)
+                    logger.debug(self.log_prefix + 'Error while querying SQL: {0}'.format(e))
+                    reply = TCP_REPLIES['not_exist']
                     return reply
 
                 if sql_record:
@@ -272,8 +272,9 @@ class SRS(asynchat.async_chat):
                         reply = TCP_REPLIES['success'] + new_addr
                         return reply
                     except Exception, e:
-                        logger.error(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
-                        reply = TCP_REPLIES['error'] + 'while generating forward address: {0}'.format(e)
+                        logger.debug(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
+                        # Return original address.
+                        reply = TCP_REPLIES['not_exist']
                         return reply
 
         return reply
@@ -291,8 +292,10 @@ class SRS(asynchat.async_chat):
                 logger.info(self.log_prefix + 'reversed: {0} -> {1}'.format(addr, new_addr))
                 reply = TCP_REPLIES['success'] + new_addr
             except Exception, e:
-                logger.error(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
-                reply = TCP_REPLIES['error'] + 'while generating reverse address: {0}'.format(e)
+                logger.debug(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
+
+                # Return original address.
+                reply = TCP_REPLIES['not_exist']
         else:
             reply = TCP_REPLIES['not_exist'] + 'Not a valid SRS address, bypassed.'
 

@@ -1,3 +1,8 @@
+iRedAPD-2.7:
+    * Fixed issues:
+        - Improper return value if can not successfully generate forward or
+          reverse SRS address.
+
 iRedAPD-2.6:
     * Switch logging to syslog.
     * Fixed issues:
