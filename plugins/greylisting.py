@@ -335,6 +335,7 @@ def restriction(**kwargs):
     # Check against A/MX/SPF DNS records, bypass if sender server is allowed.
     if settings.GREYLISTING_BYPASS_SPF:
         if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
+            logger.info('Bypass greylisting. Sender server is listed in SPF DNS record of sender domain.')
             return SMTP_ACTIONS['default']
 
     sender = kwargs['sender_without_ext']

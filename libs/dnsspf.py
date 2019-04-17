@@ -315,8 +315,8 @@ def is_allowed_server_in_spf(sender_domain, ip):
 
     _ips = qr['ips']
     if ip in _ips:
-        logger.info('[SPF] IP {0} is listed in SPF DNS record of '
-                    'sender domain {2}.'.format(ip, sender_domain))
+        logger.debug('[SPF] IP {0} is listed in SPF DNS record of '
+                     'sender domain {2}.'.format(ip, sender_domain))
         return True
 
     _ip_object = ipaddress.ip_address(unicode(ip))
@@ -336,9 +336,9 @@ def is_allowed_server_in_spf(sender_domain, ip):
                 _network = ipaddress.ip_network(unicode(_cidr))
 
                 if _ip_object in _network:
-                    logger.info('[SPF] Client IP ({0}) is listed in SPF DNS '
-                                'record of sender domain {1} '
-                                '(network={2}).'.format(ip, sender_domain, _cidr))
+                    logger.debug('[SPF] IP ({0}) is listed in SPF DNS record '
+                                 'of sender domain {1} '
+                                 '(network={2}).'.format(ip, sender_domain, _cidr))
                     return True
             except Exception, e:
                 logger.debug('[SPF] Error while checking IP {0} against '
