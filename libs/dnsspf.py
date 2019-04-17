@@ -297,6 +297,9 @@ def is_allowed_server_in_spf(sender_domain, ip):
     Check whether given IP address is listed in SPF DNS record of given
     sender domain. Return True if exists, False if not.
     """
+    if (not sender_domain) or (not ip):
+        return False
+
     qr = query_spf(domain=sender_domain, queried_domains=None)
 
     _spf = qr['spf']
