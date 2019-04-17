@@ -187,7 +187,6 @@ def restriction(**kwargs):
             logger.debug('Sender is considered as forged, rejecting')
             return SMTP_ACTIONS['reject_forged_sender']
         else:
-            logger.debug('Sender domain is not hosted locally, dunno.')
             return SMTP_ACTIONS['default']
 
     # Check emails sent by authenticated users.
