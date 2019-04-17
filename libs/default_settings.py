@@ -52,6 +52,10 @@ SQL_CONNECTION_MAX_OVERFLOW = 10
 # a particular period of time.
 SQL_CONNECTION_POOL_RECYCLE = 60
 
+# DNS Query.
+# Timeout in seconds. Must be a float number.
+DNS_QUERY_TIMEOUT = 5.0
+
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
@@ -142,6 +146,9 @@ GREYLISTING_AUTH_TRIPLET_EXPIRE = 30
 # Time (in DAYS) to keep tracking records if client didn't pass the
 # greylisting and no further deliver attempts. Defaults to `1` day.
 GREYLISTING_UNAUTH_TRIPLET_EXPIRE = 1
+
+# Bypass if sender server IP address is listed in sender domain SPF DNS record.
+GREYLISTING_BYPASS_SPF = True
 
 # --------------
 # Required by: plugins/whitelist_outbound_recipient.py

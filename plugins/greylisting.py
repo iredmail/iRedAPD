@@ -14,9 +14,10 @@
 import time
 from web import sqlquote
 from libs.logger import logger
-from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES, utils, ipaddress
-from libs.utils import is_trusted_client, get_policy_addresses_from_email
+from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
+from libs import utils, ipaddress, dnsspf
 import settings
+
 
 # Return 4xx with greylisting message to Postfix.
 action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
@@ -100,8 +101,7 @@ def _is_whitelisted(conn,
 def _client_address_passed_in_tracking(conn, client_address):
     sql = """SELECT id
                FROM greylisting_tracking
-              WHERE client_address=%s
-                    AND passed=1
+              WHERE client_address=%s AND passed=1
               LIMIT 1""" % sqlquote(client_address)
 
     logger.debug('[SQL] check whether client address (%s) passed greylisting: \n%s' % (client_address, sql))
@@ -328,18 +328,21 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     client_address = kwargs['client_address']
-    if is_trusted_client(client_address):
+    if utils.is_trusted_client(client_address):
         return SMTP_ACTIONS['default']
 
-    conn = kwargs['conn_iredapd']
+    sender_domain = kwargs['sender_domain']
+    # Check against A/MX/SPF DNS records, bypass if sender server is allowed.
+    if settings.GREYLISTING_BYPASS_SPF:
+        if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
+            return SMTP_ACTIONS['default']
 
     sender = kwargs['sender_without_ext']
-    sender_domain = kwargs['sender_domain']
     sender_tld_domain = sender_domain.split('.')[-1]
     recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
 
-    policy_recipients = get_policy_addresses_from_email(mail=recipient)
+    policy_recipients = utils.get_policy_addresses_from_email(mail=recipient)
     policy_senders = [sender,                   # email address
                       '@' + sender_domain,      # sender domain
                       '@.' + sender_domain,     # sender sub-domains
@@ -354,8 +357,9 @@ def restriction(**kwargs):
     # Get object of IP address type
     _ip_object = ipaddress.ip_address(unicode(client_address))
 
+    conn_iredapd = kwargs['conn_iredapd']
     # Check greylisting whitelists
-    if _is_whitelisted(conn=conn,
+    if _is_whitelisted(conn=conn_iredapd,
                        senders=policy_senders,
                        recipients=policy_recipients,
                        client_address=client_address,
@@ -363,14 +367,14 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     # Check greylisting settings
-    if not _should_be_greylisted_by_setting(conn=conn,
+    if not _should_be_greylisted_by_setting(conn=conn_iredapd,
                                             recipients=policy_recipients,
                                             senders=policy_senders,
                                             client_address=client_address,
                                             ip_object=_ip_object):
         return SMTP_ACTIONS['default']
 
-    if _client_address_passed_in_tracking(conn=conn, client_address=client_address):
+    if _client_address_passed_in_tracking(conn=conn_iredapd, client_address=client_address):
         # Update expire time
         _now = int(time.time())
         _new_expire_time = _now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60 * 60
@@ -378,12 +382,12 @@ def restriction(**kwargs):
                      SET record_expired=%d
                    WHERE client_address=%s AND passed=1""" % (_new_expire_time, sqlquote(client_address))
         logger.debug('[SQL] Update expire time of passed client: \n%s' % _sql)
-        conn.execute(_sql)
+        conn_iredapd.execute(_sql)
 
         return SMTP_ACTIONS['default']
 
     # check greylisting tracking.
-    if _should_be_greylisted_by_tracking(conn=conn,
+    if _should_be_greylisted_by_tracking(conn=conn_iredapd,
                                          sender=sender,
                                          sender_domain=sender_domain,
                                          recipient=recipient,

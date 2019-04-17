@@ -2,7 +2,11 @@ from dns import resolver
 
 from libs.logger import logger
 from libs import utils, ipaddress
+import settings
 
+
+resv = resolver.Resolver()
+resv.timeout = settings.DNS_QUERY_TIMEOUT
 
 def query_a(domains, queried_domains=None, returned_ips=None):
     """
@@ -21,11 +25,11 @@ def query_a(domains, queried_domains=None, returned_ips=None):
     domains = [d for d in domains if d not in queried_domains]
     for domain in domains:
         try:
-            qr = resolver.query(domain, 'A')
+            qr = resv.query(domain, 'A')
             if qr:
                 for r in qr:
                     _ip = str(r)
-                    logger.debug('[SPF][%s] A: %s' % (domain, _ip))
+                    logger.debug('[SPF][{0}] A: {1}'.format(domain, _ip))
 
                     ips.add(_ip)
                     returned_ips.add(_ip)
@@ -36,7 +40,8 @@ def query_a(domains, queried_domains=None, returned_ips=None):
         except resolver.NXDOMAIN:
             pass
         except Exception, e:
-            logger.debug('[SPF]Error while querying DNS A record %s: %s' % (domain, repr(e)))
+            logger.debug('[SPF] Error while querying DNS A record {0}: '
+                         '{1}'.format(domain, e))
 
     return {'ips': ips,
             'queried_domains': queried_domains,
@@ -62,11 +67,11 @@ def query_mx(domains, queried_domains=None, returned_ips=None):
     domains = [d for d in domains if d not in queried_domains]
     for domain in domains:
         try:
-            qr = resolver.query(domain, 'MX')
+            qr = resv.query(domain, 'MX')
             if qr:
                 for r in qr:
                     hostname = str(r).split()[-1].rstrip('.')
-                    logger.debug('[SPF][%s] MX: %s' % (domain, hostname))
+                    logger.debug('[SPF][{0}] MX: {1}'.format(domain, hostname))
                     if utils.is_domain(hostname):
                         hostnames.add(hostname)
 
@@ -101,7 +106,7 @@ def query_spf(domain, queried_domains=None):
 
     try:
         # WARNING: DO NOT UPDATE queried_domains in this function
-        qr = resolver.query(domain, 'TXT')
+        qr = resv.query(domain, 'TXT')
         for r in qr:
             # Remove heading/ending quotes
             r = str(r).strip('"').strip("'")
@@ -120,7 +125,7 @@ def query_spf(domain, queried_domains=None):
     except resolver.NXDOMAIN:
         pass
     except Exception, e:
-        logger.debug('[SPF] Error while querying DNS SPF record %s: %s' % (domain, repr(e)))
+        logger.debug('[SPF] Error while querying DNS SPF record {0}: {1}'.format(domain, e))
 
     queried_domains.add('spf:' + domain)
 
@@ -159,13 +164,13 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
                     ipaddress.ip_network(unicode(v))
                     ips.add(v)
                 except:
-                    logger.debug("%s is invalid ip address or network." % tag)
+                    logger.debug("{0} is invalid IP address or network.".format(tag))
             else:
                 try:
                     ipaddress.ip_address(unicode(v))
                     ips.add(v)
                 except:
-                    logger.debug("%s is invalid ip address." % tag)
+                    logger.debug("{0} is invalid IP address.".format(tag))
 
         elif tag.startswith('ip6:') or tag.startswith('+ip6:'):
             # Some sysadmin uses invalid syntaxes like 'ipv:*', we'd better not
@@ -178,7 +183,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
                     ipaddress.ip_network(unicode(v))
                     ips.add(v)
                 except:
-                    logger.debug("%s is invalid ip address or network." % tag)
+                    logger.debug("{0} is invalid IP address or network.".format(tag))
         elif tag.startswith('a:') or tag.startswith('+a:'):
             a.add(v)
         elif tag.startswith('mx:') or tag.startswith('+mx:'):
@@ -196,7 +201,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if included_domains:
         included_domains = [i for i in included_domains if 'spf:' + i not in queried_domains]
 
-        logger.debug("[SPF][%s] 'spf:' tag: %s" % (domain, ', '.join(included_domains)))
+        logger.debug("[SPF][{0}] 'spf:' tag: {1}".format(domain, ', '.join(included_domains)))
         qr = query_spf_of_included_domains(included_domains,
                                            queried_domains=queried_domains,
                                            returned_ips=returned_ips)
@@ -210,7 +215,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if a:
         _domains = [i for i in a if 'a:' + i not in queried_domains]
 
-        logger.debug("[SPF][%s] 'a:' tag: %s" % (domain, ', '.join(a)))
+        logger.debug("[SPF][{0}] 'a:' tag: {1}".format(domain, ', '.join(a)))
         qr = query_a(domains=_domains,
                      queried_domains=queried_domains,
                      returned_ips=returned_ips)
@@ -224,7 +229,7 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     if mx:
         _domains = [i for i in mx if 'mx:' + i not in queried_domains]
 
-        logger.debug("[SPF][%s] 'mx:' tag: %s" % (domain, ', '.join(mx)))
+        logger.debug("[SPF][{0}] 'mx:' tag: {1}".format(domain, ', '.join(mx)))
         qr = query_mx(domains=_domains,
                       queried_domains=queried_domains,
                       returned_ips=returned_ips)
@@ -238,9 +243,9 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     queried_domains.add('spf:' + domain)
 
     if ips:
-        logger.debug("[SPF][%s] All IP addresses/networks: %s" % (domain, ', '.join(ips)))
+        logger.debug("[SPF][{0}] All IP addresses/networks: {1}".format(domain, ', '.join(ips)))
     else:
-        logger.debug("[SPF][%s] No valid IP addresses/networks." % domain)
+        logger.debug("[SPF][{0}] No valid IP addresses/networks.".format(domain))
 
     return {'ips': ips,
             'queried_domains': queried_domains,
@@ -265,9 +270,9 @@ def query_spf_of_included_domains(domains,
         queried_domains = qr['queried_domains']
 
         if spf:
-            logger.debug('[SPF][include %s] %s' % (domain, spf))
+            logger.debug('[SPF][include {0}] {1}'.format(domain, spf))
         else:
-            logger.debug('[SPF][include %s] empty' % domain)
+            logger.debug('[SPF][include {0}] empty'.format(domain))
 
         qr = parse_spf(domain=domain,
                        spf=spf,
@@ -289,8 +294,8 @@ def query_spf_of_included_domains(domains,
 
 def is_allowed_server_in_spf(sender_domain, ip):
     """
-    Return True|False if given IP address is one of allowed servers defined
-    in DNS SPF record.
+    Check whether given IP address is listed in SPF DNS record of given
+    sender domain. Return True if exists, False if not.
     """
     qr = query_spf(domain=sender_domain, queried_domains=None)
 
@@ -298,7 +303,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
     queried_domains = qr['queried_domains']
 
     if not _spf:
-        logger.info('[SPF] Domain %s does not have an valid DNS SPF record, client %s is treated as disallowed server.' % (sender_domain, ip))
+        logger.debug('[SPF] Domain {0} does not have a valid SPF DNS record.'.format(sender_domain))
         return False
 
     qr = parse_spf(domain=sender_domain,
@@ -307,7 +312,8 @@ def is_allowed_server_in_spf(sender_domain, ip):
 
     _ips = qr['ips']
     if ip in _ips:
-        logger.info('[SPF] IP %s is explicitly listed in DNS SPF record of domain %s.' % (ip, sender_domain))
+        logger.info('[SPF] IP {0} is listed in SPF DNS record of '
+                    'sender domain {2}.'.format(ip, sender_domain))
         return True
 
     _ip_object = ipaddress.ip_address(unicode(ip))
@@ -327,10 +333,13 @@ def is_allowed_server_in_spf(sender_domain, ip):
                 _network = ipaddress.ip_network(unicode(_cidr))
 
                 if _ip_object in _network:
-                    logger.info('[SPF] IP (%s) is in IP network (%s) listed in DNS SPF record of domain %s.' % (ip, _cidr, sender_domain))
+                    logger.info('[SPF] Client IP ({0}) is listed in SPF DNS '
+                                'record of sender domain {1} '
+                                '(network={2}).'.format(ip, sender_domain, _cidr))
                     return True
             except Exception, e:
-                logger.debug('[SPF] Error while checking IP %s with network %s: %s' % (ip, _cidr, repr(e)))
+                logger.debug('[SPF] Error while checking IP {0} against '
+                             'network {1}: {2}'.format(ip, _cidr, e))
 
-    logger.info('[SPF] IP %s is NOT listed in DNS SPF record of domain %s, treated as disallowed server.' % (ip, sender_domain))
+    logger.debug('[SPF] IP {0} is NOT listed in SPF DNS record of domain {1}.'.format(ip, sender_domain))
     return False

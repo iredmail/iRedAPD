@@ -1,7 +1,19 @@
+iRedAPD-2.8:
+    * Improvements:
+        + Bypass greylisting service if sender server IP address is listed
+          in SPF DNS record of sender domain.
+
+          It's enabled by default, and can be disabled with setting
+          `GREYLISTING_BYPASS_SPF = False`.
+
+          Thanks to "Brno University of Technology Computer and Information
+          Services Centre" (www.vut.cz) for sponsoring this development.
+
 iRedAPD-2.7:
     * Fixed issues:
-        - Improper return value if can not successfully generate forward or
+        - Imcorrect return value if can not successfully generate forward or
           reverse SRS address.
+          Thanks Tomaž Brišnik for the report.
 
 iRedAPD-2.6:
     * Switch logging to syslog.
