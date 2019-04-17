@@ -9,6 +9,11 @@ iRedAPD-2.8:
           Thanks to "Brno University of Technology Computer and Information
           Services Centre" (www.vut.cz) for sponsoring this development.
 
+    * Fixed issues:
+        - Not correctly collect IPv4 CIDR networks while comparing sender
+          server IP address against SPF DNS record.
+          Thanks Lucas Geetz <Lucas.Geetz _at_ gecko.de> for the report.
+
 iRedAPD-2.7:
     * Fixed issues:
         - Imcorrect return value if can not successfully generate forward or

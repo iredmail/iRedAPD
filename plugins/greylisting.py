@@ -72,14 +72,14 @@ def _is_whitelisted(conn,
 
     # Gather CIDR networks
     if ip_object.version == 4:
-        # if `ip=a.b.c.d`, ip prefix = `a.b.`
-        _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
+        # if `ip=a.b.c.d`, ip prefix = `a.`
+        _cidr_prefix = client_address.split('.', 1)[0] + '.'
 
         # Make sure _cidr is IPv4 network and in 'same' IP range.
         _cidrs = [_cidr for _cidr in whitelists if (_cidr.startswith(_cidr_prefix) and '/' in _cidr)]
     elif ip_object.version == 6:
-        # if `ip=a:b:c:...`, ip prefix = `a:b:`
-        _cidr_prefix = ':'.join(client_address.split(':', 2)[:2]) + ':'
+        # if `ip=a:b:c:...`, ip prefix = `a:`
+        _cidr_prefix = client_address.split(':', 1)[0] + ':'
 
         _cidrs = [_cidr for _cidr in whitelists if _cidr.startswith(_cidr_prefix) and ':/' in _cidr]
 
@@ -144,7 +144,7 @@ def _should_be_greylisted_by_setting(conn,
         return False
 
     if ip_object.version == 4:
-        _cidr_prefix = '.'.join(client_address.split('.', 2)[:2]) + '.'
+        _cidr_prefix = client_address.split('.', 1)[0] + '.'
 
     # Found enabled/disabled greylisting setting
     for r in records:
@@ -335,7 +335,9 @@ def restriction(**kwargs):
     # Check against A/MX/SPF DNS records, bypass if sender server is allowed.
     if settings.GREYLISTING_BYPASS_SPF:
         if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
-            logger.info('Bypass greylisting. Sender server is listed in SPF DNS record of sender domain.')
+            logger.info('Bypass greylisting. Sender server {0} is listed in '
+                        'SPF DNS record of sender domain '
+                        '({1}).'.format(client_address, sender_domain))
             return SMTP_ACTIONS['default']
 
     sender = kwargs['sender_without_ext']
