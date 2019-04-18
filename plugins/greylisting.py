@@ -166,14 +166,16 @@ def _should_be_greylisted_by_setting(conn,
                         if ip_object in _net:
                             _matched = True
                     except Exception, e:
-                        logger.debug('Not an valid IP network: %s (error: %s)' % (_sender, str(e)))
+                        logger.debug('Not a valid IP network: {0} (error: {1})'.format(_sender, e))
 
         if _matched:
             if _active == 1:
-                logger.debug("Greylisting should be applied according to SQL record: (id=%d, account='%s', sender='%s')" % (_id, _account, _sender))
+                logger.debug("Greylisting should be applied according to SQL "
+                             "record: (id={0}, account='{1}', sender='{2}')".format(_id, _account, _sender))
                 return True
             else:
-                logger.debug("Greylisting should NOT be applied according to SQL record: (id=%d, account='%s', sender='%s')" % (_id, _account, _sender))
+                logger.debug("Greylisting should NOT be applied according to "
+                             "SQL record: (id={0}, account='{1}', sender='{2}')".format(_id, _account, _sender))
                 # return directly
                 return False
 
@@ -331,16 +333,8 @@ def restriction(**kwargs):
     if utils.is_trusted_client(client_address):
         return SMTP_ACTIONS['default']
 
-    sender_domain = kwargs['sender_domain']
-    # Check against A/MX/SPF DNS records, bypass if sender server is allowed.
-    if settings.GREYLISTING_BYPASS_SPF:
-        if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
-            logger.info('Bypass greylisting. Sender server {0} is listed in '
-                        'SPF DNS record of sender domain '
-                        '({1}).'.format(client_address, sender_domain))
-            return SMTP_ACTIONS['default']
-
     sender = kwargs['sender_without_ext']
+    sender_domain = kwargs['sender_domain']
     sender_tld_domain = sender_domain.split('.')[-1]
     recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
@@ -376,6 +370,14 @@ def restriction(**kwargs):
                                             client_address=client_address,
                                             ip_object=_ip_object):
         return SMTP_ACTIONS['default']
+
+    # Bypass if sender server is listed in SPF DNS record of sender domain.
+    if settings.GREYLISTING_BYPASS_SPF:
+        if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
+            logger.info('Bypass greylisting. Sender server {0} is listed in '
+                        'SPF DNS record of sender domain '
+                        '({1}).'.format(client_address, sender_domain))
+            return SMTP_ACTIONS['default']
 
     if _client_address_passed_in_tracking(conn=conn_iredapd, client_address=client_address):
         # Update expire time
