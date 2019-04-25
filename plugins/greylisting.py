@@ -201,7 +201,6 @@ def _should_be_greylisted_by_tracking(conn,
     sender = sqlquote(sender)
     sender_domain = sqlquote(sender_domain)
     recipient = sqlquote(recipient)
-    recipient_domain = sqlquote(recipient_domain)
     client_address_sql = sqlquote(client_address)
 
     #
@@ -224,8 +223,9 @@ def _should_be_greylisted_by_tracking(conn,
 
     if not sql_record:
         # Not record found, insert a new one.
-        logger.info('[%s] Client has not been seen before, greylisted.' % client_address)
+        logger.info('[{0}] Client has not been seen before, greylisted ({1}).'.format(client_address, recipient_domain))
 
+        recipient_domain = sqlquote(recipient_domain)
         sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
                                                    recipient, rcpt_domain,
                                                    client_address,
