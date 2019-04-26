@@ -374,7 +374,7 @@ def restriction(**kwargs):
     # Bypass if sender server is listed in SPF DNS record of sender domain.
     if settings.GREYLISTING_BYPASS_SPF:
         if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
-            logger.info('[{0} Bypass greylisting due to SPF match ({1}).'.format(client_address, sender_domain))
+            logger.info('[{0}] Bypass greylisting due to SPF match ({1}).'.format(client_address, sender_domain))
             return SMTP_ACTIONS['default']
 
     if _client_address_passed_in_tracking(conn=conn_iredapd, client_address=client_address):
