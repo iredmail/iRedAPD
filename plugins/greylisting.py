@@ -199,8 +199,8 @@ def _should_be_greylisted_by_tracking(conn,
     auth_triplet_expire = now + int(settings.GREYLISTING_AUTH_TRIPLET_EXPIRE) * 24 * 60 * 60
 
     sender = sqlquote(sender)
-    sender_domain = sqlquote(sender_domain)
     recipient = sqlquote(recipient)
+    recipient_domain = sqlquote(recipient_domain)
     client_address_sql = sqlquote(client_address)
 
     #
@@ -223,9 +223,9 @@ def _should_be_greylisted_by_tracking(conn,
 
     if not sql_record:
         # Not record found, insert a new one.
-        logger.info('[{0}] Client has not been seen before, greylisted ({1}).'.format(client_address, recipient_domain))
+        logger.info('[{0}] Client has not been seen before, greylisted ({1}).'.format(client_address, sender_domain))
 
-        recipient_domain = sqlquote(recipient_domain)
+        sender_domain = sqlquote(sender_domain)
         sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
                                                    recipient, rcpt_domain,
                                                    client_address,
