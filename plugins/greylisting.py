@@ -268,7 +268,7 @@ def _should_be_greylisted_by_tracking(conn,
     # Tracking record doesn't expire, check whether client retries too soon.
     if now < _block_expired:
         # blocking not expired
-        logger.info('[%s] Client retries too soon, greylisted again.' % client_address)
+        logger.info('[%s] Client retries too soon, greylisted again (%s).' % (client_address, sender_domain))
         sql = """UPDATE greylisting_tracking
                     SET blocked_count=blocked_count + 1
                   WHERE     sender=%s
