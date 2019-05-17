@@ -158,6 +158,7 @@
 #                        4096000000);
 
 import time
+from sqlalchemy.sql import text
 from libs.logger import logger
 from web import sqlquote
 import settings
@@ -499,6 +500,7 @@ def apply_throttle(conn,
         if 'msg_size' in t_settings:
             msg_size = t_settings['msg_size']['value']
 
+            _tracking_id = t_settings['msg_size']['tracking_id']
             _period = int(t_settings['msg_size'].get('period', 0))
             _init_time = int(t_settings['msg_size'].get('init_time', 0))
             _last_time = int(t_settings['msg_size'].get('last_time', 0))
@@ -518,6 +520,7 @@ def apply_throttle(conn,
                     __sendmail(conn=conn,
                                user=user,
                                client_address=client_address,
+                               throttle_tracking_id=_tracking_id,
                                throttle_name='msg_size',
                                throttle_value=msg_size,
                                throttle_kind=throttle_kind,
@@ -557,9 +560,10 @@ def apply_throttle(conn,
             max_quota = t_settings['max_quota']['value']
             _cur_quota = t_settings['max_quota'].get('cur_quota', 0)
 
-            _period = int(t_settings['msg_size'].get('period', 0))
-            _init_time = int(t_settings['msg_size'].get('init_time', 0))
-            _last_time = int(t_settings['msg_size'].get('last_time', 0))
+            _tracking_id = t_settings['max_quota']['tracking_id']
+            _period = int(t_settings['max_quota'].get('period', 0))
+            _init_time = int(t_settings['max_quota'].get('init_time', 0))
+            _last_time = int(t_settings['max_quota'].get('last_time', 0))
 
             if _period and now > (_init_time + _period):
                 # tracking record expired
@@ -579,6 +583,7 @@ def apply_throttle(conn,
                     __sendmail(conn=conn,
                                user=user,
                                client_address=client_address,
+                               throttle_tracking_id=_tracking_id,
                                throttle_name='max_quota',
                                throttle_value=max_quota,
                                throttle_kind=throttle_kind,
@@ -616,25 +621,20 @@ def apply_throttle(conn,
                     tracking_id = tracking_ids[(tid, k)]
 
                     if tracking_id not in sql_updates:
-                        sql_updates[tracking_id] = []
-
-                    _sql = []
+                        sql_updates[tracking_id] = {'id': tracking_id}
 
                     # Store period, used while cleaning up old tracking records.
-                    _sql += ['period = %d' % v['period']]
-
-                    _sql += ['last_time = %d' % now]
+                    sql_updates[tracking_id]['period'] = v['period']
+                    sql_updates[tracking_id]['last_time'] = now
 
                     if v['expired']:
-                        _sql += ['init_time = %d' % now]
-                        _sql += ['cur_msgs = %d' % recipient_count]
-                        _sql += ['cur_quota = %d' % size]
+                        sql_updates[tracking_id]['init_time'] = now
+                        sql_updates[tracking_id]['cur_msgs'] = recipient_count
+                        sql_updates[tracking_id]['cur_quota'] = now
                     else:
-                        _sql += ['init_time = %d' % v['init_time']]
-                        _sql += ['cur_msgs = cur_msgs + %d' % recipient_count]
-                        _sql += ['cur_quota = cur_quota + %d' % size]
-
-                    sql_updates[tracking_id] = _sql
+                        sql_updates[tracking_id]['init_time'] = v['init_time']
+                        sql_updates[tracking_id]['cur_msgs'] = 'cur_msgs + %d' % recipient_count
+                        sql_updates[tracking_id]['cur_quota'] = 'cur_quota + %d' % size
 
                 else:
                     # no tracking record. insert new one.
@@ -653,18 +653,16 @@ def apply_throttle(conn,
             logger.debug('[SQL] Insert new tracking record(s): {0}'.format(sql))
             conn.execute(sql)
 
-        if sql_updates:
-            sql = ''
-            for (k, v) in sql_updates.items():
-                _sql = """
-                    UPDATE throttle_tracking
-                       SET %s
-                     WHERE id=%d;
-                     """ % (','.join(v), k)
-                sql += _sql
-
-            logger.debug('[SQL] Update tracking record(s): {0}'.format(sql))
-            conn.execute(sql)
+        for (_tracking_id, _kv) in sql_updates.items():
+            _sql = text("""UPDATE throttle_tracking
+                              SET period=:period,
+                                  last_time=:last_time,
+                                  init_time=:init_time,
+                                  cur_msgs=:cur_msgs,
+                                  cur_quota=:cur_quota
+                            WHERE id=:id""")
+            logger.debug('[SQL] Update tracking record: {0}'.format(_sql))
+            conn.execute(_sql, **_kv)
 
     logger.debug('[OK] Passed all {0} throttle settings.'.format(throttle_type))
     return SMTP_ACTIONS['default']
@@ -710,7 +708,8 @@ def restriction(**kwargs):
     else:
         if not settings.THROTTLE_BYPASS_MYNETWORKS:
             if utils.is_trusted_client(client_address):
-                logger.debug('Client is sending from trusted network without SMTP AUTH, consider this sender as an internal sender.')
+                logger.debug('Client is sending from trusted network without '
+                             'SMTP AUTH, consider it as an internal sender.')
                 is_external_sender = False
 
     # Apply sender throttling to only sasl auth users.

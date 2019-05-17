@@ -321,7 +321,7 @@ def is_ip(s):
 
 
 def is_trusted_client(client_address):
-    msg = 'Client address (%s) is trusted networks (MYNETWORKS).' % client_address
+    msg = 'Client address (%s) is trusted (listed in MYNETWORKS).' % client_address
 
     if client_address in ['127.0.0.1', '::1']:
         logger.debug('Client address is trusted localhost: %s.' % client_address)

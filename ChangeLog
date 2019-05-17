@@ -1,3 +1,7 @@
+iRedAPD-2.9:
+    * Fixed issues:
+        - Not correctly update throttle tracking data in some case.
+
 iRedAPD-2.8:
     * Improvements:
         + Bypass greylisting service if sender server IP address is listed
