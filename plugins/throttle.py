@@ -705,12 +705,6 @@ def restriction(**kwargs):
     if kwargs['sasl_username']:
         logger.debug('Found sasl_username, consider this sender as an internal sender.')
         is_external_sender = False
-    else:
-        if not settings.THROTTLE_BYPASS_MYNETWORKS:
-            if utils.is_trusted_client(client_address):
-                logger.debug('Client is sending from trusted network without '
-                             'SMTP AUTH, consider it as an internal sender.')
-                is_external_sender = False
 
     # Apply sender throttling to only sasl auth users.
     logger.debug('Check sender throttling.')
