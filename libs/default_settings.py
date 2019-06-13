@@ -1,5 +1,5 @@
 # Syslog server address.
-# use '/dev/log' if it logs locally.
+# Log to local socket by default, /dev/log on Linux/OpenBSD, /var/run/log on FreeBSD.
 SYSLOG_SERVER = '/dev/log'
 SYSLOG_PORT = 514
 
