@@ -1,6 +1,6 @@
 iRedAPD-2.9:
     * Fixed issues:
-        - Not correctly update throttle tracking data in some case.
+        - Throttling doesn't work.
         - It considers trusted clients as internal senders which is not right.
 
 iRedAPD-2.8:

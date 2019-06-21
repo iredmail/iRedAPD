@@ -158,7 +158,6 @@
 #                        4096000000);
 
 import time
-from sqlalchemy.sql import text
 from libs.logger import logger
 from web import sqlquote
 import settings
@@ -654,15 +653,20 @@ def apply_throttle(conn,
             conn.execute(sql)
 
         for (_tracking_id, _kv) in sql_updates.items():
-            _sql = text("""UPDATE throttle_tracking
-                              SET period=:period,
-                                  last_time=:last_time,
-                                  init_time=:init_time,
-                                  cur_msgs=:cur_msgs,
-                                  cur_quota=:cur_quota
-                            WHERE id=:id""")
+            _sql = """UPDATE throttle_tracking
+                         SET period={0},
+                             last_time={1},
+                             init_time={2},
+                             cur_msgs={3},
+                             cur_quota={4}
+                       WHERE id={5}""".format(_kv['period'],
+                                              _kv['last_time'],
+                                              _kv['init_time'],
+                                              _kv['cur_msgs'],
+                                              _kv['cur_quota'],
+                                              _tracking_id)
             logger.debug('[SQL] Update tracking record: {0}'.format(_sql))
-            conn.execute(_sql, **_kv)
+            conn.execute(_sql)
 
     logger.debug('[OK] Passed all {0} throttle settings.'.format(throttle_type))
     return SMTP_ACTIONS['default']
