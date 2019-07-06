@@ -169,31 +169,27 @@ def is_wildcard_addr(s):
 
 
 def get_policy_addresses_from_email(mail):
-    # Return list valid policy addresses from a given email address
-    #
-    # - Sample input: mail=user@sub2.sub1.com.cn
-    # - Valid policy addresses:
-    #   * user@sub2.sub1.com.cn
-    #   * @sub2.sub1.com.cn
-    #   * @.sub2.sub1.com.cn
-    #   * @.sub1.com.cn
-    #   * @.com.cn
-    #   * @.cn
-    #   * @.        # catch-all
-    (_username, _domain) = mail.split('@', 1)
-    splited_domain_parts = _domain.split('.')
+    """Return list of valid policy addresses from given email address.
 
-    # Default senders (user@domain.ltd):
-    # ['@.', 'user@domain.ltd', @domain.ltd']
-    valid_addresses = [mail, '@' + _domain, '@.']
+    >>> get_policy_addresses_from_email(mail="user@sub3.sub2.sub1.com")
+    ["user@sub3.sub2.sub1.com",     # full email address
+         "@sub3.sub2.sub1.com",     # entire domain (without sub-domains)
+        "@.sub3.sub2.sub1.com",     # entire domain with sub-domains
+             "@.sub2.sub1.com",     # all sub-sub domains
+                  "@.sub1.com",     # all sub-sub-sub domains
+                       "@.com",     # all top-level domains
+                          "@.",     # catch-all
+    ]
+    """
+    (_user, _domain) = mail.split('@', 1)
+    _domain_parts = _domain.split('.')
 
-    for counter in range(len(splited_domain_parts)):
-        # Append domain and sub-domain.
-        subd = '.'.join(splited_domain_parts)
-        valid_addresses.append('@.' + subd)
-        splited_domain_parts.pop(0)
+    addresses = [mail, '@' + _domain, '@.']
+    for (_index, _sub) in enumerate(_domain_parts):
+        _addr = '@.' + '.'.join(_domain_parts[_index:])
+        addresses.append(_addr)
 
-    return valid_addresses
+    return addresses
 
 
 def is_valid_amavisd_address(addr):

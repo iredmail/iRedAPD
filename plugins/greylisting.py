@@ -339,7 +339,7 @@ def restriction(**kwargs):
     recipient_domain = kwargs['recipient_domain']
 
     policy_recipients = utils.get_policy_addresses_from_email(mail=recipient)
-    policy_senders = utils.get_policy_addresses_from_email(sender)
+    policy_senders = utils.get_policy_addresses_from_email(mail=sender)
     policy_senders += [client_address]
 
     if utils.is_ipv4(client_address):
