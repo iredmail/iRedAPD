@@ -335,17 +335,12 @@ def restriction(**kwargs):
 
     sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
-    sender_tld_domain = sender_domain.split('.')[-1]
     recipient = kwargs['recipient_without_ext']
     recipient_domain = kwargs['recipient_domain']
 
     policy_recipients = utils.get_policy_addresses_from_email(mail=recipient)
-    policy_senders = [sender,                   # email address
-                      '@' + sender_domain,      # sender domain
-                      '@.' + sender_domain,     # sender sub-domains
-                      sender_tld_domain,        # top-level-domain
-                      '@.',                     # catch-all
-                      client_address]           # client IP address
+    policy_senders = utils.get_policy_addresses_from_email(sender)
+    policy_senders += [client_address]
 
     if utils.is_ipv4(client_address):
         # Add wildcard ip address: xx.xx.xx.*.
