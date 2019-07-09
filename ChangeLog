@@ -1,5 +1,7 @@
 iRedAPD-3.0:
     * Fixed issues:
+        - Not include all possible sender addresses while applying greylisting
+          setting.
         - Throttling doesn't work.
 
 iRedAPD-2.9:
