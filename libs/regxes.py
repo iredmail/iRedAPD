@@ -1,7 +1,7 @@
 import re
 
 # Mail address. +, = is used in SRS rewritten addresses.
-regx_email = r'''[\w\-\#][\w\-\.\+\=\/\#]*@[\w\-][\w\-\.]*\.[a-zA-Z0-9\-]{2,15}'''
+regx_email = r'''[\w\-\#][\w\-\.\+\=\/\#\&]*@[\w\-][\w\-\.]*\.[a-zA-Z0-9\-]{2,15}'''
 cmp_email = re.compile(regx_email, re.IGNORECASE | re.DOTALL)
 
 # Domain name

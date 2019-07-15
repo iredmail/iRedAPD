@@ -1,5 +1,6 @@
 iRedAPD-3.0:
     * Fixed issues:
+        - Not allow '&' in username part of email address.
         - Not include all possible sender addresses while applying greylisting
           setting.
         - Throttling doesn't work.

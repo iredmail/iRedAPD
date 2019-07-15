@@ -99,7 +99,7 @@ def is_email(s):
         return False
 
     # Not contain invalid characters and match regular expression
-    if not set(s) & set(r'~!$%^&*()\/ ') and regxes.cmp_email.match(s):
+    if not set(s) & set(r'~!$%^*()\/ ') and regxes.cmp_email.match(s):
         return True
 
     return False
