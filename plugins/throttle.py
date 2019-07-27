@@ -158,8 +158,8 @@
 #                        4096000000);
 
 import time
-from libs.logger import logger
 from web import sqlquote
+from libs.logger import logger
 import settings
 from libs import SMTP_ACTIONS, utils
 
