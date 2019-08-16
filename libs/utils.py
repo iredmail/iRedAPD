@@ -181,6 +181,9 @@ def get_policy_addresses_from_email(mail):
                           "@.",     # catch-all
     ]
     """
+    if not is_email(mail):
+        return ['@.']
+
     (_user, _domain) = mail.split('@', 1)
     _domain_parts = _domain.split('.')
 
