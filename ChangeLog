@@ -1,5 +1,10 @@
 iRedAPD-3.1:
     * Fixed issues:
+        - Not correctly set timeout of DNS query.
+        - Default timeout of DNS query was too long (20 seconds), if the query
+          took long time to get an answer, Postfix may reject emails and
+          raise error:
+          `warning: connect to 127.0.0.1:7777: Connection timed out`.
         - Plugin `greylisting` doesn't work if sender address is empty.
 
 iRedAPD-3.0:

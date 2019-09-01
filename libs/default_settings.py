@@ -54,7 +54,7 @@ SQL_CONNECTION_POOL_RECYCLE = 60
 
 # DNS Query.
 # Timeout in seconds. Must be a float number.
-DNS_QUERY_TIMEOUT = 20.0
+DNS_QUERY_TIMEOUT = 3.0
 
 # ---------------
 # Required by:

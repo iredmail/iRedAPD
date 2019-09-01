@@ -7,6 +7,8 @@ import settings
 
 resv = resolver.Resolver()
 resv.timeout = settings.DNS_QUERY_TIMEOUT
+resv.lifetime = settings.DNS_QUERY_TIMEOUT
+
 
 def query_a(domains, queried_domains=None, returned_ips=None):
     """
@@ -35,10 +37,12 @@ def query_a(domains, queried_domains=None, returned_ips=None):
                     returned_ips.add(_ip)
 
             queried_domains.add('a:' + domain)
-        except resolver.NoAnswer:
-            pass
+        except (resolver.NoAnswer):
+            logger.debug('[SPF] Got NoAnswer of DNS A record {0}.'.format(domain))
         except resolver.NXDOMAIN:
-            pass
+            logger.debug('[SPF] Got NXDOMAIN of DNS A record {0}.'.format(domain))
+        except (resolver.Timeout):
+            logger.debug('[SPF] Timeout while querying DNS A record {0}.'.format(domain))
         except Exception, e:
             logger.debug('[SPF] Error while querying DNS A record {0}: '
                          '{1}'.format(domain, e))
