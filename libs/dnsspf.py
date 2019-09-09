@@ -31,21 +31,20 @@ def query_a(domains, queried_domains=None, returned_ips=None):
             if qr:
                 for r in qr:
                     _ip = str(r)
-                    logger.debug('[SPF][{0}] A: {1}'.format(domain, _ip))
+                    logger.debug('[DNS][A] {0} -> {1}'.format(domain, _ip))
 
                     ips.add(_ip)
                     returned_ips.add(_ip)
 
             queried_domains.add('a:' + domain)
         except (resolver.NoAnswer):
-            logger.debug('[SPF] Got NoAnswer of DNS A record {0}.'.format(domain))
+            logger.debug('[DNS][A] {0} -> NoAnswer'.format(domain))
         except resolver.NXDOMAIN:
-            logger.debug('[SPF] Got NXDOMAIN of DNS A record {0}.'.format(domain))
+            logger.debug('[DNS][A] {0} -> NXDOMAIN'.format(domain))
         except (resolver.Timeout):
-            logger.debug('[SPF] Timeout while querying DNS A record {0}.'.format(domain))
+            logger.info('[DNS][A] {0} -> Timeout'.format(domain))
         except Exception, e:
-            logger.debug('[SPF] Error while querying DNS A record {0}: '
-                         '{1}'.format(domain, e))
+            logger.debug('[DNS][A] {0} -> Error: {1}'.format(domain, e))
 
     return {'ips': ips,
             'queried_domains': queried_domains,
