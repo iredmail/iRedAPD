@@ -2,6 +2,7 @@
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: add, delete, show whitelists/blacklists for specified local recipient.
 
+from __future__ import print_function
 import os
 import sys
 import web
@@ -73,7 +74,7 @@ Sample usage:
 """
 
 if len(sys.argv) == 1:
-    print USAGE
+    print(USAGE)
     sys.exit()
 elif not len(sys.argv) >= 3:
     sys.exit()
@@ -252,7 +253,7 @@ else:
 
             if _wb:
                 for i in sorted(_wb):
-                    print i
+                    print(i)
             else:
                 logger.info('* No whitelist/blacklist.')
         else:

@@ -31,7 +31,7 @@ if settings.backend not in ['ldap', 'mysql', 'pgsql']:
 
 def main():
     # Set umask.
-    os.umask(0077)
+    os.umask(0o077)
 
     # Establish SQL database connections.
     db_conns = utils.get_required_db_conns()

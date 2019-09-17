@@ -35,7 +35,7 @@ __url__ = "http://www.clapper.org/software/python/daemon/"
 __copyright__ = "(c) 2008 Brian M. Clapper"
 __license__ = "BSD-style license"
 
-__all__ = ['daemonize', 'DaemonError']
+__all__ = ["daemonize", "DaemonError"]
 
 # ---------------------------------------------------------------------------
 # Imports
@@ -52,7 +52,7 @@ import signal
 
 # Default daemon parameters.
 # File mode creation mask of the daemon.
-UMASK = 0077
+UMASK = 0o077
 
 # Default working directory for the daemon.
 WORKDIR = "/"
@@ -61,7 +61,7 @@ WORKDIR = "/"
 MAXFD = 1024
 
 # The standard I/O file descriptors are redirected to /dev/null by default.
-if (hasattr(os, "devnull")):
+if hasattr(os, "devnull"):
     NULL_DEVICE = os.devnull
 else:
     NULL_DEVICE = "/dev/null"
@@ -71,11 +71,12 @@ else:
 # Logging
 # ---------------------------------------------------------------------------
 
-log = logging.getLogger('daemonize')
+log = logging.getLogger("daemonize")
 
 # ---------------------------------------------------------------------------
 # Public classes
 # ---------------------------------------------------------------------------
+
 
 class DaemonError(Exception):
     """
@@ -83,6 +84,7 @@ class DaemonError(Exception):
     a daemon. A C{DaemonException} object always contains a single string
     value that contains an error message describing the problem.
     """
+
     def __init__(self, errorMessage):
         """
         Create a new C{DaemonException}.
@@ -100,9 +102,11 @@ class DaemonError(Exception):
         """
         return self.errorMessage
 
+
 # ---------------------------------------------------------------------------
 # Public functions
 # ---------------------------------------------------------------------------
+
 
 def daemonize(noClose=False):
     """
@@ -122,8 +126,8 @@ def daemonize(noClose=False):
     """
     global log
 
-    if os.name != 'posix':
-        log.warn('Daemon is only supported on Posix-compliant systems.')
+    if os.name != "posix":
+        log.warn("Daemon is only supported on Posix-compliant systems.")
         return
 
     try:
@@ -163,21 +167,24 @@ def daemonize(noClose=False):
             _redirectFileDescriptors()
 
     except Exception as e:
-        raise DaemonError('Error during daemonizing: %s [%d]' % (e.strerror, e.errno))
+        raise DaemonError("Error during daemonizing: %s [%d]" % (e.strerror, e.errno))
 
 
 # ---------------------------------------------------------------------------
 # Private functions
 # ---------------------------------------------------------------------------
 
+
 def _fork():
     try:
         return os.fork()
-    except OSError, e:
-        raise DaemonError('Cannot fork: %s [%d]' % (e.strerror, e.errno))
+    except OSError as e:
+        raise DaemonError("Cannot fork: %s [%d]" % (e.strerror, e.errno))
+
 
 def _redirectFileDescriptors():
     import resource  # POSIX resource information
+
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
     if maxfd == resource.RLIM_INFINITY:
         maxfd = MAXFD
@@ -193,11 +200,15 @@ def _redirectFileDescriptors():
 
         try:
             os.close(fd)
-        except OSError, e:
+        except OSError as e:
             # File descriptor wasn't open. Ignore.
-            logging.info('Error in _redirectFileDescriptors 1: (%d, %s)' % (e.errno, e.strerror))
+            logging.info(
+                "Error in _redirectFileDescriptors 1: (%d, %s)" % (e.errno, e.strerror)
+            )
         except Exception as e:
-            logging.info('Error in _redirectFileDescriptors 2: (%d, %s)' % (e.errno, e.strerror))
+            logging.info(
+                "Error in _redirectFileDescriptors 2: (%d, %s)" % (e.errno, e.strerror)
+            )
 
     # Redirect standard input, output and error to something safe.
     # os.open() is guaranteed to return the lowest available file
@@ -208,26 +219,28 @@ def _redirectFileDescriptors():
     os.dup2(0, 1)
     os.dup2(0, 2)
 
+
 # ---------------------------------------------------------------------------
 # Main program (for testing)
 # ---------------------------------------------------------------------------
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    log = logging.getLogger('daemon')
+    log = logging.getLogger("daemon")
     hdlr = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%T')
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s", "%T")
     hdlr.setFormatter(formatter)
     log.addHandler(hdlr)
     log.setLevel(logging.DEBUG)
 
-    log.debug('Before daemonizing, PID=%d' % os.getpid())
+    log.debug("Before daemonizing, PID=%d" % os.getpid())
     daemonize(noClose=True)
-    log.debug('After daemonizing, PID=%d' % os.getpid())
-    log.debug('Daemon is sleeping for 10 seconds')
+    log.debug("After daemonizing, PID=%d" % os.getpid())
+    log.debug("Daemon is sleeping for 10 seconds")
 
     import time
+
     time.sleep(10)
 
-    log.debug('Daemon exiting')
+    log.debug("Daemon exiting")
     sys.exit(0)

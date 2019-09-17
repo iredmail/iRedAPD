@@ -37,10 +37,6 @@ _log_level = getattr(logging, str(settings.log_level).upper())
 logger.setLevel(_log_level)
 
 
-def print_error(msg):
-    print '< ERROR >', msg
-
-
 def get_gmttime():
     # Convert local time to UTC
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
@@ -68,7 +64,7 @@ def get_db_conn(db):
         conn.supports_multiple_insert = True
         return conn
     except Exception as e:
-        print_error(e)
+        logger.error(e)
 
 
 def sql_count_id(conn, table, column='id', where=None):

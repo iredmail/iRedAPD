@@ -1,3 +1,4 @@
+from __future__ import print_function
 import socket
 
 policy_data = """request=smtpd_access_policy
@@ -32,5 +33,5 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('127.0.0.1', 7777))
 s.sendall(policy_data)
 data = s.recv(1024)
-print data
+print(data)
 s.close()

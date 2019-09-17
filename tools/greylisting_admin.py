@@ -2,6 +2,7 @@
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Manage greylisting settings.
 
+from __future__ import print_function
 import os
 import sys
 import web
@@ -112,7 +113,7 @@ Sample usages:
 """
 
 if len(sys.argv) == 1:
-    print USAGE
+    print(USAGE)
     sys.exit()
 
 
@@ -250,8 +251,8 @@ elif action == 'list':
             sys.exit()
 
         output_format = '%-8s %-34s -> %-30s'
-        print output_format % ('Status', 'Sender', 'Local Account')
-        print '-' * 78
+        print(output_format % ('Status', 'Sender', 'Local Account'))
+        print('-' * 78)
 
         for i in qr:
             _account = i.account
@@ -266,9 +267,9 @@ elif action == 'list':
                 _account = '@. (anyone)'
 
             if _active:
-                print output_format % ('enabled', _sender, _account)
+                print(output_format % ('enabled', _sender, _account))
             else:
-                print output_format % ('disabled', _sender, _account)
+                print(output_format % ('disabled', _sender, _account))
 
     except Exception as e:
         logger.info(str(e))
