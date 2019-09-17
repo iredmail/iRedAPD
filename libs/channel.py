@@ -58,18 +58,18 @@ class DaemonSocket(asyncore.dispatcher):
                        plugins=self.loaded_plugins,
                        sender_search_attrlist=self.sender_search_attrlist,
                        recipient_search_attrlist=self.recipient_search_attrlist)
-            except Exception, e:
+            except Exception as e:
                 logger.error('Error while applying policy channel: %s' % repr(e))
         elif self.policy_channel == 'srs_sender':
             try:
                 SRS(sock, db_conns=self.db_conns, rewrite_address_type='sender')
-            except Exception, e:
+            except Exception as e:
                 logger.error('Error while applying srs (sender): %s' % repr(e))
 
         elif self.policy_channel == 'srs_recipient':
             try:
                 SRS(sock, db_conns=self.db_conns, rewrite_address_type='recipient')
-            except Exception, e:
+            except Exception as e:
                 logger.error('Error while applying srs (recipient): %s' % repr(e))
 
 
@@ -94,7 +94,7 @@ class Policy(asynchat.async_chat):
     def push(self, msg):
         try:
             asynchat.async_chat.push(self, msg + '\n')
-        except Exception, e:
+        except Exception as e:
             logger.error('Error while pushing message: %s. Msg: %s' % (repr(e), repr(msg)))
 
     def collect_incoming_data(self, data):
@@ -165,7 +165,7 @@ class Policy(asynchat.async_chat):
                 else:
                     logger.error('No result returned by modeler, fallback to default action: %s' % str(action))
                     action = SMTP_ACTIONS['default']
-            except Exception, e:
+            except Exception as e:
                 action = SMTP_ACTIONS['default']
                 logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
 
@@ -216,7 +216,7 @@ class SRS(asynchat.async_chat):
     def push(self, msg):
         try:
             asynchat.async_chat.push(self, msg + '\n')
-        except Exception, e:
+        except Exception as e:
             logger.error('Error while pushing message: error={0}, message={1}'.format(e, msg))
 
     def collect_incoming_data(self, data):
@@ -237,7 +237,7 @@ class SRS(asynchat.async_chat):
             try:
                 conn_vmail = self.db_conns['conn_vmail']
                 _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
-            except Exception, e:
+            except Exception as e:
                 logger.error(self.log_prefix + 'Error while verifying domain: {0}'.format(e))
 
             if _is_local_domain:
@@ -261,7 +261,7 @@ class SRS(asynchat.async_chat):
                     qr = conn_iredapd.execute(sql)
                     sql_record = qr.fetchone()
                     logger.debug(self.log_prefix + '[SQL] Query result: {0}'.format(sql_record))
-                except Exception, e:
+                except Exception as e:
                     logger.debug(self.log_prefix + 'Error while querying SQL: {0}'.format(e))
                     reply = TCP_REPLIES['not_exist']
                     return reply
@@ -275,7 +275,7 @@ class SRS(asynchat.async_chat):
                         logger.info(self.log_prefix + 'rewrited: {0} -> {1}'.format(addr, new_addr))
                         reply = TCP_REPLIES['success'] + new_addr
                         return reply
-                    except Exception, e:
+                    except Exception as e:
                         logger.debug(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
                         # Return original address.
                         reply = TCP_REPLIES['not_exist']
@@ -295,7 +295,7 @@ class SRS(asynchat.async_chat):
                 new_addr = str(self.srslib_instance.reverse(addr))
                 logger.info(self.log_prefix + 'reversed: {0} -> {1}'.format(addr, new_addr))
                 reply = TCP_REPLIES['success'] + new_addr
-            except Exception, e:
+            except Exception as e:
                 logger.debug(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
 
                 # Return original address.

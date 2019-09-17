@@ -41,7 +41,7 @@ def is_local_domain(conn,
 
         if sql_record:
             return True
-    except Exception, e:
+    except Exception as e:
         logger.error('<!> Error while querying domain: {0}'.format(e))
 
     # Query alias domain
@@ -62,7 +62,7 @@ def is_local_domain(conn,
 
             if sql_record:
                 return True
-    except Exception, e:
+    except Exception as e:
         logger.error('<!> Error while querying alias domain: {0}'.format(e))
 
     return False

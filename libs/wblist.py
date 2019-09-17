@@ -32,7 +32,7 @@ def create_user(conn, account, policy_id=0, return_record=True):
             return (True, sql_record)
         else:
             return (True, )
-    except Exception, e:
+    except Exception as e:
         return (False, str(e))
 
 
@@ -69,7 +69,7 @@ def get_user_record(conn, account, create_if_missing=True):
         d['email'] = str(_email)
 
         return (True, d)
-    except Exception, e:
+    except Exception as e:
         return (False, str(e))
 
 
@@ -187,7 +187,7 @@ def add_wblist(conn,
         if rcpt_records:
             sql = "DELETE FROM outbound_wblist WHERE sid=%d AND rid IN %s" % (user_id, sqlquote(rcpt_records.values()))
             conn.execute(sql)
-    except Exception, e:
+    except Exception as e:
         return (False, e)
 
     # Generate dict used to build SQL statements for importing wblist
@@ -232,7 +232,7 @@ def add_wblist(conn,
                 except:
                     pass
 
-    except Exception, e:
+    except Exception as e:
         return (False, e)
 
     return (True, )
@@ -346,7 +346,7 @@ def delete_wblist(conn,
             if rids:
                 conn.execute("DELETE FROM outbound_wblist WHERE sid=%s AND rid IN %s AND wb='B'" % (sqlquote(user_id), sqlquote(rids)))
 
-    except Exception, e:
+    except Exception as e:
         return (False, str(e))
 
     return (True, {'wl_senders': wl_smails,
@@ -396,7 +396,7 @@ def delete_all_wblist(conn,
                         vars={'user_id': user_id},
                         where="sid=$user_id AND wb='B'")
 
-    except Exception, e:
+    except Exception as e:
         return (False, str(e))
 
     return (True, )
@@ -431,7 +431,7 @@ def get_account_wblist(conn,
                 wl.append(_addr)
             else:
                 bl.append(_addr)
-    except Exception, e:
+    except Exception as e:
         return (False, e)
 
     return (True, {'whitelist': wl, 'blacklist': bl})
@@ -465,7 +465,7 @@ def get_account_outbound_wblist(conn,
                 wl.append(_addr)
             else:
                 bl.append(_addr)
-    except Exception, e:
+    except Exception as e:
         return (False, e)
 
     return (True, {'whitelist': wl, 'blacklist': bl})

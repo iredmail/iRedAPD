@@ -91,7 +91,7 @@ def _is_whitelisted(conn,
                 if ip_object in _net:
                     logger.info('[%s] Client network is whitelisted: cidr=%s' % (client_address, _cidr))
                     return True
-            except Exception, e:
+            except Exception as e:
                 logger.debug('Not an valid IP network: sender=%s, error=%s' % (_cidr, repr(e)))
 
     logger.debug('No whitelist found.')
@@ -165,7 +165,7 @@ def _should_be_greylisted_by_setting(conn,
                         _net = ipaddress.ip_network(_sender)
                         if ip_object in _net:
                             _matched = True
-                    except Exception, e:
+                    except Exception as e:
                         logger.debug('Not a valid IP network: {0} (error: {1})'.format(_sender, e))
 
         if _matched:
@@ -218,7 +218,7 @@ def _should_be_greylisted_by_tracking(conn,
     try:
         qr = conn.execute(sql)
         sql_record = qr.fetchone()
-    except Exception, e:
+    except Exception as e:
         logger.error('Error while querying greylisting tracking: %s. SQL: %s' % (repr(e), sql))
 
     if not sql_record:
@@ -240,7 +240,7 @@ def _should_be_greylisted_by_tracking(conn,
         logger.debug('[SQL] New tracking: \n%s' % sql)
         try:
             conn.execute(sql)
-        except Exception, e:
+        except Exception as e:
             if e.__class__.__name__ == 'IntegrityError':
                 pass
             else:
@@ -278,7 +278,7 @@ def _should_be_greylisted_by_tracking(conn,
         logger.debug('[SQL] Update tracking record: \n%s' % sql)
         try:
             conn.execute(sql)
-        except Exception, e:
+        except Exception as e:
             logger.error('Error while updating greylisting tracking: %s' % repr(e))
             conn.execute(sql)
             logger.error('Re-updated. It is safe to ignore above error message.')
@@ -301,7 +301,7 @@ def _should_be_greylisted_by_tracking(conn,
             logger.debug('[SQL] Update expired date: \n%s' % sql)
             try:
                 conn.execute(sql)
-            except Exception, e:
+            except Exception as e:
                 logger.error('[%s] Error while Updating expired date for passed client: %s' % (client_address, repr(e)))
 
             # Remove other tracking records from same client IP address to save
@@ -312,7 +312,7 @@ def _should_be_greylisted_by_tracking(conn,
             logger.debug('[SQL] Remove other tracking records from same client IP address: \n%s' % sql)
             try:
                 conn.execute(sql)
-            except Exception, e:
+            except Exception as e:
                 logger.error('[%s] Error while removing other tracking records from passed client: %s' % (client_address, repr(e)))
 
         return False

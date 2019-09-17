@@ -66,7 +66,7 @@ def main():
     # Run this program as daemon.
     try:
         daemon.daemonize(noClose=True)
-    except Exception, e:
+    except Exception as e:
         logger.error('Error in daemon.daemonize: ' + str(e))
 
     # Write pid number into pid file.
@@ -103,7 +103,7 @@ def main():
 
     except KeyboardInterrupt:
         pass
-    except Exception, e:
+    except Exception as e:
         logger.error('Error in asyncore.loop: ' + str(e))
 
 

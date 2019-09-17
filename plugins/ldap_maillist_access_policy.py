@@ -170,7 +170,7 @@ def restriction(**kwargs):
             if sender in allowed_senders:
                 logger.info('Sender (%s) is allowed by access policy of mailing list: %s.' % (sender, policy))
                 return SMTP_ACTIONS['default']
-        except Exception, e:
+        except Exception as e:
             _msg = 'Error while querying allowed senders of mailing list (access policy: %s): %s' % (MAILLIST_POLICY_MEMBERSANDMODERATORSONLY, repr(e))
             logger.error(_msg)
             return SMTP_ACTIONS['default'] + ' (%s)' % _msg

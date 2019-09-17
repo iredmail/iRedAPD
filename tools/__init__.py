@@ -67,7 +67,7 @@ def get_db_conn(db):
 
         conn.supports_multiple_insert = True
         return conn
-    except Exception, e:
+    except Exception as e:
         print_error(e)
 
 

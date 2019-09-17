@@ -43,7 +43,7 @@ def query_a(domains, queried_domains=None, returned_ips=None):
             logger.debug('[DNS][A] {0} -> NXDOMAIN'.format(domain))
         except (resolver.Timeout):
             logger.info('[DNS][A] {0} -> Timeout'.format(domain))
-        except Exception, e:
+        except Exception as e:
             logger.debug('[DNS][A] {0} -> Error: {1}'.format(domain, e))
 
     return {'ips': ips,
@@ -127,7 +127,7 @@ def query_spf(domain, queried_domains=None):
         pass
     except resolver.NXDOMAIN:
         pass
-    except Exception, e:
+    except Exception as e:
         logger.debug('[SPF] Error while querying DNS SPF record {0}: {1}'.format(domain, e))
 
     queried_domains.add('spf:' + domain)
@@ -343,7 +343,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
                                  'of sender domain {1} '
                                  '(network={2}).'.format(ip, sender_domain, _cidr))
                     return True
-            except Exception, e:
+            except Exception as e:
                 logger.debug('[SPF] Error while checking IP {0} against '
                              'network {1}: {2}'.format(ip, _cidr, e))
 

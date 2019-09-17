@@ -39,7 +39,7 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
         else:
             logger.debug('No such account.')
             return (None, None)
-    except Exception, e:
+    except Exception as e:
         logger.debug('<!> ERROR, result: %s' % str(e))
         return (None, None)
 
@@ -66,7 +66,7 @@ def get_primary_and_alias_domains(conn, domain):
             _all_domains = _ldif.get('domainName', []) + _ldif.get('domainAliasName', [])
 
             return list(set(_all_domains))
-    except Exception, e:
+    except Exception as e:
         # Log and return if LDAP error occurs
         logger.error('Error while querying alias domains of domain (%s): %s' % (domain, repr(e)))
         return []
@@ -103,7 +103,7 @@ def is_local_domain(conn,
             return True
     except ldap.NO_SUCH_OBJECT:
         return False
-    except Exception, e:
+    except Exception as e:
         logger.error('<!> Error while querying local domain: %s' % str(e))
         return False
 
@@ -139,7 +139,7 @@ def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
             return _domain
     except ldap.NO_SUCH_OBJECT:
         pass
-    except Exception, e:
+    except Exception as e:
         logger.error('<!> Error while querying alias domain: %s' % str(e))
 
     return None

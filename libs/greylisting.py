@@ -26,7 +26,7 @@ def delete_setting(conn, account, sender):
         conn.execute(sql)
 
         return (True, )
-    except Exception, e:
+    except Exception as e:
         return (False, str(e))
 
 def enable_greylisting(conn, account, sender):
@@ -44,7 +44,7 @@ def enable_greylisting(conn, account, sender):
         conn.execute(sql)
 
         return (True, )
-    except Exception, e:
+    except Exception as e:
         return (False, str(e))
 
 def disable_greylisting(conn, account, sender):
@@ -62,7 +62,7 @@ def disable_greylisting(conn, account, sender):
         conn.execute(sql)
 
         return (True, )
-    except Exception, e:
+    except Exception as e:
         return (False, str(e))
 
 def add_whitelist_sender(conn, account, sender, comment=None):
@@ -78,7 +78,7 @@ def add_whitelist_sender(conn, account, sender, comment=None):
         sql = """INSERT INTO greylisting_whitelists (account, sender, comment)
                                              VALUES ('%s', '%s', '%s')""" % (account, sender, comment)
         conn.execute(sql)
-    except Exception, e:
+    except Exception as e:
         error = str(e).lower()
         if 'duplicate key' in error or 'duplicate entry' in error:
             pass
@@ -95,7 +95,7 @@ def add_whitelist_domain(conn, domain):
     try:
         sql = """INSERT INTO greylisting_whitelist_domains (domain) VALUES ('%s')""" % domain
         conn.execute(sql)
-    except Exception, e:
+    except Exception as e:
         error = str(e).lower()
         if 'duplicate key' in error or 'duplicate entry' in error:
             pass
@@ -115,7 +115,7 @@ def remove_whitelisted_domain(domain, conn):
 
         sql = """DELETE FROM greylisting_whitelists WHERE COMMENT='AUTO-UPDATE: %s'""" % domain
         conn.execute(sql)
-    except Exception, e:
+    except Exception as e:
         error = str(e).lower()
         if 'duplicate key' in error or 'duplicate entry' in error:
             pass

@@ -270,7 +270,7 @@ elif action == 'list':
             else:
                 print output_format % ('disabled', _sender, _account)
 
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))
 
 elif action == 'list-whitelist-domains':
@@ -281,7 +281,7 @@ elif action == 'list-whitelist-domains':
         for r in qr:
             logger.info(r.domain)
 
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))
 
 elif action == 'list-whitelists':
@@ -305,7 +305,7 @@ elif action == 'list-whitelists':
 
         for r in qr_spf:
             logger.info('%s -> %s, "%s"' % (r.sender, r.account, r.comment))
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))
 elif action == 'add-whitelist':
     # show whitelisted senders in `greylisting_whitelists` table.
@@ -314,5 +314,5 @@ elif action == 'add-whitelist':
                          account=rcpt,
                          sender=sender)
 
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))

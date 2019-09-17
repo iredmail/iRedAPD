@@ -74,7 +74,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
             sql_cidr = first_field + r'.%%'
         else:
             return ids
-    except Exception, e:
+    except Exception as e:
         return ids
 
     sql = """SELECT id, email
@@ -86,7 +86,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
     try:
         qr = conn.execute(sql)
         qr_cidr = qr.fetchall()
-    except Exception, e:
+    except Exception as e:
         logger.error('Error while querying CIDR network: %s, SQL: \n%s' % (repr(e), sql))
         return ids
 
@@ -129,7 +129,7 @@ def get_id_of_external_addresses(conn, addresses):
     try:
         qr = conn.execute(sql)
         qr_addresses = qr.fetchall()
-    except Exception, e:
+    except Exception as e:
         logger.error('Error while getting list of id of external addresses: %s, SQL: %s' % (repr(e), sql))
         return ids
 
@@ -161,7 +161,7 @@ def get_id_of_local_addresses(conn, addresses):
         qr_addresses = qr.fetchall()
         if qr_addresses:
             ids = [int(r.id) for r in qr_addresses]
-    except Exception, e:
+    except Exception as e:
         logger.error('Error while executing SQL command: %s' % repr(e))
 
     if not ids:

@@ -176,7 +176,7 @@ if action == 'add':
 
         if not qr[0]:
             logger.error(qr[1])
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))
 
 elif action == 'delete':
@@ -209,7 +209,7 @@ elif action == 'delete':
                 logger.info('- Deleted: %s' % str(i))
         else:
             logger.error(qr[1])
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))
 elif action == 'delete-all':
     try:
@@ -227,7 +227,7 @@ elif action == 'delete-all':
 
         if not qr[0]:
             logger.error(qr[1])
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))
 else:
     # action == 'list'
@@ -257,5 +257,5 @@ else:
                 logger.info('* No whitelist/blacklist.')
         else:
             logger.error(qr[1])
-    except Exception, e:
+    except Exception as e:
         logger.info(str(e))

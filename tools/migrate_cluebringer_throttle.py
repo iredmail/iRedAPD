@@ -160,5 +160,5 @@ for t in t_settings:
 
     try:
         conn.query(sql)
-    except Exception, e:
+    except Exception as e:
         logger.error("<<< Error >>> %s" % str(e))

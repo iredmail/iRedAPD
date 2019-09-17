@@ -157,7 +157,7 @@ for domain in domain_ips:
         conn.delete('greylisting_whitelists',
                     vars=sql_vars,
                     where="comment=$comment")
-    except Exception, e:
+    except Exception as e:
         logger.info('* <<< ERROR >>> Cannot delete old record for domain %s: %s' % (domain, str(e)))
 
     # Insert new records
@@ -183,7 +183,7 @@ for domain in domain_ips:
                             vars={'ip': ip},
                             where='client_address=$ip')
 
-        except Exception, e:
+        except Exception as e:
             if e.__class__.__name__ == 'IntegrityError':
                 pass
             else:
@@ -194,5 +194,5 @@ if submit_to_sql_db:
     for d in domains:
         try:
             conn.insert('greylisting_whitelist_domains', domain=d)
-        except Exception, e:
+        except Exception as e:
             logger.error('<<< ERROR >>> %s' % str(e))

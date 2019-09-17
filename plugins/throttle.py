@@ -221,11 +221,11 @@ def __sendmail(conn,
             try:
                 conn.execute(_sql)
                 logger.debug('Updated last notify time.')
-            except Exception, e:
+            except Exception as e:
                 logger.error('Error while updating last notify time of quota exceed: %s.' % (repr(e)))
 
         return (True, )
-    except Exception, e:
+    except Exception as e:
         logger.error('Error while sending notification email: %s' % repr(e))
         return (False, repr(e))
 
@@ -536,7 +536,7 @@ def apply_throttle(conn,
                     _body += '- Throttle setting(s): ' + throttle_info + '\n'
 
                     utils.sendmail(subject=_subject, mail_body=_body)
-                except Exception, e:
+                except Exception as e:
                     logger.error('Error while sending notification email: {0}'.format(e))
 
                 return SMTP_ACTIONS['reject_quota_exceeded']

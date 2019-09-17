@@ -42,6 +42,6 @@ def get_applicable_policy(db_cursor,
             return (True, records)
         else:
             return (True, {})
-    except Exception, e:
+    except Exception as e:
         logger.debug('Error while quering Amavisd policy (%s): %s' % (account, str(e)))
         return (False, str(e))

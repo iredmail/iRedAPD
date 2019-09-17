@@ -113,7 +113,7 @@ for r in qr:
                             sender_priority=0,
                             active=1)
         logger.info('\t+ Migrated account setting: %s' % _account)
-    except Exception, e:
+    except Exception as e:
         if str(e).startswith('duplicate key value'):
             logger.info('\t[SKIP] Setting for account %s already exists.' % _account)
         else:
@@ -137,5 +137,5 @@ for rcd in qr:
         sql = """INSERT INTO greylisting_whitelists (account, sender, comment) VALUES ('@.', '%s', '%s');""" % (wl, comment)
         try:
             conn_iredapd.query(sql)
-        except Exception, e:
+        except Exception as e:
             pass

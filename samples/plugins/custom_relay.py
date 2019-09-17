@@ -127,7 +127,7 @@ def restriction(**kwargs):
 
     try:
         size = int(kwargs['smtp_session_data']['size'])
-    except Exception, e:
+    except Exception as e:
         logger.error('SKIP, cannot get mail message size. Error: %s' % repr(e))
         return SMTP_ACTIONS['default']
 
@@ -173,7 +173,7 @@ def restriction(**kwargs):
             qr_relay = qr.fetchone()[0]
 
             logger.debug('[SQL] Query result: %s' % qr_relay)
-        except Exception, e:
+        except Exception as e:
             logger.error('Error while querying custom relayhost (fallback to default action): %s' % repr(e))
             return SMTP_ACTIONS['default']
 

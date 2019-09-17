@@ -269,7 +269,7 @@ def get_db_conn(db):
                              pool_recycle=settings.SQL_CONNECTION_POOL_RECYCLE,
                              max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
         return conn
-    except Exception, e:
+    except Exception as e:
         logger.error('Error while create SQL connection: %s' % repr(e))
         return None
 
@@ -516,7 +516,7 @@ def load_enabled_plugins(plugins):
         try:
             loaded_plugins.append(__import__(plugin))
             logger.info('Loading plugin (priority: %s): %s' % (_plugin_priorities[plugin], plugin))
-        except Exception, e:
+        except Exception as e:
             logger.error('Error while loading plugin (%s): %s' % (plugin, repr(e)))
 
     # Get list of LDAP query attributes
@@ -549,7 +549,7 @@ def get_required_db_conns():
         try:
             conn_vmail = ldap.ldapobject.ReconnectLDAPObject(settings.ldap_uri)
             logger.debug('LDAP connection initialied success.')
-        except Exception, e:
+        except Exception as e:
             logger.error('LDAP initialized failed: %s.' % str(e))
 
         # Bind to ldap server.
@@ -558,7 +558,7 @@ def get_required_db_conns():
             logger.debug('LDAP bind success.')
         except ldap.INVALID_CREDENTIALS:
             logger.error('LDAP bind failed: incorrect bind dn or password.')
-        except Exception, e:
+        except Exception as e:
             logger.error('LDAP bind failed: %s.' % str(e))
     else:
         # settings.backend in ['mysql', 'pgsql']
@@ -592,7 +592,7 @@ def sendmail_with_cmd(from_address, recipients, message_text):
         p.wait()
 
         return (True, )
-    except Exception, e:
+    except Exception as e:
         return (False, repr(e))
 
 
@@ -651,7 +651,7 @@ def sendmail(subject, mail_body, from_address=None, recipients=None):
             s.sendmail(from_address, recipients, message_text)
             s.quit()
             return (True, )
-        except Exception, e:
+        except Exception as e:
             return (False, repr(e))
     else:
         return sendmail_with_cmd(from_address=from_address,

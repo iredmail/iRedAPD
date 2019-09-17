@@ -29,7 +29,7 @@ def get_db_conn(db):
                             pw=settings.__dict__[db + '_db_password'])
 
         return conn
-    except Exception, e:
+    except Exception as e:
         logger.error('Error while create SQL connection: %s' % repr(e))
         return None
 

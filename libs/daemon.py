@@ -162,7 +162,7 @@ def daemonize(noClose=False):
         if not noClose:
             _redirectFileDescriptors()
 
-    except Exception, e:
+    except Exception as e:
         raise DaemonError('Error during daemonizing: %s [%d]' % (e.strerror, e.errno))
 
 
@@ -196,7 +196,7 @@ def _redirectFileDescriptors():
         except OSError, e:
             # File descriptor wasn't open. Ignore.
             logging.info('Error in _redirectFileDescriptors 1: (%d, %s)' % (e.errno, e.strerror))
-        except Exception, e:
+        except Exception as e:
             logging.info('Error in _redirectFileDescriptors 2: (%d, %s)' % (e.errno, e.strerror))
 
     # Redirect standard input, output and error to something safe.
