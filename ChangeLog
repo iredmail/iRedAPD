@@ -3,9 +3,7 @@ iRedAPD-3.2:
 
         It queries sender server IP address against `senderscore.com` by DNS,
         if the returned reputation score equals to or is lower than reject
-        score (defaults to 20), email will be rejected. if lower than junk
-        score (defaults to 60), additional header `X-Spam-Flag: YES` will be
-        inserted.
+        score (defaults to 30), email will be rejected.
 
 iRedAPD-3.1:
     * Fixed issues:
