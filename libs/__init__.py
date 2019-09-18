@@ -1,5 +1,5 @@
 __author__ = 'Zhang Huangbin <zhb@iredmail.org>'
-__version__ = '3.1'
+__version__ = '3.2'
 
 
 SMTP_ACTIONS = {
@@ -20,6 +20,8 @@ SMTP_ACTIONS = {
     'reject_blacklisted_rdns': 'REJECT Blacklisted reverse DNS name of server IP address',
     # Throttling
     'reject_quota_exceeded': 'REJECT Quota exceeded',
+    # Sender Score
+    'reject_low_sender_score': 'REJECT Server IP address has bad reputation',
     'greylisting': '451 4.7.1',
 }
 
