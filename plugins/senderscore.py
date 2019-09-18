@@ -6,7 +6,7 @@
 from dns import resolver
 from libs.logger import logger
 from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4
+from libs import utils
 
 import settings
 
@@ -24,8 +24,13 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     client_address = kwargs["client_address"]
-    if not is_ipv4(client_address):
+    if not utils.is_ipv4(client_address):
+        logger.debug('Client address is not IPv4, bypass senderscore checking.')
         return SMTP_ACTIONS["default"]
+
+    if utils.is_trusted_client(client_address):
+        logger.debug('Client address is trusted, bypass senderscore checking.')
+        return SMTP_ACTIONS['default']
 
     (o1, o2, o3, o4) = client_address.split(".")
     lookup_domain = "{0}.{1}.{2}.{3}.score.senderscore.com".format(o4, o3, o2, o1)
@@ -56,6 +61,7 @@ def restriction(**kwargs):
         logger.info(log_msg)
         return SMTP_ACTIONS["reject_low_sender_score"]
 
+    log_msg += " [DUNNO]"
     logger.info(log_msg)
 
     return SMTP_ACTIONS["default"]
