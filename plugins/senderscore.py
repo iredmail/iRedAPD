@@ -1,12 +1,7 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 # Purpose: Lookup server reputation against senderscore.com.
-#
-# - If the reputation score returned by DNS query equals to or is lower than
-#   reject score (defaults to 30), email will be rejected.
-#
-# - If the reputation score returned by DNS query equals to or is lower than
-#   junk score (defaults to 60), additional header `X-Spam-Flag: YES` will be
-#   inserted into the message.
+#          If the reputation score returned by DNS query equals to or is lower
+#          than reject score (defaults to 30), email will be rejected.
 
 from dns import resolver
 from libs.logger import logger
@@ -20,7 +15,6 @@ resv.timeout = settings.DNS_QUERY_TIMEOUT
 resv.lifetime = settings.DNS_QUERY_TIMEOUT
 
 reject_score = settings.SENDERSCORE_REJECT_SCORE
-junk_score = settings.SENDERSCORE_JUNK_SCORE
 
 
 def restriction(**kwargs):
@@ -56,11 +50,7 @@ def restriction(**kwargs):
         log_msg += " [REJECT (<= {0})]".format(reject_score)
         logger.info(log_msg)
         return SMTP_ACTIONS["reject_low_sender_score"]
-    elif score <= junk_score:
-        log_msg += " [Junk (<= {0})]".format(junk_score)
-        logger.info(log_msg)
-        return "PREPEND X-Spam-Flag: YES"
 
     logger.info(log_msg)
 
-    return SMTP_ACTIONS["reject"]
+    return SMTP_ACTIONS["default"]

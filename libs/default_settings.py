@@ -211,12 +211,7 @@ THROTTLE_BYPASS_SAME_DOMAIN = True
 # Required by: plugins/senderscore.py
 #
 # Reject the email if senderscore equals to or is lower than this score.
-SENDERSCORE_REJECT_SCORE = 20
-
-# Consider the email as Spam/Junk if senderscore equals to or is slower than
-# this score.
-# It will cause Postfix to insert header `X-Spam-Flag: YES` to the message.
-SENDERSCORE_JUNK_SCORE = 60
+SENDERSCORE_REJECT_SCORE = 30
 
 # ----------------
 # Send mail

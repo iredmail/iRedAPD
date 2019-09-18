@@ -61,7 +61,7 @@ class Modeler:
 
             action = utils.apply_plugin(plugin, **plugin_kwargs)
 
-            if not (action.startswith('DUNNO') or action.startswith('PREPEND')):
+            if not action.startswith('DUNNO'):
                 return action
 
         # Close sql connections.
