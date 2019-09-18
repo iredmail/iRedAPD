@@ -18,6 +18,11 @@ reject_score = settings.SENDERSCORE_REJECT_SCORE
 
 
 def restriction(**kwargs):
+    # Bypass outgoing emails.
+    if kwargs['sasl_username']:
+        logger.debug('Found SASL username, bypass senderscore checking.')
+        return SMTP_ACTIONS['default']
+
     client_address = kwargs["client_address"]
     if not is_ipv4(client_address):
         return SMTP_ACTIONS["default"]
