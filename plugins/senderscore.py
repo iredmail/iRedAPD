@@ -61,7 +61,6 @@ def restriction(**kwargs):
         logger.info(log_msg)
         return SMTP_ACTIONS["reject_low_sender_score"]
 
-    log_msg += " [DUNNO]"
     logger.info(log_msg)
 
     return SMTP_ACTIONS["default"]
