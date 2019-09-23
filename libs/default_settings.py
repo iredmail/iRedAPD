@@ -56,6 +56,17 @@ SQL_CONNECTION_POOL_RECYCLE = 60
 # Timeout in seconds. Must be a float number.
 DNS_QUERY_TIMEOUT = 3.0
 
+# Log smtp authentication.
+LOG_SMTP_AUTH = True
+LOG_SMTP_AUTH_EXPIRE_DAYS = 7
+
+# Log smtp actions returned by plugins in SQL database (table `smtp_actions`).
+LOG_SMTP_ACTIONS = True
+LOG_SMTP_ACTIONS_EXPIRE_DAYS = 7
+
+LOG_SMTP_ACTIONS_BYPASS_GREYLISTING = True
+LOG_SMTP_ACTIONS_BYPASS_WHITELIST = True
+
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
@@ -212,6 +223,9 @@ THROTTLE_BYPASS_SAME_DOMAIN = True
 #
 # Reject the email if senderscore equals to or is lower than this score.
 SENDERSCORE_REJECT_SCORE = 30
+
+# Cache the score returned by DNS query for how many days.
+SENDERSCORE_CACHE_DAYS = 7
 
 # ----------------
 # Send mail

@@ -2,8 +2,22 @@ iRedAPD-3.2:
     - New plugin: senderscore.
 
         It queries sender server IP address against `senderscore.com` by DNS,
-        if the returned reputation score equals to or is lower than reject
-        score (defaults to 30), email will be rejected.
+        if the returned reputation score equals to or is lower than defined
+        reject score (defaults to 30), email will be rejected.
+
+    + Improvements:
+        + Log encryption_cipher and server port number by syslog.
+        + Able to log the smtp session info in SQL database.
+
+          Note: logging is enabled by default, could be disabled with
+          setting `LOG_SMTP_AUTH = False`.
+
+        + Able to log the smtp actions returned by iRedAPD plugins in SQL
+          database. Currently smtp actions for greylisting and whitelisting are
+          ignored.
+
+          Note: logging is enabled by default, could be disabled with
+          setting `LOG_SMTP_ACTIONS = False`.
 
 iRedAPD-3.1:
     * Fixed issues:

@@ -20,6 +20,7 @@ class Modeler:
         sender = smtp_session_data.get('sender', '')
         recipient = smtp_session_data.get('recipient', '')
         client_address = smtp_session_data.get('client_address', '')
+        sasl_username = smtp_session_data.get('sasl_username', '')
 
         conn_vmail = self.conns['conn_vmail'].connect()
 
@@ -36,13 +37,13 @@ class Modeler:
                          'conn_amavisd': conn_amavisd,
                          'conn_iredapd': conn_iredapd,
                          'sender': sender,
-                         'sender_without_ext': utils.strip_mail_ext_address(sender),
+                         'sender_without_ext': smtp_session_data['sender_without_ext'],
                          'recipient': recipient,
-                         'recipient_without_ext': utils.strip_mail_ext_address(recipient),
+                         'recipient_without_ext': smtp_session_data['recipient_without_ext'],
                          'client_address': client_address,
                          'sender_domain': smtp_session_data.get('sender_domain', ''),
                          'recipient_domain': smtp_session_data.get('recipient_domain', ''),
-                         'sasl_username': smtp_session_data.get('sasl_username', ''),
+                         'sasl_username': sasl_username,
                          'sasl_username_domain': smtp_session_data.get('sasl_username_domain', '')}
 
         # TODO Get SQL record of mail user or mail alias before applying plugins

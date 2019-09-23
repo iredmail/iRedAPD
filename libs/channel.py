@@ -126,6 +126,10 @@ class Policy(asynchat.async_chat):
 
                         # Add sender_domain, recipient_domain, sasl_username_domain
                         self.smtp_session_data[k + '_domain'] = v.split('@', 1)[-1]
+
+                        if k in ['sender', 'recipient']:
+                            # Add sender_without_ext, recipient_without_ext
+                            self.smtp_session_data[k + '_without_ext'] = utils.strip_mail_ext_address(v)
                     else:
                         self.smtp_session_data[k] = v
                 else:
@@ -146,8 +150,10 @@ class Policy(asynchat.async_chat):
                     _tracking_expired = int(time.time())
 
                     # @processed: count of processed smtp sessions
-                    settings.GLOBAL_SESSION_TRACKING[_instance] = {'processed': 0,
-                                                                   'expired': _tracking_expired}
+                    settings.GLOBAL_SESSION_TRACKING[_instance] = {
+                        'processed': 0,
+                        'expired': _tracking_expired,
+                    }
                 else:
                     settings.GLOBAL_SESSION_TRACKING[_instance]['processed'] += 1
 
@@ -160,6 +166,7 @@ class Policy(asynchat.async_chat):
                     sender_search_attrlist=self.sender_search_attrlist,
                     recipient_search_attrlist=self.recipient_search_attrlist,
                 )
+
                 if result:
                     action = result
                 else:
@@ -171,9 +178,9 @@ class Policy(asynchat.async_chat):
 
             # Remove tracking data when:
             #
-            #   - if session was rejected/discard/whitelisted ('OK') during
+            #   - session was rejected/discard/whitelisted ('OK') during
             #     RCPT state (it never reach END-OF-MESSAGE state)
-            #   - if session is in last state (END-OF-MESSAGE)
+            #   - session is in last state (END-OF-MESSAGE)
             if (not action.startswith('DUNNO')) or (_protocol_state == 'END-OF-MESSAGE'):
                 if _instance in settings.GLOBAL_SESSION_TRACKING:
                     settings.GLOBAL_SESSION_TRACKING.pop(_instance)
@@ -191,6 +198,17 @@ class Policy(asynchat.async_chat):
                                      action=action,
                                      start_time=_start_time,
                                      end_time=_end_time)
+
+            _sasl_username = self.smtp_session_data.get('sasl_username', '')
+            # Log smtp authentication
+            if _protocol_state == 'RCPT' and _sasl_username:
+                utils.log_smtp_auth(conn=self.db_conns['conn_iredapd'], **self.smtp_session_data)
+
+            # Log smtp action
+            if not action.startswith('DUNNO'):
+                utils.log_smtp_action(conn=self.db_conns['conn_iredapd'],
+                                      smtp_action=action,
+                                      **self.smtp_session_data)
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)

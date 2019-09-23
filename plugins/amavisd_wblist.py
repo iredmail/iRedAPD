@@ -201,7 +201,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
         for sid in sender_ids:
             if (rid, sid, 'W') in wblists:
                 logger.info("Whitelisted: wblist=(%d, %d, 'W')" % (rid, sid))
-                return SMTP_ACTIONS['whitelist'] + " wblist=(%d, %d, 'W')" % (rid, sid)
+                return SMTP_ACTIONS['whitelist']
 
             if (rid, sid, 'B') in wblists:
                 logger.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
