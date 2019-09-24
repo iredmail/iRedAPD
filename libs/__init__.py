@@ -64,7 +64,8 @@ PLUGIN_PRIORITIES = {
     'sql_ml_access_policy': 51,
     'sql_alias_access_policy': 50,
     'amavisd_wblist': 40,
-    'whitelist_outbound_recipient': 10,
+    'whitelist_outbound_recipient': 30,
+    'senderscore': 10,
 }
 
 # Account proiroties.
