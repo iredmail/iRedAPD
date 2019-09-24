@@ -2,7 +2,7 @@
 
 * `iRedMail`: All iRedMail versions should work as expected.
 * `Python` >= 2.4: core programming language.
-* `web.py` >= 0.37: utility used to parse URI.
+* `web.py` >= 0.39: utility used to parse URI.
 * `SQLAlchemy` >= 0.9: The Python SQL Toolkit and Object Relational Mapper.
 * `Python-LDAP` >= 2.3.7: API to access LDAP directory servers from Python
   programs. Required by OpenLDAP backend.
@@ -15,9 +15,10 @@
 
 ## Create a low privilege user as iRedAPD daemon user
 
-It’s recommended to run iRedAPD as a low privilege user for security reason, let’s create user `iredapd` as daemon user.
+It’s recommended to run iRedAPD as a low privilege user for security reason,
+we will create user/group `iredapd` as daemon user.
 
-* Create user on Red Hat, CentOS, Scientific Linux, Debian, Ubuntu, Gentoo, openSUSE, OpenBSD:
+* Create user on Red Hat, CentOS, Debian, Ubuntu, OpenBSD:
 
 ```shell
 # useradd -m -s /sbin/nologin -d /home/iredapd iredapd
@@ -31,7 +32,7 @@ It’s recommended to run iRedAPD as a low privilege user for security reason, l
 
 ## Install required packages
 
-* On Red Hat, CentOS, Scientific Linux:
+* On Red Hat, CentOS:
 
 ```shell
 # ---- For OpenLDAP backend:
@@ -96,7 +97,7 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy python-webpy
 ## Download and configure iRedAPD
 
 * Download the latest iRedAPD from project page: [https://bitbucket.org/zhb/iredapd/downloads](https://bitbucket.org/zhb/iredapd/downloads).
-* Extract iRedAPD to /opt/, set correct file permissions, and create symbol link.
+* Extract iRedAPD to `/opt/`, set correct file permissions, and create symbol link.
 
 ```shell
 # tar xjf iRedAPD-x.y.z.tar.bz2 -C /opt/
@@ -108,7 +109,7 @@ $ sudo apt-get install python-psycopg2 python-sqlalchemy python-webpy
 * Copy RC script to `/etc/init.d/` (Linux), or `/usr/local/etc/rc.d/`
   (FreeBSD), `/etc/rc.d/` (OpenBSD), and set correct permission.
 
-    * `iredapd.rhel` for Red Hat, CentOS, Scientific Linux
+    * `iredapd.rhel` for Red Hat, CentOS.
     * `iredapd.debian` for Debian, Ubuntu.
 
 ```shell
@@ -174,7 +175,7 @@ sql_user = "vmail"
 sql_password = "Psaf68wsuVctYSbj4PJzRqmFsE0rlQ"
 ```
 
-* Create log file: `/var/log/iredapd.log`.
+* Create log file: `/var/log/iredapd/iredapd.log`.
 
 ```shell
 mkdir -p /var/log/iredapd
@@ -185,7 +186,7 @@ chown -R iredapd:iredapd /var/log/iredapd
 * Run command `crontab -e -u root` to add cron jobs for root user:
 
 ```
-# iRedAPD: Clean up expired tracking records hourly.
+# iRedAPD: Clean up database hourly.
 1   *   *   *   *   python /opt/iredapd/tools/cleanup_db.py >/dev/null
 
 # iRedAPD: Convert SPF DNS record of specified domain names to IP
@@ -193,7 +194,7 @@ chown -R iredapd:iredapd /var/log/iredapd
 2   *   *   *   *   python /opt/iredapd/tools/spf_to_greylist_whitelists.py >/dev/null
 ```
 
-* Make iRedAPD start when boot your server.
+* Enable iRedAPD service:
 
 ```shell
 # ---- on RHEL/CentOS ----
@@ -253,7 +254,7 @@ smtpd_end_of_data_restrictions =
   also list them in iRedAPD config file `/opt/iredapd/settings.py`, parameter
   `MYNETWORKS =`.
 
-## Use iRedAPD as SRS (Sender Rewriting Scheme) policy server
+## [OPTIONAL] Use iRedAPD as SRS (Sender Rewriting Scheme) policy server
 
 In Postfix config file `/etc/postfix/main.cf` (it’s
 `/usr/local/etc/postfix/main.cf` on FreeBSD), add 4 new parameters:
@@ -322,9 +323,15 @@ post.
 
 # FAQ
 
-## Available access policies
+## Available access policies for mail alias and mailing list
 
 Below access policies are recognized in iRedAPD-1.4.0 and later releases:
+
+    * For OpenLDAP backend, access policy is stored in attribute `accessPolicy`
+      of mailing list account.
+    * For MySQL or PostgreSQL backends, access policy is stored in SQL column
+      `alias.accesspolicy` (mail alias account) or `maillists.accesspolicy`
+      (mailing list account).
 
 * `public`:  Unrestricted. Everyone can mail to this address.
 * `domain`: Only users under same domain can send mail to this address.
@@ -333,10 +340,6 @@ Below access policies are recognized in iRedAPD-1.4.0 and later releases:
 * `moderatorsonly`: Only moderators can send mail to this address.
 * `membersandmoderatorsonly`: Only members and moderators can send mail to this address.
 
-**NOTE**:
-
-* For OpenLDAP backend, value of access policy is stored in LDAP attribute `accessPolicy` of mail list object.
-* For MySQL or PostgreSQL backend, value of access policy is stored in SQL column `alias.accesspolicy`.
 
 ## [SQL backend] How to add moderators for mail alias
 
@@ -346,5 +349,3 @@ To add moderators for certain mail alias, just list all email addresses of moder
 sql> UPDATE alias SET moderators='user1@domain.ltd' WHERE address='myalias01@domain.ltd';
 sql> UPDATE alias SET moderators='user1@domain.ltd,user2@domain.ltd,user3@domain.ltd' WHERE address='myalias02@domain.ltd';
 ```
-
-
