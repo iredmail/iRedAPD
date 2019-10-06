@@ -199,9 +199,6 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
     -- The number of delivery attempts that have been blocked
     `blocked_count`     BIGINT(20) NOT NULL DEFAULT 0,
 
-    -- The number of emails we have sucessfully passed
-    -- `blocked_count`     BIGINT(20) NOT NULL DEFAULT 0,
-
     -- Mark this triplet passes greylisting.
     `passed`            TINYINT(1) NOT NULL DEFAULT 0,
 
@@ -214,10 +211,8 @@ CREATE TABLE IF NOT EXISTS `greylisting_tracking` (
 
 CREATE TABLE IF NOT EXISTS `wblist_rdns` (
     `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
-    -- reverse DNS name of sender IP address
-    `rdns`      VARCHAR(255) NOT NULL DEFAULT '',
-    -- W=whitelist, B=blacklist
-    `wb`        VARCHAR(10) NOT NULL DEFAULT 'B',
+    `rdns`      VARCHAR(255) NOT NULL DEFAULT '',   -- reverse DNS name of sender IP address
+    `wb`        VARCHAR(10) NOT NULL DEFAULT 'B',   -- W=whitelist, B=blacklist
     PRIMARY KEY (`id`),
     UNIQUE INDEX (`rdns`),
     INDEX (`wb`)
