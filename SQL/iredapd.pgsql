@@ -199,11 +199,11 @@ CREATE TABLE srs_exclude_domains (
 CREATE UNIQUE INDEX idx_srs_exclude_domains_domain ON srs_exclude_domains (domain);
 
 
-CREATE TABLE IF NOT EXISTS `senderscore_cache` (
+CREATE TABLE senderscore_cache (
     id              SERIAL PRIMARY KEY,
     client_address  VARCHAR(40) NOT NULL DEFAULT '',
     -- sender score: 1-100.
-    score           INT(3) UNSIGNED DEFAULT 0,
+    score           INT DEFAULT 0,
     -- creation time
     time            BIGINT NOT NULL DEFAULT 0
 );

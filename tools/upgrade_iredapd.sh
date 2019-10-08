@@ -369,6 +369,34 @@ psql_conn="psql -h ${iredapd_db_server} \
                 -U ${iredapd_db_user} \
                 -d ${iredapd_db_name}"
 
+add_new_pgsql_tables()
+{
+    # Usage: add_new_pgsql_tables <sql-file-name> "SELECT ..."
+
+    # name of SQL file under SQL/update/
+    sql_file="$1"
+    shift 1
+
+    # SQL statement used to verify whether it's necessary to import the SQL file.
+    sql_statement="$@"
+
+    psql_conn="psql \
+                -h ${iredapd_db_server} \
+                -p ${iredapd_db_port} \
+                -U ${iredapd_db_user} \
+                -d ${iredapd_db_name}"
+
+    ${psql_conn} -c "${sql_statement}" &>/dev/null
+
+    if [ X"$?" != X'0' ]; then
+        cp ${ROOTDIR}/../SQL/update/${sql_file} /tmp/
+        chmod 0555 /tmp/${sql_file}
+        ${psql_conn} -c "\i /tmp/${sql_file}"
+        rm -f /tmp/${sql_file}
+    fi
+}
+
+
 if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
     cp -f ${ROOTDIR}/../SQL/iredapd.mysql /tmp/
 
@@ -460,48 +488,10 @@ CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whit
     fi
 
     #
-    # `greylisting_whitelist_domain_spf`
+    # v2.1: `greylisting_whitelist_domain_spf`, `wblist_rdns`
     #
-    ${psql_conn} -c "SELECT id FROM greylisting_whitelist_domain_spf LIMIT 1" &>/dev/null
-
-    if [ X"$?" != X'0' ]; then
-        ${psql_conn} -c "
-CREATE TABLE greylisting_whitelist_domain_spf (
-    id      SERIAL PRIMARY KEY,
-    account VARCHAR(255)    NOT NULL DEFAULT '',
-    sender  VARCHAR(255)    NOT NULL DEFAULT '',
-    comment VARCHAR(255) NOT NULL DEFAULT ''
-);
-
-CREATE UNIQUE INDEX idx_greylisting_whitelist_domain_spf_account_sender ON greylisting_whitelist_domain_spf (account, sender);
-CREATE INDEX idx_greylisting_whitelist_domain_spf_comment ON greylisting_whitelist_domain_spf (comment);
-"
-    fi
-
-    #
-    # `wblist_rdns`
-    #
-    ${psql_conn} -c "SELECT id FROM wblist_rdns LIMIT 1" &>/dev/null
-
-    if [ X"$?" != X'0' ]; then
-        cp -f ${ROOTDIR}/../SQL/wblist_rdns.sql /tmp/
-        chmod 0555 /tmp/wblist_rdns.sql
-
-        ${psql_conn} <<EOF
-CREATE TABLE wblist_rdns (
-    id      SERIAL PRIMARY KEY,
-    -- reverse DNS name of sender IP address
-    rdns    VARCHAR(255) NOT NULL DEFAULT '',
-    -- W=whitelist, B=blacklist
-    wb      VARCHAR(10) NOT NULL DEFAULT 'B'
-);
-CREATE UNIQUE INDEX idx_wblist_rdns_rdns ON wblist_rdns (rdns);
-CREATE INDEX idx_wblist_rdns_wb ON wblist_rdns (wb);
-\i /tmp/wblist_rdns.sql;
-EOF
-
-        rm -f /tmp/wblist_rdns.sql &>/dev/null
-    fi
+    add_new_pgsql_tables 2.1-greylisting_whitelist_domain_spf.pgsql "SELECT id FROM greylisting_whitelist_domain_spf LIMIT 1"
+    add_new_pgsql_tables 2.1-wblist_rdns.pgsql "SELECT id FROM wblist_rdns LIMIT 1"
 
     #
     # INDEX on `greylisting_tracking`: (client_address, passed)
@@ -513,28 +503,20 @@ EOF
     fi
 
     #
-    # iRedAPD-2.3: new column `throttle_tracking.last_notify_time`
+    # v2.3: new column `throttle_tracking.last_notify_time`
     #
     ${psql_conn} -c "\d+ throttle_tracking" | grep 'last_notify_time' &>/dev/null
     if [ X"$?" != X'0' ]; then
         ${psql_conn} -c "ALTER TABLE throttle_tracking ADD COLUMN last_notify_time BIGINT NOT NULL DEFAULT 0;"
     fi
 
-    #
-    # `srs_exclude_domains`
-    #
-    ${psql_conn} -c "SELECT id FROM srs_exclude_domains LIMIT 1" &>/dev/null
+    # v2.5: `srs_exclude_domains`
+    add_new_pgsql_tables 2.5-srs_exclude_domains.pgsql "SELECT id FROM srs_exclude_domains LIMIT 1"
 
-    if [ X"$?" != X'0' ]; then
-        ${psql_conn} <<EOF
-CREATE TABLE srs_exclude_domains (
-    id      SERIAL PRIMARY KEY,
-    domain  VARCHAR(255) NOT NULL DEFAULT ''
-);
-CREATE UNIQUE INDEX idx_srs_exclude_domains_domain ON srs_exclude_domains (domain);
-EOF
-    fi
-
+    # v3.2: `senderscore_cache`, `log_smtp_actions`, `log_smtp_auth`.
+    add_new_pgsql_tables 3.2-senderscore_cache.pgsql "SELECT id FROM senderscore_cache LIMIT 1"
+    add_new_pgsql_tables 3.2-log_smtp_actions.pgsql "SELECT id FROM log_smtp_actions LIMIT 1"
+    add_new_pgsql_tables 3.2-log_smtp_auth.pgsql "SELECT id FROM log_smtp_auth LIMIT 1"
 fi
 
 #
