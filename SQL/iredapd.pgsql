@@ -131,7 +131,6 @@ CREATE TABLE greylisting_whitelist_domains (
     id          SERIAL PRIMARY KEY,
     domain      VARCHAR(255) NOT NULL DEFAULT ''
 );
-
 CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whitelist_domains (domain);
 
 -- 'tools/spf_to_greylisting_whitelists.py' will query SPF/MX DNS records of

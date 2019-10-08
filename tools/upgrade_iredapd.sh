@@ -380,12 +380,6 @@ add_new_pgsql_tables()
     # SQL statement used to verify whether it's necessary to import the SQL file.
     sql_statement="$@"
 
-    psql_conn="psql \
-                -h ${iredapd_db_server} \
-                -p ${iredapd_db_port} \
-                -U ${iredapd_db_user} \
-                -d ${iredapd_db_name}"
-
     ${psql_conn} -c "${sql_statement}" &>/dev/null
 
     if [ X"$?" != X'0' ]; then
@@ -465,31 +459,10 @@ EOF
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
 
-    #
-    # `greylisting_whitelist_domains`
-    #
-    ${psql_conn} -c "SELECT id FROM greylisting_whitelist_domains LIMIT 1" &>/dev/null
+    # v1.8: greylisting_whitelist_domains
+    add_new_pgsql_tables 1.8-greylisting_whitelist_domains.pgsql "SELECT id FROM greylisting_whitelist_domains LIMIT 1"
 
-    if [ X"$?" != X'0' ]; then
-        cp -f ${ROOTDIR}/../SQL/greylisting_whitelist_domains.sql /tmp/
-        chmod 0555 /tmp/greylisting_whitelist_domains.sql
-
-        ${psql_conn} -c "
-CREATE TABLE greylisting_whitelist_domains (
-    id      SERIAL PRIMARY KEY,
-    domain  VARCHAR(255) NOT NULL DEFAULT ''
-);
-
-CREATE UNIQUE INDEX idx_greylisting_whitelist_domains_domain ON greylisting_whitelist_domains (domain);
-\i /tmp/greylisting_whitelist_domains.sql;
-"
-
-        rm -f /tmp/greylisting_whitelist_domains.sql &>/dev/null
-    fi
-
-    #
     # v2.1: `greylisting_whitelist_domain_spf`, `wblist_rdns`
-    #
     add_new_pgsql_tables 2.1-greylisting_whitelist_domain_spf.pgsql "SELECT id FROM greylisting_whitelist_domain_spf LIMIT 1"
     add_new_pgsql_tables 2.1-wblist_rdns.pgsql "SELECT id FROM wblist_rdns LIMIT 1"
 
