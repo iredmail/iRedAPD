@@ -59,9 +59,9 @@ logger.info("* Remove expired greylisting tracking records: "
 # Clean up cached senderscore results.
 #
 expire_seconds = int(time.time()) - (settings.SENDERSCORE_CACHE_DAYS * 86400)
-total_before = sql_count_id(conn_iredapd, 'senderscore_cache')
+total_before = sql_count_id(conn_iredapd, 'senderscore_cache', column='client_address')
 conn_iredapd.delete('senderscore_cache', where='time < %d' % expire_seconds)
-total_after = sql_count_id(conn_iredapd, 'senderscore_cache')
+total_after = sql_count_id(conn_iredapd, 'senderscore_cache', column='client_address')
 
 logger.info("* Remove expired senderscore DNS query results: "
             "%d removed, %d left." % (total_before - total_after, total_after))
@@ -71,7 +71,7 @@ logger.info("* Remove expired senderscore DNS query results: "
 #
 expire_seconds = int(time.time()) - (settings.LOG_SMTP_SESSIONS_EXPIRE_DAYS * 86400)
 total_before = sql_count_id(conn_iredapd, 'smtp_sessions')
-conn_iredapd.delete('smtp_sessions', where='time < %d' % expire_seconds)
+conn_iredapd.delete('smtp_sessions', where='time_num < %d' % expire_seconds)
 total_after = sql_count_id(conn_iredapd, 'smtp_sessions')
 
 logger.info("* Remove expired smtp sessions: "
