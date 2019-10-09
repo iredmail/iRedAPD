@@ -227,14 +227,12 @@ CREATE TABLE IF NOT EXISTS `srs_exclude_domains` (
 
 
 CREATE TABLE IF NOT EXISTS `senderscore_cache` (
-    `id`        BIGINT(20) UNSIGNED AUTO_INCREMENT,
-    `client_address`        VARCHAR(40) NOT NULL DEFAULT '',
+    `client_address`    VARCHAR(40) NOT NULL DEFAULT '',
     -- sender score: 1-100.
-    `score`     INT(3) UNSIGNED DEFAULT 0,
+    `score`             INT(3) UNSIGNED DEFAULT 0,
     -- creation time
-    `time`      INT(10) UNSIGNED NOT NULL DEFAULT 0,
-    PRIMARY KEY (`id`),
-    INDEX (`client_address`),
+    `time`              INT(10) UNSIGNED NOT NULL DEFAULT 0,
+    PRIMARY KEY (`client_address`),
     INDEX (`score`),
     INDEX (`time`)
 ) ENGINE=InnoDB;
