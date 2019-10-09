@@ -211,8 +211,8 @@ CREATE INDEX idx_senderscore_cache_score ON senderscore_cache (score);
 CREATE INDEX idx_senderscore_cache_time ON senderscore_cache (time);
 
 
--- Log smtp actions returned by iRedAPD plugins.
-CREATE TABLE log_smtp_actions (
+-- Log smtp sessions processed by iRedAPD.
+CREATE TABLE smtp_sessions (
     id      SERIAL PRIMARY KEY,
     time    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     time_num    BIGINT NOT NULL DEFAULT 0,
@@ -238,63 +238,22 @@ CREATE TABLE log_smtp_actions (
     server_port           VARCHAR(10) NOT NULL DEFAULT ''
 );
 
-CREATE INDEX idx_log_smtp_actions_time ON log_smtp_actions (time);
-CREATE INDEX idx_log_smtp_actions_time_num ON log_smtp_actions (time_num);
-CREATE INDEX idx_log_smtp_actions_action ON log_smtp_actions (action);
-CREATE INDEX idx_log_smtp_actions_reason ON log_smtp_actions (reason);
-CREATE INDEX idx_log_smtp_actions_instance ON log_smtp_actions (instance);
-CREATE INDEX idx_log_smtp_actions_client_address ON log_smtp_actions (client_address);
-CREATE INDEX idx_log_smtp_actions_client_name ON log_smtp_actions (client_name);
-CREATE INDEX idx_log_smtp_actions_reverse_client_name ON log_smtp_actions (reverse_client_name);
-CREATE INDEX idx_log_smtp_actions_helo_name ON log_smtp_actions (helo_name);
-CREATE INDEX idx_log_smtp_actions_sender ON log_smtp_actions (sender);
-CREATE INDEX idx_log_smtp_actions_sender_domain ON log_smtp_actions (sender_domain);
-CREATE INDEX idx_log_smtp_actions_sasl_username ON log_smtp_actions (sasl_username);
-CREATE INDEX idx_log_smtp_actions_sasl_domain ON log_smtp_actions (sasl_domain);
-CREATE INDEX idx_log_smtp_actions_recipient ON log_smtp_actions (recipient);
-CREATE INDEX idx_log_smtp_actions_recipient_domain ON log_smtp_actions (recipient_domain);
-CREATE INDEX idx_log_smtp_actions_encryption_protocol ON log_smtp_actions (encryption_protocol);
-CREATE INDEX idx_log_smtp_actions_encryption_cipher ON log_smtp_actions (encryption_cipher);
-CREATE INDEX idx_log_smtp_actions_server_address ON log_smtp_actions (server_address);
-CREATE INDEX idx_log_smtp_actions_server_port ON log_smtp_actions (server_port);
-
--- Log smtp authentications performed by local users.
-CREATE TABLE log_smtp_auth (
-    id      SERIAL PRIMARY KEY,
-    time    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    time_num    BIGINT NOT NULL DEFAULT 0,
-    -- smtp session info
-    instance              VARCHAR(40) NOT NULL DEFAULT '',
-    client_address        VARCHAR(40) NOT NULL DEFAULT '',
-    client_name           VARCHAR(255) NOT NULL DEFAULT '',
-    reverse_client_name   VARCHAR(255) NOT NULL DEFAULT '',
-    helo_name             VARCHAR(255) NOT NULL DEFAULT '',
-    sender                VARCHAR(255) NOT NULL DEFAULT '',
-    sender_domain         VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_username         VARCHAR(255) NOT NULL DEFAULT '',
-    sasl_domain           VARCHAR(255) NOT NULL DEFAULT '',
-    recipient             VARCHAR(255) NOT NULL DEFAULT '',
-    recipient_domain      VARCHAR(255) NOT NULL DEFAULT '',
-    encryption_protocol   VARCHAR(20) NOT NULL DEFAULT '',
-    encryption_cipher     VARCHAR(50) NOT NULL DEFAULT '',
-    -- Postfix-3.x logs `server_address` and `server_port`
-    server_address        VARCHAR(40) NOT NULL DEFAULT '',
-    server_port           VARCHAR(10) NOT NULL DEFAULT ''
-);
-CREATE INDEX idx_log_smtp_auth_time ON log_smtp_auth (time);
-CREATE INDEX idx_log_smtp_auth_time_num ON log_smtp_auth (time_num);
-CREATE INDEX idx_log_smtp_auth_instance ON log_smtp_auth (instance);
-CREATE INDEX idx_log_smtp_auth_client_address ON log_smtp_auth (client_address);
-CREATE INDEX idx_log_smtp_auth_client_name ON log_smtp_auth (client_name);
-CREATE INDEX idx_log_smtp_auth_reverse_client_name ON log_smtp_auth (reverse_client_name);
-CREATE INDEX idx_log_smtp_auth_helo_name ON log_smtp_auth (helo_name);
-CREATE INDEX idx_log_smtp_auth_sender ON log_smtp_auth (sender);
-CREATE INDEX idx_log_smtp_auth_sender_domain ON log_smtp_auth (sender_domain);
-CREATE INDEX idx_log_smtp_auth_sasl_username ON log_smtp_auth (sasl_username);
-CREATE INDEX idx_log_smtp_auth_sasl_domain ON log_smtp_auth (sasl_domain);
-CREATE INDEX idx_log_smtp_auth_recipient ON log_smtp_auth (recipient);
-CREATE INDEX idx_log_smtp_auth_recipient_domain ON log_smtp_auth (recipient_domain);
-CREATE INDEX idx_log_smtp_auth_encryption_protocol ON log_smtp_auth (encryption_protocol);
-CREATE INDEX idx_log_smtp_auth_encryption_cipher ON log_smtp_auth (encryption_cipher);
-CREATE INDEX idx_log_smtp_auth_server_address ON log_smtp_auth (server_address);
-CREATE INDEX idx_log_smtp_auth_server_port ON log_smtp_auth (server_port);
+CREATE INDEX idx_smtp_sessions_time ON smtp_sessions (time);
+CREATE INDEX idx_smtp_sessions_time_num ON smtp_sessions (time_num);
+CREATE INDEX idx_smtp_sessions_action ON smtp_sessions (action);
+CREATE INDEX idx_smtp_sessions_reason ON smtp_sessions (reason);
+CREATE INDEX idx_smtp_sessions_instance ON smtp_sessions (instance);
+CREATE INDEX idx_smtp_sessions_client_address ON smtp_sessions (client_address);
+CREATE INDEX idx_smtp_sessions_client_name ON smtp_sessions (client_name);
+CREATE INDEX idx_smtp_sessions_reverse_client_name ON smtp_sessions (reverse_client_name);
+CREATE INDEX idx_smtp_sessions_helo_name ON smtp_sessions (helo_name);
+CREATE INDEX idx_smtp_sessions_sender ON smtp_sessions (sender);
+CREATE INDEX idx_smtp_sessions_sender_domain ON smtp_sessions (sender_domain);
+CREATE INDEX idx_smtp_sessions_sasl_username ON smtp_sessions (sasl_username);
+CREATE INDEX idx_smtp_sessions_sasl_domain ON smtp_sessions (sasl_domain);
+CREATE INDEX idx_smtp_sessions_recipient ON smtp_sessions (recipient);
+CREATE INDEX idx_smtp_sessions_recipient_domain ON smtp_sessions (recipient_domain);
+CREATE INDEX idx_smtp_sessions_encryption_protocol ON smtp_sessions (encryption_protocol);
+CREATE INDEX idx_smtp_sessions_encryption_cipher ON smtp_sessions (encryption_cipher);
+CREATE INDEX idx_smtp_sessions_server_address ON smtp_sessions (server_address);
+CREATE INDEX idx_smtp_sessions_server_port ON smtp_sessions (server_port);

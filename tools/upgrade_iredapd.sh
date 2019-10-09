@@ -486,10 +486,9 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     # v2.5: `srs_exclude_domains`
     add_new_pgsql_tables 2.5-srs_exclude_domains.pgsql "SELECT id FROM srs_exclude_domains LIMIT 1"
 
-    # v3.2: `senderscore_cache`, `log_smtp_actions`, `log_smtp_auth`.
+    # v3.2: `senderscore_cache`, `smtp_sessions`
     add_new_pgsql_tables 3.2-senderscore_cache.pgsql "SELECT id FROM senderscore_cache LIMIT 1"
-    add_new_pgsql_tables 3.2-log_smtp_actions.pgsql "SELECT id FROM log_smtp_actions LIMIT 1"
-    add_new_pgsql_tables 3.2-log_smtp_auth.pgsql "SELECT id FROM log_smtp_auth LIMIT 1"
+    add_new_pgsql_tables 3.2-smtp_sessions.pgsql "SELECT id FROM smtp_sessions LIMIT 1"
 fi
 
 #

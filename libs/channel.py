@@ -199,16 +199,10 @@ class Policy(asynchat.async_chat):
                                      start_time=_start_time,
                                      end_time=_end_time)
 
-            _sasl_username = self.smtp_session_data.get('sasl_username', '')
-            # Log smtp authentication
-            if _protocol_state == 'RCPT' and _sasl_username:
-                utils.log_smtp_auth(conn=self.db_conns['conn_iredapd'], **self.smtp_session_data)
-
-            # Log smtp action
-            if not action.startswith('DUNNO'):
-                utils.log_smtp_action(conn=self.db_conns['conn_iredapd'],
-                                      smtp_action=action,
-                                      **self.smtp_session_data)
+            # Log smtp session
+            utils.log_smtp_session(conn=self.db_conns['conn_iredapd'],
+                                   smtp_action=action,
+                                   **self.smtp_session_data)
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)

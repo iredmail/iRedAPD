@@ -665,19 +665,19 @@ def sendmail(subject, mail_body, from_address=None, recipients=None):
                                  message_text=message_text)
 
 
-def log_smtp_action(conn, smtp_action, **smtp_session_data):
-    """Store smtp action in SQL table `iredapd.log_smtp_actions`."""
-    if not settings.LOG_SMTP_ACTIONS:
+def log_smtp_session(conn, smtp_action, **smtp_session_data):
+    """Store smtp action in SQL table `iredapd.smtp_sessions`."""
+    if not settings.LOG_SMTP_SESSIONS:
         return None
 
     _action_and_reason = smtp_action.split(" ", 1)
     _action = _action_and_reason[0]
 
-    if settings.LOG_SMTP_ACTIONS_BYPASS_GREYLISTING:
+    if settings.LOG_SMTP_SESSIONS_BYPASS_GREYLISTING:
         if smtp_action.startswith(SMTP_ACTIONS['greylisting']):
             return None
 
-    if settings.LOG_SMTP_ACTIONS_BYPASS_WHITELIST:
+    if settings.LOG_SMTP_SESSIONS_BYPASS_WHITELIST:
         if _action == 'OK':
             return None
 
@@ -690,7 +690,7 @@ def log_smtp_action(conn, smtp_action, **smtp_session_data):
             _reason = _action_and_reason[1]
 
     sql = """
-        INSERT INTO log_smtp_actions (
+        INSERT INTO smtp_sessions (
             time, time_num,
             action, reason, instance,
             client_address, client_name, reverse_client_name, helo_name,
@@ -727,57 +727,9 @@ def log_smtp_action(conn, smtp_action, **smtp_session_data):
            sqlquote(smtp_session_data.get('recipient_domain', '')))
 
     try:
-        logger.debug('[SQL] Insert into log_smtp_actions: %s' % sql)
+        logger.debug('[SQL] Insert into smtp_sessions: %s' % sql)
         conn.execute(sql)
     except Exception as e:
         logger.error('<!> Error while logging smtp action: %s' % repr(e))
-
-    return None
-
-
-def log_smtp_auth(conn, **smtp_session_data):
-    """Store smtp authentication in SQL table `iredapd.log_smtp_auth`."""
-    if not settings.LOG_SMTP_AUTH:
-        return None
-
-    sql = """
-        INSERT INTO log_smtp_auth (
-            time, time_num, instance,
-            client_address, client_name, reverse_client_name, helo_name,
-            encryption_protocol, encryption_cipher,
-            server_address, server_port,
-            sender, sender_domain,
-            sasl_username, sasl_domain,
-            recipient, recipient_domain)
-        VALUES (
-            %s, %d, %s,
-            %s, %s, %s, %s,
-            %s, %s,
-            %s, %s,
-            %s, %s,
-            %s, %s,
-            %s, %s)
-    """ % (sqlquote(get_gmttime()), int(time.time()),
-           sqlquote(smtp_session_data.get("instance", "")),
-           sqlquote(smtp_session_data.get("client_address", "")),
-           sqlquote(smtp_session_data.get('client_name', '')),
-           sqlquote(smtp_session_data.get('reverse_client_name', '')),
-           sqlquote(smtp_session_data.get('helo_name', '')),
-           sqlquote(smtp_session_data.get('encryption_protocol', '')),
-           sqlquote(smtp_session_data.get('encryption_cipher', '')),
-           sqlquote(smtp_session_data.get('server_address', '')),
-           sqlquote(smtp_session_data.get('server_port', '')),
-           sqlquote(smtp_session_data.get('sender_without_ext', '')),
-           sqlquote(smtp_session_data.get('sender_domain', '')),
-           sqlquote(smtp_session_data.get('sasl_username', '')),
-           sqlquote(smtp_session_data.get('sasl_username_domain', '')),
-           sqlquote(smtp_session_data.get('recipient_without_ext', '')),
-           sqlquote(smtp_session_data.get('recipient_domain', '')))
-
-    try:
-        logger.debug('[SQL] Insert into log_smtp_auth: %s' % sql)
-        conn.execute(sql)
-    except Exception as e:
-        logger.error('<!> Error while logging smtp auth: %s' % repr(e))
 
     return None

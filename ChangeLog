@@ -7,17 +7,11 @@ iRedAPD-3.2:
 
     + Improvements:
         + Log encryption_cipher and server port number by syslog.
-        + Able to log the smtp session info in SQL database.
+        + Able to log the smtp sessions processed by iRedAPD in SQL database.
+          Log will expire in 7 days by default.
 
           Note: logging is enabled by default, could be disabled with
-          setting `LOG_SMTP_AUTH = False`.
-
-        + Able to log the smtp actions returned by iRedAPD plugins in SQL
-          database. Currently smtp actions for greylisting and whitelisting are
-          ignored.
-
-          Note: logging is enabled by default, could be disabled with
-          setting `LOG_SMTP_ACTIONS = False`.
+          setting `LOG_SMTP_SESSIONS = False`.
 
 iRedAPD-3.1:
     * Fixed issues:

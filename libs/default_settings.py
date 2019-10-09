@@ -56,16 +56,13 @@ SQL_CONNECTION_POOL_RECYCLE = 60
 # Timeout in seconds. Must be a float number.
 DNS_QUERY_TIMEOUT = 3.0
 
-# Log smtp authentication.
-LOG_SMTP_AUTH = True
-LOG_SMTP_AUTH_EXPIRE_DAYS = 7
-
 # Log smtp actions returned by plugins in SQL database (table `smtp_actions`).
-LOG_SMTP_ACTIONS = True
-LOG_SMTP_ACTIONS_EXPIRE_DAYS = 7
+LOG_SMTP_SESSIONS = True
+LOG_SMTP_SESSIONS_EXPIRE_DAYS = 7
 
-LOG_SMTP_ACTIONS_BYPASS_GREYLISTING = True
-LOG_SMTP_ACTIONS_BYPASS_WHITELIST = True
+LOG_SMTP_SESSIONS_BYPASS_DUNNO = False
+LOG_SMTP_SESSIONS_BYPASS_GREYLISTING = False
+LOG_SMTP_SESSIONS_BYPASS_WHITELIST = False
 
 # ---------------
 # Required by:

@@ -67,23 +67,12 @@ logger.info("* Remove expired senderscore DNS query results: "
             "%d removed, %d left." % (total_before - total_after, total_after))
 
 #
-# Clean up `log_smtp_actions`
+# Clean up `smtp_sessions`
 #
-expire_seconds = int(time.time()) - (settings.LOG_SMTP_ACTIONS_EXPIRE_DAYS * 86400)
-total_before = sql_count_id(conn_iredapd, 'log_smtp_actions')
-conn_iredapd.delete('senderscore_cache', where='time < %d' % expire_seconds)
-total_after = sql_count_id(conn_iredapd, 'log_smtp_actions')
+expire_seconds = int(time.time()) - (settings.LOG_SMTP_SESSIONS_EXPIRE_DAYS * 86400)
+total_before = sql_count_id(conn_iredapd, 'smtp_sessions')
+conn_iredapd.delete('smtp_sessions', where='time < %d' % expire_seconds)
+total_after = sql_count_id(conn_iredapd, 'smtp_sessions')
 
-logger.info("* Remove expired smtp action log: "
-            "%d removed, %d left." % (total_before - total_after, total_after))
-
-#
-# Clean up `log_smtp_auth`
-#
-expire_seconds = int(time.time()) - (settings.LOG_SMTP_AUTH_EXPIRE_DAYS * 86400)
-total_before = sql_count_id(conn_iredapd, 'log_smtp_auth')
-conn_iredapd.delete('senderscore_cache', where='time < %d' % expire_seconds)
-total_after = sql_count_id(conn_iredapd, 'log_smtp_auth')
-
-logger.info("* Remove expired smtp authentication log: "
+logger.info("* Remove expired smtp sessions: "
             "%d removed, %d left." % (total_before - total_after, total_after))

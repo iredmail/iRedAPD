@@ -240,8 +240,8 @@ CREATE TABLE IF NOT EXISTS `senderscore_cache` (
 ) ENGINE=InnoDB;
 
 
--- Log smtp actions returned by iRedAPD plugins.
-CREATE TABLE IF NOT EXISTS `log_smtp_actions` (
+-- Log smtp sessions processed by iRedAPD.
+CREATE TABLE IF NOT EXISTS `smtp_sessions` (
     `id`                    BIGINT(20) UNSIGNED AUTO_INCREMENT,
     `time`                  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `time_num`              INT(10) UNSIGNED NOT NULL DEFAULT 0,
@@ -270,48 +270,6 @@ CREATE TABLE IF NOT EXISTS `log_smtp_actions` (
     INDEX (`time_num`),
     INDEX (`action`),
     INDEX (`reason`),
-    INDEX (`instance`),
-    INDEX (`client_address`),
-    INDEX (`client_name`),
-    INDEX (`reverse_client_name`),
-    INDEX (`helo_name`),
-    INDEX (`sender`),
-    INDEX (`sender_domain`),
-    INDEX (`sasl_username`),
-    INDEX (`sasl_domain`),
-    INDEX (`recipient`),
-    INDEX (`recipient_domain`),
-    INDEX (`encryption_protocol`),
-    INDEX (`encryption_cipher`),
-    INDEX (`server_address`),
-    INDEX (`server_port`)
-) ENGINE=InnoDB;
-
--- Log smtp authentications performed by local users.
-CREATE TABLE IF NOT EXISTS `log_smtp_auth` (
-    `id`                    BIGINT(20) UNSIGNED AUTO_INCREMENT,
-    `time`                  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `time_num`              INT(10) UNSIGNED NOT NULL DEFAULT 0,
-    -- smtp session info
-    `instance`              VARCHAR(40) NOT NULL DEFAULT '',
-    `client_address`        VARCHAR(40) NOT NULL DEFAULT '',
-    `client_name`           VARCHAR(255) NOT NULL DEFAULT '',
-    `reverse_client_name`   VARCHAR(255) NOT NULL DEFAULT '',
-    `helo_name`             VARCHAR(255) NOT NULL DEFAULT '',
-    `sender`                VARCHAR(255) NOT NULL DEFAULT '',
-    `sender_domain`         VARCHAR(255) NOT NULL DEFAULT '',
-    `sasl_username`         VARCHAR(255) NOT NULL DEFAULT '',
-    `sasl_domain`           VARCHAR(255) NOT NULL DEFAULT '',
-    `recipient`             VARCHAR(255) NOT NULL DEFAULT '',
-    `recipient_domain`      VARCHAR(255) NOT NULL DEFAULT '',
-    `encryption_protocol`   VARCHAR(20) NOT NULL DEFAULT '',
-    `encryption_cipher`     VARCHAR(50) NOT NULL DEFAULT '',
-    -- Postfix-3.x logs `server_address` and `server_port`
-    `server_address`        VARCHAR(40) NOT NULL DEFAULT '',
-    `server_port`           VARCHAR(10) NOT NULL DEFAULT '',
-    PRIMARY KEY (`id`),
-    INDEX (`time`),
-    INDEX (`time_num`),
     INDEX (`instance`),
     INDEX (`client_address`),
     INDEX (`client_name`),
