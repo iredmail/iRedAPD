@@ -6,7 +6,7 @@ iRedAPD-3.2:
         reject score (defaults to 30), email will be rejected.
 
     + Improvements:
-        + Log encryption_cipher and server port number by syslog.
+        + Log encryption_cipher and server port number.
         + Able to log the smtp sessions processed by iRedAPD in SQL database.
           Log will expire in 7 days by default.
 
