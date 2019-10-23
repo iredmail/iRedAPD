@@ -5,8 +5,10 @@ iRedAPD-3.2:
         if the returned reputation score equals to or is lower than defined
         reject score (defaults to 30), email will be rejected.
 
+        NOTE: This plugin is NOT enabled by default.
+
     + Improvements:
-        + Log encryption_cipher and server port number.
+        + Log encryption cipher and server port number used by client.
         + Able to log the smtp sessions processed by iRedAPD in SQL database.
           Log will expire in 7 days by default.
 
