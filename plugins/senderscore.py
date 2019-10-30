@@ -102,8 +102,6 @@ def restriction(**kwargs):
                 conn_iredapd.execute(sql)
             except Exception as e:
                 logger.error("[{0}] senderscore -> Error while caching score: {1}".format(client_address, e))
-        else:
-            logger.info("[{0}] senderscore: DEBUG: cache_the_score is False".format(client_address))
     else:
         logger.error("Invalid sender score: %d (must between 0-100)" % score)
         return SMTP_ACTIONS['default']
