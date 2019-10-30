@@ -1,3 +1,7 @@
+iRedAPD-3.3:
+    - Fixed issues:
+        - plugins/senderscore.py: not cache score if DNS query failed.
+
 iRedAPD-3.2:
     - New plugin: senderscore.
 
