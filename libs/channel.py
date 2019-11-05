@@ -199,10 +199,15 @@ class Policy(asynchat.async_chat):
                                      start_time=_start_time,
                                      end_time=_end_time)
 
-            # Log smtp session
-            utils.log_smtp_session(conn=self.db_conns['conn_iredapd'],
-                                   smtp_action=action,
-                                   **self.smtp_session_data)
+            # Log smtp session.
+            # Postfix may send the smtp session data twice or even more if
+            # iRedAPD is called in multiple protocol states, try to avoid
+            # "duplicate" logging here.
+            if _protocol_state == 'END-OF-MESSAGE' or \
+               (_protocol_state == 'RCPT' and not action.startswith('DUNNO')):
+                utils.log_smtp_session(conn=self.db_conns['conn_iredapd'],
+                                       smtp_action=action,
+                                       **self.smtp_session_data)
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: " + action)
