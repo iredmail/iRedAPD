@@ -455,7 +455,7 @@ def apply_throttle(conn,
 
             # Get the real cur_msgs (if mail contains multiple recipients, we
             # need to count them all)
-            _real_max_msgs_cur_msgs = max_msgs_cur_msgs + settings.GLOBAL_SESSION_TRACKING[instance_id]['processed']
+            _real_max_msgs_cur_msgs = max_msgs_cur_msgs + settings.GLOBAL_SESSION_TRACKING[instance_id]['num_processed']
 
             if _real_max_msgs_cur_msgs >= max_msgs > 0:
                 logger.info('[{0}] [{1}] Quota exceeded: {2} throttle for '

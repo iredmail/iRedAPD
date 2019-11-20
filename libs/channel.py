@@ -149,13 +149,13 @@ class Policy(asynchat.async_chat):
                     # remove them after instance finished.
                     _tracking_expired = int(time.time())
 
-                    # @processed: count of processed smtp sessions
+                    # @num_processed: count of processed smtp sessions
                     settings.GLOBAL_SESSION_TRACKING[_instance] = {
-                        'processed': 0,
+                        'num_processed': 0,
                         'expired': _tracking_expired,
                     }
                 else:
-                    settings.GLOBAL_SESSION_TRACKING[_instance]['processed'] += 1
+                    settings.GLOBAL_SESSION_TRACKING[_instance]['num_processed'] += 1
 
             # Call modeler and apply plugins
             try:
