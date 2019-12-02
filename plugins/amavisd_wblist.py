@@ -59,6 +59,12 @@ else:
     from libs.sql import is_local_domain, get_alias_target_domain
 
 
+if settings.WBLIST_DISCARD_INSTEAD_OF_REJECT:
+    reject_action = SMTP_ACTIONS['discard']
+else:
+    reject_action = SMTP_ACTIONS['reject_blacklisted']
+
+
 def get_id_of_possible_cidr_network(conn, client_address):
     """Return list of `mailaddr.id` which are CIDR network addresses."""
     ids = []
@@ -205,7 +211,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
 
             if (rid, sid, 'B') in wblists:
                 logger.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
-                return SMTP_ACTIONS['reject_blacklisted']
+                return reject_action
 
     return SMTP_ACTIONS['default']
 
@@ -246,7 +252,7 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
 
             if (rid, sid, 'B') in wblists:
                 logger.info("Blacklisted: outbound_wblist=(%d, %d, 'B')" % (rid, sid))
-                return SMTP_ACTIONS['reject_blacklisted']
+                return reject_action
 
     return SMTP_ACTIONS['default']
 

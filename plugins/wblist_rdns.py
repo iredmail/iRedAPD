@@ -40,6 +40,13 @@ from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_trusted_client
+import settings
+
+
+if settings.WBLIST_DISCARD_INSTEAD_OF_REJECT:
+    reject_action = SMTP_ACTIONS['discard']
+else:
+    reject_action = SMTP_ACTIONS['reject_blacklisted']
 
 
 def restriction(**kwargs):
@@ -95,6 +102,6 @@ def restriction(**kwargs):
     if record:
         rdns = str(record[0]).lower()
         logger.info('Reverse client hostname is blacklisted: ' + rdns)
-        return SMTP_ACTIONS['reject_blacklisted']
+        return reject_action
 
     return SMTP_ACTIONS['default']

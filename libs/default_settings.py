@@ -81,6 +81,7 @@ ENABLE_ALL_WILDCARD_IP = False
 #
 # Don't check white/blacklists for outgoing emails sent by sasl authenticated user.
 WBLIST_BYPASS_OUTGOING_EMAIL = False
+WBLIST_DISCARD_INSTEAD_OF_REJECT = False
 
 # ---------------
 # Required by:
