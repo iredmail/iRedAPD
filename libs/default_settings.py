@@ -81,6 +81,9 @@ ENABLE_ALL_WILDCARD_IP = False
 #
 # Don't check white/blacklists for outgoing emails sent by sasl authenticated user.
 WBLIST_BYPASS_OUTGOING_EMAIL = False
+
+# Silently discard email instead of rejecting it with message like `Blacklisted`.
+# Note: this setting applies to all plugins which do white/blacklisting.
 WBLIST_DISCARD_INSTEAD_OF_REJECT = False
 
 # ---------------
