@@ -8,6 +8,7 @@ iRedAPD-3.3:
           Defaults to `False`.
 
     - Fixed issues:
+        - Do not enable SRS automatically after upgrade.
         - Not avoid duplicate logging of smtp sessions.
         - plugins/senderscore.py: not cache score if DNS query failed.
 

@@ -646,7 +646,8 @@ if ! grep '^srs_' ${NEW_IREDAPD_CONF} &>/dev/null; then
     add_missing_parameter 'srs_forward_port' "7778"
     add_missing_parameter 'srs_reverse_port' "7779"
     add_missing_parameter 'srs_domain' "${HOSTNAME}"
-    add_missing_parameter 'srs_secrets' "['$(${RANDOM_STRING})']"
+    # Do not add a srs secret to enable SRS.
+    add_missing_parameter 'srs_secrets' "[]"
 fi
 
 # On FreeBSD, syslog socket is /var/run/log.
