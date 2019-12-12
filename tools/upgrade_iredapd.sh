@@ -723,6 +723,7 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     fi
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     # syslog
+    [[ -d ${SYSLOG_CONF_DIR} ]] || mkdir -p ${SYSLOG_CONF_DIR}
     cp -f ${ROOTDIR}/../samples/freebsd/syslog.d/iredapd.conf ${SYSLOG_CONF_DIR}/iredapd.conf
     chown ${SYS_USER_ROOT}:${SYS_GROUP_ROOT} ${SYSLOG_CONF_DIR}/iredapd.conf
     chmod 0644 ${SYSLOG_CONF_DIR}/iredapd.conf

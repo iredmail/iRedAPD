@@ -1,3 +1,8 @@
+iRedAPD-3.4:
+    - Fixed issues:
+        - tools/upgrade_iredapd.sh: Create /usr/local/etc/syslog.d/ on FreeBSD
+          if it doens't exist.
+
 iRedAPD-3.3:
     + Improvements:
         + New setting `WBLIST_DISCARD_INSTEAD_OF_REJECT`.
