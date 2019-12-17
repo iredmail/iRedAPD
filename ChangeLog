@@ -1,4 +1,9 @@
 iRedAPD-3.4:
+    - Improvements:
+        - tools/senderscore_admin.py: command line script used to manage
+          senderscore plugin. Currently only whitelisting IP addresses is
+          supported.
+
     - Fixed issues:
         - tools/upgrade_iredapd.sh: Create /usr/local/etc/syslog.d/ on FreeBSD
           if it doens't exist.
