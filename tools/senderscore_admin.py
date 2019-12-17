@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
-
 # Author: Zhang Huangbin <zhb@iredmail.org>
-# Purpose: Manage senderscore data.
+# Purpose: Manage data of senderscore plugin.
 
 from __future__ import print_function
 import os
