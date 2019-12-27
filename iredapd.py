@@ -64,10 +64,11 @@ def main():
         logger.info('No SRS domain and/or secret strings in settings.py, not loaded.')
 
     # Run this program as daemon.
-    try:
-        daemon.daemonize(noClose=True)
-    except Exception as e:
-        logger.error('Error in daemon.daemonize: ' + str(e))
+    if '--foreground' not in sys.argv:
+        try:
+            daemon.daemonize(noClose=True)
+        except Exception as e:
+            logger.error('Error in daemon.daemonize: ' + str(e))
 
     # Write pid number into pid file.
     f = open(settings.pid_file, 'w')
