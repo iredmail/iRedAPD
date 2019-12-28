@@ -1,5 +1,7 @@
 iRedAPD-3.4:
     - Improvements:
+        - Support '--foreground' argument to run in foreground.
+          Useful for running inside docker container.
         - tools/senderscore_admin.py: command line script used to manage
           senderscore plugin. Currently only whitelisting IP addresses is
           supported.
