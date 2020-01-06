@@ -629,7 +629,7 @@ def apply_throttle(conn,
                     if v['expired']:
                         sql_updates[tracking_id]['init_time'] = now
                         sql_updates[tracking_id]['cur_msgs'] = recipient_count
-                        sql_updates[tracking_id]['cur_quota'] = now
+                        sql_updates[tracking_id]['cur_quota'] = size
                     else:
                         sql_updates[tracking_id]['init_time'] = v['init_time']
                         sql_updates[tracking_id]['cur_msgs'] = 'cur_msgs + %d' % recipient_count
