@@ -7,8 +7,10 @@ iRedAPD-3.4:
           supported.
 
     - Fixed issues:
-        - tools/upgrade_iredapd.sh: Create /usr/local/etc/syslog.d/ on FreeBSD
-          if it doens't exist.
+        - tools/upgrade_iredapd.sh:
+            - Create /usr/local/etc/syslog.d/ on FreeBSD if it doens't exist.
+            - Enable SRS by default if upgrading from iRedAPD-2.5 or earlier
+              release.
 
 iRedAPD-3.3:
     + Improvements:
