@@ -53,9 +53,6 @@ def restriction(**kwargs):
         if not policy:
             return SMTP_ACTIONS['default'] + ' (Recipient is not a mailing list account)'
 
-    if not policy:
-        return SMTP_ACTIONS['default'] + ' (Recipient is not a mailing list account)'
-
     logger.debug('Access policy: %s' % policy)
 
     if policy == MAILLIST_POLICY_PUBLIC:
