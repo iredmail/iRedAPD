@@ -248,3 +248,9 @@ NOTIFICATION_SMTP_DEBUG_LEVEL = 0
 
 # The short description or full name of this smtp user. e.g. 'No Reply'
 NOTIFICATION_SENDER_NAME = 'No Reply'
+
+# ----------------------------
+# Clean up related settings.
+#
+# Query and return how many rows each time for delete.
+CLEANUP_QUERY_SIZE_LIMIT = 1000

@@ -14,65 +14,45 @@ rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 
 import settings
-from tools import logger, get_db_conn, sql_count_id
+from tools import get_db_conn, cleanup_sql_table
 
 web.config.debug = False
 
 backend = settings.backend
-logger.info('* Backend: %s' % backend)
-
 now = int(time.time())
-
 conn_iredapd = get_db_conn('iredapd')
 
 #
 # Throttling
 #
-total_before = sql_count_id(conn_iredapd, 'throttle_tracking')
-conn_iredapd.delete('throttle_tracking', where='init_time + period < %d' % now)
-total_after = sql_count_id(conn_iredapd, 'throttle_tracking')
-
-logger.info("* Remove expired throttle tracking records: "
-            "%d removed, %d left." % (total_before - total_after, total_after))
+cleanup_sql_table(conn=conn_iredapd,
+                  sql_table='throttle_tracking',
+                  sql_where='(init_time + period) < %d' % now,
+                  print_left_rows=True)
 
 #
 # Greylisting tracking records.
 #
-total_before = sql_count_id(conn_iredapd, 'greylisting_tracking')
-conn_iredapd.delete('greylisting_tracking', where='record_expired < %d' % now)
-total_after = sql_count_id(conn_iredapd, 'greylisting_tracking')
-
-#
-# Some basic analyzation
-#
-# Count how many records are passed greylisting
-total_passed = sql_count_id(conn_iredapd, 'greylisting_tracking', where='passed=1')
-
-logger.info("* Remove expired greylisting tracking records: "
-            "%d removed, %d left (%d passed, %d not)." % (
-                total_before - total_after,
-                total_after,
-                total_passed,
-                total_after - total_passed))
+cleanup_sql_table(conn=conn_iredapd,
+                  sql_table='greylisting_tracking',
+                  sql_where='record_expired < %d' % now,
+                  print_left_rows=True)
 
 #
 # Clean up cached senderscore results.
 #
 expire_seconds = int(time.time()) - (settings.SENDERSCORE_CACHE_DAYS * 86400)
-total_before = sql_count_id(conn_iredapd, 'senderscore_cache', column='client_address')
-conn_iredapd.delete('senderscore_cache', where='time < %d' % expire_seconds)
-total_after = sql_count_id(conn_iredapd, 'senderscore_cache', column='client_address')
-
-logger.info("* Remove expired senderscore DNS query results: "
-            "%d removed, %d left." % (total_before - total_after, total_after))
+cleanup_sql_table(conn=conn_iredapd,
+                  sql_table='senderscore_cache',
+                  unique_index_column='client_address',
+                  sql_where='time < %d' % expire_seconds,
+                  print_left_rows=True)
 
 #
 # Clean up `smtp_sessions`
 #
 expire_seconds = int(time.time()) - (settings.LOG_SMTP_SESSIONS_EXPIRE_DAYS * 86400)
-total_before = sql_count_id(conn_iredapd, 'smtp_sessions')
-conn_iredapd.delete('smtp_sessions', where='time_num < %d' % expire_seconds)
-total_after = sql_count_id(conn_iredapd, 'smtp_sessions')
-
-logger.info("* Remove expired smtp sessions: "
-            "%d removed, %d left." % (total_before - total_after, total_after))
+cleanup_sql_table(conn=conn_iredapd,
+                  sql_table='smtp_sessions',
+                  sql_where='time_num < %d' % expire_seconds,
+                  print_left_rows=True)

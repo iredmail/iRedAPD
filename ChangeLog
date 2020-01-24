@@ -5,6 +5,11 @@ iRedAPD-3.4:
         - tools/senderscore_admin.py: command line script used to manage
           senderscore plugin. Currently only whitelisting IP addresses is
           supported.
+        - tools/cleanup_db.py: instead of deleting all matched records in one
+          command, it now deletes limited records (defaults to 1000) each time.
+          If some SQL table has a lot records, deleting all in one command may
+          take a long time and causes deadlock/conflict, SQL server may abort
+          the transaction.
 
     - Fixed issues:
         - plugins/throttle.py: Stored initial message size was wrong.

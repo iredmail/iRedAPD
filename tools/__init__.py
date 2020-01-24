@@ -81,3 +81,45 @@ def sql_count_id(conn, table, column='id', where=None):
         total = 0
 
     return total
+
+
+# Removing limited records each time from single table.
+def cleanup_sql_table(conn,
+                      sql_table,
+                      unique_index_column='id',
+                      remove_values=None,
+                      sql_where=None,
+                      print_left_rows=False):
+    num_query_pages = 0
+    num_removed_rows = 0
+
+    loops = 0
+    while True:
+        remove_values = []
+        _qr = conn.select(sql_table,
+                          what="{0}".format(unique_index_column),
+                          where=sql_where,
+                          limit=settings.CLEANUP_QUERY_SIZE_LIMIT)
+
+        for i in _qr:
+            remove_values.append(i[unique_index_column])
+
+        if remove_values:
+            num_query_pages += 1
+            num_removed_rows += len(remove_values)
+
+            conn.delete(sql_table,
+                        vars={'values': remove_values},
+                        where='{0} IN $values'.format(unique_index_column))
+
+            logger.info("* {0:20}: {1} records removed.".format(sql_table, num_removed_rows))
+        else:
+            break
+
+        loops += 1
+
+    if print_left_rows:
+        _qr = conn.select(sql_table, what="COUNT({0}) AS total".format(unique_index_column))
+        total = _qr[0].total or 0
+
+        logger.info("* {0:20}: {1} left.".format(sql_table, total))

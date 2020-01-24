@@ -13,13 +13,15 @@ alias = 'alias@' + domain
 ext_domain = 'external.com'
 ext_user = 'user@' + ext_domain
 
-sql_vars = {'domain': domain,
-            'alias_domain': alias_domain,
-            'user': user,
-            'user_alias': user_alias,
-            'alias': alias,
-            'ext_domain': ext_domain,
-            'ext_user': ext_user}
+sql_vars = {
+    'domain': domain,
+    'alias_domain': alias_domain,
+    'user': user,
+    'user_alias': user_alias,
+    'alias': alias,
+    'ext_domain': ext_domain,
+    'ext_user': ext_user,
+}
 
 # rDNS names
 rdns_subdomain_name = '.rdns.com'
