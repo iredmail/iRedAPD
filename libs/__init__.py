@@ -21,7 +21,7 @@ SMTP_ACTIONS = {
     # Throttling
     'reject_quota_exceeded': 'REJECT Quota exceeded',
     # Sender Score
-    'reject_low_sender_score': 'REJECT Server IP address has bad reputation. FYI: https://www.senderscore.org/',
+    'reject_low_sender_score': 'REJECT Server IP address has bad reputation. FYI: https://www.senderscore.org/lookup.php?lookup=',
     'greylisting': '451 4.7.1',
 }
 

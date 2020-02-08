@@ -115,7 +115,7 @@ def restriction(**kwargs):
     if score <= reject_score:
         log_msg += " [REJECT (<= {0})]".format(reject_score)
         logger.info(log_msg)
-        return SMTP_ACTIONS["reject_low_sender_score"]
+        return SMTP_ACTIONS["reject_low_sender_score"] + client_address
 
     logger.info(log_msg)
     return SMTP_ACTIONS["default"]
