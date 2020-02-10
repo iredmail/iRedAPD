@@ -12,10 +12,12 @@
 """
 
 import time
+import ipaddress
+
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
-from libs import utils, ipaddress, dnsspf
+from libs import utils, dnsspf
 import settings
 
 
@@ -87,7 +89,7 @@ def _is_whitelisted(conn,
         _net = ()
         for _cidr in _cidrs:
             try:
-                _net = ipaddress.ip_network(unicode(_cidr))
+                _net = ipaddress.ip_network(_cidr)
                 if ip_object in _net:
                     logger.info('[%s] Client network is whitelisted: cidr=%s' % (client_address, _cidr))
                     return True
@@ -347,7 +349,7 @@ def restriction(**kwargs):
         policy_senders += client_address.rsplit('.', 1)[0] + '.*'
 
     # Get object of IP address type
-    _ip_object = ipaddress.ip_address(unicode(client_address))
+    _ip_object = ipaddress.ip_address(client_address)
 
     conn_iredapd = kwargs['conn_iredapd']
     # Check greylisting whitelists

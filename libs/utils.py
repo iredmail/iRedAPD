@@ -6,6 +6,7 @@ import time
 import socket
 import subprocess
 import smtplib
+import ipaddress
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -18,7 +19,6 @@ from libs.logger import logger
 from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
 from libs import SMTP_ACTIONS
 from libs import regxes
-from libs import ipaddress
 import settings
 
 if settings.backend == 'ldap':
@@ -62,7 +62,7 @@ TRUSTED_NETWORKS = []
 for ip in settings.MYNETWORKS:
     if '/' in ip:
         try:
-            TRUSTED_NETWORKS.append(ipaddress.ip_network(unicode(ip)))
+            TRUSTED_NETWORKS.append(ipaddress.ip_network(ip))
         except:
             pass
     else:
@@ -131,7 +131,7 @@ def is_ipv6(s):
 
 def is_strict_ip(s):
     try:
-        ipaddress.ip_address(unicode(s))
+        ipaddress.ip_address(s)
         return True
     except:
         return False
@@ -139,7 +139,7 @@ def is_strict_ip(s):
 
 def is_cidr_network(s):
     try:
-        ipaddress.ip_network(unicode(s))
+        ipaddress.ip_network(s)
         return True
     except:
         return False
@@ -335,7 +335,7 @@ def is_trusted_client(client_address):
         logger.debug(msg)
         return True
 
-    ip_addr = ipaddress.ip_address(unicode(client_address))
+    ip_addr = ipaddress.ip_address(client_address)
     for net in TRUSTED_NETWORKS:
         if ip_addr in net:
             logger.debug(msg)
@@ -516,7 +516,7 @@ def load_enabled_plugins(plugins):
     # plugins in ideal order.
     ordered_plugins = []
     for item in sorted(pnl, reverse=True):
-        ordered_plugins += item.values()
+        ordered_plugins += list(item.values())
 
     for plugin in ordered_plugins:
         try:

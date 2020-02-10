@@ -70,7 +70,7 @@ def set_smtp_session(**kw):
 
     d.update(**kw)
 
-    l = ['%s=%s' % (k, v) for k, v in d.items()]
+    l = ['%s=%s' % (k, v) for k, v in list(d.items())]
     return '\n'.join(l) + '\n\n'
 
 

@@ -43,10 +43,10 @@
 #                   'WBLIST_ENABLE_ALL_WILDCARD_IP = True' in
 #                   /opt/iredapd/settings.py.
 
+import ipaddress
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS
-from libs import ipaddress
 from libs.utils import is_ipv4, wildcard_ipv4, get_policy_addresses_from_email
 import settings
 
@@ -74,7 +74,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
         return ids
 
     try:
-        _ip = ipaddress.ip_address(unicode(client_address))
+        _ip = ipaddress.ip_address(client_address)
         if _ip.version == 4:
             first_field = client_address.split('.')[0]
             sql_cidr = first_field + r'.%%'
@@ -104,13 +104,13 @@ def get_id_of_possible_cidr_network(conn, client_address):
         for (_id, _cidr) in _cidrs:
             # Verify whether client_address is in CIDR network
             try:
-                _net = ipaddress.ip_network(unicode(_cidr))
+                _net = ipaddress.ip_network(_cidr)
                 _ip_networks.add((_id, _net))
             except:
                 pass
 
         if _ip_networks:
-            _ip = ipaddress.ip_address(unicode(client_address))
+            _ip = ipaddress.ip_address(client_address)
             for (_id, _net) in _ip_networks:
                 if _ip in _net:
                     ids.append(_id)

@@ -1,7 +1,8 @@
+import ipaddress
 from dns import resolver
 
 from libs.logger import logger
-from libs import utils, ipaddress
+from libs import utils
 import settings
 
 
@@ -164,13 +165,13 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
         elif tag.startswith('ip4:') or tag.startswith('+ip4:'):
             if '/' in v:
                 try:
-                    ipaddress.ip_network(unicode(v))
+                    ipaddress.ip_network(v)
                     ips.add(v)
                 except:
                     logger.debug("{0} is invalid IP address or network.".format(tag))
             else:
                 try:
-                    ipaddress.ip_address(unicode(v))
+                    ipaddress.ip_address(v)
                     ips.add(v)
                 except:
                     logger.debug("{0} is invalid IP address.".format(tag))
@@ -179,11 +180,11 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
             # Some sysadmin uses invalid syntaxes like 'ipv:*', we'd better not
             # store them.
             try:
-                ipaddress.ip_address(unicode(v))
+                ipaddress.ip_address(v)
                 ips.add(v)
             except:
                 try:
-                    ipaddress.ip_network(unicode(v))
+                    ipaddress.ip_network(v)
                     ips.add(v)
                 except:
                     logger.debug("{0} is invalid IP address or network.".format(tag))
@@ -322,7 +323,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
                      'sender domain {1}.'.format(ip, sender_domain))
         return True
 
-    _ip_object = ipaddress.ip_address(unicode(ip))
+    _ip_object = ipaddress.ip_address(ip)
     _cidrs = []
 
     # Get CIDR networks
@@ -336,7 +337,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
     if _cidrs:
         for _cidr in _cidrs:
             try:
-                _network = ipaddress.ip_network(unicode(_cidr))
+                _network = ipaddress.ip_network(_cidr)
 
                 if _ip_object in _network:
                     logger.debug('[SPF] IP ({0}) is listed in SPF DNS record '

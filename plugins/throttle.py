@@ -371,7 +371,7 @@ def apply_throttle(conn,
         logger.debug('{0} throttle setting: {1}'.format(throttle_type, throttle_info))
 
     # Update track_key.
-    for (_, v) in t_settings.items():
+    for (_, v) in list(t_settings.items()):
         t_account = v['account']
         addr_type = utils.is_valid_amavisd_address(t_account)
 
@@ -612,7 +612,7 @@ def apply_throttle(conn,
         # {tracking_id: ['last_time=xxx', 'init_time=xxx', ...]}
         sql_updates = {}
 
-        for (_, v) in t_settings.items():
+        for (_, v) in list(t_settings.items()):
             tid = v['tid']
             for k in v['track_key']:
                 if (tid, k) in tracking_ids:
@@ -652,7 +652,7 @@ def apply_throttle(conn,
             logger.debug('[SQL] Insert new tracking record(s): {0}'.format(sql))
             conn.execute(sql)
 
-        for (_tracking_id, _kv) in sql_updates.items():
+        for (_tracking_id, _kv) in list(sql_updates.items()):
             _sql = """UPDATE throttle_tracking
                          SET period={0},
                              last_time={1},

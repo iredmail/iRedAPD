@@ -1,8 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: add, delete, show whitelists/blacklists for specified local recipient.
 
-from __future__ import print_function
 import os
 import sys
 import web

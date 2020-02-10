@@ -181,11 +181,11 @@ def add_wblist(conn,
     # Remove existing records of current submitted records then insert new.
     try:
         if sender_records:
-            sql = "DELETE FROM wblist WHERE rid=%d AND sid IN %s" % (user_id, sqlquote(sender_records.values()))
+            sql = "DELETE FROM wblist WHERE rid=%d AND sid IN %s" % (user_id, sqlquote(list(sender_records.values())))
             conn.execute(sql)
 
         if rcpt_records:
-            sql = "DELETE FROM outbound_wblist WHERE sid=%d AND rid IN %s" % (user_id, sqlquote(rcpt_records.values()))
+            sql = "DELETE FROM outbound_wblist WHERE sid=%d AND rid IN %s" % (user_id, sqlquote(list(rcpt_records.values())))
             conn.execute(sql)
     except Exception as e:
         return (False, e)
