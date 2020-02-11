@@ -496,27 +496,31 @@ def load_enabled_plugins(plugins):
     if not plugins:
         plugins = settings.plugins
 
-    # If enabled plugin doesn't have a priority pre-defined, set it to 0 (lowest)
-    _plugins_without_priority = [i for i in plugins if i not in _plugin_priorities]
-    for _p in _plugins_without_priority:
-        _plugin_priorities[_p] = 0
-
     # a list of {priority: name}
     pnl = []
+
     for p in plugins:
         plugin_file = os.path.join(plugin_dir, p + '.py')
+
+        # Skip non-existing plugin.
         if not os.path.isfile(plugin_file):
             logger.error('Plugin %s (%s) does not exist.' % (p, plugin_file))
             continue
 
+        # If plugin doesn't have a pre-defined priority, set it to 0 (lowest)
+        if p not in _plugin_priorities:
+            _plugin_priorities[p] = 0
+
         priority = _plugin_priorities[p]
-        pnl += [{priority: p}]
+        pnl += [{'priority': priority, 'plugin': p}]
 
     # Sort plugin order with pre-defined priorities, so that we can apply
     # plugins in ideal order.
+    pnl.sort(key=lambda d: d['priority'], reverse=True)
+
     ordered_plugins = []
-    for item in sorted(pnl, reverse=True):
-        ordered_plugins += list(item.values())
+    for item in pnl:
+        ordered_plugins.append(item['plugin'])
 
     for plugin in ordered_plugins:
         try:
