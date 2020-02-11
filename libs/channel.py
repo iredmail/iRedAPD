@@ -84,7 +84,7 @@ class Policy(asynchat.async_chat):
         asynchat.async_chat.__init__(self, sock)
         self.buffer = []
         self.smtp_session_data = {}
-        self.set_terminator('\n')
+        self.set_terminator(b'\n')
 
         self.db_conns = db_conns
         self.plugins = plugins
@@ -93,7 +93,7 @@ class Policy(asynchat.async_chat):
 
     def push(self, msg):
         try:
-            asynchat.async_chat.push(self, msg + '\n')
+            asynchat.async_chat.push(self, (msg + '\n').encode())
         except Exception as e:
             logger.error('Error while pushing message: %s. Msg: %s' % (repr(e), repr(msg)))
 
@@ -103,7 +103,8 @@ class Policy(asynchat.async_chat):
     def found_terminator(self):
         if self.buffer:
             # Format received data
-            line = self.buffer.pop()
+            line = self.buffer.pop().decode()
+
             if '=' in line:
                 logger.debug("[policy] " + line)
                 (k, v) = line.split('=', 1)
@@ -232,7 +233,7 @@ class SRS(asynchat.async_chat):
 
     def push(self, msg):
         try:
-            asynchat.async_chat.push(self, msg + '\n')
+            asynchat.async_chat.push(self, (msg + '\n').encode())
         except Exception as e:
             logger.error('Error while pushing message: error={0}, message={1}'.format(e, msg))
 

@@ -31,7 +31,7 @@ ccert_pubkey_fingerprint=
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('127.0.0.1', 7777))
-s.sendall(policy_data)
+s.sendall(policy_data.encode())
 data = s.recv(1024)
 print(data)
 s.close()
