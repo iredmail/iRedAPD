@@ -231,7 +231,7 @@ THROTTLE_BYPASS_SAME_DOMAIN = True
 SENDERSCORE_REJECT_SCORE = 30
 
 # Cache the score returned by DNS query for how many days.
-SENDERSCORE_CACHE_DAYS = 7
+SENDERSCORE_CACHE_DAYS = 2
 
 # ----------------
 # Send mail
