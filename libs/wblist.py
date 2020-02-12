@@ -2,6 +2,7 @@
 
 from web import sqlquote
 from libs import utils
+from libs.logger import logger
 
 def create_mailaddr(conn, addresses):
     for addr in addresses:
@@ -163,19 +164,19 @@ def add_wblist(conn,
         sql_records = qr.fetchall()
         for r in sql_records:
             (_id, _email) = r
-            sender_records[str(_email)] = int(_id)
+            sender_records[_email.decode()] = int(_id)
         del qr
 
     # Get `mailaddr.id` of recipients
     rcpt_records = {}
     if rcpt_addresses:
-        sql = "SELECT id, email FROM mailaddr WHERE email in %s" % sqlquote(list(rcpt_addresses))
+        sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(list(rcpt_addresses))
         qr = conn.execute(sql)
         sql_records = qr.fetchall()
 
         for r in sql_records:
             (_id, _email) = r
-            rcpt_records[str(_email)] = int(_id)
+            rcpt_records[_email.decode()] = int(_id)
         del qr
 
     # Remove existing records of current submitted records then insert new.
@@ -220,8 +221,8 @@ def add_wblist(conn,
                     conn.execute("INSERT INTO wblist (sid, rid, wb) VALUES (%s, %s, %s)" % (sqlquote(v['sid']),
                                                                                             sqlquote(v['rid']),
                                                                                             sqlquote(v['wb'])))
-                except:
-                    pass
+                except Exception as e:
+                    logger.error(e)
 
         if rcpt_values:
             for v in rcpt_values:
@@ -229,8 +230,8 @@ def add_wblist(conn,
                     conn.execute("INSERT INTO outbound_wblist (sid, rid, wb) VALUES (%s, %s, %s)" % (sqlquote(v['sid']),
                                                                                                      sqlquote(v['rid']),
                                                                                                      sqlquote(v['wb'])))
-                except:
-                    pass
+                except Exception as e:
+                    logger.error(e)
 
     except Exception as e:
         return (False, e)

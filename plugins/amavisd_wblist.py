@@ -85,19 +85,19 @@ def get_id_of_possible_cidr_network(conn, client_address):
 
     sql = """SELECT id, email
                FROM mailaddr
-              WHERE email LIKE %s
-           ORDER BY priority DESC""" % sqlquote(sql_cidr)
-    logger.debug('[SQL] Query CIDR network: \n%s' % sql)
+              WHERE email LIKE {0}
+           ORDER BY priority DESC""".format(sqlquote(sql_cidr))
+    logger.debug('[SQL] Query CIDR network: \n{0}'.format(sql))
 
     try:
         qr = conn.execute(sql)
         qr_cidr = qr.fetchall()
     except Exception as e:
-        logger.error('Error while querying CIDR network: %s, SQL: \n%s' % (repr(e), sql))
+        logger.error('Error while querying CIDR network: {0}, SQL: \n{1}'.format(e, sql))
         return ids
 
     if qr_cidr:
-        _cidrs = [(int(r.id), r.email) for r in qr_cidr]
+        _cidrs = [(int(r.id), r.email.decode()) for r in qr_cidr]
 
         # Get valid CIDR.
         _ip_networks = set()
@@ -115,6 +115,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
                 if _ip in _net:
                     ids.append(_id)
 
+    logger.debug("IDs of CIDR network(s): {0}".format(ids))
     return ids
 
 def get_id_of_external_addresses(conn, addresses):
@@ -128,15 +129,15 @@ def get_id_of_external_addresses(conn, addresses):
     # Get 'mailaddr.id' of external addresses, ordered by priority
     sql = """SELECT id, email
                FROM mailaddr
-              WHERE email IN %s
-           ORDER BY priority DESC""" % sqlquote(addresses)
-    logger.debug('[SQL] Query external addresses: \n%s' % sql)
+              WHERE email IN {0}
+           ORDER BY priority DESC""".format(sqlquote(addresses))
+    logger.debug('[SQL] Query external addresses: \n{0}'.format(sql))
 
     try:
         qr = conn.execute(sql)
         qr_addresses = qr.fetchall()
     except Exception as e:
-        logger.error('Error while getting list of id of external addresses: %s, SQL: %s' % (repr(e), sql))
+        logger.error('Error while getting list of id of external addresses: {0}, SQL: {1}'.format(e, sql))
         return ids
 
     if qr_addresses:
@@ -147,7 +148,7 @@ def get_id_of_external_addresses(conn, addresses):
         logger.debug('No record found in SQL database.')
         return []
     else:
-        logger.debug('Addresses (in `mailaddr`): %s' % repr(qr_addresses))
+        logger.debug('Addresses (in `mailaddr`): {0}'.format(qr_addresses))
         return ids
 
 
@@ -157,9 +158,9 @@ def get_id_of_local_addresses(conn, addresses):
     # Get 'users.id' of local addresses
     sql = """SELECT id, email
                FROM users
-              WHERE email IN %s
-           ORDER BY priority DESC""" % sqlquote(addresses)
-    logger.debug('[SQL] Query local addresses: \n%s' % sql)
+              WHERE email IN {0}
+           ORDER BY priority DESC""".format(sqlquote(addresses))
+    logger.debug('[SQL] Query local addresses: \n{0}'.format(sql))
 
     ids = []
     try:
@@ -168,14 +169,14 @@ def get_id_of_local_addresses(conn, addresses):
         if qr_addresses:
             ids = [int(r.id) for r in qr_addresses]
     except Exception as e:
-        logger.error('Error while executing SQL command: %s' % repr(e))
+        logger.error('Error while executing SQL command: {0}'.format(e))
 
     if not ids:
         # don't waste time if we don't have any per-recipient wblist.
         logger.debug('No record found in SQL database.')
         return []
     else:
-        logger.debug('Local addresses (in `users`): %s' % str(qr_addresses))
+        logger.debug('Local addresses (in `amavisd.users`): {0}'.format(qr_addresses))
         return ids
 
 
@@ -188,8 +189,8 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
     # Get wblist
     sql = """SELECT rid, sid, wb
                FROM wblist
-              WHERE sid IN %s AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
-    logger.debug('[SQL] Query inbound wblist (in `wblist`): \n%s' % sql)
+              WHERE sid IN {0} AND rid IN {1}""".format(sqlquote(sender_ids), sqlquote(recipient_ids))
+    logger.debug('[SQL] Query inbound wblist (in `wblist`): \n{0}'.format(sql))
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
@@ -198,7 +199,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
         logger.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logger.debug('Found inbound wblist: %s' % str(wblists))
+    logger.debug('Found inbound wblist: {0}'.format(wblists))
 
     # Check sender addresses
     # rids/recipients are orded by priority
@@ -206,11 +207,11 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
         # sids/senders are sorted by priority
         for sid in sender_ids:
             if (rid, sid, 'W') in wblists:
-                logger.info("Whitelisted: wblist=(%d, %d, 'W')" % (rid, sid))
+                logger.info("Whitelisted: wblist=({0}, {1}, 'W')".format(rid, sid))
                 return SMTP_ACTIONS['whitelist']
 
             if (rid, sid, 'B') in wblists:
-                logger.info("Blacklisted: wblist=(%d, %d, 'B')" % (rid, sid))
+                logger.info("Blacklisted: wblist=({0}, {1}, 'B')".format(rid, sid))
                 return reject_action
 
     return SMTP_ACTIONS['default']
@@ -230,8 +231,8 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
     # Get wblist
     sql = """SELECT rid, sid, wb
                FROM outbound_wblist
-              WHERE sid IN %s AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
-    logger.debug('[SQL] Query outbound wblist: \n%s' % sql)
+              WHERE sid IN {0} AND rid IN {1}""".format(sqlquote(sender_ids), sqlquote(recipient_ids))
+    logger.debug('[SQL] Query outbound wblist: \n{0}'.format(sql))
     qr = conn.execute(sql)
     wblists = qr.fetchall()
 
@@ -240,18 +241,18 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
         logger.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logger.debug('Found outbound wblist: %s' % str(wblists))
+    logger.debug('Found outbound wblist: {0}'.format(wblists))
 
     # Check sender addresses
     # rids/recipients are orded by priority
     for sid in sender_ids:
         for rid in recipient_ids:
             if (rid, sid, 'W') in wblists:
-                logger.info("Whitelisted: outbound_wblist=(%d, %d, 'W')" % (rid, sid))
-                return SMTP_ACTIONS['default'] + " outbound_wblist=(%d, %d, 'W')" % (rid, sid)
+                logger.info("Whitelisted: outbound_wblist=({0}, {1}, 'W')".format(rid, sid))
+                return SMTP_ACTIONS['default'] + " outbound_wblist=({0}, {1}, 'W')".format(rid, sid)
 
             if (rid, sid, 'B') in wblists:
-                logger.info("Blacklisted: outbound_wblist=(%d, %d, 'B')" % (rid, sid))
+                logger.info("Blacklisted: outbound_wblist=({0}, {1}, 'B')".format(rid, sid))
                 return reject_action
 
     return SMTP_ACTIONS['default']
@@ -313,8 +314,8 @@ def restriction(**kwargs):
         _mail = recipient.split('@', 1)[0] + '@' + alias_target_rcpt_domain
         valid_recipients += get_policy_addresses_from_email(mail=_mail)
 
-    logger.debug('Possible policy senders: %s' % str(valid_senders))
-    logger.debug('Possible policy recipients: %s' % str(valid_recipients))
+    logger.debug('Possible policy senders: {0}'.format(valid_senders))
+    logger.debug('Possible policy recipients: {0}'.format(valid_recipients))
 
     check_outbound = False
     if (not check_outbound) and kwargs['sasl_username']:
