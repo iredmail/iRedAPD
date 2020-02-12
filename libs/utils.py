@@ -254,6 +254,9 @@ def get_db_conn(db):
     else:
         dbn = 'mysql'
 
+    if settings.SQL_DB_DRIVER:
+        dbn += '+' + settings.SQL_DB_DRIVER
+
     try:
         uri = '%s://%s:%s@%s:%d/%s' % (dbn,
                                        settings.__dict__[db + '_db_user'],

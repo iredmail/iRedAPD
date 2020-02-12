@@ -52,6 +52,11 @@ SQL_CONNECTION_MAX_OVERFLOW = 10
 # a particular period of time.
 SQL_CONNECTION_POOL_RECYCLE = 60
 
+# The SQL db driver for Python.
+# Leave it empty to let SQLAlchemy choose the existing one, or specify the
+# preferred one and force SQLAlchemy to use it.
+SQL_DB_DRIVER = ''
+
 # DNS Query.
 # Timeout in seconds. Must be a float number.
 DNS_QUERY_TIMEOUT = 3.0

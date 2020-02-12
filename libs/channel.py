@@ -224,7 +224,7 @@ class SRS(asynchat.async_chat):
                  rewrite_address_type='sender'):
         asynchat.async_chat.__init__(self, sock)
         self.buffer = []
-        self.set_terminator('\n')
+        self.set_terminator(b'\n')
         self.db_conns = db_conns
         self.log_prefix = '[srs][' + rewrite_address_type + '] '
         self.rewrite_address_type = rewrite_address_type
@@ -325,7 +325,7 @@ class SRS(asynchat.async_chat):
 
     def found_terminator(self):
         if self.buffer:
-            line = self.buffer.pop()
+            line = self.buffer.pop().decode()
             logger.debug(self.log_prefix + 'input: ' + line)
 
             if line.startswith('get '):
