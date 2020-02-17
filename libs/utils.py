@@ -7,10 +7,12 @@ import socket
 import subprocess
 import smtplib
 import ipaddress
+import uuid
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
+from email.utils import formatdate
 
 from sqlalchemy import create_engine
 from web import sqlquote
@@ -643,6 +645,9 @@ def sendmail(subject, mail_body, from_address=None, recipients=None):
 
     msg['To'] = ','.join(recipients)
     msg['Subject'] = Header(subject, 'utf-8')
+    msg['Date'] = formatdate(usegmt=True)
+    msg['Message-Id'] = '<' + str(uuid.uuid4()) + '>'
+
     msg_body_plain = MIMEText(mail_body, 'plain', 'utf-8')
     msg.attach(msg_body_plain)
 
