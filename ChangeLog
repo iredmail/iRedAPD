@@ -1,3 +1,8 @@
+iRedAPD-3.5:
+    - Fixed issues:
+        - plugins/greylisting.py: if recipient domain is an alias domain, it
+          doesn't check the target domain.
+
 iRedAPD-3.4:
     - Improvements:
         - Support '--foreground' argument to run in foreground.
