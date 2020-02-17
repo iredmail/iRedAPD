@@ -20,6 +20,10 @@ from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
 from libs import utils, dnsspf
 import settings
 
+if settings.backend == 'ldap':
+    from libs.ldaplib.conn_utils import get_alias_target_domain
+else:
+    from libs.sql import get_alias_target_domain
 
 # Return 4xx with greylisting message to Postfix.
 action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
@@ -343,6 +347,14 @@ def restriction(**kwargs):
     policy_recipients = utils.get_policy_addresses_from_email(mail=recipient)
     policy_senders = utils.get_policy_addresses_from_email(mail=sender)
     policy_senders += [client_address]
+
+    # If recipient_domain is an alias domain name, we should check the target
+    # domain.
+    conn_vmail = kwargs['conn_vmail']
+    alias_target_rcpt_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
+    if alias_target_rcpt_domain:
+        _addr = recipient.split('@', 1)[0] + '@' + alias_target_rcpt_domain
+        policy_recipients += utils.get_policy_addresses_from_email(mail=_addr)
 
     if utils.is_ipv4(client_address):
         # Add wildcard ip address: xx.xx.xx.*.
