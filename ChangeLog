@@ -4,6 +4,9 @@ iRedAPD-4.0:
     https://github.com/iredmail/iRedAPD/releases
 
     - Drop Python-2 support and completely switch to Python-3.
+    - Fixed issues:
+        - plugins/greylisting.py: if recipient domain is an alias domain, it
+          doesn't check the target domain.
 
 iRedAPD-3.4:
 

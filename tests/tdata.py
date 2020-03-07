@@ -30,4 +30,4 @@ rdns_exact_name = 'test' + rdns_subdomain_name
 #########################################
 # DO NOT TOUCH LINES BELOW
 #########################################
-from tests.tsettings import *
+#from tests.tsettings import *
