@@ -49,7 +49,6 @@ class DaemonSocket(asyncore.dispatcher):
 
     def handle_accept(self):
         sock, remote_addr = self.accept()
-        #logger.debug("Connect from %s, port %s." % remote_addr)
 
         if self.policy_channel == 'policy':
             try:
@@ -59,18 +58,18 @@ class DaemonSocket(asyncore.dispatcher):
                        sender_search_attrlist=self.sender_search_attrlist,
                        recipient_search_attrlist=self.recipient_search_attrlist)
             except Exception as e:
-                logger.error('Error while applying policy channel: %s' % repr(e))
+                logger.error(f"Error while applying policy channel: {e}")
         elif self.policy_channel == 'srs_sender':
             try:
                 SRS(sock, db_conns=self.db_conns, rewrite_address_type='sender')
             except Exception as e:
-                logger.error('Error while applying srs (sender): %s' % repr(e))
+                logger.error(f"Error while applying srs (sender): {e}")
 
         elif self.policy_channel == 'srs_recipient':
             try:
                 SRS(sock, db_conns=self.db_conns, rewrite_address_type='recipient')
             except Exception as e:
-                logger.error('Error while applying srs (recipient): %s' % repr(e))
+                logger.error(f"Error while applying srs (recipient): {e}")
 
 
 class Policy(asynchat.async_chat):
@@ -95,7 +94,7 @@ class Policy(asynchat.async_chat):
         try:
             asynchat.async_chat.push(self, (msg + '\n').encode())
         except Exception as e:
-            logger.error('Error while pushing message: %s. Msg: %s' % (repr(e), repr(msg)))
+            logger.error(f"Error while pushing message: msg={msg}, error={e}")
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -134,7 +133,7 @@ class Policy(asynchat.async_chat):
                     else:
                         self.smtp_session_data[k] = v
                 else:
-                    logger.debug('[policy] Drop invalid smtp session input: %s' % line)
+                    logger.debug(f"[policy] Drop invalid smtp session input: {line}")
 
         elif self.smtp_session_data:
             # Track how long a request takes
@@ -171,11 +170,11 @@ class Policy(asynchat.async_chat):
                 if result:
                     action = result
                 else:
-                    logger.error('No result returned by modeler, fallback to default action: %s' % str(action))
+                    logger.error(f"No result returned by modeler, fallback to default action: {action}")
                     action = SMTP_ACTIONS['default']
             except Exception as e:
                 action = SMTP_ACTIONS['default']
-                logger.error('Unexpected error: %s. Fallback to default action: %s' % (str(e), str(action)))
+                logger.error(f"Unexpected error: {e}. Fallback to default action: {action}")
 
             # Remove tracking data when:
             #

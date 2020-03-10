@@ -84,13 +84,13 @@ def apply_plugin(plugin, **kwargs):
     action = SMTP_ACTIONS['default']
     plugin_name = plugin.__name__
 
-    logger.debug('--> Apply plugin: %s' % plugin_name)
+    logger.debug(f"--> Apply plugin: {plugin_name}")
     try:
         action = plugin.restriction(**kwargs)
-        logger.debug('<-- Result: %s' % action)
+        logger.debug(f"<-- Result: {action}")
     except:
         err_msg = get_traceback()
-        logger.error('<!> Error while applying plugin "%s": %s' % (plugin_name, err_msg))
+        logger.error(f"<!> Error while applying plugin '{plugin_name}': {err_msg}")
 
     return action
 
@@ -155,7 +155,7 @@ def is_wildcard_ipv4(s):
 
 def is_domain(s):
     s = str(s)
-    if len(set(s) & set('~!#$%^&*()+\\/\ ')) > 0 or '.' not in s:
+    if len(set(s) & set('~!#$%^&*()+\\/ ')) > 0 or '.' not in s:
         return False
 
     if regxes.cmp_domain.match(s):
@@ -276,7 +276,7 @@ def get_db_conn(db):
                              max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
         return conn
     except Exception as e:
-        logger.error('Error while create SQL connection: %s' % repr(e))
+        logger.error(f"Error while creating SQL connection: {e}")
         return None
 
 
@@ -329,7 +329,7 @@ def is_trusted_client(client_address):
     msg = 'Client address (%s) is trusted (listed in MYNETWORKS).' % client_address
 
     if client_address in ['127.0.0.1', '::1']:
-        logger.debug('Client address is trusted localhost: %s.' % client_address)
+        logger.debug(f"Client address is trusted (localhost): {client_address}.")
         return True
 
     if client_address in TRUSTED_IPS:
@@ -436,6 +436,7 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
     sender = smtp_session_data.get('sender', '')
     recipient = smtp_session_data.get('recipient', '')
 
+    client_address = smtp_session_data['client_address']
     protocol_state = smtp_session_data['protocol_state']
     helo = smtp_session_data.get('helo_name', '')
     client_name = smtp_session_data.get('client_name', '')
@@ -443,45 +444,32 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
 
     if sasl_username:
         if sasl_username == sender:
-            _log_sender_to_rcpt = '%s => %s' % (sasl_username, recipient)
+            _log_sender_to_rcpt = f"{sasl_username} => {recipient}"
         else:
-            _log_sender_to_rcpt = '%s => %s -> %s' % (sasl_username, sender, recipient)
+            _log_sender_to_rcpt = f"{sasl_username} => {sender} -> {recipient}"
     else:
-        _log_sender_to_rcpt = '%s -> %s' % (sender, recipient)
+        _log_sender_to_rcpt = f"{sender} -> {recipient}"
 
     _time = ''
     if start_time and end_time:
-        _time = '%.4fs' % (end_time - start_time)
+        _shift_time = end_time - start_time
+        _time = f"{_shift_time:.4f}s"
 
     # Log final action
     if smtp_session_data['protocol_state'] == 'RCPT':
-        logger.info("[%s] %s, %s, %s [sasl_username=%s, sender=%s, "
-                    "client_name=%s, reverse_client_name=%s, helo=%s, "
-                    "encryption_protocol=%s, encryption_cipher=%s, "
-                    "server_port=%s, "
-                    "process_time=%s]" % (
-                        smtp_session_data['client_address'],
-                        protocol_state,
-                        _log_sender_to_rcpt,
-                        action,
-                        sasl_username,
-                        sender,
-                        client_name,
-                        reverse_client_name,
-                        helo,
-                        smtp_session_data.get('encryption_protocol', ''),
-                        smtp_session_data.get('encryption_cipher', ''),
-                        smtp_session_data.get('server_port', ''),
-                        _time))
+        logger.info(f"[{client_address}] {protocol_state}, {_log_sender_to_rcpt}, "
+                    f"{action} [sasl_username={sasl_username}, sender={sender}, "
+                    f"client_name={client_name}, "
+                    f"reverse_client_name={reverse_client_name}, "
+                    f"helo={helo}, "
+                    f"encryption_protocol={smtp_session_data.get('encryption_protocol', '')}, "
+                    f"encryption_cipher={smtp_session_data.get('encryption_cipher', '')}, "
+                    f"server_port={smtp_session_data.get('server_port', '')}, "
+                    f"process_time={_time}]")
     else:
-        logger.info('[%s] %s, %s, %s [recipient_count=%s, size=%s, process_time=%s]' % (
-            smtp_session_data['client_address'],
-            protocol_state,
-            _log_sender_to_rcpt,
-            action,
-            smtp_session_data.get('recipient_count', '0'),
-            smtp_session_data.get('size', '0'),
-            _time))
+        logger.info(f"[{client_address}] {protocol_state}, {_log_sender_to_rcpt}, "
+                    f"{action} [recipient_count={smtp_session_data.get('recipient_count', 0)}, "
+                    f"size={smtp_session_data.get('size', 0)}, process_time={_time}]")
 
     return None
 
@@ -509,7 +497,7 @@ def load_enabled_plugins(plugins):
 
         # Skip non-existing plugin.
         if not os.path.isfile(plugin_file):
-            logger.error('Plugin %s (%s) does not exist.' % (p, plugin_file))
+            logger.error(f"Plugin {p} ({plugin_file}) does not exist.")
             continue
 
         # If plugin doesn't have a pre-defined priority, set it to 0 (lowest)
@@ -530,9 +518,9 @@ def load_enabled_plugins(plugins):
     for plugin in ordered_plugins:
         try:
             loaded_plugins.append(__import__(plugin))
-            logger.info('Loading plugin (priority: %s): %s' % (_plugin_priorities[plugin], plugin))
+            logger.info(f"Loading plugin (priority: {_plugin_priorities[plugin]}): {plugin}")
         except Exception as e:
-            logger.error('Error while loading plugin (%s): %s' % (plugin, repr(e)))
+            logger.error(f"Error while loading plugin ({plugin}): {e}")
 
     # Get list of LDAP query attributes
     sender_search_attrlist = []
@@ -565,7 +553,7 @@ def get_required_db_conns():
             conn_vmail = ldap.ldapobject.ReconnectLDAPObject(settings.ldap_uri)
             logger.debug('LDAP connection initialied success.')
         except Exception as e:
-            logger.error('LDAP initialized failed: %s.' % str(e))
+            logger.error(f"LDAP initialized failed: {e}")
 
         # Bind to ldap server.
         try:
@@ -574,7 +562,7 @@ def get_required_db_conns():
         except ldap.INVALID_CREDENTIALS:
             logger.error('LDAP bind failed: incorrect bind dn or password.')
         except Exception as e:
-            logger.error('LDAP bind failed: %s.' % str(e))
+            logger.error(f"LDAP bind failed: {e}")
     else:
         # settings.backend in ['mysql', 'pgsql']
         conn_vmail = get_db_conn('vmail')
@@ -739,9 +727,9 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
            sqlquote(smtp_session_data.get('recipient_domain', '')))
 
     try:
-        logger.debug('[SQL] Insert into smtp_sessions: %s' % sql)
+        logger.debug(f"[SQL] Insert into smtp_sessions: {sql}")
         conn.execute(sql)
     except Exception as e:
-        logger.error('<!> Error while logging smtp action: %s' % repr(e))
+        logger.error(f"<!> Error while logging smtp action: {e}")
 
     return None
