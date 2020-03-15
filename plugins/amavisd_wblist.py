@@ -80,7 +80,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
             sql_cidr = first_field + r'.%%'
         else:
             return ids
-    except Exception as e:
+    except:
         return ids
 
     sql = """SELECT id, email
