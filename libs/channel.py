@@ -193,6 +193,8 @@ class Policy(asynchat.async_chat):
                 except Exception as e:
                     action = SMTP_ACTIONS['default']
                     logger.error(f"Unexpected error: {e}. Fallback to default action: {action}")
+            elif _protocol_state == 'END-OF-MESSAGE' and _action_eom is not None:
+                action = _action_eom
 
             # Remove tracking data
             if _protocol_state == 'END-OF-MESSAGE':
@@ -201,7 +203,7 @@ class Policy(asynchat.async_chat):
 
                 # Remove expired/ghost data.
                 for i in settings.GLOBAL_SESSION_TRACKING:
-                    if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 60 < int(time.time()):
+                    if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 30 < int(time.time()):
                         settings.GLOBAL_SESSION_TRACKING
 
             self.push('action=' + action + '\n')
