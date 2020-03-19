@@ -709,6 +709,12 @@ def restriction(**kwargs):
     if kwargs['sasl_username']:
         logger.debug('Found sasl_username, consider this sender as an internal sender.')
         is_external_sender = False
+    else:
+        # Consider email from localhost as outbound.
+        # SOGo groupware doesn't perform SMTP authentication if it's running
+        # on same host as SMTP server.
+        if client_address in ['127.0.0.1', '::1']:
+            is_external_sender = False
 
     # Apply sender throttling to only sasl auth users.
     logger.debug('Check sender throttling.')
