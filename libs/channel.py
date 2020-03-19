@@ -153,9 +153,17 @@ class Policy(asynchat.async_chat):
                     settings.GLOBAL_SESSION_TRACKING[_instance] = {
                         'num_processed': 0,
                         'expired': _tracking_expired,
+                        'action': 'DUNNO',
                     }
                 else:
                     settings.GLOBAL_SESSION_TRACKING[_instance]['num_processed'] += 1
+            else:
+                # if RCPT state already returns action which indicates
+                # unnecessary to evaluate the message, return immediately to
+                # save system resource.
+                _action_rcpt = settings.GLOBAL_SESSION_TRACKING[_instance]['action']
+                if _action_rcpt in ['REJECT', 'DISCARD', 'FILTER', 'OK', '451']:
+                    return SMTP_ACTIONS['default'] + ' Bypass further evaluation due to action returned in RCPT state'
 
             # Call modeler and apply plugins
             try:
@@ -169,6 +177,7 @@ class Policy(asynchat.async_chat):
 
                 if result:
                     action = result
+                    settings.GLOBAL_SESSION_TRACKING[_instance]['action'] = action.split()[0].UPPER()
                 else:
                     logger.error(f"No result returned by modeler, fallback to default action: {action}")
                     action = SMTP_ACTIONS['default']
