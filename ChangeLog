@@ -5,6 +5,8 @@ iRedAPD-4.0:
 
     - Drop Python-2 support and completely switch to Python-3.
     - Fixed issues:
+        - plugins/throttle.py: not treat email from localhost (127.0.0.1 or
+          ::1) but no SMTP authentication as outbound.
         - plugins/greylisting.py: if recipient domain is an alias domain, it
           doesn't check the target domain.
 
