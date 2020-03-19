@@ -672,19 +672,13 @@ remove_parameter 'iredadmin_db_name'
 remove_parameter 'iredadmin_db_user'
 remove_parameter 'iredadmin_db_password'
 
-#------------------------------
-# Remove old plugins
-#
-echo "* Remove deprecated plugins."
+# Remove deprecated plugins.
 rm -f ${IREDAPD_ROOT_DIR}/plugins/ldap_amavisd_block_blacklisted_senders.py &>/dev/null
 rm -f ${IREDAPD_ROOT_DIR}/plugins/ldap_recipient_restrictions.py &>/dev/null
 rm -f ${IREDAPD_ROOT_DIR}/plugins/sql_user_restrictions.py &>/dev/null
 rm -f ${IREDAPD_ROOT_DIR}/plugins/amavisd_message_size_limit.py &>/dev/null
 
-#------------------------------
 # Rename old plugins
-#
-echo "* Rename old plugins."
 perl -pi -e 's#sql_force_change_password_in_days#sql_force_change_password#g' ${IREDAPD_CONF_PY}
 perl -pi -e 's#ldap_force_change_password_in_days#ldap_force_change_password#g' ${IREDAPD_CONF_PY}
 
@@ -783,7 +777,7 @@ fi
 #
 rm -rf /tmp/iredapd* &>/dev/null
 
-echo "* Remove all *.pyc files."
+# Remove `*.pyc` files.
 cd ${IREDAPD_ROOT_DIR} && find . -name '*.pyc' | xargs rm -f {} &>/dev/null
 
 echo "* Restarting iRedAPD service."
