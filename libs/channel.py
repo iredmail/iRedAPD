@@ -196,7 +196,7 @@ class Policy(asynchat.async_chat):
                 action = _action_eom
 
             # Remove tracking data
-            if _protocol_state == 'END-OF-MESSAGE':
+            if _protocol_state == 'END-OF-MESSAGE' or action.startswith("REJECT"):
                 if _instance in settings.GLOBAL_SESSION_TRACKING:
                     settings.GLOBAL_SESSION_TRACKING.pop(_instance)
 
