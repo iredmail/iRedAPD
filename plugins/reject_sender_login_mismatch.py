@@ -334,10 +334,14 @@ def restriction(**kwargs):
                 if sql_record:
                     # Perform mlmmjadmin query.
                     api_auth_token = settings.mlmmjadmin_api_auth_token
-                    if api_auth_token:
+                    if api_auth_token and settings.mlmmjadmin_api_endpoint:
+                        _api_endpoint = '/'.join([settings.mlmmjadmin_api_endpoint, real_sender, 'has_subscriber', sasl_username])
                         api_headers = {settings.MLMMJADMIN_API_AUTH_TOKEN_HEADER_NAME: api_auth_token}
+                        logger.debug('mlmmjadmin api endpoint: {0}'.format(_api_endpoint))
+                        logger.debug('mlmmjadmin api headers: {0}'.format(api_headers))
+
                         try:
-                            r = requests.get(settings.mlmmjadmin_api_endpoint, headers=api_headers, verify=False)
+                            r = requests.get(_api_endpoint, headers=api_headers, verify=False)
                             _json = r.json()
                             if _json['_success']:
                                 logger.debug('SASL username (%s) is a member of mailing list (%s).' % (sasl_username, sender))
