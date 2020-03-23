@@ -41,7 +41,7 @@ export KERNEL_NAME="$(uname -s | tr '[a-z]' '[A-Z]')"
 export RC_SCRIPT_NAME='iredapd'
 
 # Path to some programs.
-export PYTHON_BIN='/usr/bin/python'
+export PYTHON_BIN='/usr/bin/python2'
 export MD5_BIN='md5sum'
 
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
@@ -105,7 +105,7 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
-    export PYTHON_BIN='/usr/local/bin/python'
+    export PYTHON_BIN='/usr/local/bin/python2'
     export MD5_BIN='md5'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
@@ -115,7 +115,7 @@ elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
-    export PYTHON_BIN='/usr/local/bin/python'
+    export PYTHON_BIN='/usr/local/bin/python2'
     export MD5_BIN='md5'
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
@@ -186,7 +186,7 @@ install_pkg()
 has_python_module()
 {
     for mod in $@; do
-        python -c "import $mod" &>/dev/null
+        ${PYTHON_BIN} -c "import $mod" &>/dev/null
         if [ X"$?" == X'0' ]; then
             echo 'YES'
         else
@@ -494,8 +494,8 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     add_new_pgsql_tables 2.5-srs_exclude_domains.pgsql "SELECT id FROM srs_exclude_domains LIMIT 1"
 
     # v3.2: `senderscore_cache`, `smtp_sessions`
-    add_new_pgsql_tables 3.2-senderscore_cache.pgsql "SELECT id FROM senderscore_cache LIMIT 1"
-    add_new_pgsql_tables 3.2-smtp_sessions.pgsql "SELECT id FROM smtp_sessions LIMIT 1"
+    add_new_pgsql_tables 3.2-senderscore_cache.pgsql "SELECT client_address FROM senderscore_cache LIMIT 1"
+    add_new_pgsql_tables 3.2-smtp_sessions.pgsql "SELECT client_address FROM smtp_sessions LIMIT 1"
 fi
 
 #
@@ -504,7 +504,11 @@ fi
 echo "* Checking dependent Python modules:"
 echo "  + [required] python-sqlalchemy"
 if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
-    [ X"${DISTRO}" == X'RHEL' ]     && install_pkg python-sqlalchemy
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && install_pkg python-sqlalchemy
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && install_pkg python2-sqlalchemy
+    fi
+
     [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-sqlalchemy
     [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-sqlalchemy
     [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg databases/py-sqlalchemy
@@ -513,7 +517,11 @@ fi
 
 echo "  + [required] dnspython"
 if [ X"$(has_python_module dns)" == X'NO' ]; then
-    [ X"${DISTRO}" == X'RHEL' ]     && install_pkg python-dns
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [ X"${DISTRO_VERSION}" == X'7' ] && install_pkg python-dns
+        [ X"${DISTRO_VERSION}" == X'8' ] && install_pkg python2-dns
+    fi
+
     [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-dnspython
     [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-dnspython
     [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg dns/py-dnspython
@@ -667,6 +675,15 @@ if ! grep '^srs_' ${NEW_IREDAPD_CONF} &>/dev/null; then
     add_missing_parameter 'srs_reverse_port' "7779"
     add_missing_parameter 'srs_domain' "${HOSTNAME}"
     add_missing_parameter 'srs_secrets' "['$(${RANDOM_STRING})']"
+fi
+
+# mlmmjadmin integration.
+if ! grep '^mlmmjadmin_' ${NEW_IREDAPD_CONF} &>/dev/null; then
+    add_missing_parameter 'mlmmjadmin_api_endpoint' "http://127.0.0.1:7790/api"
+
+    # Get api token from mlmmjadmin config file.
+    token=$(grep '^api_auth_tokens' /opt/mlmmjadmin/settings.py | awk -F"[=\']" '{print $3}' | tr -d '\n')
+    add_missing_parameter 'mlmmjadmin_api_auth_token' "${token}"
 fi
 
 # On FreeBSD, syslog socket is /var/run/log.
