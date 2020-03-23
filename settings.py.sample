@@ -71,3 +71,8 @@ iredapd_db_port = '3306'
 iredapd_db_name = 'iredapd'
 iredapd_db_user = 'iredapd'
 iredapd_db_password = 'password'
+
+# mlmmjadmin integration, used to query whether sender is a subscriber of
+# mailing list when `ALLOWED_LOGIN_MISMATCH_LIST_MEMBER = True`.
+mlmmjadmin_api_endpoint = 'http://127.0.0.1:7790/api'
+mlmmjadmin_api_auth_token = ''
