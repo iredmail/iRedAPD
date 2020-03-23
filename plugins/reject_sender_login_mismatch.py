@@ -222,6 +222,9 @@ def restriction(**kwargs):
             # Note: not reject email here, still need to check other access settings.
             logger.debug('Sender is not allowed to send email as other user (ALLOWED_LOGIN_MISMATCH_SENDERS).')
 
+    # Check whether sender is a member of mlmmj mailing list.
+    _check_mlmmj_ml = False
+
     # Check alias domains and user alias addresses
     if is_strict or allow_list_member:
         if is_strict:
@@ -252,12 +255,21 @@ def restriction(**kwargs):
                                              query_filter=query_filter,
                                              attrs=['dn'])
             (dn, entry) = qr
-            if dn:
-                logger.debug(success_msg)
-                return SMTP_ACTIONS['default']
-            else:
+            if dn is None:
                 logger.debug('Sender is neither user alias address nor member of list/alias.')
                 return action_reject
+
+            logger.debug(success_msg)
+
+            # Check mlmmj
+            query_filter = "(&(objectClass=mailList)(enabledService=mlmmj)(accountStatus=active))"
+            qr = conn_utils.get_account_ldif(conn=conn,
+                                             account=sender,
+                                             query_filter=query_filter,
+                                             attrs=['dn'])
+            (dn, entry) = qr
+            if dn:
+                _check_mlmmj_ml = True
 
         elif settings.backend in ['mysql', 'pgsql']:
             if is_strict:
@@ -332,23 +344,26 @@ def restriction(**kwargs):
                 logger.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
-                    # Perform mlmmjadmin query.
-                    api_auth_token = settings.mlmmjadmin_api_auth_token
-                    if api_auth_token and settings.mlmmjadmin_api_endpoint:
-                        _api_endpoint = '/'.join([settings.mlmmjadmin_api_endpoint, real_sender, 'has_subscriber', sasl_username])
-                        api_headers = {settings.MLMMJADMIN_API_AUTH_TOKEN_HEADER_NAME: api_auth_token}
-                        logger.debug('mlmmjadmin api endpoint: {0}'.format(_api_endpoint))
-                        logger.debug('mlmmjadmin api headers: {0}'.format(api_headers))
-
-                        try:
-                            r = requests.get(_api_endpoint, headers=api_headers, verify=False)
-                            _json = r.json()
-                            if _json['_success']:
-                                logger.debug('SASL username (%s) is a member of mailing list (%s).' % (sasl_username, sender))
-                                return SMTP_ACTIONS['default']
-                        except Exception as e:
-                            logger.error("Error while querying mlmmjadmin api: {0}".format(e))
+                    _check_mlmmj_ml = True
                 else:
                     logger.debug('No such mailing list account.')
+
+    if _check_mlmmj_ml:
+        # Perform mlmmjadmin query.
+        api_auth_token = settings.mlmmjadmin_api_auth_token
+        if api_auth_token and settings.mlmmjadmin_api_endpoint:
+            _api_endpoint = '/'.join([settings.mlmmjadmin_api_endpoint, real_sender, 'has_subscriber', sasl_username])
+            api_headers = {settings.MLMMJADMIN_API_AUTH_TOKEN_HEADER_NAME: api_auth_token}
+            logger.debug('mlmmjadmin api endpoint: {0}'.format(_api_endpoint))
+            logger.debug('mlmmjadmin api headers: {0}'.format(api_headers))
+
+            try:
+                r = requests.get(_api_endpoint, headers=api_headers, verify=False)
+                _json = r.json()
+                if _json['_success']:
+                    logger.debug('SASL username (%s) is a member of mailing list (%s).' % (sasl_username, sender))
+                    return SMTP_ACTIONS['default']
+            except Exception as e:
+                logger.error("Error while querying mlmmjadmin api: {0}".format(e))
 
     return action_reject
