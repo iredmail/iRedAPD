@@ -53,6 +53,13 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         export DISTRO='RHEL'
         export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
         export CRON_SPOOL_DIR='/var/spool/cron'
+
+        # Get distribution version
+        if grep '\ 7\.' /etc/redhat-release &>/dev/null; then
+            export DISTRO_VERSION='7'
+        elif grep '\ 8\.' /etc/redhat-release &>/dev/null; then
+            export DISTRO_VERSION='8'
+        fi
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
@@ -507,6 +514,19 @@ fi
 echo "  + [required] dnspython"
 if [ X"$(has_python_module dns)" == X'NO' ]; then
     [ X"${DISTRO}" == X'RHEL' ]     && install_pkg python-dns
+    [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-dnspython
+    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-dnspython
+    [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg dns/py-dnspython
+    [ X"${DISTRO}" == X'OPENBSD' ]  && install_pkg py-dnspython
+fi
+
+echo "  + [required] requests"
+if [ X"$(has_python_module requests)" == X'NO' ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [ X"${DISTRO_VERSION}" == X'7' ] && install_pkg python-requests
+        [ X"${DISTRO_VERSION}" == X'8' ] && install_pkg python2-requests
+    fi
+
     [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-dnspython
     [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-dnspython
     [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg dns/py-dnspython

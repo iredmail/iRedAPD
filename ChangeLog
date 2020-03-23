@@ -1,5 +1,7 @@
 iRedAPD-3.6:
     - Improvements:
+        + plugins/reject_sender_login_mismatch.py: able to verify whether
+          sender is a member of subscribeable (mlmmj) mailing list.
         + If RCPT state already returns action which indicates unnecessary to
           evaluate the message, return immediately to save system resource.
 

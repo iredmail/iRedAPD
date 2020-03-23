@@ -94,6 +94,7 @@
 #
 # *) Restart iRedAPD service.
 
+import requests
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, dnsspf
@@ -308,7 +309,7 @@ def restriction(**kwargs):
                 # Get alias members
                 sql = """SELECT forwarding
                            FROM forwardings
-                          WHERE address=%s AND forwarding=%s AND is_list=1
+                          WHERE address=%s AND forwarding=%s AND is_list=1 AND active=1
                           LIMIT 1""" % (sqlquote(real_sender), sqlquote(real_sasl_username))
                 logger.debug('[SQL] query members of mail alias account (%s): \n%s' % (real_sender, sql))
 
@@ -321,5 +322,33 @@ def restriction(**kwargs):
                     return SMTP_ACTIONS['default']
                 else:
                     logger.debug('No such mail alias account.')
+
+                # Check subscribeable (mlmmj) mailing list.
+                sql = """SELECT id FROM maillists WHERE address=%s AND active=1 LIMIT 1""" % sqlquote(real_sender)
+                logger.debug('[SQL] query mailing list account (%s): \n%s' % (real_sender, sql))
+
+                qr = conn.execute(sql)
+                sql_record = qr.fetchone()
+                logger.debug('SQL query result: %s' % str(sql_record))
+
+                if sql_record:
+                    # Perform mlmmjadmin query.
+                    api_auth_token = settings.mlmmjadmin_api_auth_token
+                    if api_auth_token and settings.mlmmjadmin_api_endpoint:
+                        _api_endpoint = '/'.join([settings.mlmmjadmin_api_endpoint, real_sender, 'has_subscriber', sasl_username])
+                        api_headers = {settings.MLMMJADMIN_API_AUTH_TOKEN_HEADER_NAME: api_auth_token}
+                        logger.debug('mlmmjadmin api endpoint: {0}'.format(_api_endpoint))
+                        logger.debug('mlmmjadmin api headers: {0}'.format(api_headers))
+
+                        try:
+                            r = requests.get(_api_endpoint, headers=api_headers, verify=False)
+                            _json = r.json()
+                            if _json['_success']:
+                                logger.debug('SASL username (%s) is a member of mailing list (%s).' % (sasl_username, sender))
+                                return SMTP_ACTIONS['default']
+                        except Exception as e:
+                            logger.error("Error while querying mlmmjadmin api: {0}".format(e))
+                else:
+                    logger.debug('No such mailing list account.')
 
     return action_reject
