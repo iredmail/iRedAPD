@@ -87,13 +87,13 @@ def get_id_of_possible_cidr_network(conn, client_address):
                FROM mailaddr
               WHERE email LIKE {0}
            ORDER BY priority DESC""".format(sqlquote(sql_cidr))
-    logger.debug('[SQL] Query CIDR network: \n{0}'.format(sql))
+    logger.debug(f'[SQL] Query CIDR network: \n{sql}')
 
     try:
         qr = conn.execute(sql)
         qr_cidr = qr.fetchall()
     except Exception as e:
-        logger.error('Error while querying CIDR network: {0}, SQL: \n{1}'.format(e, sql))
+        logger.error(f'Error while querying CIDR network: {repr(e)}, SQL: \n{sql}'.format(e, sql))
         return ids
 
     if qr_cidr:
@@ -115,7 +115,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
                 if _ip in _net:
                     ids.append(_id)
 
-    logger.debug("IDs of CIDR network(s): {0}".format(ids))
+    logger.debug(f"IDs of CIDR network(s): {ids}")
     return ids
 
 def get_id_of_external_addresses(conn, addresses):
@@ -131,7 +131,7 @@ def get_id_of_external_addresses(conn, addresses):
                FROM mailaddr
               WHERE email IN {0}
            ORDER BY priority DESC""".format(sqlquote(addresses))
-    logger.debug('[SQL] Query external addresses: \n{0}'.format(sql))
+    logger.debug(f'[SQL] Query external addresses: \n{sql}')
 
     try:
         qr = conn.execute(sql)
@@ -199,7 +199,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
         logger.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logger.debug('Found inbound wblist: {0}'.format(wblists))
+    logger.debug(f'Found inbound wblist: {wblists}')
 
     # Check sender addresses
     # rids/recipients are orded by priority
@@ -207,11 +207,11 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
         # sids/senders are sorted by priority
         for sid in sender_ids:
             if (rid, sid, 'W') in wblists:
-                logger.info("Whitelisted: wblist=({0}, {1}, 'W')".format(rid, sid))
+                logger.info(f"Whitelisted: wblist=({rid}, {sid}, 'W')")
                 return SMTP_ACTIONS['whitelist']
 
             if (rid, sid, 'B') in wblists:
-                logger.info("Blacklisted: wblist=({0}, {1}, 'B')".format(rid, sid))
+                logger.info(f"Blacklisted: wblist=({rid}, {sid}, 'B')")
                 return reject_action
 
     return SMTP_ACTIONS['default']
@@ -241,18 +241,18 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
         logger.debug('No wblist found.')
         return SMTP_ACTIONS['default']
 
-    logger.debug('Found outbound wblist: {0}'.format(wblists))
+    logger.debug(f'Found outbound wblist: {wblists}')
 
     # Check sender addresses
     # rids/recipients are orded by priority
     for sid in sender_ids:
         for rid in recipient_ids:
             if (rid, sid, 'W') in wblists:
-                logger.info("Whitelisted: outbound_wblist=({0}, {1}, 'W')".format(rid, sid))
+                logger.info(f"Whitelisted: outbound_wblist=({rid}, {sid}, 'W')")
                 return SMTP_ACTIONS['default'] + " outbound_wblist=({0}, {1}, 'W')".format(rid, sid)
 
             if (rid, sid, 'B') in wblists:
-                logger.info("Blacklisted: outbound_wblist=({0}, {1}, 'B')".format(rid, sid))
+                logger.info(f"Blacklisted: outbound_wblist=({rid}, {sid}, 'B')")
                 return reject_action
 
     return SMTP_ACTIONS['default']

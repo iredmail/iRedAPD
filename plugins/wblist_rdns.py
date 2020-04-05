@@ -51,6 +51,7 @@ else:
 
 def restriction(**kwargs):
     rdns_name = kwargs['smtp_session_data']['reverse_client_name']
+    client_address = kwargs['smtp_session_data']['client_address']
 
     # Bypass outgoing emails.
     if kwargs['sasl_username']:
@@ -61,7 +62,7 @@ def restriction(**kwargs):
         logger.debug('No reverse dns name, bypass.')
         return SMTP_ACTIONS['default']
 
-    if is_trusted_client(kwargs['client_address']):
+    if is_trusted_client(client_address):
         return SMTP_ACTIONS['default']
 
     _policy_rdns_names = [rdns_name]
@@ -86,7 +87,7 @@ def restriction(**kwargs):
     record = qr.fetchone()
     if record:
         rdns = str(record[0]).lower()
-        logger.info('Reverse client hostname is whitelisted: %s' % rdns)
+        logger.info(f'[{client_address}] Reverse client hostname is whitelisted: {rdns}.')
 
         # better use 'DUNNO' instead of 'OK'
         return SMTP_ACTIONS['default']
@@ -101,7 +102,7 @@ def restriction(**kwargs):
     record = qr.fetchone()
     if record:
         rdns = str(record[0]).lower()
-        logger.info('Reverse client hostname is blacklisted: ' + rdns)
+        logger.info(f'[{client_address}] Reverse client hostname is blacklisted: {rdns}')
         return reject_action
 
     return SMTP_ACTIONS['default']
