@@ -132,6 +132,10 @@ def restriction(**kwargs):
     if sender:
         (sender_name, sender_domain) = sender.split('@', 1)
 
+    # Leave this to plugin `reject_null_sender`.
+    if sasl_username and not sender:
+        return SMTP_ACTIONS['default']
+
     recipient_domain = kwargs['recipient_domain']
     client_address = kwargs['client_address']
 
