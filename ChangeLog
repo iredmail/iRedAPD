@@ -10,6 +10,9 @@ iRedAPD-4.0:
           evaluate the message, return immediately to save system resource.
 
     - Fixed issues:
+        - plugins/reject_sender_login_mismatch.py: bypass if sender is sending
+          as null sender with smtp auth. Leave it to plugin
+          `reject_null_sender`.
         - plugins/throttle.py: not treat email from localhost (127.0.0.1 or
           ::1) but no SMTP authentication as outbound.
         - plugins/greylisting.py: if recipient domain is an alias domain, it
