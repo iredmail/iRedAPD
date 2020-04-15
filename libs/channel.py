@@ -143,68 +143,53 @@ class Policy(asynchat.async_chat):
             _instance = self.smtp_session_data['instance']
             _protocol_state = self.smtp_session_data['protocol_state']
 
-            if _instance not in settings.GLOBAL_SESSION_TRACKING:
-                # add timestamp of tracked smtp instance, so that we can
-                # remove them after instance finished.
-                _tracking_expired = int(time.time())
+            if _protocol_state == 'RCPT':
+                if _instance not in settings.GLOBAL_SESSION_TRACKING:
+                    # add timestamp of tracked smtp instance, so that we can
+                    # remove them after instance finished.
+                    _tracking_expired = int(time.time())
 
-                # @num_processed: count of processed smtp sessions
-                settings.GLOBAL_SESSION_TRACKING[_instance] = {
-                    'num_processed': 0,
-                    'expired': _tracking_expired,
-                    'action_rcpt': 'DUNNO',
-                }
+                    # @num_processed: count of processed smtp sessions
+                    settings.GLOBAL_SESSION_TRACKING[_instance] = {
+                        'num_processed': 0,
+                        'expired': _tracking_expired,
+                    }
+                else:
+                    settings.GLOBAL_SESSION_TRACKING[_instance]['num_processed'] += 1
 
-            # action should be returned in END-OF-MESSAGE state.
-            _action_eom = None
+            # Call modeler and apply plugins
+            try:
+                modeler = Modeler(conns=self.db_conns)
+                result = modeler.handle_data(
+                    smtp_session_data=self.smtp_session_data,
+                    plugins=self.plugins,
+                    sender_search_attrlist=self.sender_search_attrlist,
+                    recipient_search_attrlist=self.recipient_search_attrlist,
+                )
 
-            if _protocol_state == 'END-OF-MESSAGE':
-                settings.GLOBAL_SESSION_TRACKING[_instance]['num_processed'] += 1
-
-                # If action returned in RCPT state indicates unnecessary to
-                # evaluate the message, return immediately in EOM state.
-                _action_rcpt = settings.GLOBAL_SESSION_TRACKING[_instance]['action_rcpt']
-
-                if _action_rcpt in ['DISCARD', 'FILTER', 'HOLD', 'OK', 'REJECT'] or \
-                   _action_rcpt.startswith('4') or _action_rcpt.startswith('5'):
-                    _msg = "Skip all plugins due to action retuend in RCPT state: %s" % _action_rcpt
-                    _action_eom = SMTP_ACTIONS['default'] + ' ' + _msg
-
-            # Apply all plugins
-            if (_protocol_state == 'RCPT') or \
-               (_protocol_state == 'END-OF-MESSAGE' and _action_eom is None):
-                try:
-                    modeler = Modeler(conns=self.db_conns)
-                    result = modeler.handle_data(
-                        smtp_session_data=self.smtp_session_data,
-                        plugins=self.plugins,
-                        sender_search_attrlist=self.sender_search_attrlist,
-                        recipient_search_attrlist=self.recipient_search_attrlist,
-                    )
-
-                    if result:
-                        action = result
-
-                        if _instance in settings.GLOBAL_SESSION_TRACKING:
-                            settings.GLOBAL_SESSION_TRACKING[_instance]['action_rcpt'] = action.split()[0].upper()
-                    else:
-                        logger.error(f"No result returned by modeler, fallback to default action: {action}")
-                        action = SMTP_ACTIONS['default']
-                except Exception as e:
+                if result:
+                    action = result
+                else:
+                    logger.error('No result returned by modeler, fallback to default action: %s' % str(action))
                     action = SMTP_ACTIONS['default']
-                    logger.error(f"Unexpected error: {e}. Fallback to default action: {action}")
-            elif _protocol_state == 'END-OF-MESSAGE' and _action_eom is not None:
-                action = _action_eom
 
-            # Remove tracking data
-            if _protocol_state == 'END-OF-MESSAGE' or action.startswith("REJECT"):
+            except Exception as e:
+                action = SMTP_ACTIONS['default']
+                logger.error(f"Unexpected error: {e}. Fallback to default action: {action}")
+
+            # Remove tracking data when:
+            #
+            #   - session was rejected/discard/whitelisted ('OK') during
+            #     RCPT state (it never reach END-OF-MESSAGE state)
+            #   - session is in last state (END-OF-MESSAGE)
+            if (not action.startswith('DUNNO')) or (_protocol_state == 'END-OF-MESSAGE'):
                 if _instance in settings.GLOBAL_SESSION_TRACKING:
                     settings.GLOBAL_SESSION_TRACKING.pop(_instance)
-
-                # Remove expired/ghost data.
-                for i in settings.GLOBAL_SESSION_TRACKING:
-                    if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 10 < int(time.time()):
-                        settings.GLOBAL_SESSION_TRACKING.pop(i)
+                else:
+                    # Remove expired/ghost data.
+                    for i in settings.GLOBAL_SESSION_TRACKING:
+                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 60 < int(time.time()):
+                            settings.GLOBAL_SESSION_TRACKING.pop(_instance)
 
             self.push('action=' + action + '\n')
             logger.debug('Session ended.')
@@ -216,11 +201,11 @@ class Policy(asynchat.async_chat):
                                      end_time=_end_time)
 
             # Log smtp session.
-            # Postfix sends the smtp session data for evaluation for each
-            # protocol state, iRedAPD may be called multiple times for same
-            # smtp session. Try to avoid "duplicate" logging here.
-            if not action.startswith('DUNNO') or \
-               (_protocol_state == 'END-OF-MESSAGE' and _action_eom is None):
+            # Postfix may send the smtp session data twice or even more if
+            # iRedAPD is called in multiple protocol states, try to avoid
+            # "duplicate" logging here.
+            if _protocol_state == 'END-OF-MESSAGE' or \
+               (_protocol_state == 'RCPT' and not action.startswith('DUNNO')):
                 utils.log_smtp_session(conn=self.db_conns['conn_iredapd'],
                                        smtp_action=action,
                                        **self.smtp_session_data)

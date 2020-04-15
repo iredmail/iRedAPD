@@ -1,13 +1,14 @@
 iRedAPD-4.0:
     NOTE: Only Python-3 is supported. If you're looking for Python-2 support,
-    please try the latest 3.x release:
+    please try the latest iRedAPD-3.x release:
     https://github.com/iredmail/iRedAPD/releases
 
     - Drop Python-2 support and completely switch to Python-3.
 
+iRedAPD-3.6:
     - Improvements:
-        + If RCPT state already returns action which indicates unnecessary to
-          evaluate the message, return immediately to save system resource.
+        + plugins/reject_sender_login_mismatch.py: able to verify whether
+          sender is a member of subscribeable (mlmmj) mailing list.
 
     - Fixed issues:
         - plugins/reject_sender_login_mismatch.py: bypass if sender is sending
@@ -15,6 +16,9 @@ iRedAPD-4.0:
           `reject_null_sender`.
         - plugins/throttle.py: not treat email from localhost (127.0.0.1 or
           ::1) but no SMTP authentication as outbound.
+
+iRedAPD-3.5:
+    - Fixed issues:
         - plugins/greylisting.py: if recipient domain is an alias domain, it
           doesn't check the target domain.
 
