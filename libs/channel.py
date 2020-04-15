@@ -183,11 +183,6 @@ class Policy(asynchat.async_chat):
             if (not action.startswith('DUNNO')) or (_protocol_state == 'END-OF-MESSAGE'):
                 if _instance in settings.GLOBAL_SESSION_TRACKING:
                     settings.GLOBAL_SESSION_TRACKING.pop(_instance)
-                else:
-                    # Remove expired/ghost data.
-                    for i in settings.GLOBAL_SESSION_TRACKING:
-                        if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 60 < int(time.time()):
-                            settings.GLOBAL_SESSION_TRACKING
 
             self.push('action=' + action + '\n')
             logger.debug('Session ended.')
