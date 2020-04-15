@@ -258,12 +258,12 @@ def restriction(**kwargs):
                                              account=sasl_username,
                                              query_filter=query_filter,
                                              attrs=['dn'])
-            (dn, entry) = qr
-            if dn is None:
+            (_dn, _ldif) = qr
+            if _dn:
+                logger.debug(success_msg)
+                return SMTP_ACTIONS['default']
+            else:
                 logger.debug('Sender is neither user alias address nor member of list/alias.')
-                return action_reject
-
-            logger.debug(success_msg)
 
             # Check mlmmj
             query_filter = "(&(objectClass=mailList)(enabledService=mlmmj)(accountStatus=active))"
@@ -271,8 +271,8 @@ def restriction(**kwargs):
                                              account=sender,
                                              query_filter=query_filter,
                                              attrs=['dn'])
-            (dn, entry) = qr
-            if dn:
+            (_dn, _ldif) = qr
+            if _dn:
                 _check_mlmmj_ml = True
 
         elif settings.backend in ['mysql', 'pgsql']:
