@@ -146,6 +146,7 @@ def is_cidr_network(s):
     except:
         return False
 
+
 def is_wildcard_ipv4(s):
     if re.match(regxes.regx_wildcard_ipv4, s):
         return True
@@ -249,7 +250,7 @@ def is_valid_amavisd_address(addr):
     return False
 
 
-def get_db_conn(db):
+def get_db_conn(db_name):
     """Return SQL connection instance with connection pool support."""
     if settings.backend == 'pgsql':
         dbn = 'postgres'
@@ -260,12 +261,14 @@ def get_db_conn(db):
         dbn += '+' + settings.SQL_DB_DRIVER
 
     try:
-        uri = '%s://%s:%s@%s:%d/%s' % (dbn,
-                                       settings.__dict__[db + '_db_user'],
-                                       settings.__dict__[db + '_db_password'],
-                                       settings.__dict__[db + '_db_server'],
-                                       int(settings.__dict__[db + '_db_port']),
-                                       settings.__dict__[db + '_db_name'])
+        uri = '%s://%s:%s@%s:%d/%s' % (
+            dbn,
+            settings.__dict__[db_name + '_db_user'],
+            settings.__dict__[db_name + '_db_password'],
+            settings.__dict__[db_name + '_db_server'],
+            int(settings.__dict__[db_name + '_db_port']),
+            settings.__dict__[db_name + '_db_name'],
+        )
 
         if settings.backend == 'mysql':
             uri += '?charset=utf8'
@@ -352,7 +355,6 @@ def is_trusted_client(client_address):
 def pretty_left_seconds(seconds=0):
     hours = 0
     mins = 0
-    left_seconds = 0
 
     # hours
     if seconds >= 3600:
@@ -552,17 +554,18 @@ def get_required_db_conns():
         try:
             conn_vmail = ldap.ldapobject.ReconnectLDAPObject(settings.ldap_uri)
             logger.debug('LDAP connection initialied success.')
-        except Exception as e:
-            logger.error(f"LDAP initialized failed: {e}")
 
-        # Bind to ldap server.
-        try:
-            conn_vmail.bind_s(settings.ldap_binddn, settings.ldap_bindpw)
-            logger.debug('LDAP bind success.')
-        except ldap.INVALID_CREDENTIALS:
-            logger.error('LDAP bind failed: incorrect bind dn or password.')
+            # Bind to ldap server.
+            try:
+                conn_vmail.bind_s(settings.ldap_binddn, settings.ldap_bindpw)
+                logger.debug('LDAP bind success.')
+            except ldap.INVALID_CREDENTIALS:
+                logger.error('LDAP bind failed: incorrect bind dn or password.')
+            except Exception as e:
+                logger.error(f"LDAP bind failed: {e}")
         except Exception as e:
-            logger.error(f"LDAP bind failed: {e}")
+            logger.error(f"Fail2ed to establish LDAP connection: {e}")
+            conn_vmail = None
     else:
         # settings.backend in ['mysql', 'pgsql']
         conn_vmail = get_db_conn('vmail')
@@ -570,9 +573,11 @@ def get_required_db_conns():
     conn_amavisd = get_db_conn('amavisd')
     conn_iredapd = get_db_conn('iredapd')
 
-    return {'conn_vmail': conn_vmail,
-            'conn_amavisd': conn_amavisd,
-            'conn_iredapd': conn_iredapd}
+    return {
+        'conn_vmail': conn_vmail,
+        'conn_amavisd': conn_amavisd,
+        'conn_iredapd': conn_iredapd,
+    }
 
 
 def sendmail_with_cmd(from_address, recipients, message_text):
@@ -602,9 +607,10 @@ def sendmail_with_cmd(from_address, recipients, message_text):
 def sendmail(subject, mail_body, from_address=None, recipients=None):
     """Send email through smtp or with command `sendmail`.
 
+    :param subject: mail subject.
+    :param mail_body: plain mail body.
+    :param from_address: the address specified in `From:` header.
     :param recipients: a list/set/tuple of recipient email addresses.
-    :param message_text: encoded mail message.
-    :param from_address: the From: address used while sending email.
     """
     server = settings.NOTIFICATION_SMTP_SERVER
     port = settings.NOTIFICATION_SMTP_PORT
