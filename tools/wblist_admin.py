@@ -245,6 +245,7 @@ else:
                                                     blacklist=for_blacklist)
 
         if qr[0]:
+            _wb = []
             if for_whitelist:
                 _wb = qr[1]['whitelist']
             elif for_blacklist:

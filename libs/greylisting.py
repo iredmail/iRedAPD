@@ -1,5 +1,6 @@
 from libs import utils
 
+
 def is_valid_sender(sender):
     if utils.is_ip(sender) or \
        utils.is_valid_amavisd_address(sender) in ['catchall',
@@ -10,11 +11,13 @@ def is_valid_sender(sender):
     else:
         return False
 
+
 def get_gl_base_setting(account, sender):
     return {'account': account,
             'priority': utils.get_account_priority(account),
             'sender': sender,
             'sender_priority': utils.get_account_priority(sender)}
+
 
 def delete_setting(conn, account, sender):
     try:
@@ -28,6 +31,7 @@ def delete_setting(conn, account, sender):
         return (True, )
     except Exception as e:
         return (False, str(e))
+
 
 def enable_greylisting(conn, account, sender):
     gl_setting = get_gl_base_setting(account=account, sender=sender)
@@ -47,6 +51,7 @@ def enable_greylisting(conn, account, sender):
     except Exception as e:
         return (False, str(e))
 
+
 def disable_greylisting(conn, account, sender):
     gl_setting = get_gl_base_setting(account=account, sender=sender)
     gl_setting['active'] = 0
@@ -64,6 +69,7 @@ def disable_greylisting(conn, account, sender):
         return (True, )
     except Exception as e:
         return (False, str(e))
+
 
 def add_whitelist_sender(conn, account, sender, comment=None):
     if not is_valid_sender(sender):
@@ -87,6 +93,7 @@ def add_whitelist_sender(conn, account, sender, comment=None):
 
     return (True, )
 
+
 def add_whitelist_domain(conn, domain):
     # Insert domain into sql table `iredapd.greylisting_whitelist_domains`
     if not utils.is_domain(domain):
@@ -103,6 +110,7 @@ def add_whitelist_domain(conn, domain):
             return (False, str(e))
 
     return (True, )
+
 
 def remove_whitelisted_domain(domain, conn):
     # Insert domain into sql table `iredapd.greylisting_whitelist_domains`

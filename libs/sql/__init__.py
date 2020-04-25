@@ -21,9 +21,8 @@ def is_local_domain(conn,
     if utils.is_server_hostname(domain):
         return True
 
+    sql_quote_domain = sqlquote(domain)
     try:
-        sql_quote_domain = sqlquote(domain)
-
         # include backup mx domains by default.
         sql_backupmx = ''
         if not include_backupmx:

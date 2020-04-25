@@ -283,10 +283,10 @@ def get_db_conn(db_name):
         return None
 
 
-def wildcard_ipv4(ip):
+def wildcard_ipv4(s):
     ips = []
-    if is_ipv4(ip):
-        ip4 = ip.split('.')
+    if is_ipv4(s):
+        ip4 = s.split('.')
 
         if settings.ENABLE_ALL_WILDCARD_IP:
             ip4s = set()

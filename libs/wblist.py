@@ -4,6 +4,7 @@ from web import sqlquote
 from libs import utils
 from libs.logger import logger
 
+
 def create_mailaddr(conn, addresses):
     for addr in addresses:
         addr_type = utils.is_valid_amavisd_address(addr)
@@ -18,7 +19,7 @@ def create_mailaddr(conn, addresses):
     return True
 
 
-def create_user(conn, account, policy_id=0, return_record=True):
+def create_user(conn, account, return_record=True):
     # Create a new record in `amavisd.users`
     addr_type = utils.is_valid_amavisd_address(account)
     try:
@@ -63,11 +64,12 @@ def get_user_record(conn, account, create_if_missing=True):
 
         (_id, _priority, _policy_id, _email) = user_record
 
-        d = {}
-        d['id'] = int(_id)
-        d['priority'] = int(_priority)
-        d['_policy_id'] = int(_policy_id)
-        d['email'] = str(_email)
+        d = {
+            'id': int(_id),
+            'priority': int(_priority),
+            '_policy_id': int(_policy_id),
+            'email': str(_email),
+        }
 
         return (True, d)
     except Exception as e:

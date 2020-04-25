@@ -32,6 +32,7 @@ from libs import SMTP_ACTIONS
 
 reject_action = 'REJECT ' + settings.CHANGE_PASSWORD_MESSAGE
 
+
 def restriction(**kwargs):
     if not kwargs['sasl_username']:
         return 'DUNNO Not a local user'
@@ -69,7 +70,3 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
     else:
         logger.debug("Sender didn't change password in last %d days." % settings.CHANGE_PASSWORD_DAYS)
-        return reject_action
-
-    logger.debug("Sender will be forced to change password on %s." % str(pwchdate + datetime.timedelta(days=settings.CHANGE_PASSWORD_DAYS)))
-    return SMTP_ACTIONS['default']

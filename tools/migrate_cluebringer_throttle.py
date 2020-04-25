@@ -31,10 +31,11 @@ from libs.utils import is_email, is_domain
 from tools import logger, get_db_conn
 
 backend = settings.backend
-if backend in ['ldap', 'mysql']:
-    sql_dbn = 'mysql'
-elif backend in ['pgsql']:
+if backend in ['pgsql']:
     sql_dbn = 'postgres'
+else:
+    # backend in ['ldap', 'mysql']
+    sql_dbn = 'mysql'
 
 if not (cluebringer_db_host and
         cluebringer_db_port and
@@ -58,7 +59,7 @@ conn.supports_multiple_insert = True
 
 logger.info('* Backend: %s' % backend)
 
-#--------------------------
+# --------------------------
 # Get throttle settings.
 #
 
@@ -146,7 +147,6 @@ logger.info("Total %d throttle settings." % len(t_settings))
 
 conn = get_db_conn('iredapd')
 for t in t_settings:
-    #print t_settings[t]
     v = t_settings[t]
     if not ('max_msgs' in v):
         v['max_msgs'] = -1

@@ -85,14 +85,14 @@ class DaemonError(Exception):
     value that contains an error message describing the problem.
     """
 
-    def __init__(self, errorMessage):
+    def __init__(self, error_message):
         """
         Create a new C{DaemonException}.
 
-        @type errorMessage:  string
-        @param errorMessage: the error message
+        @type error_message:  string
+        @param error_message: the error message
         """
-        self.errorMessage = errorMessage
+        self.error_message = error_message
 
     def __str__(self):
         """
@@ -100,7 +100,7 @@ class DaemonError(Exception):
 
         @return: a string representing the exception
         """
-        return self.errorMessage
+        return self.error_message
 
 
 # ---------------------------------------------------------------------------
@@ -108,26 +108,26 @@ class DaemonError(Exception):
 # ---------------------------------------------------------------------------
 
 
-def daemonize(noClose=False):
+def daemonize(no_close=False):
     """
     Convert the calling process into a daemon.
 
-    @type noClose:  boolean
-    @param noClose: If True, don't close the file descriptors. Useful
-                    if the calling process has already redirected file
-                    descriptors to an output file. WARNING: Only set this
-                    parameter to True if you're SURE there are no open file
-                    descriptors to the calling terminal. Otherwise, you'll
-                    risk having the daemon re-acquire a control terminal,
-                    which can cause it to be killed if someone logs off that
-                    terminal.
+    @type no_close:  boolean
+    @param no_close: If True, don't close the file descriptors. Useful
+                     if the calling process has already redirected file
+                     descriptors to an output file. WARNING: Only set this
+                     parameter to True if you're SURE there are no open file
+                     descriptors to the calling terminal. Otherwise, you'll
+                     risk having the daemon re-acquire a control terminal,
+                     which can cause it to be killed if someone logs off that
+                     terminal.
 
     @raise DaemonException: Error during daemonizing
     """
     global log
 
     if os.name != "posix":
-        log.warn("Daemon is only supported on Posix-compliant systems.")
+        log.warning("Daemon is only supported on Posix-compliant systems.")
         return
 
     try:
@@ -162,12 +162,12 @@ def daemonize(noClose=False):
         # unmounted).
         os.chdir(WORKDIR)
 
-        # Unless noClose was specified, close all file descriptors.
-        if not noClose:
+        # Unless `no_close` was specified, close all file descriptors.
+        if not no_close:
             _redirectFileDescriptors()
 
     except Exception as e:
-        raise DaemonError("Error during daemonizing: %s [%d]" % (e.strerror, e.errno))
+        raise DaemonError(f"Error during daemonizing: {repr(e)}")
 
 
 # ---------------------------------------------------------------------------
@@ -202,13 +202,9 @@ def _redirectFileDescriptors():
             os.close(fd)
         except OSError as e:
             # File descriptor wasn't open. Ignore.
-            logging.info(
-                "Error in _redirectFileDescriptors 1: (%d, %s)" % (e.errno, e.strerror)
-            )
+            logging.info(f"Error in _redirectFileDescriptors 1: {repr(e)}")
         except Exception as e:
-            logging.info(
-                "Error in _redirectFileDescriptors 2: (%d, %s)" % (e.errno, e.strerror)
-            )
+            logging.info(f"Error in _redirectFileDescriptors 2: {repr(e)}")
 
     # Redirect standard input, output and error to something safe.
     # os.open() is guaranteed to return the lowest available file
@@ -234,7 +230,7 @@ if __name__ == "__main__":
     log.setLevel(logging.DEBUG)
 
     log.debug("Before daemonizing, PID=%d" % os.getpid())
-    daemonize(noClose=True)
+    daemonize(no_close=True)
     log.debug("After daemonizing, PID=%d" % os.getpid())
     log.debug("Daemon is sleeping for 10 seconds")
 

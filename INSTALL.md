@@ -163,10 +163,10 @@ srs_domain = 'my.full.hostname'
 srs_secrets = ['7d86deed2cdee17baa8cf216348efe05']
 
 # For OpenLDAP backend. Not used by MySQL and PostgreSQL backends.
-ldap_uri = “ldap://127.0.0.1:389”
-ldap_basedn = “o=domains,dc=iredmail,dc=org”
-ldap_binddn = “cn=vmail,dc=iredmail,dc=org”
-ldap_bindpw = “mRAEWpGRtlCs1O0QuWpXoaJ36EjRql”
+ldap_uri = "ldap://127.0.0.1:389"
+ldap_basedn = "o=domains,dc=iredmail,dc=org"
+ldap_binddn = "cn=vmail,dc=iredmail,dc=org"
+ldap_bindpw = "mRAEWpGRtlCs1O0QuWpXoaJ36EjRql"
 
 # For MySQL and PostgreSQL backends. Not used by OpenLDAP backend.
 sql_server = "127.0.0.1"

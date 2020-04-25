@@ -105,8 +105,10 @@ def query_spf(domain, queried_domains=None):
 
     queried_domains = queried_domains or set()
     if 'spf:' + domain in queried_domains:
-        return {'spf': None,
-                'queried_domains': queried_domains}
+        return {
+            'spf': None,
+            'queried_domains': queried_domains,
+        }
 
     try:
         # WARNING: DO NOT UPDATE queried_domains in this function
@@ -133,8 +135,10 @@ def query_spf(domain, queried_domains=None):
 
     queried_domains.add('spf:' + domain)
 
-    return {'spf': spf,
-            'queried_domains': queried_domains}
+    return {
+        'spf': spf,
+        'queried_domains': queried_domains,
+    }
 
 
 def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
@@ -148,9 +152,11 @@ def parse_spf(domain, spf, queried_domains=None, returned_ips=None):
     returned_ips = returned_ips or set()
 
     if not spf:
-        return {'ips': ips,
-                'queried_domains': queried_domains,
-                'returned_ips': returned_ips}
+        return {
+            'ips': ips,
+            'queried_domains': queried_domains,
+            'returned_ips': returned_ips,
+        }
 
     tags = spf.split()
 
@@ -310,7 +316,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
     queried_domains = qr['queried_domains']
 
     if not _spf:
-        logger.debug('[SPF] Domain {0} does not have a valid SPF DNS record.'.format(sender_domain))
+        logger.debug(f'[SPF] Domain {sender_domain} does not have a valid SPF DNS record.')
         return False
 
     qr = parse_spf(domain=sender_domain,
@@ -319,8 +325,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
 
     _ips = qr['ips']
     if ip in _ips:
-        logger.debug('[SPF] IP {0} is listed in SPF DNS record of '
-                     'sender domain {1}.'.format(ip, sender_domain))
+        logger.debug(f'[SPF] IP {ip} is listed in SPF DNS record of sender domain {sender_domain}.')
         return True
 
     _ip_object = ipaddress.ip_address(ip)
@@ -340,13 +345,12 @@ def is_allowed_server_in_spf(sender_domain, ip):
                 _network = ipaddress.ip_network(_cidr)
 
                 if _ip_object in _network:
-                    logger.debug('[SPF] IP ({0}) is listed in SPF DNS record '
-                                 'of sender domain {1} '
-                                 '(network={2}).'.format(ip, sender_domain, _cidr))
+                    logger.debug(f'[SPF] IP ({ip}) is listed in SPF DNS record '
+                                 f'of sender domain {sender_domain} '
+                                 f'(network={_cidr}).')
                     return True
             except Exception as e:
-                logger.debug('[SPF] Error while checking IP {0} against '
-                             'network {1}: {2}'.format(ip, _cidr, e))
+                logger.debug(f'[SPF] Error while checking IP {ip} against network {_cidr}: {e}')
 
-    logger.debug('[SPF] IP {0} is NOT listed in SPF DNS record of domain {1}.'.format(ip, sender_domain))
+    logger.debug(f'[SPF] IP {ip} is NOT listed in SPF DNS record of domain {sender_domain}.')
     return False

@@ -30,7 +30,6 @@ class DaemonSocket(asyncore.dispatcher):
         self.set_reuse_addr()
         self.bind(local_addr)
         self.listen(5)
-        ip, port = local_addr
         self.db_conns = db_conns
         self.policy_channel = policy_channel
 
@@ -170,8 +169,8 @@ class Policy(asynchat.async_chat):
                 if result:
                     action = result
                 else:
-                    logger.error('No result returned by modeler, fallback to default action: %s' % str(action))
                     action = SMTP_ACTIONS['default']
+                    logger.error(f'No result returned by modeler, fallback to default action: {action}.')
 
             except Exception as e:
                 action = SMTP_ACTIONS['default']
@@ -241,8 +240,6 @@ class SRS(asynchat.async_chat):
         self.buffer.append(data)
 
     def srs_forward(self, addr, domain):
-        reply = TCP_REPLIES['not_exist']
-
         # if domain is hostname, virtual mail domain or srs_domain, do not rewrite.
         if domain == settings.srs_domain:
             reply = TCP_REPLIES['not_exist'] + 'Domain is srs_domain, bypassed.'
@@ -274,7 +271,6 @@ class SRS(asynchat.async_chat):
                 sql = """SELECT id FROM srs_exclude_domains WHERE domain IN %s LIMIT 1""" % sqlquote(list(possible_domains))
                 logger.debug(self.log_prefix + '[SQL] Query srs_exclude_domains: {0}'.format(sql))
 
-                sql_record = None
                 try:
                     qr = conn_iredapd.execute(sql)
                     sql_record = qr.fetchone()
@@ -299,11 +295,7 @@ class SRS(asynchat.async_chat):
                         reply = TCP_REPLIES['not_exist']
                         return reply
 
-        return reply
-
     def srs_reverse(self, addr):
-        reply = TCP_REPLIES['not_exist']
-
         # if address is not srs address, do not reverse.
         _is_srs_address = self.srslib_instance.is_srs_address(addr, strict=True)
 

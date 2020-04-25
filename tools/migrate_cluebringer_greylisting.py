@@ -30,10 +30,11 @@ from libs.utils import is_valid_amavisd_address
 from tools import logger, get_db_conn
 
 backend = settings.backend
-if backend in ['ldap', 'mysql']:
-    sql_dbn = 'mysql'
-elif backend in ['pgsql']:
+if backend in ['pgsql']:
     sql_dbn = 'postgres'
+else:
+    # backend in ['ldap', 'mysql']
+    sql_dbn = 'mysql'
 
 if not (cluebringer_db_host and
         cluebringer_db_port and

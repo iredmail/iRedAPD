@@ -61,6 +61,7 @@ def get_members(conn, mail):
 
     return _members
 
+
 def get_moderators(conn, mail):
     """Return a list of moderators of mail alias account."""
     _moderators = []

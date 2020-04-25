@@ -42,24 +42,16 @@ def get_gmttime():
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
 
-def get_db_conn(db):
-    if db == 'ldap':
-        from libs.ldaplib.auth import verify_bind_dn_pw
-        qr = verify_bind_dn_pw(dn=settings.ldap_bind_dn,
-                               password=settings.ldap_bind_password,
-                               close_connection=False)
-        if qr[0]:
-            return qr[1]
-        else:
-            return None
-
+def get_db_conn(db_name):
     try:
-        conn = web.database(dbn=sql_dbn,
-                            host=settings.__dict__[db + '_db_server'],
-                            port=int(settings.__dict__[db + '_db_port']),
-                            db=settings.__dict__[db + '_db_name'],
-                            user=settings.__dict__[db + '_db_user'],
-                            pw=settings.__dict__[db + '_db_password'])
+        conn = web.database(
+            dbn=sql_dbn,
+            host=settings.__dict__[db_name + '_db_server'],
+            port=int(settings.__dict__[db_name + '_db_port']),
+            db=settings.__dict__[db_name + '_db_name'],
+            user=settings.__dict__[db_name + '_db_user'],
+            pw=settings.__dict__[db_name + '_db_password'],
+        )
 
         conn.supports_multiple_insert = True
         return conn
@@ -87,7 +79,6 @@ def sql_count_id(conn, table, column='id', where=None):
 def cleanup_sql_table(conn,
                       sql_table,
                       unique_index_column='id',
-                      remove_values=None,
                       sql_where=None,
                       print_left_rows=False):
     num_query_pages = 0

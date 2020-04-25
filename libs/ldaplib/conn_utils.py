@@ -5,6 +5,7 @@ from libs import utils
 import ldap
 import settings
 
+
 def get_account_ldif(conn, account, query_filter=None, attrs=None):
     logger.debug('[+] Getting LDIF data of account: %s' % account)
 

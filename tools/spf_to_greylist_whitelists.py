@@ -187,7 +187,7 @@ for domain in domain_ips:
             if e.__class__.__name__ == 'IntegrityError':
                 pass
             else:
-                logger.error(f"* <<< ERROR >>> Cannot insert new record for domain {domain}: {e.message}")
+                logger.error(f"* <<< ERROR >>> Cannot insert new record for domain {domain}: {repr(e)}")
 
 if submit_to_sql_db:
     logger.info('* Store domain names in SQL database as greylisting whitelists.')

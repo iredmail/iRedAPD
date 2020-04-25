@@ -86,7 +86,7 @@ def restriction(**kwargs):
     # Check all possible sender domains (without checking sender alias domains)
     _possible_sender_domains = [sender_domain]
     _domain_parts = sender_domain.split('.')
-    for i in _domain_parts:
+    for _ in _domain_parts:
         _possible_sender_domains += ['.' + '.'.join(_domain_parts)]
         _domain_parts.pop(0)
 

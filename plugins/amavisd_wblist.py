@@ -93,7 +93,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
         qr = conn.execute(sql)
         qr_cidr = qr.fetchall()
     except Exception as e:
-        logger.error(f'Error while querying CIDR network: {repr(e)}, SQL: \n{sql}'.format(e, sql))
+        logger.error(f'Error while querying CIDR network: {repr(e)}, SQL: \n{sql}')
         return ids
 
     if qr_cidr:
@@ -118,8 +118,9 @@ def get_id_of_possible_cidr_network(conn, client_address):
     logger.debug(f"IDs of CIDR network(s): {ids}")
     return ids
 
+
 def get_id_of_external_addresses(conn, addresses):
-    '''Return list of `mailaddr.id` of external addresses.'''
+    """Return list of `mailaddr.id` of external addresses."""
     ids = []
 
     if not addresses:
@@ -153,7 +154,7 @@ def get_id_of_external_addresses(conn, addresses):
 
 
 def get_id_of_local_addresses(conn, addresses):
-    '''Return list of `users.id` of local addresses.'''
+    """Return list of `users.id` of local addresses."""
 
     # Get 'users.id' of local addresses
     sql = """SELECT id, email
@@ -168,6 +169,7 @@ def get_id_of_local_addresses(conn, addresses):
         qr_addresses = qr.fetchall()
         if qr_addresses:
             ids = [int(r.id) for r in qr_addresses]
+            logger.debug('Local addresses (in `amavisd.users`): {0}'.format(qr_addresses))
     except Exception as e:
         logger.error('Error while executing SQL command: {0}'.format(e))
 
@@ -176,7 +178,6 @@ def get_id_of_local_addresses(conn, addresses):
         logger.debug('No record found in SQL database.')
         return []
     else:
-        logger.debug('Local addresses (in `amavisd.users`): {0}'.format(qr_addresses))
         return ids
 
 

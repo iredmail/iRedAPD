@@ -221,6 +221,7 @@ def _should_be_greylisted_by_tracking(conn,
               LIMIT 1""" % (sender, recipient, client_address_sql)
 
     logger.debug('[SQL] query greylisting tracking: \n%s' % sql)
+    sql_record = None
     try:
         qr = conn.execute(sql)
         sql_record = qr.fetchone()
@@ -325,11 +326,6 @@ def _should_be_greylisted_by_tracking(conn,
 
 
 def restriction(**kwargs):
-    # Bypass null sender (in case we don't have `reject_null_sender` plugin enabled)
-    #if not kwargs['sender']:
-    #    logger.debug('Bypass greylisting for null sender.')
-    #    return SMTP_ACTIONS['default']
-
     # Bypass outgoing emails.
     if kwargs['sasl_username']:
         logger.debug('Found SASL username, bypass greylisting for outbound email.')

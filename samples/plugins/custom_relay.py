@@ -117,6 +117,7 @@ try:
 except:
     relay_for_local_recipient = 'smtp-amavis:[127.0.0.1]:10025'
 
+
 def restriction(**kwargs):
     sasl_username = kwargs['sasl_username']
     sasl_username_domain = kwargs['sasl_username_domain']

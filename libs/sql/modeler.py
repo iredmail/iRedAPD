@@ -32,19 +32,21 @@ class Modeler:
         if self.conns['conn_iredapd']:
             conn_iredapd = self.conns['conn_iredapd'].connect()
 
-        plugin_kwargs = {'smtp_session_data': smtp_session_data,
-                         'conn_vmail': conn_vmail,
-                         'conn_amavisd': conn_amavisd,
-                         'conn_iredapd': conn_iredapd,
-                         'sender': sender,
-                         'sender_without_ext': smtp_session_data['sender_without_ext'],
-                         'recipient': recipient,
-                         'recipient_without_ext': smtp_session_data['recipient_without_ext'],
-                         'client_address': client_address,
-                         'sender_domain': smtp_session_data.get('sender_domain', ''),
-                         'recipient_domain': smtp_session_data.get('recipient_domain', ''),
-                         'sasl_username': sasl_username,
-                         'sasl_username_domain': smtp_session_data.get('sasl_username_domain', '')}
+        plugin_kwargs = {
+            'smtp_session_data': smtp_session_data,
+            'conn_vmail': conn_vmail,
+            'conn_amavisd': conn_amavisd,
+            'conn_iredapd': conn_iredapd,
+            'sender': sender,
+            'sender_without_ext': smtp_session_data['sender_without_ext'],
+            'recipient': recipient,
+            'recipient_without_ext': smtp_session_data['recipient_without_ext'],
+            'client_address': client_address,
+            'sender_domain': smtp_session_data.get('sender_domain', ''),
+            'recipient_domain': smtp_session_data.get('recipient_domain', ''),
+            'sasl_username': sasl_username,
+            'sasl_username_domain': smtp_session_data.get('sasl_username_domain', ''),
+        }
 
         # TODO Get SQL record of mail user or mail alias before applying plugins
         # TODO Query required sql columns instead of all

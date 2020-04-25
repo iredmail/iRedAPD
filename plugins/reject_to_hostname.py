@@ -8,6 +8,7 @@ from libs.utils import is_trusted_client
 
 server_hostname = socket.gethostname()
 
+
 def restriction(*args, **kwargs):
     # Bypass authenticated user.
     if kwargs['sasl_username']:

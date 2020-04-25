@@ -1,5 +1,6 @@
 from tests import utils
 
+
 def test_cleanup():
     # Remove all sql records generated during testing.
     utils.delete_alias_domain()

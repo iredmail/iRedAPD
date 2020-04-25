@@ -65,7 +65,7 @@ def main():
     # Run this program as daemon.
     if '--foreground' not in sys.argv:
         try:
-            daemon.daemonize(noClose=True)
+            daemon.daemonize(no_close=True)
         except Exception as e:
             logger.error(f"Error in daemon.daemonize: {e}")
 
@@ -91,10 +91,7 @@ def main():
 
     # Starting loop.
     try:
-        # There's a bug report for Python 2.6/3.0 that `use_poll=True` yields
-        # some 2.5 incompatibilities:
-        if (sys.version_info >= (2, 7) and sys.version_info < (2, 8)) \
-           or (sys.version_info >= (3, 4)):     # if python 2.7 ...
+        if sys.version_info >= (3, 4):
             # workaround for the "Bad file descriptor" issue on Python 2.7, gh-161
             asyncore.loop(use_poll=True)
         else:

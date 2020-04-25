@@ -11,8 +11,6 @@ os.environ['LC_ALL'] = 'C'
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 
-#import settings
-#from tools import logger, get_db_conn, sql_count_id
 from tools import logger, get_db_conn
 from libs import utils
 

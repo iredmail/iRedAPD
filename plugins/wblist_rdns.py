@@ -17,7 +17,7 @@
 #            mail.domain.co.uk
 #       smtp.mail.domain.co.uk
 #
-#--------------
+# --------------
 # Sample usages
 #
 # *) Block rDNS name 'mail.domain.co.uk':
@@ -41,7 +41,6 @@ from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_trusted_client
 import settings
-
 
 if settings.WBLIST_DISCARD_INSTEAD_OF_REJECT:
     reject_action = SMTP_ACTIONS['discard']

@@ -90,7 +90,7 @@ def restriction(**kwargs):
         except Exception as e:
             logger.error("[{0}] senderscore -> Error: {1}".format(client_address, e))
 
-    if score >= 0 and score <= 100:
+    if 0 <= score <= 100:
         if cache_the_score:
             # Store the DNS query result as cache.
             sql = """

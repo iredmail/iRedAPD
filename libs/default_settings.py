@@ -233,7 +233,7 @@ SENDERSCORE_REJECT_SCORE = 30
 # Cache the score returned by DNS query for how many days.
 SENDERSCORE_CACHE_DAYS = 2
 
-#------------------------
+# ------------------------
 # mlmmjadmin integration.
 #
 MLMMJADMIN_API_AUTH_TOKEN_HEADER_NAME = 'X-MLMMJADMIN-API-AUTH-TOKEN'
