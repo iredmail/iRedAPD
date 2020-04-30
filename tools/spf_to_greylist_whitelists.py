@@ -50,7 +50,7 @@
 #
 # REFERENCES
 #
-#   * SPF Record Syntax: http://www.openspf.org/SPF_Record_Syntax
+#   * SPF Record Syntax: http://www.open-spf.org/SPF_Record_Syntax
 #   * A simpler shell script which does the same job, it lists all IP addresses
 #     and/or networks on terminal: https://bitbucket.org/zhb/spf-to-ip
 
