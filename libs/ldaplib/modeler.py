@@ -60,7 +60,7 @@ class Modeler:
                 target_protocol_state = ['RCPT']
 
             if protocol_state not in target_protocol_state:
-                logger.debug('Skip plugin: %s (protocol_state != %s)' % (plugin.__name__, protocol_state))
+                logger.debug(f"Skip plugin: {plugin.__name__} (protocol_state != {protocol_state})")
                 continue
 
             # Get LDIF data of sender if required

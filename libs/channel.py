@@ -104,7 +104,7 @@ class Policy(asynchat.async_chat):
             line = self.buffer.pop().decode()
 
             if '=' in line:
-                logger.debug("[policy] " + line)
+                logger.debug(f"[policy] {line}")
                 (k, v) = line.split('=', 1)
 
                 if k in SMTP_SESSION_ATTRIBUTES:
@@ -191,7 +191,7 @@ class Policy(asynchat.async_chat):
                             settings.GLOBAL_SESSION_TRACKING.pop(_instance)
 
             self.push('action=' + action + '\n')
-            logger.debug('Session ended.')
+            logger.debug("Session ended.")
 
             _end_time = time.time()
             utils.log_policy_request(smtp_session_data=self.smtp_session_data,
@@ -210,7 +210,7 @@ class Policy(asynchat.async_chat):
                                        **self.smtp_session_data)
         else:
             action = SMTP_ACTIONS['default']
-            logger.debug("replying: " + action)
+            logger.debug(f"replying: {action}")
             self.push('action=' + action + '\n')
             logger.debug("Session ended")
 
@@ -234,7 +234,7 @@ class SRS(asynchat.async_chat):
         try:
             asynchat.async_chat.push(self, (msg + '\n').encode())
         except Exception as e:
-            logger.error('Error while pushing message: error={0}, message={1}'.format(e, msg))
+            logger.error(f"Error while pushing message: error={repr(e)}, message={msg}")
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -253,7 +253,7 @@ class SRS(asynchat.async_chat):
                 conn_vmail = self.db_conns['conn_vmail']
                 _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
             except Exception as e:
-                logger.error(self.log_prefix + 'Error while verifying domain: {0}'.format(e))
+                logger.error(f"{self.log_prefix} Error while verifying domain: {repr(e)}")
 
             if _is_local_domain:
                 reply = TCP_REPLIES['not_exist'] + 'Domain is a local mail domain, bypassed.'
@@ -269,14 +269,14 @@ class SRS(asynchat.async_chat):
 
                 conn_iredapd = self.db_conns['conn_iredapd']
                 sql = """SELECT id FROM srs_exclude_domains WHERE domain IN %s LIMIT 1""" % sqlquote(list(possible_domains))
-                logger.debug(self.log_prefix + '[SQL] Query srs_exclude_domains: {0}'.format(sql))
+                logger.debug(f"{self.log_prefix} [SQL] Query srs_exclude_domains: {sql}")
 
                 try:
                     qr = conn_iredapd.execute(sql)
                     sql_record = qr.fetchone()
-                    logger.debug(self.log_prefix + '[SQL] Query result: {0}'.format(sql_record))
+                    logger.debug(f"{self.log_prefix} [SQL] Query result: {sql_record}")
                 except Exception as e:
-                    logger.debug(self.log_prefix + 'Error while querying SQL: {0}'.format(e))
+                    logger.debug(f"{self.log_prefix} Error while querying SQL: {repr(e)}")
                     reply = TCP_REPLIES['not_exist']
                     return reply
 
@@ -286,11 +286,11 @@ class SRS(asynchat.async_chat):
                 else:
                     try:
                         new_addr = str(self.srslib_instance.forward(addr, settings.srs_domain))
-                        logger.info(self.log_prefix + 'rewrited: {0} -> {1}'.format(addr, new_addr))
+                        logger.info(f"{self.log_prefix} rewrited: {addr} -> {new_addr}")
                         reply = TCP_REPLIES['success'] + new_addr
                         return reply
                     except Exception as e:
-                        logger.debug(self.log_prefix + 'Error while generating forward address: {0}'.format(e))
+                        logger.debug(f"{self.log_prefix} Error while generating forward address: {repr(e)}")
                         # Return original address.
                         reply = TCP_REPLIES['not_exist']
                         return reply
@@ -303,10 +303,10 @@ class SRS(asynchat.async_chat):
             # Reverse
             try:
                 new_addr = str(self.srslib_instance.reverse(addr))
-                logger.info(self.log_prefix + 'reversed: {0} -> {1}'.format(addr, new_addr))
+                logger.info(f"{self.log_prefix} reversed: {addr} -> {new_addr}")
                 reply = TCP_REPLIES['success'] + new_addr
             except Exception as e:
-                logger.debug(self.log_prefix + 'Error while generating reverse address: {0}'.format(e))
+                logger.debug(f"{self.log_prefix} Error while generating reverse address: {repr(e)}")
 
                 # Return original address.
                 reply = TCP_REPLIES['not_exist']
@@ -318,7 +318,7 @@ class SRS(asynchat.async_chat):
     def found_terminator(self):
         if self.buffer:
             line = self.buffer.pop().decode()
-            logger.debug(self.log_prefix + 'input: ' + line)
+            logger.debug(f"{self.log_prefix} input: {line}")
 
             if line.startswith('get '):
                 addr = line.strip().split(' ', 1)[-1]
@@ -328,15 +328,15 @@ class SRS(asynchat.async_chat):
 
                     if self.rewrite_address_type == 'sender':
                         reply = self.srs_forward(addr=addr, domain=domain)
-                        logger.debug(self.log_prefix + reply)
+                        logger.debug(f"{self.log_prefix}  {reply}")
                         self.push(reply)
                     else:
                         reply = self.srs_reverse(addr=addr)
-                        logger.debug(self.log_prefix + reply)
+                        logger.debug(f"{self.log_prefix} {reply}")
                         self.push(reply)
                 else:
-                    logger.debug(self.log_prefix + 'Not a valid email address, bypassed.')
+                    logger.debug(f"{self.log_prefix} Not a valid email address, bypassed.")
                     self.push(TCP_REPLIES['not_exist'] + 'Not a valid email address, bypassed.')
             else:
-                logger.debug(self.log_prefix + 'Unexpected input: {0}'.format(line))
+                logger.debug(f"{self.log_prefix} Unexpected input: {line}")
                 self.push(TCP_REPLIES['not_exist'] + 'Unexpected input: {0}'.format(line))

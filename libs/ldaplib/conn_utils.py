@@ -7,7 +7,7 @@ import settings
 
 
 def get_account_ldif(conn, account, query_filter=None, attrs=None):
-    logger.debug('[+] Getting LDIF data of account: %s' % account)
+    logger.debug(f"[+] Getting LDIF data of account: {account}")
 
     if not query_filter:
         query_filter = '(&' + \
@@ -19,10 +19,10 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
                        '(objectClass=mailAlias)' + \
                        '))'
 
-    logger.debug('search base dn: %s' % settings.ldap_basedn)
-    logger.debug('search scope: SUBTREE')
-    logger.debug('search filter: %s' % query_filter)
-    logger.debug('search attributes: %s' % str(attrs))
+    logger.debug(f"search base dn: {settings.ldap_basedn}")
+    logger.debug("search scope: SUBTREE")
+    logger.debug(f"search filter: {query_filter}")
+    logger.debug(f"search attributes: {attrs}")
     if not isinstance(attrs, list):
         # Attribute list must be None (search all attributes) or non-empty list
         attrs = None
@@ -34,14 +34,14 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
                                attrs)
 
         if result:
-            logger.debug('result: %s' % str(result))
+            logger.debug(f"result: {repr(result)}")
             # (dn, entry = result[0])
             return result[0]
         else:
             logger.debug('No such account.')
             return (None, None)
     except Exception as e:
-        logger.debug('<!> ERROR, result: %s' % str(e))
+        logger.debug(f"<!> ERROR: {repr(e)}")
         return (None, None)
 
 
@@ -69,7 +69,7 @@ def get_primary_and_alias_domains(conn, domain):
             return list(set(_all_domains))
     except Exception as e:
         # Log and return if LDAP error occurs
-        logger.error('Error while querying alias domains of domain (%s): %s' % (domain, repr(e)))
+        logger.error(f"Error while querying alias domains of domain ({domain}): {repr(e)}")
         return []
 
 
@@ -105,7 +105,7 @@ def is_local_domain(conn,
     except ldap.NO_SUCH_OBJECT:
         return False
     except Exception as e:
-        logger.error('<!> Error while querying local domain: %s' % str(e))
+        logger.error(f"<!> Error while querying local domain: {repr(e)}")
         return False
 
 
@@ -114,7 +114,7 @@ def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
     alias_domain = str(alias_domain).lower()
 
     if not utils.is_domain(alias_domain):
-        logger.debug('Given alias_domain %s is not an valid domain name.' % alias_domain)
+        logger.debug(f"Given alias_domain {alias_domain} is not an valid domain name.")
         return None
 
     try:
@@ -126,14 +126,14 @@ def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
 
         _filter += ')'
 
-        logger.debug('[LDAP] query target domain of given alias domain (%s).' % alias_domain)
-        logger.debug('[LDAP] query filter: (%s)' % _filter)
+        logger.debug(f"[LDAP] query target domain of given alias domain ({alias_domain})")
+        logger.debug(f"[LDAP] query filter: ({_filter})")
         qr = conn.search_s(settings.ldap_basedn,
                            1,   # 1 == ldap.SCOPE_ONELEVEL
                            _filter,
                            ['domainName'])
 
-        logger.debug('result: %s' % str(qr))
+        logger.debug(f"result: {repr(qr)}")
         if qr:
             (_dn, _ldif) = qr[0]
             _domain = _ldif['domainName'][0]
@@ -141,6 +141,6 @@ def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
     except ldap.NO_SUCH_OBJECT:
         pass
     except Exception as e:
-        logger.error('<!> Error while querying alias domain: %s' % str(e))
+        logger.error(f"<!> Error while querying alias domain: {repr(e)}")
 
     return None

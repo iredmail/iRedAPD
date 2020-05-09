@@ -26,7 +26,7 @@ plugin_dir = os.path.abspath(os.path.dirname(__file__)) + '/plugins'
 sys.path.append(plugin_dir)
 
 if settings.backend not in ['ldap', 'mysql', 'pgsql']:
-    sys.exit('Invalid backend, it must be ldap, mysql or pgsql.')
+    sys.exit("Invalid backend, it must be ldap, mysql or pgsql.")
 
 
 def main():
@@ -60,14 +60,14 @@ def main():
                      db_conns=db_conns,
                      policy_channel='srs_recipient')
     else:
-        logger.info('No SRS domain and/or secret strings in settings.py, not loaded.')
+        logger.info("No SRS domain and/or secret strings in settings.py, not loaded.")
 
     # Run this program as daemon.
     if '--foreground' not in sys.argv:
         try:
             daemon.daemonize(no_close=True)
         except Exception as e:
-            logger.error(f"Error in daemon.daemonize: {e}")
+            logger.error(f"Error in daemon.daemonize: {repr(e)}")
 
     # Write pid number into pid file.
     f = open(settings.pid_file, 'w')
@@ -101,7 +101,7 @@ def main():
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        logger.error('Error in asyncore.loop: ' + str(e))
+        logger.error(f"Error in asyncore.loop: {repr(e)}")
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Migrate Cluebringer greylisting setting to iRedAPD.
@@ -48,45 +48,53 @@ web.config.debug = False
 backend = settings.backend
 conn_iredapd = get_db_conn('iredapd')
 
-conn_cb = web.database(dbn=sql_dbn,
-                       host=cluebringer_db_host,
-                       port=int(cluebringer_db_port),
-                       db=cluebringer_db_name,
-                       user=cluebringer_db_user,
-                       pw=cluebringer_db_password)
+conn_cb = web.database(
+    dbn=sql_dbn,
+    host=cluebringer_db_host,
+    port=int(cluebringer_db_port),
+    db=cluebringer_db_name,
+    user=cluebringer_db_user,
+    pw=cluebringer_db_password,
+)
 
 conn_cb.supports_multiple_insert = True
 
-logger.info('* Backend: %s' % backend)
+logger.info(f"* Backend: {backend}")
 
 #
 # Global greylisting setting
 #
 logger.info('* Migrate global greylisting setting.')
 logger.info('\t- Query enabled global greylisting setting.')
-qr = conn_cb.select('greylisting',
-                    what='id',
-                    where="name='Greylisting Inbound Emails' AND usegreylisting=1",
-                    limit=1)
+qr = conn_cb.select(
+    'greylisting',
+    what='id',
+    where="name='Greylisting Inbound Emails' AND usegreylisting=1",
+    limit=1,
+)
 
 if qr:
     logger.info('\t- Cluebringer has greylisting enabled globally.')
     # Check existing global greylisting setting
-    qr = conn_iredapd.select('greylisting',
-                             what='id',
-                             where="account='@.' AND sender='@.'",
-                             limit=1)
+    qr = conn_iredapd.select(
+        'greylisting',
+        what='id',
+        where="account='@.' AND sender='@.'",
+        limit=1,
+    )
 
     if qr:
         logger.info('\t- iRedAPD already has global greylisting setting, not migrate Cluebringer global setting.')
     else:
         logger.info("\t- iRedAPD doesn't have global greylisting setting, migrating ...")
-        conn_iredapd.insert('greylisting',
-                            account='@.',
-                            priority=0,
-                            sender='@.',
-                            sender_priority=0,
-                            active=1)
+        conn_iredapd.insert(
+            'greylisting',
+            account='@.',
+            priority=0,
+            sender='@.',
+            sender_priority=0,
+            active=1,
+        )
 
 #
 # no_greylisting settings
@@ -107,18 +115,20 @@ for r in qr:
         continue
 
     try:
-        conn_iredapd.insert('greylisting',
-                            account=r.member,
-                            priority=_priority,
-                            sender='@.',
-                            sender_priority=0,
-                            active=1)
-        logger.info('\t+ Migrated account setting: %s' % _account)
+        conn_iredapd.insert(
+            'greylisting',
+            account=r.member,
+            priority=_priority,
+            sender='@.',
+            sender_priority=0,
+            active=1,
+        )
+        logger.info(f"\t+ Migrated account setting: {_account}")
     except Exception as e:
         if str(e).startswith('duplicate key value'):
-            logger.info('\t[SKIP] Setting for account %s already exists.' % _account)
+            logger.info(f"\t[SKIP] Setting for account {_account} already exists.")
         else:
-            logger.info('\t<<< ERROR >>> Error while migrating setting for account %s: %s' % (_account, str(e)))
+            logger.info(f"\t<<< ERROR >>> Error while migrating setting for account {_account}: {repr(e)}")
 
 #
 # Greylisting whitelists

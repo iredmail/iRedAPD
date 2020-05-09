@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Migrate Cluebringer throttle setting to iRedAPD.
@@ -57,7 +57,7 @@ conn = web.database(dbn=sql_dbn,
 
 conn.supports_multiple_insert = True
 
-logger.info('* Backend: %s' % backend)
+logger.info(f"* Backend: {backend}")
 
 # --------------------------
 # Get throttle settings.
@@ -71,9 +71,12 @@ outbound_settings = {}
 quotas_ids = []
 
 # Get enabled default inbound/outbound throttle.
-qr = conn.select('quotas',
-                 what='id, name, period',
-                 where=r"""name IN ('default_inbound', 'default_outbound') AND disabled=0""")
+qr = conn.select(
+    'quotas',
+    what='id, name, period',
+    where=r"""name IN ('default_inbound', 'default_outbound') AND disabled=0""",
+)
+
 if qr:
     for rcd in qr:
         _id = rcd.id
@@ -86,15 +89,19 @@ if qr:
         if _name == 'default_inbound':
             inout_type = 'inbound'
 
-        t_settings[_id] = {'account': '@.',
-                           'inout_type': inout_type,
-                           'period': _period,
-                           'priority': ACCOUNT_PRIORITIES['catchall']}
+        t_settings[_id] = {
+            'account': '@.',
+            'inout_type': inout_type,
+            'period': _period,
+            'priority': ACCOUNT_PRIORITIES['catchall'],
+        }
 
 # Get enabled throttle account and period.
-qr = conn.select('quotas',
-                 what='id, name, period',
-                 where=r"""(name LIKE 'inbound_%' OR name LIKE 'outbound_%') AND disabled=0""")
+qr = conn.select(
+    'quotas',
+    what='id, name, period',
+    where=r"""(name LIKE 'inbound_%' OR name LIKE 'outbound_%') AND disabled=0""",
+)
 
 if qr:
     for rcd in qr:
@@ -118,19 +125,23 @@ if qr:
             _account = '@' + _account
             priority = ACCOUNT_PRIORITIES['domain']
 
-        t_settings[_id] = {'account': _account,
-                           'inout_type': inout_type,
-                           'period': _period,
-                           'priority': priority}
+        t_settings[_id] = {
+            'account': _account,
+            'inout_type': inout_type,
+            'period': _period,
+            'priority': priority,
+        }
 
 if not quotas_ids:
     sys.exit('No throttle settings found. Exit.')
 
 # Get detailed throttle settings.
-qr = conn.select('quotas_limits',
-                 vars={'quotas_ids': quotas_ids},
-                 what='quotasid, type, counterlimit',
-                 where='quotasid IN $quotas_ids')
+qr = conn.select(
+    'quotas_limits',
+    vars={'quotas_ids': quotas_ids},
+    what='quotasid, type, counterlimit',
+    where='quotasid IN $quotas_ids',
+)
 
 if qr:
     for rcd in qr:
@@ -143,7 +154,7 @@ if qr:
         elif _type == 'MessageCumulativeSize':
             t_settings[_id]['max_quota'] = _counterlimit
 
-logger.info("Total %d throttle settings." % len(t_settings))
+logger.info(f"Total {len(t_settings)} throttle settings.")
 
 conn = get_db_conn('iredapd')
 for t in t_settings:
@@ -161,4 +172,4 @@ for t in t_settings:
     try:
         conn.query(sql)
     except Exception as e:
-        logger.error("<<< Error >>> %s" % str(e))
+        logger.error(f"<<< Error >>> {repr(e)}")

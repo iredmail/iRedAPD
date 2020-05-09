@@ -10,7 +10,6 @@ logger = logging.getLogger('iredapd')
 _log_level = getattr(logging, str(settings.log_level).upper())
 logger.setLevel(_log_level)
 
-# Log format
 
 if '--foreground' in sys.argv:
     _formatter = logging.Formatter('%(asctime)s %(message)s')

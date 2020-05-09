@@ -127,19 +127,19 @@ else:
 if '--add' in args:
     action = 'add'
     args.remove('--add')
-    logger.info('* Add %s %s for account: %s' % (inout_type, wblist_type, account))
+    logger.info(f"* Add {inout_type} {wblist_type} for account: {account}")
 elif '--delete' in args:
     action = 'delete'
     args.remove('--delete')
-    logger.info('* Delete %s %s for account: %s' % (inout_type, wblist_type, account))
+    logger.info(f"* Delete {inout_type} {wblist_type} for account: {account}")
 elif '--delete-all' in args:
     action = 'delete-all'
     args.remove('--delete-all')
-    logger.info('* Delete all %s %s for account: %s' % (inout_type, wblist_type, account))
+    logger.info(f"* Delete all {inout_type} {wblist_type} for account: {account}")
 elif '--list' in args:
     action = 'list'
     args.remove('--list')
-    logger.info('* List all %s %s for account: %s' % (inout_type, wblist_type, account))
+    logger.info(f"* List all {inout_type} {wblist_type} for account: {account}")
 else:
     sys.exit('No --add, --delete or --list specified. Exit.')
 
@@ -158,7 +158,7 @@ elif for_blacklist:
 # Add, delete, show
 if action == 'add':
     try:
-        logger.info('* Add senders: %s' % ', '.join(wb_senders))
+        logger.info(f"* Add senders: {', '.join(wb_senders)}")
 
         if inout_type == 'inbound':
             qr = wblist.add_wblist(conn=conn,
@@ -200,13 +200,13 @@ elif action == 'delete':
             _bl_rcpts = qr[1]['bl_rcpts']
 
             for i in set(_wl_senders):
-                logger.info('- Deleted: %s' % str(i))
+                logger.info(f"- Deleted: {i}")
             for i in set(_wl_rcpts):
-                logger.info('- Deleted: %s' % str(i))
+                logger.info(f"- Deleted: {i}")
             for i in set(_bl_senders):
-                logger.info('- Deleted: %s' % str(i))
+                logger.info(f"- Deleted: {i}")
             for i in set(_bl_rcpts):
-                logger.info('- Deleted: %s' % str(i))
+                logger.info(f"- Deleted: {i}")
         else:
             logger.error(qr[1])
     except Exception as e:

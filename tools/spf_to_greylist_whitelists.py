@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Query SPF DNS record of specified domains and import returned IP

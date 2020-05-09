@@ -22,6 +22,10 @@
     - `7779`: SRS (Sender Rewriting Scheme) for recipient address rewriting
 * You can manage iRedAPD with iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
 
+# Requirements
+
+- Python 3.5+
+
 # Manage iRedAPD with command line tools
 
 iRedMail project has a detailed tutorial to show you how to manage iRedAPD

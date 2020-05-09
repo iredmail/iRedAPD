@@ -13,10 +13,12 @@ def is_valid_sender(sender):
 
 
 def get_gl_base_setting(account, sender):
-    return {'account': account,
-            'priority': utils.get_account_priority(account),
-            'sender': sender,
-            'sender_priority': utils.get_account_priority(sender)}
+    return {
+        'account': account,
+        'priority': utils.get_account_priority(account),
+        'sender': sender,
+        'sender_priority': utils.get_account_priority(sender),
+    }
 
 
 def delete_setting(conn, account, sender):
