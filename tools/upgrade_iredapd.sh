@@ -41,7 +41,7 @@ export KERNEL_NAME="$(uname -s | tr '[a-z]' '[A-Z]')"
 export RC_SCRIPT_NAME='iredapd'
 
 # Path to some programs.
-export PYTHON_BIN='/usr/bin/python2'
+export PYTHON_BIN='/usr/bin/python3'
 export MD5_BIN='md5sum'
 
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
@@ -105,7 +105,7 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
-    export PYTHON_BIN='/usr/local/bin/python2'
+    export PYTHON_BIN='/usr/local/bin/python3'
     export MD5_BIN='md5'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
@@ -115,7 +115,7 @@ elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
-    export PYTHON_BIN='/usr/local/bin/python2'
+    export PYTHON_BIN='/usr/local/bin/python3'
     export MD5_BIN='md5'
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
@@ -501,46 +501,70 @@ fi
 #
 # Check dependent packages. Prompt to install missed ones manually.
 #
+DEP_PKGS=""
+
+# Install python3.
+if [ ! -x ${PYTHON_BIN} ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [[ X"${DISTRO_VERSION}" == X'6' ]] && DEP_PKGS="${DEP_PKGS} python34"
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python36"
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-sqlalchemy"
+fi
+
 echo "* Checking dependent Python modules:"
 echo "  + [required] python-sqlalchemy"
 if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
-        [[ X"${DISTRO_VERSION}" == X'7' ]] && install_pkg python-sqlalchemy
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && install_pkg python2-sqlalchemy
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python36-sqlalchemy"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
     fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-sqlalchemy
-    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-sqlalchemy
-    [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg databases/py-sqlalchemy
-    [ X"${DISTRO}" == X'OPENBSD' ]  && install_pkg py-sqlalchemy
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-sqlalchemy"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-sqlalchemy"
 fi
 
 echo "  + [required] dnspython"
 if [ X"$(has_python_module dns)" == X'NO' ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
-        [ X"${DISTRO_VERSION}" == X'7' ] && install_pkg python-dns
-        [ X"${DISTRO_VERSION}" == X'8' ] && install_pkg python2-dns
+        [ X"${DISTRO_VERSION}" == X'7' ] && DEP_PKGS="${DEP_PKGS} python36-dns"
+        [ X"${DISTRO_VERSION}" == X'8' ] && DEP_PKGS="${DEP_PKGS} python3-dns"
     fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-dnspython
-    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-dnspython
-    [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg dns/py-dnspython
-    [ X"${DISTRO}" == X'OPENBSD' ]  && install_pkg py-dnspython
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-dnspython"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-dnspython"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} dns/py-dnspython"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-dnspython"
 fi
 
 echo "  + [required] requests"
 if [ X"$(has_python_module requests)" == X'NO' ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
-        [ X"${DISTRO_VERSION}" == X'7' ] && install_pkg python-requests
-        [ X"${DISTRO_VERSION}" == X'8' ] && install_pkg python2-requests
+        [ X"${DISTRO_VERSION}" == X'7' ] && DEP_PKGS="${DEP_PKGS} python36-requests"
+        [ X"${DISTRO_VERSION}" == X'8' ] && DEP_PKGS="${DEP_PKGS} python3-requests"
     fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && install_pkg python-dnspython
-    [ X"${DISTRO}" == X'UBUNTU' ]   && install_pkg python-dnspython
-    [ X"${DISTRO}" == X'FREEBSD' ]  && install_pkg dns/py-dnspython
-    [ X"${DISTRO}" == X'OPENBSD' ]  && install_pkg py-dnspython
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-requests"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-requests"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} dns/py-requests"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-requests"
 fi
 
+if [ X"${DEP_PKGS}" != X'' ]; then
+    install_pkg ${DEP_PKGS}
+fi
+
+if [ ! -x ${PYTHON_BIN} ]; then
+    echo "<<< ERROR >>> Failed to install Python-3, please install it manually."
+    exit 255
+fi
 
 #
 # Upgrade to new version
