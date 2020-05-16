@@ -47,8 +47,7 @@
 import ipaddress
 from web import sqlquote
 from libs.logger import logger
-from libs import SMTP_ACTIONS
-from libs.utils import is_ipv4, wildcard_ipv4, get_policy_addresses_from_email
+from libs import SMTP_ACTIONS, utils
 import settings
 
 SMTP_PROTOCOL_STATE = ["RCPT"]
@@ -287,8 +286,8 @@ def restriction(**kwargs):
         logger.debug("SKIP: Sender is same as recipient.")
         return SMTP_ACTIONS["default"]
 
-    valid_senders = get_policy_addresses_from_email(mail=sender)
-    valid_recipients = get_policy_addresses_from_email(mail=recipient)
+    valid_senders = utils.get_policy_addresses_from_email(mail=sender)
+    valid_recipients = utils.get_policy_addresses_from_email(mail=recipient)
 
     if not kwargs["sasl_username"]:
         # Sender `username@*`
@@ -303,35 +302,27 @@ def restriction(**kwargs):
     valid_senders.append(client_address)
 
     # Append all possible wildcast IP addresses
-    if is_ipv4(client_address):
-        valid_senders += wildcard_ipv4(client_address)
+    if utils.is_ipv4(client_address):
+        valid_senders += utils.wildcard_ipv4(client_address)
 
     alias_target_sender_domain = get_alias_target_domain(alias_domain=sender_domain, conn=conn_vmail)
     if alias_target_sender_domain:
         _mail = sender.split("@", 1)[0] + "@" + alias_target_sender_domain
-        valid_senders += get_policy_addresses_from_email(mail=_mail)
+        valid_senders += utils.get_policy_addresses_from_email(mail=_mail)
 
     alias_target_rcpt_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
     if alias_target_rcpt_domain:
         _mail = recipient.split("@", 1)[0] + "@" + alias_target_rcpt_domain
-        valid_recipients += get_policy_addresses_from_email(mail=_mail)
+        valid_recipients += utils.get_policy_addresses_from_email(mail=_mail)
 
     logger.debug(f"Possible policy senders: {valid_senders}")
     logger.debug(f"Possible policy recipients: {valid_recipients}")
-
-    check_outbound = False
-    if (not check_outbound) and kwargs["sasl_username"]:
-        check_outbound = True
-
-    sender_domain_is_local = is_local_domain(conn=conn_vmail, domain=sender_domain, include_alias_domain=False)
-    if (not check_outbound) and (alias_target_sender_domain or sender_domain_is_local):
-        check_outbound = True
 
     id_of_client_cidr_networks = []
     client_cidr_network_checked = False
 
     # Outbound
-    if check_outbound:
+    if kwargs["sasl_username"]:
         logger.debug("Apply wblist for outbound message.")
 
         id_of_local_addresses = get_id_of_local_addresses(conn, valid_senders)
@@ -351,17 +342,18 @@ def restriction(**kwargs):
             return action
 
     check_inbound = False
-    if (not check_inbound) and (not kwargs["sasl_username"]):
+    if not kwargs["sasl_username"]:
         check_inbound = True
 
     if (not check_inbound) and kwargs["sasl_username"] and (sender_domain == recipient_domain):
         # Local user sends to another user in same domain
         check_inbound = True
 
-    rcpt_domain_is_local = is_local_domain(conn=conn_vmail, domain=recipient_domain, include_alias_domain=False)
-    if (not check_inbound) and (alias_target_rcpt_domain or rcpt_domain_is_local):
-        # Local user sends to another local user in different domain
-        check_inbound = True
+    if not check_inbound:
+        rcpt_domain_is_local = is_local_domain(conn=conn_vmail, domain=recipient_domain, include_alias_domain=False)
+        if alias_target_rcpt_domain or rcpt_domain_is_local:
+            # Local user sends to another local user in different domain
+            check_inbound = True
 
     if check_inbound:
         logger.debug("Apply wblist for inbound message.")
