@@ -41,8 +41,7 @@ export KERNEL_NAME="$(uname -s | tr '[a-z]' '[A-Z]')"
 export RC_SCRIPT_NAME='iredapd'
 
 # Path to some programs.
-export PYTHON_BIN='/usr/bin/python3'
-export MD5_BIN='md5sum'
+export CMD_PYTHON3='/usr/bin/python3'
 
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     export DIR_RC_SCRIPTS='/etc/init.d'
@@ -54,8 +53,12 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
         export CRON_SPOOL_DIR='/var/spool/cron'
 
-        # Get distribution version
-        if grep '\ 7\.' /etc/redhat-release &>/dev/null; then
+        # Get an check relese version.
+        if grep '\ 6\.' /etc/redhat-release &>/dev/null; then
+            echo "[ERROR] RHEL/CentOS 6 is not supported (EOF: Nov 30, 2020)."
+            echo "[ERROR] FYI: https://wiki.centos.org/About/Product"
+            exit 255
+        elif grep '\ 7\.' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='7'
         elif grep '\ 8\.' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='8'
@@ -63,6 +66,12 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
+        export DISTRO_VERSION="$(awk -F'=' '/^DISTRIB_RELEASE/ {print $2}' /etc/lsb-release)"
+
+        if echo "${DISTRO_VERSION}" | grep '^1[4567]' &>/dev/null; then
+            echo "[ERROR] Your Ubuntu release ${DISTRO_VERSION} is too old and not supported."
+            exit 255
+        fi
         # Syslog
         export SYS_USER_SYSLOG='syslog'
         export SYS_GROUP_SYSLOG='adm'
@@ -76,6 +85,11 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     elif [ -f /etc/debian_version ]; then
         # Debian
         export DISTRO='DEBIAN'
+
+        if grep '^[678]' /etc/debian_version &>/dev/null &>/dev/null; then
+            echo "[ERROR] Your Debian release ${DISTRO_VERSION} is too old and not supported."
+            exit 255
+        fi
         # Syslog
         export SYS_GROUP_SYSLOG='adm'
 
@@ -105,8 +119,7 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DIR_RC_SCRIPTS='/usr/local/etc/rc.d'
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
-    export PYTHON_BIN='/usr/local/bin/python3'
-    export MD5_BIN='md5'
+    export CMD_PYTHON3='/usr/local/bin/python3'
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
     export SYS_GROUP_ROOT='wheel'
@@ -115,8 +128,7 @@ elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
-    export PYTHON_BIN='/usr/local/bin/python3'
-    export MD5_BIN='md5'
+    export CMD_PYTHON3='/usr/local/bin/python3'
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
@@ -125,14 +137,13 @@ fi
 
 if [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export HOSTNAME="$(hostname)"
+
+    # Command used to genrate a random string.
+    # Usage: str="$(${RANDOM_STRING})"
+    export RANDOM_STRING='eval </dev/random tr -cd [:alnum:] | fold -w 32 | head -1'
 else
     export HOSTNAME="$(hostname -f)"
-fi
-
-if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
-    export RANDOM_STRING='eval </dev/urandom tr -dc A-Za-z0-9 | (head -c $1 &>/dev/null || head -c 30)'
-else
-    export RANDOM_STRING='eval echo $RANDOM | md5'
+    export RANDOM_STRING='eval </dev/urandom tr -dc A-Za-z0-9 | (head -c $1 &>/dev/null || head -c 32)'
 fi
 
 export CRON_FILE_ROOT="${CRON_SPOOL_DIR}/${SYS_USER_ROOT}"
@@ -186,7 +197,7 @@ install_pkg()
 has_python_module()
 {
     for mod in $@; do
-        ${PYTHON_BIN} -c "import $mod" &>/dev/null
+        ${CMD_PYTHON3} -c "import $mod" &>/dev/null
         if [ X"$?" == X'0' ]; then
             echo 'YES'
         else
@@ -299,7 +310,7 @@ export IREDAPD_DB_NAME='iredapd'
 if ! grep '^iredapd_db_' ${IREDAPD_CONF_PY} &>/dev/null; then
     export IREDAPD_DB_SERVER='127.0.0.1'
     export IREDAPD_DB_USER='iredapd'
-    export IREDAPD_DB_PASSWD="$(echo $RANDOM | ${MD5_BIN} | awk '{print $1}')"
+    export IREDAPD_DB_PASSWD="$(${RANDOM_STRING})"
 
     mkdir /tmp/iredapd/ 2>/dev/null
     cp -f ${ROOTDIR}/../SQL/*sql /tmp/iredapd
@@ -504,7 +515,7 @@ fi
 DEP_PKGS=""
 
 # Install python3.
-if [ ! -x ${PYTHON_BIN} ]; then
+if [ ! -x ${CMD_PYTHON3} ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
         [[ X"${DISTRO_VERSION}" == X'6' ]] && DEP_PKGS="${DEP_PKGS} python34"
         [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3"
@@ -514,7 +525,18 @@ if [ ! -x ${PYTHON_BIN} ]; then
     [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3"
     [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3"
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-sqlalchemy"
+
+    if [ X"${DISTRO}" == X'OPENBSD' ]; then
+        # Create symbol link.
+        for v in 3.8 3.7 3.6 3.5 3.4; do
+            if [ -x /usr/local/bin/python${v} ]; then
+                ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
+                break
+            fi
+        done
+    else
+        DEP_PKGS="${DEP_PKGS} python%3"
+    fi
 fi
 
 echo "* Checking dependent Python modules:"
@@ -561,7 +583,17 @@ if [ X"${DEP_PKGS}" != X'' ]; then
     install_pkg ${DEP_PKGS}
 fi
 
-if [ ! -x ${PYTHON_BIN} ]; then
+# Re-check py3 and create symbol link.
+if [ X"${DISTRO}" == X'OPENBSD' ]; then
+    for v in 3.8 3.7 3.6 3.5 3.4; do
+        if [ -x /usr/local/bin/python${v} ]; then
+            ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
+            break
+        fi
+    done
+fi
+
+if [ ! -x ${CMD_PYTHON3} ]; then
     echo "<<< ERROR >>> Failed to install Python-3, please install it manually."
     exit 255
 fi
@@ -819,7 +851,7 @@ fi
 if ! grep '/opt/iredapd/tools/cleanup_db.py' ${CRON_FILE_ROOT} &>/dev/null; then
     cat >> ${CRON_FILE_ROOT} <<EOF
 # iRedAPD: Clean up expired tracking records hourly.
-1   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/cleanup_db.py &>/dev/null
+1   *   *   *   *   ${CMD_PYTHON3} ${IREDAPD_ROOT_DIR}/tools/cleanup_db.py &>/dev/null
 EOF
 fi
 
@@ -828,10 +860,13 @@ if ! grep 'spf_to_greylist_whitelists.py' ${CRON_FILE_ROOT} &>/dev/null; then
     cat >> ${CRON_FILE_ROOT} <<EOF
 # iRedAPD: Convert specified SPF DNS record of specified domain names to IP
 #          addresses/networks every 10 minutes.
-*/30   *   *   *   *   ${PYTHON_BIN} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylist_whitelists.py &>/dev/null
+*/30   *   *   *   *   ${CMD_PYTHON3} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylist_whitelists.py &>/dev/null
 EOF
 fi
 
+echo "* Replace py2 by py3 in cron jobs."
+perl -pi -e 's#(.*)python (.*/opt/iredapd/tools/.*)#${1}$ENV{CMD_PYTHON3}${2}#' ${CRON_FILE_ROOT}
+perl -pi -e 's#(.*)python2 (.*/opt/iredapd/tools/.*)#${1}$ENV{CMD_PYTHON3}${2}#' ${CRON_FILE_ROOT}
 
 #------------------------------
 # Clean up.
