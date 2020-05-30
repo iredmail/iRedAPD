@@ -36,11 +36,11 @@ else:
     # backend in ['ldap', 'mysql']
     sql_dbn = 'mysql'
 
-if not (cluebringer_db_host and
-        cluebringer_db_port and
-        cluebringer_db_name and
-        cluebringer_db_user and
-        cluebringer_db_password):
+if not (cluebringer_db_host
+        and cluebringer_db_port
+        and cluebringer_db_name
+        and cluebringer_db_user
+        and cluebringer_db_password):
     # Not run cluebringer
     sys.exit("Incorrect database info, please update cluebringer_db_* parameters.")
 
@@ -59,7 +59,7 @@ conn_cb = web.database(
 
 conn_cb.supports_multiple_insert = True
 
-logger.info(f"* Backend: {backend}")
+logger.info("* Backend: {0}".format(backend))
 
 #
 # Global greylisting setting
@@ -123,12 +123,12 @@ for r in qr:
             sender_priority=0,
             active=1,
         )
-        logger.info(f"\t+ Migrated account setting: {_account}")
+        logger.info("\t+ Migrated account setting: {0}".format(_account))
     except Exception as e:
         if str(e).startswith('duplicate key value'):
-            logger.info(f"\t[SKIP] Setting for account {_account} already exists.")
+            logger.info("\t[SKIP] Setting for account {0} already exists.".format(_account))
         else:
-            logger.info(f"\t<<< ERROR >>> Error while migrating setting for account {_account}: {repr(e)}")
+            logger.info("\t<<< ERROR >>> Error while migrating setting for account {0}: {1}".format(_account, repr(e)))
 
 #
 # Greylisting whitelists
@@ -148,5 +148,5 @@ for rcd in qr:
         sql = """INSERT INTO greylisting_whitelists (account, sender, comment) VALUES ('@.', '%s', '%s');""" % (wl, comment)
         try:
             conn_iredapd.query(sql)
-        except Exception as e:
+        except:
             pass

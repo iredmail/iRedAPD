@@ -99,7 +99,7 @@ if not domains:
     logger.info('* No valid domain names. Abort.')
     sys.exit()
 
-logger.info(f"* {len(domains)} mail domains in total.")
+logger.info("* {0} mail domains in total.".format(len(domains)))
 
 all_ips = set()
 domain_ips = {}
@@ -110,7 +110,7 @@ for domain in domains:
     if 'spf:' + domain in queried_domains:
         continue
 
-    logger.info(f"\t+ [{domain}]")
+    logger.info("\t+ [{0}]".format(domain))
 
     # Query SPF record
     qr = dnsspf.query_spf(domain, queried_domains=queried_domains)
@@ -118,7 +118,7 @@ for domain in domains:
     queried_domains = qr['queried_domains']
 
     if spf:
-        logger.debug(f"\t\t+ SPF -> {spf}")
+        logger.debug("\t\t+ SPF -> {0}".format(spf))
 
         # Parse returned SPF record
         qr = dnsspf.parse_spf(domain, spf, queried_domains=queried_domains, returned_ips=returned_ips)
@@ -133,7 +133,7 @@ for domain in domains:
     domain_ips[domain] = ips
     all_ips.update(ips)
 
-    logger.debug(f"\t\t+ Result: {ips}")
+    logger.debug("\t\t+ Result: {0}".format(ips))
 
 if not all_ips:
     logger.info('* No IP address/network found. Exit.')
@@ -158,7 +158,7 @@ for domain in domain_ips:
                     vars=sql_vars,
                     where="comment=$comment")
     except Exception as e:
-        logger.info(f"* <<< ERROR >>> Cannot delete old record for domain {domain}: {e}")
+        logger.info("* <<< ERROR >>> Cannot delete old record for domain {0}: {1}".format(domain, repr(e)))
 
     # Insert new records
     for ip in domain_ips[domain]:
@@ -187,7 +187,7 @@ for domain in domain_ips:
             if e.__class__.__name__ == 'IntegrityError':
                 pass
             else:
-                logger.error(f"* <<< ERROR >>> Cannot insert new record for domain {domain}: {repr(e)}")
+                logger.error("* <<< ERROR >>> Cannot insert new record for domain {0}: {1}".format(domain, repr(e)))
 
 if submit_to_sql_db:
     logger.info('* Store domain names in SQL database as greylisting whitelists.')
@@ -195,4 +195,4 @@ if submit_to_sql_db:
         try:
             conn.insert('greylisting_whitelist_domains', domain=d)
         except Exception as e:
-            logger.error(f"<<< ERROR >>> {e}")
+            logger.error("<<< ERROR >>> {0}".format(repr(e)))

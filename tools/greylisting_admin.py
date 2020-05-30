@@ -197,7 +197,7 @@ gl_setting = lib_gl.get_gl_base_setting(account=rcpt, sender=sender)
 
 # Perform the operations
 if action == 'enable':
-    logger.info(f"* Enable greylisting: {sender} -> {rcpt}")
+    logger.info("* Enable greylisting: {0} -> {1}".format(sender, rcpt))
 
     qr = lib_gl.enable_greylisting(conn=conn2,
                                    account=rcpt,
@@ -206,7 +206,7 @@ if action == 'enable':
         logger.info(qr[1])
 
 elif action == 'disable':
-    logger.info(f"* Disable greylisting: {sender} -> {rcpt}")
+    logger.info("* Disable greylisting: {0} -> {1}".format(sender, rcpt))
 
     qr = lib_gl.disable_greylisting(conn=conn2,
                                     account=rcpt,
@@ -216,7 +216,7 @@ elif action == 'disable':
         logger.info(qr[1])
 
 elif action == 'delete':
-    logger.info(f"* Delete greylisting setting: {sender} -> {rcpt}")
+    logger.info("* Delete greylisting setting: {0} -> {1}".format(sender, rcpt))
     qr = lib_gl.delete_setting(conn=conn2,
                                account=rcpt,
                                sender=sender)
@@ -225,11 +225,11 @@ elif action == 'delete':
         logger.info(qr[1])
 
 elif action == 'whitelist-domain':
-    logger.info(f"* Whitelisting sender domain: {sender_domain}")
+    logger.info("* Whitelisting sender domain: {0}".format(sender_domain))
     lib_gl.add_whitelist_domain(conn=conn2, domain=sender_domain)
 
 elif action == 'remove-whitelist-domain':
-    logger.info(f"* Remove whitelisted sender domain: {sender_domain}")
+    logger.info("* Remove whitelisted sender domain: {0}".format(sender_domain))
     lib_gl.remove_whitelisted_domain(domain=sender_domain, conn=conn2)
 
 elif action == 'list':
@@ -301,10 +301,10 @@ elif action == 'list-whitelists':
                              order='account ASC, sender ASC')
 
         for r in qr:
-            logger.info(f"{r.sender} -> {r.account}, '{r.comment}'")
+            logger.info("{0} -> {1}, '{2}'".format(r.sender, r.account, r.comment))
 
         for r in qr_spf:
-            logger.info(f"{r.sender} -> {r.account}, '{r.comment}'")
+            logger.info("{0} -> {1}, '{2}'".format(r.sender, r.account, r.comment))
     except Exception as e:
         logger.info(repr(e))
 elif action == 'add-whitelist':
