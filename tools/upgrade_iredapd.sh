@@ -528,14 +528,16 @@ if [ ! -x ${CMD_PYTHON3} ]; then
 
     if [ X"${DISTRO}" == X'OPENBSD' ]; then
         # Create symbol link.
-        for v in 3.8 3.7 3.6 3.5 3.4; do
+        for v in 3.7 3.6 3.5 3.4; do
             if [ -x /usr/local/bin/python${v} ]; then
                 ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
                 break
             fi
         done
     else
-        DEP_PKGS="${DEP_PKGS} python%3"
+        # OpenBSD 6.6, 6.7 should use Python 3.7 because all `py3-*` binary
+        # packages were built against Python 3.7.
+        DEP_PKGS="${DEP_PKGS} python%3.7"
     fi
 fi
 
@@ -585,7 +587,7 @@ fi
 
 # Re-check py3 and create symbol link.
 if [ X"${DISTRO}" == X'OPENBSD' ]; then
-    for v in 3.8 3.7 3.6 3.5 3.4; do
+    for v in 3.7 3.6 3.5 3.4; do
         if [ -x /usr/local/bin/python${v} ]; then
             ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
             break
