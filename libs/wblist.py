@@ -380,25 +380,20 @@ def delete_all_wblist(conn,
     # have daily cron job to delete them (tools/cleanup_amavisd_db.py).
     try:
         if wl_senders:
-            conn.delete('wblist',
-                        vars={'user_id': user_id},
-                        where="rid=$user_id AND wb='W'")
+            sql = "DELETE FROM wblist WHERE rid=%d AND wb='W'" % int(user_id)
+            conn.execute(sql)
 
         if bl_senders:
-            conn.delete('wblist',
-                        vars={'user_id': user_id},
-                        where="rid=$user_id AND wb='B'")
+            sql = "DELETE FROM wblist WHERE rid=%d AND wb='B'" % int(user_id)
+            conn.execute(sql)
 
         if wl_rcpts:
-            conn.delete('outbound_wblist',
-                        vars={'user_id': user_id},
-                        where="sid=$user_id AND wb='W'")
+            sql = "DELETE FROM outbound_wblist WHERE sid=%d AND wb='W'" % int(user_id)
+            conn.execute(sql)
 
         if bl_rcpts:
-            conn.delete('outbound_wblist',
-                        vars={'user_id': user_id},
-                        where="sid=$user_id AND wb='B'")
-
+            sql = "DELETE FROM outbound_wblist WHERE sid=%d AND wb='B'" % int(user_id)
+            conn.execute(sql)
     except Exception as e:
         return (False, str(e))
 

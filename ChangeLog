@@ -4,6 +4,8 @@ iRedAPD-4.0:
     https://github.com/iredmail/iRedAPD/releases
 
     - Drop Python-2 support and completely switch to Python-3.
+    - Fixed issues:
+        - tools/wblist_admin.py: Can not delete all whitelists or blacklists.
 
 iRedAPD-3.6:
     - Improvements:
