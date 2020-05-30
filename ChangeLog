@@ -1,6 +1,6 @@
 iRedAPD-4.0:
-    NOTE: Only Python-3 is supported. If you're looking for Python-2 support,
-    please try the latest iRedAPD-3.x release:
+    NOTE: Python 3.5 and later are required. If you're looking for
+    Python 2 support, please try the latest iRedAPD-3.x release:
     https://github.com/iredmail/iRedAPD/releases
 
     - Drop Python-2 support and completely switch to Python-3.

@@ -86,7 +86,7 @@ def restriction(**kwargs):
     record = qr.fetchone()
     if record:
         rdns = str(record[0]).lower()
-        logger.info(f'[{client_address}] Reverse client hostname is whitelisted: {rdns}.')
+        logger.info("[{0}] Reverse client hostname is whitelisted: {1}.".format(client_address, rdns))
 
         # better use 'DUNNO' instead of 'OK'
         return SMTP_ACTIONS['default']
@@ -101,7 +101,7 @@ def restriction(**kwargs):
     record = qr.fetchone()
     if record:
         rdns = str(record[0]).lower()
-        logger.info(f'[{client_address}] Reverse client hostname is blacklisted: {rdns}')
+        logger.info("[{0}] Reverse client hostname is blacklisted: {1}".format(client_address, rdns))
         return reject_action
 
     return SMTP_ACTIONS['default']

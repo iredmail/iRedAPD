@@ -37,8 +37,10 @@ def main():
     db_conns = utils.get_required_db_conns()
 
     # Initialize policy daemon.
-    logger.info(f"Starting iRedAPD (version: {__version__}, backend: {settings.backend}), "
-                f"listening on {settings.listen_address}:{settings.listen_port}.")
+    logger.info("Starting iRedAPD (version: {0}, backend: {1}), "
+                "listening on {2}:{3}.".format(
+                    __version__, settings.backend,
+                    settings.listen_address, settings.listen_port))
     local_addr = (settings.listen_address, int(settings.listen_port))
     DaemonSocket(local_addr=local_addr,
                  db_conns=db_conns,
@@ -46,15 +48,15 @@ def main():
                  plugins=settings.plugins)
 
     if (settings.srs_secrets and settings.srs_domain):
-        logger.info(f"Starting SRS sender rewriting channel, listening on "
-                    f"{settings.listen_address}:{settings.srs_forward_port}.")
+        logger.info("Starting SRS sender rewriting channel, listening on "
+                    "{0}:{1}".format(settings.listen_address, settings.srs_forward_port))
         local_addr = (settings.listen_address, int(settings.srs_forward_port))
         DaemonSocket(local_addr=local_addr,
                      db_conns=db_conns,
                      policy_channel='srs_sender')
 
-        logger.info(f"Starting SRS recipient rewriting channel, listening on "
-                    f"{settings.listen_address}:{settings.srs_reverse_port}.")
+        logger.info("Starting SRS recipient rewriting channel, listening on "
+                    "{0}:{1}".format(settings.listen_address, settings.srs_reverse_port))
         local_addr = (settings.listen_address, int(settings.srs_reverse_port))
         DaemonSocket(local_addr=local_addr,
                      db_conns=db_conns,
@@ -67,7 +69,7 @@ def main():
         try:
             daemon.daemonize(no_close=True)
         except Exception as e:
-            logger.error(f"Error in daemon.daemonize: {repr(e)}")
+            logger.error("Error in daemon.daemonize: {0}".format(repr(e)))
 
     # Write pid number into pid file.
     f = open(settings.pid_file, 'w')
@@ -101,7 +103,7 @@ def main():
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        logger.error(f"Error in asyncore.loop: {repr(e)}")
+        logger.error("Error in asyncore.loop: {0}".format(repr(e)))
 
 
 if __name__ == '__main__':

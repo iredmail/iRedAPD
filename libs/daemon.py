@@ -167,7 +167,7 @@ def daemonize(no_close=False):
             _redirectFileDescriptors()
 
     except Exception as e:
-        raise DaemonError(f"Error during daemonizing: {repr(e)}")
+        raise DaemonError("Error during daemonizing: {0}".format(repr(e)))
 
 
 # ---------------------------------------------------------------------------
@@ -202,9 +202,9 @@ def _redirectFileDescriptors():
             os.close(fd)
         except OSError as e:
             # File descriptor wasn't open. Ignore.
-            logging.info(f"Error in _redirectFileDescriptors 1: {repr(e)}")
+            logging.info("Error in _redirectFileDescriptors 1: {0}".format(repr(e)))
         except Exception as e:
-            logging.info(f"Error in _redirectFileDescriptors 2: {repr(e)}")
+            logging.info("Error in _redirectFileDescriptors 2: {0}".format(repr(e)))
 
     # Redirect standard input, output and error to something safe.
     # os.open() is guaranteed to return the lowest available file

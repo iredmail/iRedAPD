@@ -84,13 +84,13 @@ def apply_plugin(plugin, **kwargs):
     action = SMTP_ACTIONS['default']
     plugin_name = plugin.__name__
 
-    logger.debug(f"--> Apply plugin: {plugin_name}")
+    logger.debug("--> Apply plugin: {0}".format(plugin_name))
     try:
         action = plugin.restriction(**kwargs)
-        logger.debug(f"<-- Result: {action}")
+        logger.debug("<-- Result: {0}".format(action))
     except:
         err_msg = get_traceback()
-        logger.error(f"<!> Error while applying plugin '{plugin_name}': {err_msg}")
+        logger.error("<!> Error while applying plugin '{0}': {1}".format(plugin_name, err_msg))
 
     return action
 
@@ -279,7 +279,7 @@ def get_db_conn(db_name):
                              max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
         return conn
     except Exception as e:
-        logger.error(f"Error while creating SQL connection: {e}")
+        logger.error("Error while creating SQL connection: {0}".format(repr(e)))
         return None
 
 
@@ -332,7 +332,7 @@ def is_trusted_client(client_address):
     msg = 'Client address (%s) is trusted (listed in MYNETWORKS).' % client_address
 
     if client_address in ['127.0.0.1', '::1']:
-        logger.debug(f"Client address is trusted (localhost): {client_address}.")
+        logger.debug("Client address is trusted (localhost): {0}".format(client_address))
         return True
 
     if client_address in TRUSTED_IPS:
@@ -446,32 +446,44 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
 
     if sasl_username:
         if sasl_username == sender:
-            _log_sender_to_rcpt = f"{sasl_username} => {recipient}"
+            _log_sender_to_rcpt = "{0} => {1}".format(sasl_username, recipient)
         else:
-            _log_sender_to_rcpt = f"{sasl_username} => {sender} -> {recipient}"
+            _log_sender_to_rcpt = "{0} => {1} -> {2}".format(sasl_username, sender, recipient)
     else:
-        _log_sender_to_rcpt = f"{sender} -> {recipient}"
+        _log_sender_to_rcpt = "{0} -> {1}".format(sender, recipient)
 
     _time = ''
     if start_time and end_time:
         _shift_time = end_time - start_time
-        _time = f"{_shift_time:.4f}s"
+        _time = "{0:.4f}s".format(_shift_time)
 
     # Log final action
     if smtp_session_data['protocol_state'] == 'RCPT':
-        logger.info(f"[{client_address}] {protocol_state}, {_log_sender_to_rcpt}, "
-                    f"{action} [sasl_username={sasl_username}, sender={sender}, "
-                    f"client_name={client_name}, "
-                    f"reverse_client_name={reverse_client_name}, "
-                    f"helo={helo}, "
-                    f"encryption_protocol={smtp_session_data.get('encryption_protocol', '')}, "
-                    f"encryption_cipher={smtp_session_data.get('encryption_cipher', '')}, "
-                    f"server_port={smtp_session_data.get('server_port', '')}, "
-                    f"process_time={_time}]")
+        logger.info("[{0}] {1}, {2}, "
+                    "{3} [sasl_username={4}, sender={5}, "
+                    "client_name={6}, "
+                    "reverse_client_name={7}, "
+                    "helo={8}, "
+                    "encryption_protocol={9}, "
+                    "encryption_cipher={10}, "
+                    "server_port={11}, "
+                    "process_time={12}]".format(
+                        client_address, protocol_state, _log_sender_to_rcpt,
+                        action, sasl_username, sender,
+                        client_name,
+                        reverse_client_name,
+                        helo,
+                        smtp_session_data.get('encryption_protocol', ''),
+                        smtp_session_data.get('encryption_cipher', ''),
+                        smtp_session_data.get('server_port', ''),
+                        _time))
     else:
-        logger.info(f"[{client_address}] {protocol_state}, {_log_sender_to_rcpt}, "
-                    f"{action} [recipient_count={smtp_session_data.get('recipient_count', 0)}, "
-                    f"size={smtp_session_data.get('size', 0)}, process_time={_time}]")
+        logger.info("[{0}] {1}, {2}, "
+                    "{3} [recipient_count={4}, "
+                    "size={5}, process_time={6}]".format(
+                        client_address, protocol_state, _log_sender_to_rcpt,
+                        action, smtp_session_data.get('recipient_count', 0),
+                        smtp_session_data.get('size', 0), _time))
 
     return None
 
@@ -499,7 +511,7 @@ def load_enabled_plugins(plugins):
 
         # Skip non-existing plugin.
         if not os.path.isfile(plugin_file):
-            logger.error(f"Plugin {p} ({plugin_file}) does not exist.")
+            logger.error("Plugin {0} ({1}) does not exist.".format(p, plugin_file))
             continue
 
         # If plugin doesn't have a pre-defined priority, set it to 0 (lowest)
@@ -520,9 +532,9 @@ def load_enabled_plugins(plugins):
     for plugin in ordered_plugins:
         try:
             loaded_plugins.append(__import__(plugin))
-            logger.info(f"Loading plugin (priority: {_plugin_priorities[plugin]}): {plugin}")
+            logger.info("Loading plugin (priority: {0}): {1}".format(_plugin_priorities[plugin], plugin))
         except Exception as e:
-            logger.error(f"Error while loading plugin ({plugin}): {e}")
+            logger.error("Error while loading plugin '{0}': {1}".format(plugin, repr(e)))
 
     # Get list of LDAP query attributes
     sender_search_attrlist = []
@@ -562,9 +574,9 @@ def get_required_db_conns():
             except ldap.INVALID_CREDENTIALS:
                 logger.error('LDAP bind failed: incorrect bind dn or password.')
             except Exception as e:
-                logger.error(f"LDAP bind failed: {e}")
+                logger.error("LDAP bind failed: {0}".format(repr(e)))
         except Exception as e:
-            logger.error(f"Fail2ed to establish LDAP connection: {e}")
+            logger.error("Fail2ed to establish LDAP connection: {0}".format(repr(e)))
             conn_vmail = None
     else:
         # settings.backend in ['mysql', 'pgsql']
@@ -591,7 +603,7 @@ def sendmail_with_cmd(from_address, recipients, message_text):
     if isinstance(recipients, (list, tuple, set)):
         recipients = ','.join(recipients)
 
-    cmd = [settings.CMD_SENDMAIL, '-f', from_address, recipients]
+    cmd = [settings.CMD_SENDMAIL, "-f", from_address, recipients]
 
     try:
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
@@ -733,9 +745,9 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
            sqlquote(smtp_session_data.get('recipient_domain', '')))
 
     try:
-        logger.debug(f"[SQL] Insert into smtp_sessions: {sql}")
+        logger.debug("[SQL] Insert into smtp_sessions: {0}".format(sql))
         conn.execute(sql)
     except Exception as e:
-        logger.error(f"<!> Error while logging smtp action: {e}")
+        logger.error("<!> Error while logging smtp action: {0}".format(repr(e)))
 
     return None

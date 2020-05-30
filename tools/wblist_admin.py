@@ -127,19 +127,19 @@ else:
 if '--add' in args:
     action = 'add'
     args.remove('--add')
-    logger.info(f"* Add {inout_type} {wblist_type} for account: {account}")
+    logger.info("* Add {0} {1} for account: {2}".format(inout_type, wblist_type, account))
 elif '--delete' in args:
     action = 'delete'
     args.remove('--delete')
-    logger.info(f"* Delete {inout_type} {wblist_type} for account: {account}")
+    logger.info("* Delete {0} {1} for account: {2}".format(inout_type, wblist_type, account))
 elif '--delete-all' in args:
     action = 'delete-all'
     args.remove('--delete-all')
-    logger.info(f"* Delete all {inout_type} {wblist_type} for account: {account}")
+    logger.info("* Delete all {0} {1} for account: {2}".format(inout_type, wblist_type, account))
 elif '--list' in args:
     action = 'list'
     args.remove('--list')
-    logger.info(f"* List all {inout_type} {wblist_type} for account: {account}")
+    logger.info("* List all {0} {1} for account: {2}".format(inout_type, wblist_type, account))
 else:
     sys.exit('No --add, --delete or --list specified. Exit.')
 
@@ -158,7 +158,7 @@ elif for_blacklist:
 # Add, delete, show
 if action == 'add':
     try:
-        logger.info(f"* Add senders: {', '.join(wb_senders)}")
+        logger.info("* Add senders: {0}".format(', '.join(wb_senders)))
 
         if inout_type == 'inbound':
             qr = wblist.add_wblist(conn=conn,
@@ -200,13 +200,13 @@ elif action == 'delete':
             _bl_rcpts = qr[1]['bl_rcpts']
 
             for i in set(_wl_senders):
-                logger.info(f"- Deleted: {i}")
+                logger.info("- Deleted: {0}".format(i))
             for i in set(_wl_rcpts):
-                logger.info(f"- Deleted: {i}")
+                logger.info("- Deleted: {0}".format(i))
             for i in set(_bl_senders):
-                logger.info(f"- Deleted: {i}")
+                logger.info("- Deleted: {0}".format(i))
             for i in set(_bl_rcpts):
-                logger.info(f"- Deleted: {i}")
+                logger.info("- Deleted: {0}".format(i))
         else:
             logger.error(qr[1])
     except Exception as e:

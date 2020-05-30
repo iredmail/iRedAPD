@@ -37,11 +37,11 @@ else:
     # backend in ['ldap', 'mysql']
     sql_dbn = 'mysql'
 
-if not (cluebringer_db_host and
-        cluebringer_db_port and
-        cluebringer_db_name and
-        cluebringer_db_user and
-        cluebringer_db_password):
+if not (cluebringer_db_host
+        and cluebringer_db_port
+        and cluebringer_db_name
+        and cluebringer_db_user
+        and cluebringer_db_password):
     # Not run cluebringer
     sys.exit("Incorrect database info, please update cluebringer_db_* parameters.")
 
@@ -57,7 +57,7 @@ conn = web.database(dbn=sql_dbn,
 
 conn.supports_multiple_insert = True
 
-logger.info(f"* Backend: {backend}")
+logger.info("* Backend: {0}".format(backend))
 
 # --------------------------
 # Get throttle settings.
@@ -154,7 +154,7 @@ if qr:
         elif _type == 'MessageCumulativeSize':
             t_settings[_id]['max_quota'] = _counterlimit
 
-logger.info(f"Total {len(t_settings)} throttle settings.")
+logger.info("Total {0} throttle settings.".format(len(t_settings)))
 
 conn = get_db_conn('iredapd')
 for t in t_settings:
@@ -172,4 +172,4 @@ for t in t_settings:
     try:
         conn.query(sql)
     except Exception as e:
-        logger.error(f"<<< Error >>> {repr(e)}")
+        logger.error("<<< Error >>> {0}".format(repr(e)))

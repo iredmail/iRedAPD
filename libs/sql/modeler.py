@@ -59,7 +59,7 @@ class Modeler:
                 target_protocol_state = ['RCPT']
 
             if protocol_state not in target_protocol_state:
-                logger.debug(f"Skip plugin: {plugin.__name__} (protocol_state != {protocol_state})")
+                logger.debug("Skip plugin: {0} (protocol_state != {1})".format(plugin.__name__, protocol_state))
                 continue
 
             action = utils.apply_plugin(plugin, **plugin_kwargs)
