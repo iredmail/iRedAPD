@@ -42,6 +42,7 @@ export RC_SCRIPT_NAME='iredapd'
 
 # Path to some programs.
 export CMD_PYTHON3='/usr/bin/python3'
+export CMD_PIP3='pip3'
 
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     export DIR_RC_SCRIPTS='/etc/init.d'
@@ -129,6 +130,17 @@ elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
     export CMD_PYTHON3='/usr/local/bin/python3'
+
+    if [ -x /usr/local/bin/pip3 ]; then
+        :
+    else
+        for version in 3.7 3.6 3.5; do
+            if [ -x /usr/local/bin/pip${version} ]; then
+                export CMD_PIP3="/usr/local/bin/pip${version}"
+                break
+            fi
+        done
+    fi
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
@@ -177,17 +189,22 @@ get_iredapd_setting()
     echo "${value}"
 }
 
-install_pkg()
+install_pkgs()
 {
-    echo "Install package: $@"
-
     if [ X"${DISTRO}" == X'RHEL' ]; then
+        echo "Install packages: $@"
         yum -y install $@
     elif [ X"${DISTRO}" == X'DEBIAN' -o X"${DISTRO}" == X'UBUNTU' ]; then
+        echo "Install packages: $@"
         apt-get install -y --force-yes $@
     elif [ X"${DISTRO}" == X'FREEBSD' ]; then
-        cd /usr/ports/$@ && make install clean
+        for _port in $@; do
+            echo "Install package: ${_port}"
+            cd /usr/ports/${_port}
+            make USES=python:3.4+ install clean
+        done
     elif [ X"${DISTRO}" == X'OPENBSD' ]; then
+        echo "Install packages: $@"
         pkg_add -r $@
     else
         echo "<< ERROR >> Please install package(s) manually: $@"
@@ -513,6 +530,7 @@ fi
 # Check dependent packages. Prompt to install missed ones manually.
 #
 DEP_PKGS=""
+DEP_PIP3_MODS=""
 
 # Install python3.
 if [ ! -x ${CMD_PYTHON3} ]; then
@@ -581,8 +599,72 @@ if [ X"$(has_python_module requests)" == X'NO' ]; then
     [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-requests"
 fi
 
+echo "  + [required] web.py"
+if [ X"$(has_python_module web)" == X'NO' ]; then
+    # FreeBSD ports has 0.40. So we install the latest with pip.
+    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py>=0.51"
+fi
+
+if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
+    # LDAP backend
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        if [ X"${DISTRO_VERSION}" == X'7' ]; then
+            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
+        fi
+    fi
+
+    if [ X"${DISTRO}" == X'DEBIAN' ]; then
+        DEP_PKGS="${DEP_PKGS} python3-pymysql"
+        if [ X"${DISTRO_VERSION}" == X'9' ]; then
+            DEP_PKGS="${DEP_PKGS} python3-pyldap"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-ldap"
+        fi
+    fi
+
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-ldap python3-pymysql"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} net/py-ldap databases/py-pymysql"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-ldap py3-mysqlclient"
+
+elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'mysql' &>/dev/null; then
+    # MySQL/MariaDB backend
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        if [ X"${DISTRO_VERSION}" == X'7' ]; then
+            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
+        fi
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-pymysql"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-mysqlclient"
+
+elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'pgsql' &>/dev/null; then
+    # PostgreSQL backend
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        if [ X"${DISTRO_VERSION}" == X'7' ]; then
+            DEP_PKGS="${DEP_PKGS} python36-psycopg2"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+        fi
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-psycopg2"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-psycopg2"
+fi
+
 if [ X"${DEP_PKGS}" != X'' ]; then
-    install_pkg ${DEP_PKGS}
+    install_pkgs ${DEP_PKGS}
+fi
+
+if [ X"${DEP_PIP3_MODS}" != X'' ]; then
+    ${CMD_PIP3} install -U ${DEP_PIP3_MODS}
 fi
 
 # Re-check py3 and create symbol link.

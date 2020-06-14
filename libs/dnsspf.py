@@ -210,6 +210,10 @@ def parse_spf(domain: str,
             mx.add(domain)
         elif tag == 'ptr':
             ips.add('@' + domain)
+        elif tag.startswith('exists:'):
+            # TODO http://www.open-spf.org/RFC_4408/#mech-exists
+            # Support macro `%{i}` first.
+            pass
 
     # Find IP in included_domains
     if included_domains:
