@@ -537,7 +537,7 @@ if [ ! -x ${CMD_PYTHON3} ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
         [[ X"${DISTRO_VERSION}" == X'6' ]] && DEP_PKGS="${DEP_PKGS} python34"
         [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3"
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python36"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38"
     fi
 
     [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3"
