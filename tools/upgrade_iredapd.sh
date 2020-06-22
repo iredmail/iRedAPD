@@ -48,6 +48,7 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     export DIR_RC_SCRIPTS='/etc/init.d'
     export SYSLOG_CONF_DIR='/etc/rsyslog.d'
     export LOGROTATE_DIR='/etc/logrotate.d'
+
     if [ -f /etc/redhat-release ]; then
         # RHEL/CentOS
         export DISTRO='RHEL'
@@ -55,24 +56,29 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         export CRON_SPOOL_DIR='/var/spool/cron'
 
         # Get an check relese version.
-        if grep '\ 6\.' /etc/redhat-release &>/dev/null; then
-            echo "[ERROR] RHEL/CentOS 6 is not supported (EOF: Nov 30, 2020)."
-            echo "[ERROR] FYI: https://wiki.centos.org/About/Product"
-            exit 255
-        elif grep '\ 7\.' /etc/redhat-release &>/dev/null; then
+        if grep '\ 7\.' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='7'
         elif grep '\ 8\.' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='8'
+            export CMD_PIP3='pip3.8'
+        else
+            export UNSUPPORTED_RELEASE="YES"
         fi
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
+
+        # Ubuntu version number and code name:
+        #   - 18.04: bionic
+        #   - 20.04: focal
         export DISTRO_VERSION="$(awk -F'=' '/^DISTRIB_RELEASE/ {print $2}' /etc/lsb-release)"
+        export DISTRO_CODENAME="$(awk -F'=' '/^DISTRIB_CODENAME/ {print $2}' /etc/lsb-release)"
 
         if echo "${DISTRO_VERSION}" | grep '^1[4567]' &>/dev/null; then
             echo "[ERROR] Your Ubuntu release ${DISTRO_VERSION} is too old and not supported."
             exit 255
         fi
+
         # Syslog
         export SYS_USER_SYSLOG='syslog'
         export SYS_GROUP_SYSLOG='adm'
@@ -83,14 +89,21 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
             export IREDADMIN_CONF_PY='/opt/www/iredadmin/settings.py'
         fi
         export CRON_SPOOL_DIR='/var/spool/cron/crontabs'
+
     elif [ -f /etc/debian_version ]; then
         # Debian
         export DISTRO='DEBIAN'
 
-        if grep '^[678]' /etc/debian_version &>/dev/null &>/dev/null; then
-            echo "[ERROR] Your Debian release ${DISTRO_VERSION} is too old and not supported."
-            exit 255
+        # Set distro code name and unsupported releases.
+        if grep -i '^10' /etc/debian_version &>/dev/null; then
+            export DISTRO_VERSION='10'
+        elif grep '^9' /etc/debian_version &>/dev/null || \
+            grep -i '^stretch' /etc/debian_version &>/dev/null; then
+            export DISTRO_VERSION='9'
+        else
+            export UNSUPPORTED_RELEASE="YES"
         fi
+
         # Syslog
         export SYS_GROUP_SYSLOG='adm'
 
@@ -100,16 +113,10 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
             export IREDADMIN_CONF_PY='/opt/www/iredadmin/settings.py'
         fi
         export CRON_SPOOL_DIR='/var/spool/cron/crontabs'
-    elif [ -f /etc/SuSE-release ]; then
-        # openSUSE
-        export DISTRO='SUSE'
-        export IREDADMIN_CONF_PY='/srv/www/iredadmin/settings.py'
-        export CRON_SPOOL_DIR='/var/spool/cron'
     else
-        echo "<<< ERROR >>> Cannot detect Linux distribution name. Exit."
-        echo "Please contact support@iredmail.org to solve it."
-        exit 255
+        export UNSUPPORTED_RELEASE="YES"
     fi
+
 elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export DISTRO='FREEBSD'
     export SYS_GROUP_ROOT='wheel'
@@ -121,6 +128,7 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
     export CMD_PYTHON3='/usr/local/bin/python3'
+
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
     export SYS_GROUP_ROOT='wheel'
@@ -141,9 +149,15 @@ elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
             fi
         done
     fi
+
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
+    exit 255
+fi
+
+if [ X"${UNSUPPORTED_RELEASE}" == X'YES' ]; then
+    echo "Unsupported Linux/BSD distribution or release, abort."
     exit 255
 fi
 
@@ -201,7 +215,7 @@ install_pkgs()
         for _port in $@; do
             echo "Install package: ${_port}"
             cd /usr/ports/${_port}
-            make USES=python:3.4+ install clean
+            make USES=python:3.5+ install clean
         done
     elif [ X"${DISTRO}" == X'OPENBSD' ]; then
         echo "Install packages: $@"
@@ -535,14 +549,13 @@ DEP_PIP3_MODS=""
 # Install python3.
 if [ ! -x ${CMD_PYTHON3} ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
-        [[ X"${DISTRO_VERSION}" == X'6' ]] && DEP_PKGS="${DEP_PKGS} python34"
-        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3"
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38"
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38 python38-pip"
     fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38"
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip"
 
     if [ X"${DISTRO}" == X'OPENBSD' ]; then
         # Create symbol link.
