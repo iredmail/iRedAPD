@@ -128,6 +128,7 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
     export IREDADMIN_CONF_PY='/usr/local/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
     export CMD_PYTHON3='/usr/local/bin/python3'
+    export CMD_PIP3='/usr/local/bin/pip3'
 
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
@@ -138,8 +139,9 @@ elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
     export CMD_PYTHON3='/usr/local/bin/python3'
+    export CMD_PIP3='/usr/local/bin/pip3'
 
-    if [ -x /usr/local/bin/pip3 ]; then
+    if [ -x ${CMD_PIP3} ]; then
         :
     else
         for version in 3.7 3.6 3.5; do
