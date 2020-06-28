@@ -42,7 +42,7 @@ export RC_SCRIPT_NAME='iredapd'
 
 # Path to some programs.
 export CMD_PYTHON3='/usr/bin/python3'
-export CMD_PIP3='pip3'
+export CMD_PIP3='/usr/bin/pip3'
 
 if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     export DIR_RC_SCRIPTS='/etc/init.d'
@@ -60,7 +60,7 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
             export DISTRO_VERSION='7'
         elif grep '\ 8\.' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='8'
-            export CMD_PIP3='pip3.8'
+            export CMD_PIP3='/usr/bin/pip3.8'
         else
             export UNSUPPORTED_RELEASE="YES"
         fi
@@ -237,44 +237,6 @@ has_python_module()
     done
 }
 
-# Check /root/.my.cnf. This will make sql related changes much simpler.
-if [ -f ${IREDAPD_CONF_PY} ]; then
-    if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
-        if [ ! -f /root/.my.cnf ]; then
-            echo "<<< ERROR >>> File /root/.my.cnf not found."
-            echo "<<< ERROR >>> Please add mysql root user and password in it like below, then run this script again."
-            cat <<EOF
-
-[client]
-host=127.0.0.1
-port=3306
-user=root
-password="plain_password"
-
-EOF
-
-            exit 255
-        fi
-
-        # Check MySQL connection
-        mysql -e "SHOW DATABASES" &>/dev/null
-        if [ X"$?" != X'0' ]; then
-            echo "<<< ERROR >>> MySQL root user name or password is incorrect in /root/.my.cnf, please double check."
-            exit 255
-        fi
-    fi
-fi
-
-echo "* Detected Linux/BSD distribution: ${DISTRO}"
-
-if [ -L ${IREDAPD_ROOT_DIR} ]; then
-    export IREDAPD_ROOT_REAL_DIR="$(readlink ${IREDAPD_ROOT_DIR})"
-    echo "* Found iRedAPD directory: ${IREDAPD_ROOT_DIR}, symbol link of ${IREDAPD_ROOT_REAL_DIR}"
-else
-    echo "<<< ERROR >>> Directory is not a symbol link created by iRedMail. Exit."
-    exit 255
-fi
-
 add_missing_parameter()
 {
     # Usage: add_missing_parameter VARIABLE DEFAULT_VALUE [COMMENT]
@@ -311,6 +273,223 @@ remove_parameter()
 
     unset var
 }
+
+# Check /root/.my.cnf. This will make sql related changes much simpler.
+if [ -f ${IREDAPD_CONF_PY} ]; then
+    if egrep '^backend.*(mysql|ldap)' ${IREDAPD_CONF_PY} &>/dev/null; then
+        if [ ! -f /root/.my.cnf ]; then
+            echo "<<< ERROR >>> File /root/.my.cnf not found."
+            echo "<<< ERROR >>> Please add mysql root user and password in it like below, then run this script again."
+            cat <<EOF
+
+[client]
+host=127.0.0.1
+port=3306
+user=root
+password="plain_password"
+
+EOF
+
+            exit 255
+        fi
+
+        # Check MySQL connection
+        mysql -e "SHOW DATABASES" &>/dev/null
+        if [ X"$?" != X'0' ]; then
+            echo "<<< ERROR >>> MySQL root user name or password is incorrect in /root/.my.cnf, please double check."
+            exit 255
+        fi
+    fi
+fi
+
+echo "* Detected Linux/BSD distribution: ${DISTRO}"
+
+#
+# Check dependent packages.
+#
+DEP_PKGS=""
+DEP_PIP3_MODS=""
+
+# Install python3.
+if [ ! -x ${CMD_PYTHON3} ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38 python38-pip"
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip"
+
+    if [ X"${DISTRO}" == X'OPENBSD' ]; then
+        # Create symbol link.
+        for v in 3.7 3.6 3.5 3.4; do
+            if [ -x /usr/local/bin/python${v} ]; then
+                ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
+                break
+            fi
+        done
+    else
+        # OpenBSD 6.6, 6.7 should use Python 3.7 because all `py3-*` binary
+        # packages were built against Python 3.7.
+        DEP_PKGS="${DEP_PKGS} python%3.7"
+    fi
+fi
+
+if [ ! -x ${CMD_PIP3} ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3-pip"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38-pip"
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pip"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pip"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} devel/py-pip"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-pip"
+fi
+
+echo "* Checking dependent Python modules:"
+echo "  + [required] python-sqlalchemy"
+if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python36-sqlalchemy"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-sqlalchemy"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-sqlalchemy"
+fi
+
+echo "  + [required] dnspython"
+if [ X"$(has_python_module dns)" == X'NO' ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [ X"${DISTRO_VERSION}" == X'7' ] && DEP_PKGS="${DEP_PKGS} python36-dns"
+        [ X"${DISTRO_VERSION}" == X'8' ] && DEP_PKGS="${DEP_PKGS} python3-dns"
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-dnspython"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-dnspython"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} dns/py-dnspython"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-dnspython"
+fi
+
+echo "  + [required] requests"
+if [ X"$(has_python_module requests)" == X'NO' ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [ X"${DISTRO_VERSION}" == X'7' ] && DEP_PKGS="${DEP_PKGS} python36-requests"
+        [ X"${DISTRO_VERSION}" == X'8' ] && DEP_PKGS="${DEP_PKGS} python3-requests"
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-requests"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-requests"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} dns/py-requests"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-requests"
+fi
+
+echo "  + [required] web.py"
+if [ X"$(has_python_module web)" == X'NO' ]; then
+    # FreeBSD ports has 0.40. So we install the latest with pip.
+    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py>=0.51"
+fi
+
+if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
+    # LDAP backend
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        if [ X"${DISTRO_VERSION}" == X'7' ]; then
+            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
+        fi
+    fi
+
+    if [ X"${DISTRO}" == X'DEBIAN' ]; then
+        DEP_PKGS="${DEP_PKGS} python3-pymysql"
+        if [ X"${DISTRO_VERSION}" == X'9' ]; then
+            DEP_PKGS="${DEP_PKGS} python3-pyldap"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-ldap"
+        fi
+    fi
+
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-ldap python3-pymysql"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} net/py-ldap databases/py-pymysql"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-ldap py3-mysqlclient"
+
+elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'mysql' &>/dev/null; then
+    # MySQL/MariaDB backend
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        if [ X"${DISTRO_VERSION}" == X'7' ]; then
+            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
+        fi
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-pymysql"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-mysqlclient"
+
+elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'pgsql' &>/dev/null; then
+    # PostgreSQL backend
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        if [ X"${DISTRO_VERSION}" == X'7' ]; then
+            DEP_PKGS="${DEP_PKGS} python36-psycopg2"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+        fi
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-psycopg2"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-psycopg2"
+fi
+
+if [ X"${DEP_PKGS}" != X'' ]; then
+    install_pkgs ${DEP_PKGS}
+fi
+
+if [ X"${DEP_PIP3_MODS}" != X'' ]; then
+    ${CMD_PIP3} install -U ${DEP_PIP3_MODS}
+fi
+
+# Re-check py3 and create symbol link.
+if [ X"${DISTRO}" == X'OPENBSD' ]; then
+    for v in 3.7 3.6 3.5 3.4; do
+        if [ -x /usr/local/bin/python${v} ]; then
+            ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
+            break
+        fi
+    done
+
+    for v in 3.7 3.6 3.5 3.4; do
+        if [ -x /usr/local/bin/pip${v} ]; then
+            ln -sf /usr/local/bin/pip${v} /usr/local/bin/pip3
+            break
+        fi
+    done
+fi
+
+if [ ! -x ${CMD_PYTHON3} ]; then
+    echo "<<< ERROR >>> Failed to install Python 3, please install it manually."
+    exit 255
+fi
+
+if [ ! -x ${CMD_PIP3} ]; then
+    echo "<<< ERROR >>> Failed to install pip for Python 3, please install it manually."
+    exit 255
+fi
+
+if [ -L ${IREDAPD_ROOT_DIR} ]; then
+    export IREDAPD_ROOT_REAL_DIR="$(readlink ${IREDAPD_ROOT_DIR})"
+    echo "* Found iRedAPD directory: ${IREDAPD_ROOT_DIR}, symbol link of ${IREDAPD_ROOT_REAL_DIR}"
+else
+    echo "<<< ERROR >>> Directory is not a symbol link created by iRedMail. Exit."
+    exit 255
+fi
 
 # Detect config file
 if [ -f ${IREDAPD_CONF_PY} ]; then
@@ -538,161 +717,6 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     # v3.2: `senderscore_cache`, `smtp_sessions`
     add_new_pgsql_tables 3.2-senderscore_cache.pgsql "SELECT client_address FROM senderscore_cache LIMIT 1"
     add_new_pgsql_tables 3.2-smtp_sessions.pgsql "SELECT client_address FROM smtp_sessions LIMIT 1"
-fi
-
-#
-# Check dependent packages. Prompt to install missed ones manually.
-#
-DEP_PKGS=""
-DEP_PIP3_MODS=""
-
-# Install python3.
-if [ ! -x ${CMD_PYTHON3} ]; then
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38 python38-pip"
-    fi
-
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip"
-
-    if [ X"${DISTRO}" == X'OPENBSD' ]; then
-        # Create symbol link.
-        for v in 3.7 3.6 3.5 3.4; do
-            if [ -x /usr/local/bin/python${v} ]; then
-                ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
-                break
-            fi
-        done
-    else
-        # OpenBSD 6.6, 6.7 should use Python 3.7 because all `py3-*` binary
-        # packages were built against Python 3.7.
-        DEP_PKGS="${DEP_PKGS} python%3.7"
-    fi
-fi
-
-echo "* Checking dependent Python modules:"
-echo "  + [required] python-sqlalchemy"
-if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python36-sqlalchemy"
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
-    fi
-
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-sqlalchemy"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-sqlalchemy"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-sqlalchemy"
-fi
-
-echo "  + [required] dnspython"
-if [ X"$(has_python_module dns)" == X'NO' ]; then
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        [ X"${DISTRO_VERSION}" == X'7' ] && DEP_PKGS="${DEP_PKGS} python36-dns"
-        [ X"${DISTRO_VERSION}" == X'8' ] && DEP_PKGS="${DEP_PKGS} python3-dns"
-    fi
-
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-dnspython"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-dnspython"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} dns/py-dnspython"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-dnspython"
-fi
-
-echo "  + [required] requests"
-if [ X"$(has_python_module requests)" == X'NO' ]; then
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        [ X"${DISTRO_VERSION}" == X'7' ] && DEP_PKGS="${DEP_PKGS} python36-requests"
-        [ X"${DISTRO_VERSION}" == X'8' ] && DEP_PKGS="${DEP_PKGS} python3-requests"
-    fi
-
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-requests"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-requests"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} dns/py-requests"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-requests"
-fi
-
-echo "  + [required] web.py"
-if [ X"$(has_python_module web)" == X'NO' ]; then
-    # FreeBSD ports has 0.40. So we install the latest with pip.
-    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py>=0.51"
-fi
-
-if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
-    # LDAP backend
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        if [ X"${DISTRO_VERSION}" == X'7' ]; then
-            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
-        fi
-    fi
-
-    if [ X"${DISTRO}" == X'DEBIAN' ]; then
-        DEP_PKGS="${DEP_PKGS} python3-pymysql"
-        if [ X"${DISTRO_VERSION}" == X'9' ]; then
-            DEP_PKGS="${DEP_PKGS} python3-pyldap"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-ldap"
-        fi
-    fi
-
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-ldap python3-pymysql"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} net/py-ldap databases/py-pymysql"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-ldap py3-mysqlclient"
-
-elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'mysql' &>/dev/null; then
-    # MySQL/MariaDB backend
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        if [ X"${DISTRO_VERSION}" == X'7' ]; then
-            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
-        fi
-    fi
-
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-pymysql"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-mysqlclient"
-
-elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'pgsql' &>/dev/null; then
-    # PostgreSQL backend
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        if [ X"${DISTRO_VERSION}" == X'7' ]; then
-            DEP_PKGS="${DEP_PKGS} python36-psycopg2"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-psycopg2"
-        fi
-    fi
-
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-psycopg2"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-psycopg2"
-fi
-
-if [ X"${DEP_PKGS}" != X'' ]; then
-    install_pkgs ${DEP_PKGS}
-fi
-
-if [ X"${DEP_PIP3_MODS}" != X'' ]; then
-    ${CMD_PIP3} install -U ${DEP_PIP3_MODS}
-fi
-
-# Re-check py3 and create symbol link.
-if [ X"${DISTRO}" == X'OPENBSD' ]; then
-    for v in 3.7 3.6 3.5 3.4; do
-        if [ -x /usr/local/bin/python${v} ]; then
-            ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
-            break
-        fi
-    done
-fi
-
-if [ ! -x ${CMD_PYTHON3} ]; then
-    echo "<<< ERROR >>> Failed to install Python-3, please install it manually."
-    exit 255
 fi
 
 #
