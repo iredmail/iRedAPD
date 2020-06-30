@@ -1,3 +1,9 @@
+iRedAPD-4.1:
+    - Fixed issues:
+        - tools/upgrade_iredapd.sh:
+            - Not correctly replace Python 2 by 3 in cron jobs.
+            - Not set correct SQL db driver for OpenLDAP and MySQL backends.
+
 iRedAPD-4.0:
     NOTE: Python 3.5 and later are required. If you're looking for
     Python 2 support, please try the latest iRedAPD-3.x release:
