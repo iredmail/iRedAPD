@@ -351,7 +351,21 @@ if [ ! -x ${CMD_PIP3} ]; then
 fi
 
 echo "* Checking dependent Python modules:"
-echo "  + [required] python-sqlalchemy"
+
+echo "  + [required] wheel"
+if [ X"$(has_python_module wheel)" == X'NO' ]; then
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3-wheel"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38-wheel"
+    fi
+
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-wheel"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-wheel"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} devel/py-wheel"
+    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-wheel"
+fi
+
+echo "  + [required] sqlalchemy"
 if [ X"$(has_python_module sqlalchemy)" == X'NO' ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
         [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python36-sqlalchemy"

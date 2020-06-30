@@ -3,6 +3,8 @@ iRedAPD-4.1:
         - tools/upgrade_iredapd.sh:
             - Not correctly replace Python 2 by 3 in cron jobs.
             - Not set correct SQL db driver for OpenLDAP and MySQL backends.
+            - Not install missing dependent packages used to install web.py
+              with pip3.
 
 iRedAPD-4.0:
     NOTE: Python 3.5 and later are required. If you're looking for
