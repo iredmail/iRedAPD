@@ -398,6 +398,8 @@ fi
 
 if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
     # LDAP backend
+    export IREDMAIL_BACKEND='OPENLDAP'
+
     if [ X"${DISTRO}" == X'RHEL' ]; then
         if [ X"${DISTRO_VERSION}" == X'7' ]; then
             DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
@@ -421,6 +423,8 @@ if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
 
 elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'mysql' &>/dev/null; then
     # MySQL/MariaDB backend
+    export IREDMAIL_BACKEND='MYSQL'
+
     if [ X"${DISTRO}" == X'RHEL' ]; then
         if [ X"${DISTRO_VERSION}" == X'7' ]; then
             DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
@@ -436,6 +440,8 @@ elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'mysql' &>/dev/null; then
 
 elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'pgsql' &>/dev/null; then
     # PostgreSQL backend
+    export IREDMAIL_BACKEND='PGSQL'
+
     if [ X"${DISTRO}" == X'RHEL' ]; then
         if [ X"${DISTRO_VERSION}" == X'7' ]; then
             DEP_PKGS="${DEP_PKGS} python36-psycopg2"
@@ -760,6 +766,16 @@ EOF
 
     cat ${NEW_IREDAPD_CONF} >> ${NEW_IREDAPD_CONF}_tmp
     mv ${NEW_IREDAPD_CONF}_tmp ${NEW_IREDAPD_CONF}
+fi
+
+# Set correct SQL driver for SQLAlchemy.
+if [ X"${IREDMAIL_BACKEND}" == X"OPENLDAP" -o X"${IREDMAIL_BACKEND}" == X'MYSQL' ]; then
+    if [ X"${DISTRO}" != X'OPENBSD' ]; then
+        if ! grep '^SQL_DB_DRIVER' ${NEW_IREDAPD_CONF} &>/dev/null; then
+            echo "" >> ${NEW_IREDAPD_CONF}
+            echo "SQL_DB_DRIVER = 'pymysql'" >> ${NEW_IREDAPD_CONF}
+        fi
+    fi
 fi
 
 echo "* Set correct owner and permission for ${NEW_IREDAPD_ROOT_DIR}: ${SYS_USER_ROOT}:${SYS_GROUP_ROOT}, 0500."
