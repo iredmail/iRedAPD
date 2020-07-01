@@ -95,6 +95,8 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         export DISTRO='DEBIAN'
 
         # Set distro code name and unsupported releases.
+        if grep -i '^bullseye' /etc/debian_version &>/dev/null; then
+            export DISTRO_VERSION='11'
         if grep -i '^10' /etc/debian_version &>/dev/null; then
             export DISTRO_VERSION='10'
         elif grep '^9' /etc/debian_version &>/dev/null || \
