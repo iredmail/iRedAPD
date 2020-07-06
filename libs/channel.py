@@ -188,7 +188,10 @@ class Policy(asynchat.async_chat):
                     # Remove expired/ghost data.
                     for i in settings.GLOBAL_SESSION_TRACKING:
                         if settings.GLOBAL_SESSION_TRACKING[i]['expired'] + 60 < int(time.time()):
-                            settings.GLOBAL_SESSION_TRACKING.pop(_instance)
+                            try:
+                                settings.GLOBAL_SESSION_TRACKING.pop(i)
+                            except:
+                                pass
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended.")

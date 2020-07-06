@@ -177,7 +177,7 @@ if action == 'add':
         if not qr[0]:
             logger.error(qr[1])
     except Exception as e:
-        logger.info(str(e))
+        logger.info(repr(e))
 
 elif action == 'delete':
     try:
@@ -200,17 +200,17 @@ elif action == 'delete':
             _bl_rcpts = qr[1]['bl_rcpts']
 
             for i in set(_wl_senders):
-                logger.info("- Deleted: {0}".format(i))
+                logger.info("- Deleted: {0}".format(i.decode()))
             for i in set(_wl_rcpts):
-                logger.info("- Deleted: {0}".format(i))
+                logger.info("- Deleted: {0}".format(i.decode()))
             for i in set(_bl_senders):
-                logger.info("- Deleted: {0}".format(i))
+                logger.info("- Deleted: {0}".format(i.decode()))
             for i in set(_bl_rcpts):
-                logger.info("- Deleted: {0}".format(i))
+                logger.info("- Deleted: {0}".format(i.decode()))
         else:
             logger.error(qr[1])
     except Exception as e:
-        logger.info(str(e))
+        logger.info(repr(e))
 elif action == 'delete-all':
     try:
         if inout_type == 'inbound':
@@ -228,7 +228,7 @@ elif action == 'delete-all':
         if not qr[0]:
             logger.error(qr[1])
     except Exception as e:
-        logger.info(str(e))
+        logger.info(repr(e))
 else:
     # action == 'list'
     try:
@@ -253,10 +253,10 @@ else:
 
             if _wb:
                 for i in sorted(_wb):
-                    print(i)
+                    print(i.decode())
             else:
                 logger.info('* No whitelist/blacklist.')
         else:
             logger.error(qr[1])
     except Exception as e:
-        logger.info(str(e))
+        logger.info(repr(e))

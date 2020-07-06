@@ -1,3 +1,8 @@
+iRedAPD-4.2:
+    - Fixed issues:
+        - Not correctly remove item from tracking dict.
+        - Few formatting issues in `tools/wblist_admin.py`.
+
 iRedAPD-4.1:
     - Fixed issues:
         - tools/upgrade_iredapd.sh:
