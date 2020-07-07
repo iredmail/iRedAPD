@@ -407,7 +407,7 @@ fi
 echo "  + [required] web.py"
 if [ X"$(has_python_module web)" == X'NO' ]; then
     # FreeBSD ports has 0.40. So we install the latest with pip.
-    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py>=0.51"
+    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py==0.51"
 fi
 
 if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
