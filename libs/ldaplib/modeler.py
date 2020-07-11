@@ -33,24 +33,27 @@ class Modeler:
         if self.conns['conn_iredapd']:
             conn_iredapd = self.conns['conn_iredapd'].connect()
 
-        plugin_kwargs = {'smtp_session_data': smtp_session_data,
-                         'conn_vmail': self.conn,
-                         'conn_amavisd': conn_amavisd,
-                         'conn_iredapd': conn_iredapd,
-                         'sender': sender,
-                         'sender_without_ext': smtp_session_data['sender_without_ext'],
-                         'recipient': recipient,
-                         'recipient_without_ext': smtp_session_data['recipient_without_ext'],
-                         'client_address': client_address,
-                         'sasl_username': sasl_username,
-                         'sender_domain': smtp_session_data.get('sender_domain', ''),
-                         'recipient_domain': smtp_session_data.get('recipient_domain', ''),
-                         'sasl_username_domain': smtp_session_data.get('sasl_username_domain', ''),
-                         'base_dn': settings.ldap_basedn,
-                         'sender_dn': None,
-                         'sender_ldif': None,
-                         'recipient_dn': None,
-                         'recipient_ldif': None}
+        plugin_kwargs = {
+            'smtp_session_data': smtp_session_data,
+            'conn_vmail': self.conn,
+            'conn_amavisd': conn_amavisd,
+            'conn_iredapd': conn_iredapd,
+            'conn_tracking': self.conns['conn_tracking'],
+            'sender': sender,
+            'sender_without_ext': smtp_session_data['sender_without_ext'],
+            'recipient': recipient,
+            'recipient_without_ext': smtp_session_data['recipient_without_ext'],
+            'client_address': client_address,
+            'sasl_username': sasl_username,
+            'sender_domain': smtp_session_data.get('sender_domain', ''),
+            'recipient_domain': smtp_session_data.get('recipient_domain', ''),
+            'sasl_username_domain': smtp_session_data.get('sasl_username_domain', ''),
+            'base_dn': settings.ldap_basedn,
+            'sender_dn': None,
+            'sender_ldif': None,
+            'recipient_dn': None,
+            'recipient_ldif': None,
+        }
 
         for plugin in plugins:
             # Get plugin target smtp protocol state

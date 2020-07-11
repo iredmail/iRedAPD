@@ -233,6 +233,7 @@ def __sendmail(conn,
 # Apply throttle setting and return smtp action.
 def apply_throttle(conn,
                    conn_vmail,
+                   conn_tracking,
                    user,
                    client_address,
                    protocol_state,
@@ -455,7 +456,18 @@ def apply_throttle(conn,
 
             # Get the real cur_msgs (if mail contains multiple recipients, we
             # need to count them all)
-            _real_max_msgs_cur_msgs = max_msgs_cur_msgs + settings.GLOBAL_SESSION_TRACKING[instance_id]['num_processed']
+            _num_processed = 0
+            try:
+                _c = conn_tracking.cursor()
+                _c.execute("SELECT num_processed FROM tracking WHERE instance=? LIMIT 1", (instance_id,))
+                _row = _c.fetchone()
+
+                if _row:
+                    _num_processed = int(_row[0])
+            except Exception as e:
+                logger.error("while querying `num_processed` for instance {}: {}".format(instance_id, repr(e)))
+
+            _real_max_msgs_cur_msgs = max_msgs_cur_msgs + _num_processed
 
             if _real_max_msgs_cur_msgs >= max_msgs > 0:
                 logger.info('[{0}] [{1}] Quota exceeded: {2} throttle for '
@@ -675,6 +687,7 @@ def apply_throttle(conn,
 def restriction(**kwargs):
     conn = kwargs['conn_iredapd']
     conn_vmail = kwargs['conn_vmail']
+    conn_tracking = kwargs['conn_tracking']
 
     # Use SASL username as sender. if not available, use sender in 'From:'.
     sender = kwargs['sasl_username'] or kwargs['sender_without_ext']
@@ -720,6 +733,7 @@ def restriction(**kwargs):
     logger.debug('Check sender throttling.')
     action = apply_throttle(conn=conn,
                             conn_vmail=conn_vmail,
+                            conn_tracking=conn_tracking,
                             user=sender,
                             client_address=client_address,
                             protocol_state=protocol_state,
@@ -740,6 +754,7 @@ def restriction(**kwargs):
         logger.debug('Check recipient throttling.')
         action = apply_throttle(conn=conn,
                                 conn_vmail=conn_vmail,
+                                conn_tracking=conn_tracking,
                                 user=recipient,
                                 client_address=client_address,
                                 protocol_state=protocol_state,

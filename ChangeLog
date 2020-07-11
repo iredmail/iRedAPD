@@ -1,6 +1,7 @@
 iRedAPD-4.3:
-    - Fixed issues:
-        - Fix a RuntimeError while cleaning up expired tracking data.
+    - Improvements:
+        - Replace global dict object by in-memory SQLite database for global
+          smtp session tracking.
 
 iRedAPD-4.2:
     - Fixed issues:

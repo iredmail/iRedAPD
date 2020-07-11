@@ -69,6 +69,11 @@ LOG_SMTP_SESSIONS_BYPASS_DUNNO = False
 LOG_SMTP_SESSIONS_BYPASS_GREYLISTING = False
 LOG_SMTP_SESSIONS_BYPASS_WHITELIST = False
 
+# (In-Memory SQLite) global session tracking.
+# If 10 seconds is not long enough to finish the process, there must be
+# something wrong and need further troubleshooting.
+TRACKING_EXPIRE_SECONDS = 10
+
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py

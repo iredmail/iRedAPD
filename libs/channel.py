@@ -143,18 +143,19 @@ class Policy(asynchat.async_chat):
             _protocol_state = self.smtp_session_data['protocol_state']
 
             if _protocol_state == 'RCPT':
-                if _instance not in settings.GLOBAL_SESSION_TRACKING:
-                    # add timestamp of tracked smtp instance, so that we can
-                    # remove them after instance finished.
-                    _tracking_expired = int(time.time())
-
-                    # @num_processed: count of processed smtp sessions
-                    settings.GLOBAL_SESSION_TRACKING[_instance] = {
-                        'num_processed': 0,
-                        'expired': _tracking_expired,
-                    }
-                else:
-                    settings.GLOBAL_SESSION_TRACKING[_instance]['num_processed'] += 1
+                try:
+                    _db = self.db_conns['conn_tracking']
+                    _c = _db.cursor()
+                    _c.execute("SELECT * FROM tracking WHERE instance=? LIMIT 1", (_instance,))
+                    _row = _c.fetchone()
+                    if _row:
+                        logger.debug("Update `num_processed` for existing instance {}".format(_instance))
+                        _c.execute("UPDATE tracking set num_processed=num_processed+1 WHERE instance=?", (_instance,))
+                    else:
+                        logger.debug("Add new tracking record for instance {}".format(_instance))
+                        _c.execute("INSERT INTO tracking (instance, num_processed, init_time) values (?, ?, ?)", (_instance, 0, int(time.time())))
+                except Exception as e:
+                    logger.error("while adding or updating existing tracking record: {}".format(repr(e)))
 
             # Call modeler and apply plugins
             try:
@@ -182,24 +183,15 @@ class Policy(asynchat.async_chat):
             #     RCPT state (it never reach END-OF-MESSAGE state)
             #   - session is in last state (END-OF-MESSAGE)
             if (not action.startswith('DUNNO')) or (_protocol_state == 'END-OF-MESSAGE'):
-                if _instance in settings.GLOBAL_SESSION_TRACKING:
-                    try:
-                        settings.GLOBAL_SESSION_TRACKING.pop(_instance)
-                    except:
-                        pass
-                else:
-                    # Remove expired tracking data.
-                    try:
-                        # Get a copy of keys to prevent `RuntimeError` like
-                        # `dictionary changed size during iteration`.
-                        _keys = settings.GLOBAL_SESSION_TRACKING.keys()
-                        if _keys:
-                            _now = int(time.time())
-                            for i in _keys:
-                                if (settings.GLOBAL_SESSION_TRACKING.get(i, {}).get('expired', _now) + 60) < _now:
-                                    settings.GLOBAL_SESSION_TRACKING.pop(i)
-                    except:
-                        pass
+                # Remove expired tracking data.
+                try:
+                    _db = self.db_conns['conn_tracking']
+                    _c = _db.cursor()
+
+                    _expired_time = int(time.time()) + settings.TRACKING_EXPIRE_SECONDS
+                    _c.execute("DELETE FROM tracking WHERE init_time <=?", (_expired_time,))
+                except Exception as e:
+                    logger.error("while cleaning up expired tracking record: {}".format(repr(e)))
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended.")

@@ -85,12 +85,6 @@ def main():
     os.setgid(gid)
     os.setuid(uid)
 
-    # Create a global dict used to track smtp session data.
-    #   - gather data at RCPT state
-    #   - used in END-OF-MESSAGE state
-    #   - clean up after applied all enabled plugins
-    settings.GLOBAL_SESSION_TRACKING = {}
-
     # Starting loop.
     try:
         if sys.version_info >= (3, 4):

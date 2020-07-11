@@ -1,6 +1,5 @@
 import ipaddress
 from dns import resolver
-from typing import Union
 
 from libs.logger import logger
 from libs import utils
@@ -142,8 +141,8 @@ def query_spf(domain, queried_domains=None):
     }
 
 
-def parse_spf(domain: str,
-              spf: Union[str, type(None)],
+def parse_spf(domain,
+              spf,
               queried_domains=None,
               returned_ips=None):
     """Parse value of DNS SPF record."""

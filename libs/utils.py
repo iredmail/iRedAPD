@@ -8,6 +8,7 @@ import subprocess
 import smtplib
 import ipaddress
 import uuid
+import sqlite3
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -585,10 +586,26 @@ def get_required_db_conns():
     conn_amavisd = get_db_conn('amavisd')
     conn_iredapd = get_db_conn('iredapd')
 
+    # Create an in-memory SQLite database for global smtp session tracking.
+    #   - gather data at RCPT state
+    #   - used in END-OF-MESSAGE state
+    #   - clean up after applied all enabled plugins
+    conn_tracking = sqlite3.connect(':memory:')
+    try:
+        with conn_tracking as c:
+            # Create SQL table used to store tracking data.
+            c.executescript("""
+                CREATE TABLE IF NOT EXISTS tracking (instance text, num_processed integer, init_time integer);
+                CREATE UNIQUE INDEX idx_tracking ON tracking (instance);
+            """)
+    except Exception as e:
+        logger.info("DEBUG ERROR 1: %s" % repr(e))
+
     return {
         'conn_vmail': conn_vmail,
         'conn_amavisd': conn_amavisd,
         'conn_iredapd': conn_iredapd,
+        'conn_tracking': conn_tracking,
     }
 
 
