@@ -189,17 +189,17 @@ class Policy(asynchat.async_chat):
                         pass
                 else:
                     # Remove expired tracking data.
-                    # Get a copy of keys to prevent `RuntimeError` like
-                    # `dictionary changed size during iteration`.
-                    _keys = settings.GLOBAL_SESSION_TRACKING.keys()
-                    if _keys:
-                        _now = int(time.time())
-                        for i in _keys:
-                            if (settings.GLOBAL_SESSION_TRACKING.get(i, {}).get('expired', _now) + 60) < _now:
-                                try:
+                    try:
+                        # Get a copy of keys to prevent `RuntimeError` like
+                        # `dictionary changed size during iteration`.
+                        _keys = settings.GLOBAL_SESSION_TRACKING.keys()
+                        if _keys:
+                            _now = int(time.time())
+                            for i in _keys:
+                                if (settings.GLOBAL_SESSION_TRACKING.get(i, {}).get('expired', _now) + 60) < _now:
                                     settings.GLOBAL_SESSION_TRACKING.pop(i)
-                                except:
-                                    pass
+                    except:
+                        pass
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended.")
