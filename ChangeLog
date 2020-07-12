@@ -1,7 +1,7 @@
 iRedAPD-4.3:
     - Improvements:
         - Replace global dict object by in-memory SQLite database for global
-          smtp session tracking.
+          policy tracking.
 
 iRedAPD-4.2:
     - Fixed issues:
