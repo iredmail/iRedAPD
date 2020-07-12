@@ -599,7 +599,7 @@ def get_required_db_conns():
                 CREATE UNIQUE INDEX idx_tracking ON tracking (instance);
             """)
     except Exception as e:
-        logger.info("DEBUG ERROR 1: %s" % repr(e))
+        logger.error("error while creating SQLite table and index: %s" % repr(e))
 
     return {
         'conn_vmail': conn_vmail,

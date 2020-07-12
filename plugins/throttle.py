@@ -460,7 +460,7 @@ def apply_throttle(conn,
             try:
                 _c = conn_tracking.cursor()
                 _c.execute("SELECT num_processed FROM tracking WHERE instance=? LIMIT 1", (instance_id,))
-                _row = _c.fetchone()
+                _row = _c.fetchone()    # _row is a tuple
 
                 if _row:
                     _num_processed = int(_row[0])
