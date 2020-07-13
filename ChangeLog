@@ -1,3 +1,7 @@
+iRedAPD-4.4:
+    - Fixed issues:
+        - Can not correctly add or remove whitelists and blacklists.
+
 iRedAPD-4.3:
     - Improvements:
         - Replace global dict object by in-memory SQLite database for global

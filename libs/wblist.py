@@ -166,7 +166,7 @@ def add_wblist(conn,
         sql_records = qr.fetchall()
         for r in sql_records:
             (_id, _email) = r
-            sender_records[_email.decode()] = int(_id)
+            sender_records[_email] = int(_id)
         del qr
 
     # Get `mailaddr.id` of recipients
@@ -299,7 +299,7 @@ def delete_wblist(conn,
             for r in sql_records:
                 (_id, _email) = r
                 sids.append(int(_id))
-                wl_smails.append(str(_email))
+                wl_smails.append(_email.tobytes().decode())
 
             if sids:
                 conn.execute("DELETE FROM wblist WHERE rid=%s AND sid IN %s AND wb='W'" % (sqlquote(user_id), sqlquote(sids)))
@@ -314,7 +314,7 @@ def delete_wblist(conn,
             for r in sql_records:
                 (_id, _email) = r
                 sids.append(int(_id))
-                bl_smails.append(str(_email))
+                bl_smails.append(_email.tobytes().decode())
 
             if sids:
                 conn.execute("DELETE FROM wblist WHERE rid=%s AND sid IN %s AND wb='B'" % (sqlquote(user_id), sqlquote(sids)))
@@ -329,7 +329,7 @@ def delete_wblist(conn,
             for r in sql_records:
                 (_id, _email) = r
                 rids.append(int(_id))
-                wl_rmails.append(str(_email))
+                wl_rmails.append(_email.tobytes().decode())
 
             if rids:
                 conn.execute("DELETE FROM outbound_wblist WHERE sid=%s AND rid IN %s AND wb='W'" % (sqlquote(user_id), sqlquote(rids)))
@@ -344,7 +344,7 @@ def delete_wblist(conn,
             for r in sql_records:
                 (_id, _email) = r
                 rids.append(int(_id))
-                bl_rmails.append(str(_email))
+                bl_rmails.append(_email.tobytes().decode())
 
             if rids:
                 conn.execute("DELETE FROM outbound_wblist WHERE sid=%s AND rid IN %s AND wb='B'" % (sqlquote(user_id), sqlquote(rids)))

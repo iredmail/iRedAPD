@@ -200,13 +200,13 @@ elif action == 'delete':
             _bl_rcpts = qr[1]['bl_rcpts']
 
             for i in set(_wl_senders):
-                logger.info("- Deleted: {0}".format(i.decode()))
+                logger.info("- Deleted: {0}".format(i))
             for i in set(_wl_rcpts):
-                logger.info("- Deleted: {0}".format(i.decode()))
+                logger.info("- Deleted: {0}".format(i))
             for i in set(_bl_senders):
-                logger.info("- Deleted: {0}".format(i.decode()))
+                logger.info("- Deleted: {0}".format(i))
             for i in set(_bl_rcpts):
-                logger.info("- Deleted: {0}".format(i.decode()))
+                logger.info("- Deleted: {0}".format(i))
         else:
             logger.error(qr[1])
     except Exception as e:
@@ -253,7 +253,7 @@ else:
 
             if _wb:
                 for i in sorted(_wb):
-                    print(i.decode())
+                    logger.info(i.decode())
             else:
                 logger.info('* No whitelist/blacklist.')
         else:

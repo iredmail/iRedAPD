@@ -1,5 +1,5 @@
 __author__ = "Zhang Huangbin <zhb@iredmail.org>"
-__version__ = "4.3"
+__version__ = "4.4"
 
 
 SMTP_ACTIONS = {
