@@ -331,10 +331,12 @@ if [ ! -x ${CMD_PYTHON3} ]; then
                 break
             fi
         done
-    else
-        # OpenBSD 6.6, 6.7 should use Python 3.7 because all `py3-*` binary
-        # packages were built against Python 3.7.
-        DEP_PKGS="${DEP_PKGS} python%3.7"
+
+        if [ -x ${CMD_PYTHON3} ]; then
+            # OpenBSD 6.6, 6.7 should use Python 3.7 because all `py3-*` binary
+            # packages were built against Python 3.7.
+            DEP_PKGS="${DEP_PKGS} python%3.7"
+        fi
     fi
 fi
 
