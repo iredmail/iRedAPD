@@ -97,7 +97,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
         return ids
 
     if qr_cidr:
-        _cidrs = [(int(r.id), r.email.decode()) for r in qr_cidr]
+        _cidrs = [(int(r.id), utils.bytes2str(r.email)) for r in qr_cidr]
 
         # Get valid CIDR.
         _ip_networks = set()

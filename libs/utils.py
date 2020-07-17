@@ -768,3 +768,15 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
         logger.error("<!> Error while logging smtp action: {0}".format(repr(e)))
 
     return None
+
+
+def bytes2str(b):
+    """Convert `b` from bytes to string. If `b` is not bytes, return original
+    `b` directly.
+    """
+    if isinstance(b, (bytes, bytearray)):
+        return b.decode()
+    elif isinstance(b, memoryview):
+        return b.tobytes().decode()
+    else:
+        return b
