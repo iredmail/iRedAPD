@@ -1,12 +1,10 @@
-iRedAPD-4.5:
+iRedAPD-4.4:
     - Fixed issues:
+        - tools/wblist_admin.py: Can not correctly add or remove whitelists
+          and blacklists.
         - tools/upgrade_iredapd.sh: not install required package
           `python3-devel` on CentOS 7, it's used for compiling python module
           `python-ldap`.
-
-iRedAPD-4.4:
-    - Fixed issues:
-        - Can not correctly add or remove whitelists and blacklists.
 
 iRedAPD-4.3:
     - Improvements:
