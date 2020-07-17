@@ -419,14 +419,16 @@ if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
 
     if [ X"${DISTRO}" == X'RHEL' ]; then
         if [ X"${DISTRO_VERSION}" == X'7' ]; then
-            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
+            DEP_PKGS="${DEP_PKGS} python36-PyMySQL gcc python3-devel"
+            DEP_PIP3_MODS="${DEP_PIP3_MODS} python-ldap==3.3.1"
         else
-            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
+            DEP_PKGS="${DEP_PKGS} python3-ldap python3-PyMySQL"
         fi
     fi
 
     if [ X"${DISTRO}" == X'DEBIAN' ]; then
         DEP_PKGS="${DEP_PKGS} python3-pymysql"
+
         if [ X"${DISTRO_VERSION}" == X'9' ]; then
             DEP_PKGS="${DEP_PKGS} python3-pyldap"
         else
