@@ -58,18 +58,18 @@ Sample usage:
 
     * Show and add server-wide whitelists or blacklists:
 
-        # python wblist_admin.py --add --whitelist 192.168.1.10 user@example.com
-        # python wblist_admin.py --add --blacklist 172.16.1.10 baduser@example.com
-        # python wblist_admin.py --list --whitelist
-        # python wblist_admin.py --list --blacklist
+        python3 wblist_admin.py --add --whitelist 192.168.1.10 user@example.com
+        python3 wblist_admin.py --add --blacklist 172.16.1.10 baduser@example.com
+        python3 wblist_admin.py --list --whitelist
+        python3 wblist_admin.py --list --blacklist
 
     * For per-user or per-domain whitelists and blacklists, please use option
       `--account`. for example:
 
-        # python wblist_admin.py --account user@mydomain.com --add --whitelist 192.168.1.10 user@example.com
-        # python wblist_admin.py --account user@mydomain.com --add --blacklist 172.16.1.10 baduser@example.com
-        # python wblist_admin.py --account user@mydomain.com --list --whitelist
-        # python wblist_admin.py --account user@mydomain.com --list --blacklist
+        python3 wblist_admin.py --account user@mydomain.com --add --whitelist 192.168.1.10 user@example.com
+        python3 wblist_admin.py --account user@mydomain.com --add --blacklist 172.16.1.10 baduser@example.com
+        python3 wblist_admin.py --account user@mydomain.com --list --whitelist
+        python3 wblist_admin.py --account user@mydomain.com --list --blacklist
 """
 
 if len(sys.argv) == 1:
@@ -253,7 +253,7 @@ else:
 
             if _wb:
                 for i in sorted(_wb):
-                    logger.info(i.decode())
+                    logger.info(i)
             else:
                 logger.info('* No whitelist/blacklist.')
         else:

@@ -426,9 +426,9 @@ def get_account_wblist(conn,
         for r in sql_records:
             (_addr, _wb) = r
             if _wb == 'W':
-                wl.append(_addr)
+                wl.append(utils.bytes2str(_addr))
             else:
-                bl.append(_addr)
+                bl.append(utils.bytes2str(_addr))
     except Exception as e:
         return (False, e)
 

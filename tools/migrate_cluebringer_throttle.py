@@ -9,7 +9,7 @@
 #
 #   2) Run command:
 #
-#       # python migrate_cluebringer_throttle.py
+#       python3 migrate_cluebringer_throttle.py
 
 cluebringer_db_host = '127.0.0.1'
 cluebringer_db_port = 3306
