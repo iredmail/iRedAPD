@@ -60,7 +60,7 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
             export DISTRO_VERSION='7'
         elif grep '\ 8\.' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='8'
-            export CMD_PIP3='/usr/bin/pip3.8'
+            export CMD_PIP3='/usr/bin/pip3.6'
         else
             export UNSUPPORTED_RELEASE="YES"
         fi
@@ -316,7 +316,7 @@ DEP_PIP3_MODS=""
 if [ ! -x ${CMD_PYTHON3} ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
         [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38 python38-pip"
+        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python36 python3-pip"
     fi
 
     [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
@@ -341,11 +341,7 @@ if [ ! -x ${CMD_PYTHON3} ]; then
 fi
 
 if [ ! -x ${CMD_PIP3} ]; then
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3-pip"
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38-pip"
-    fi
-
+    [ X"${DISTRO}" == X'RHEL' ] && DEP_PKGS="${DEP_PKGS} python3-pip"
     [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pip"
     [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pip"
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} devel/py-pip"
@@ -356,11 +352,7 @@ echo "* Checking dependent Python modules:"
 
 echo "  + [required] wheel"
 if [ X"$(has_python_module wheel)" == X'NO' ]; then
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3-wheel"
-        [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python38-wheel"
-    fi
-
+    [ X"${DISTRO}" == X'RHEL' ] && DEP_PKGS="${DEP_PKGS} python3-wheel"
     [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-wheel"
     [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-wheel"
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} devel/py-wheel"
