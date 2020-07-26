@@ -59,7 +59,7 @@ conn_cb = web.database(
 
 conn_cb.supports_multiple_insert = True
 
-logger.info("* Backend: {0}".format(backend))
+logger.info("* Backend: {}".format(backend))
 
 #
 # Global greylisting setting
@@ -123,12 +123,12 @@ for r in qr:
             sender_priority=0,
             active=1,
         )
-        logger.info("\t+ Migrated account setting: {0}".format(_account))
+        logger.info("\t+ Migrated account setting: {}".format(_account))
     except Exception as e:
         if str(e).startswith('duplicate key value'):
-            logger.info("\t[SKIP] Setting for account {0} already exists.".format(_account))
+            logger.info("\t[SKIP] Setting for account {} already exists.".format(_account))
         else:
-            logger.info("\t<<< ERROR >>> Error while migrating setting for account {0}: {1}".format(_account, repr(e)))
+            logger.info("\t<<< ERROR >>> Error while migrating setting for account {}: {}".format(_account, repr(e)))
 
 #
 # Greylisting whitelists
@@ -145,7 +145,7 @@ for rcd in qr:
         if rcd.comment:
             comment = rcd.comment.title()
 
-        sql = """INSERT INTO greylisting_whitelists (account, sender, comment) VALUES ('@.', '%s', '%s');""" % (wl, comment)
+        sql = """INSERT INTO greylisting_whitelists (account, sender, comment) VALUES ('@.', '{}', '{}');""".format(wl, comment)
         try:
             conn_iredapd.query(sql)
         except:

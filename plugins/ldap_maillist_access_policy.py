@@ -49,7 +49,7 @@ def restriction(**kwargs):
     policy = recipient_ldif.get('accessPolicy', [MAILLIST_POLICY_PUBLIC])[0].lower()
 
     # Log access policy
-    logger.debug('Access policy of mailing list (%s): %s' % (recipient, policy))
+    logger.debug('Access policy of mailing list ({}): {}'.format(recipient, policy))
 
     if policy == MAILLIST_POLICY_PUBLIC:
         return SMTP_ACTIONS['default'] + ' (Access policy: %s, no restriction)' % MAILLIST_POLICY_PUBLIC
@@ -70,7 +70,7 @@ def restriction(**kwargs):
     # Get primary recipient domain and all its alias domains
     valid_rcpt_domains = conn_utils.get_primary_and_alias_domains(conn=conn,
                                                                   domain=recipient_domain)
-    logger.debug('Primary and all alias domain names of recipient domain (%s): %s' % (recipient_domain, ', '.join(valid_rcpt_domains)))
+    logger.debug('Primary and all alias domain names of recipient domain ({}): {}'.format(recipient_domain, ', '.join(valid_rcpt_domains)))
 
     #
     # No matter what access policy it has, bypass explictly allowed senders
@@ -104,14 +104,14 @@ def restriction(**kwargs):
         if policy == MAILLIST_POLICY_DOMAIN:
             # Bypass all users under the same domain.
             if sender_domain in valid_rcpt_domains:
-                logger.info('Sender domain (%s) is allowed by access policy of mailing list: %s.' % (sender_domain, policy))
+                logger.info('Sender domain ({}) is allowed by access policy of mailing list: {}.'.format(sender_domain, policy))
                 return SMTP_ACTIONS['default']
 
         elif policy == MAILLIST_POLICY_SUBDOMAIN:
             # Bypass all users under the same domain and all sub domains.
             for d in valid_rcpt_domains:
                 if sender_domain == d or sender_domain.endswith('.' + d):
-                    logger.info('Sender domain (%s) is allowed by access policy of mailing list: %s.' % (d, policy))
+                    logger.info('Sender domain ({}) is allowed by access policy of mailing list: {}.'.format(d, policy))
                     return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
@@ -139,7 +139,7 @@ def restriction(**kwargs):
                 allowed_senders += _ldif.get(k, [])
 
         if sender in allowed_senders:
-            logger.info('Sender (%s) is allowed by access policy of mailing list: %s.' % (sender, policy))
+            logger.info('Sender ({}) is allowed by access policy of mailing list: {}.'.format(sender, policy))
             return SMTP_ACTIONS['default']
 
         return SMTP_ACTIONS['reject_not_authorized']
@@ -168,10 +168,10 @@ def restriction(**kwargs):
                     allowed_senders += _ldif.get(k, [])
 
             if sender in allowed_senders:
-                logger.info('Sender (%s) is allowed by access policy of mailing list: %s.' % (sender, policy))
+                logger.info('Sender ({}) is allowed by access policy of mailing list: {}.'.format(sender, policy))
                 return SMTP_ACTIONS['default']
         except Exception as e:
-            _msg = 'Error while querying allowed senders of mailing list (access policy: %s): %s' % (MAILLIST_POLICY_MEMBERSANDMODERATORSONLY, repr(e))
+            _msg = 'Error while querying allowed senders of mailing list (access policy: {}): {}'.format(MAILLIST_POLICY_MEMBERSANDMODERATORSONLY, repr(e))
             logger.error(_msg)
             return SMTP_ACTIONS['default'] + ' (%s)' % _msg
 
@@ -219,7 +219,7 @@ def restriction(**kwargs):
             _basedn = 'ou=Users,' + dn_rcpt_domain
             _f = '(&(objectClass=mailUser)(enabledService=shadowaddress)(|'
             for i in _users:
-                _f += '(mail=%s)(shadowAddress=%s)' % (i, i)
+                _f += '(mail={})(shadowAddress={})'.format(i, i)
             _f += '))'
 
             _search_attrs = ['mail', 'shadowAddress']
@@ -242,7 +242,7 @@ def restriction(**kwargs):
             _basedn = settings.ldap_basedn
             _f = '(&(objectClass=mailDomain)(enabledService=domainalias)(|'
             for i in _domains:
-                _f += '(domainName=%s)(domainAliasName=%s)' % (i, i)
+                _f += '(domainName={})(domainAliasName={})'.format(i, i)
             _f += '))'
 
             _search_attrs = ['domainName', 'domainAliasName']
@@ -266,7 +266,7 @@ def restriction(**kwargs):
                         allowed_senders += [d for d in _all_domains]
 
         if sender in allowed_senders or sender_domain in allowed_senders:
-            logger.info('Sender (%s) is allowed by access policy of mailing list: %s.' % (sender, policy))
+            logger.info('Sender ({}) is allowed by access policy of mailing list: {}.'.format(sender, policy))
             return SMTP_ACTIONS['default']
         else:
             return SMTP_ACTIONS['reject_not_authorized']

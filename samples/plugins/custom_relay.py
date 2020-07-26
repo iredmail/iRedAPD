@@ -144,11 +144,11 @@ def restriction(**kwargs):
     recipient_domain = kwargs['recipient_domain']
     if kwargs['smtp_session_data']['protocol_state'] == 'RCPT':
         if sasl_username_domain == recipient_domain:
-            logger.debug('SASL username domain is same as recipient domain (%s), use default relay: %s' % (recipient_domain, relay_for_local_recipient))
+            logger.debug('SASL username domain is same as recipient domain ({}), use default relay: {}'.format(recipient_domain, relay_for_local_recipient))
             return 'FILTER %s' % relay_for_local_recipient
 
         if is_local_domain(conn=conn_vmail, domain=recipient_domain, include_backupmx=True):
-            logger.debug('Recipient domain (%s) is locally hosted, use default relay: %s' % (recipient_domain, relay_for_local_recipient))
+            logger.debug('Recipient domain ({}) is locally hosted, use default relay: {}'.format(recipient_domain, relay_for_local_recipient))
             return 'FILTER %s' % relay_for_local_recipient
 
     if kwargs['smtp_session_data']['protocol_state'] == 'END-OF-MESSAGE':

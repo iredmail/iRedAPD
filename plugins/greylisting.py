@@ -53,7 +53,7 @@ def _is_whitelisted(conn,
                    FROM %s
                   WHERE account IN %s""" % (tbl, sqlquote(recipients))
 
-        logger.debug('[SQL] Query greylisting whitelists from `%s`: \n%s' % (tbl, sql))
+        logger.debug('[SQL] Query greylisting whitelists from `{}`: \n{}'.format(tbl, sql))
         qr = conn.execute(sql)
         records = qr.fetchall()
 
@@ -66,7 +66,7 @@ def _is_whitelisted(conn,
 
         _wl_senders = set(senders) & set(_wls)
         if _wl_senders:
-            logger.info('[%s] Sender address is explictly whitelisted for greylisting service: %s' % (client_address, ', '.join(_wl_senders)))
+            logger.info('[{}] Sender address is explictly whitelisted for greylisting service: {}'.format(client_address, ', '.join(_wl_senders)))
             return True
 
         whitelists += _wls
@@ -95,10 +95,10 @@ def _is_whitelisted(conn,
             try:
                 _net = ipaddress.ip_network(_cidr)
                 if ip_object in _net:
-                    logger.info('[%s] Client network is whitelisted: cidr=%s' % (client_address, _cidr))
+                    logger.info('[{}] Client network is whitelisted: cidr={}'.format(client_address, _cidr))
                     return True
             except Exception as e:
-                logger.debug('Not an valid IP network: sender=%s, error=%s' % (_cidr, repr(e)))
+                logger.debug('Not an valid IP network: sender={}, error={}'.format(_cidr, repr(e)))
 
     logger.debug('No whitelist found.')
     return False
@@ -110,7 +110,7 @@ def _client_address_passed_in_tracking(conn, client_address):
               WHERE client_address=%s AND passed=1
               LIMIT 1""" % sqlquote(client_address)
 
-    logger.debug('[SQL] check whether client address (%s) passed greylisting: \n%s' % (client_address, sql))
+    logger.debug('[SQL] check whether client address ({}) passed greylisting: \n{}'.format(client_address, sql))
     qr = conn.execute(sql)
     sql_record = qr.fetchone()
 
@@ -172,16 +172,16 @@ def _should_be_greylisted_by_setting(conn,
                         if ip_object in _net:
                             _matched = True
                     except Exception as e:
-                        logger.debug('Not a valid IP network: {0} (error: {1})'.format(_sender, e))
+                        logger.debug('Not a valid IP network: {} (error: {})'.format(_sender, e))
 
         if _matched:
             if _active == 1:
                 logger.debug("Greylisting should be applied according to SQL "
-                             "record: (id={0}, account='{1}', sender='{2}')".format(_id, _account, _sender))
+                             "record: (id={}, account='{}', sender='{}')".format(_id, _account, _sender))
                 return True
             else:
                 logger.debug("Greylisting should NOT be applied according to "
-                             "SQL record: (id={0}, account='{1}', sender='{2}')".format(_id, _account, _sender))
+                             "SQL record: (id={}, account='{}', sender='{}')".format(_id, _account, _sender))
                 # return directly
                 return False
 
@@ -226,11 +226,11 @@ def _should_be_greylisted_by_tracking(conn,
         qr = conn.execute(sql)
         sql_record = qr.fetchone()
     except Exception as e:
-        logger.error('Error while querying greylisting tracking: %s. SQL: %s' % (repr(e), sql))
+        logger.error('Error while querying greylisting tracking: {}. SQL: {}'.format(repr(e), sql))
 
     if not sql_record:
         # Not record found, insert a new one.
-        logger.info('[{0}] Client has not been seen before, greylisted ({1}).'.format(client_address, sender_domain))
+        logger.info('[{}] Client has not been seen before, greylisted ({}).'.format(client_address, sender_domain))
 
         sender_domain = sqlquote(sender_domain)
         sql = """INSERT INTO greylisting_tracking (sender, sender_domain,
@@ -275,7 +275,7 @@ def _should_be_greylisted_by_tracking(conn,
     # Tracking record doesn't expire, check whether client retries too soon.
     if now < _block_expired:
         # blocking not expired
-        logger.info('[%s] Client retries too soon, greylisted again (%s).' % (client_address, sender_domain))
+        logger.info('[{}] Client retries too soon, greylisted again ({}).'.format(client_address, sender_domain))
         sql = """UPDATE greylisting_tracking
                     SET blocked_count=blocked_count + 1
                   WHERE     sender=%s
@@ -309,7 +309,7 @@ def _should_be_greylisted_by_tracking(conn,
             try:
                 conn.execute(sql)
             except Exception as e:
-                logger.error('[%s] Error while Updating expired date for passed client: %s' % (client_address, repr(e)))
+                logger.error('[{}] Error while Updating expired date for passed client: {}'.format(client_address, repr(e)))
 
             # Remove other tracking records from same client IP address to save
             # database space.
@@ -320,7 +320,7 @@ def _should_be_greylisted_by_tracking(conn,
             try:
                 conn.execute(sql)
             except Exception as e:
-                logger.error('[%s] Error while removing other tracking records from passed client: %s' % (client_address, repr(e)))
+                logger.error('[{}] Error while removing other tracking records from passed client: {}'.format(client_address, repr(e)))
 
         return False
 
@@ -379,7 +379,7 @@ def restriction(**kwargs):
     # Bypass if sender server is listed in SPF DNS record of sender domain.
     if settings.GREYLISTING_BYPASS_SPF:
         if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
-            logger.info('[{0}] Bypass greylisting due to SPF match ({1})'.format(client_address, sender_domain))
+            logger.info('[{}] Bypass greylisting due to SPF match ({})'.format(client_address, sender_domain))
             return SMTP_ACTIONS['default']
 
     if _client_address_passed_in_tracking(conn=conn_iredapd, client_address=client_address):

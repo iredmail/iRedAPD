@@ -195,7 +195,7 @@ def restriction(**kwargs):
             return SMTP_ACTIONS['default']
 
     # Check emails sent by authenticated users.
-    logger.debug('Sender: %s, SASL username: %s' % (sender, sasl_username))
+    logger.debug('Sender: {}, SASL username: {}'.format(sender, sasl_username))
 
     if sender == sasl_username:
         logger.debug('SKIP: sender == sasl username.')
@@ -238,9 +238,9 @@ def restriction(**kwargs):
             logger.debug('Apply list/alias member restriction (ALLOWED_LOGIN_MISMATCH_LIST_MEMBER=True).')
 
         if settings.backend == 'ldap':
-            filter_user_alias = '(&(objectClass=mailUser)(mail=%s)(shadowAddress=%s))' % (sasl_username, sender)
-            filter_list_member = '(&(objectClass=mailUser)(|(mail=%s)(shadowAddress=%s))(memberOfGroup=%s))' % (sasl_username, sasl_username, sender)
-            filter_alias_member = '(&(objectClass=mailAlias)(|(mail=%s)(shadowAddress=%s))(mailForwardingAddress=%s))' % (sender, sender, sasl_username)
+            filter_user_alias = '(&(objectClass=mailUser)(mail={})(shadowAddress={}))'.format(sasl_username, sender)
+            filter_list_member = '(&(objectClass=mailUser)(|(mail={})(shadowAddress={}))(memberOfGroup={}))'.format(sasl_username, sasl_username, sender)
+            filter_alias_member = '(&(objectClass=mailAlias)(|(mail={})(shadowAddress={}))(mailForwardingAddress={}))'.format(sender, sender, sasl_username)
 
             if is_strict and (not allow_list_member):
                 # Query mail account directly
@@ -248,11 +248,11 @@ def restriction(**kwargs):
                 success_msg = 'Sender is an user alias address.'
             elif (not is_strict) and allow_list_member:
                 query_filter = '(|' + filter_list_member + filter_alias_member + ')'
-                success_msg = 'Sender (%s) is member of mail list/alias (%s).' % (sasl_username, sender)
+                success_msg = 'Sender ({}) is member of mail list/alias ({}).'.format(sasl_username, sender)
             else:
                 # (is_strict and allow_list_member)
                 query_filter = '(|' + filter_user_alias + filter_list_member + filter_alias_member + ')'
-                success_msg = 'Sender (%s) is an user alias address or list/alias member (%s).' % (sasl_username, sender)
+                success_msg = 'Sender ({}) is an user alias address or list/alias member ({}).'.format(sasl_username, sender)
 
             qr = conn_utils.get_account_ldif(conn=conn,
                                              account=sasl_username,
@@ -289,7 +289,7 @@ def restriction(**kwargs):
                 logger.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
-                    logger.debug('Sender %s is an alias address of smtp auth username %s.' % (sender, real_sasl_username))
+                    logger.debug('Sender {} is an alias address of smtp auth username {}.'.format(sender, real_sasl_username))
                     return SMTP_ACTIONS['default']
                 else:
                     logger.debug('No per-user alias address found.')
@@ -309,7 +309,7 @@ def restriction(**kwargs):
                     if not sql_record:
                         logger.debug('No alias domain found.')
                     else:
-                        logger.debug('Sender domain %s is an alias domain of %s.' % (sender_domain, sasl_username_domain))
+                        logger.debug('Sender domain {} is an alias domain of {}.'.format(sender_domain, sasl_username_domain))
 
                         real_sasl_username = sasl_username_user + '@' + sasl_username_domain
                         real_sender = sender_name + '@' + sasl_username_domain
@@ -327,21 +327,21 @@ def restriction(**kwargs):
                            FROM forwardings
                           WHERE address=%s AND forwarding=%s AND is_list=1 AND active=1
                           LIMIT 1""" % (sqlquote(real_sender), sqlquote(real_sasl_username))
-                logger.debug('[SQL] query members of mail alias account (%s): \n%s' % (real_sender, sql))
+                logger.debug('[SQL] query members of mail alias account ({}): \n{}'.format(real_sender, sql))
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 
                 if sql_record:
-                    logger.debug('SASL username (%s) is a member of mail alias (%s).' % (sasl_username, sender))
+                    logger.debug('SASL username ({}) is a member of mail alias ({}).'.format(sasl_username, sender))
                     return SMTP_ACTIONS['default']
                 else:
                     logger.debug('No such mail alias account.')
 
                 # Check subscribeable (mlmmj) mailing list.
                 sql = """SELECT id FROM maillists WHERE address=%s AND active=1 LIMIT 1""" % sqlquote(real_sender)
-                logger.debug('[SQL] query mailing list account (%s): \n%s' % (real_sender, sql))
+                logger.debug('[SQL] query mailing list account ({}): \n{}'.format(real_sender, sql))
 
                 qr = conn.execute(sql)
                 sql_record = qr.fetchone()
@@ -358,16 +358,16 @@ def restriction(**kwargs):
         if api_auth_token and settings.mlmmjadmin_api_endpoint:
             _api_endpoint = '/'.join([settings.mlmmjadmin_api_endpoint, real_sender, 'has_subscriber', sasl_username])
             api_headers = {settings.MLMMJADMIN_API_AUTH_TOKEN_HEADER_NAME: api_auth_token}
-            logger.debug('mlmmjadmin api endpoint: {0}'.format(_api_endpoint))
-            logger.debug('mlmmjadmin api headers: {0}'.format(api_headers))
+            logger.debug('mlmmjadmin api endpoint: {}'.format(_api_endpoint))
+            logger.debug('mlmmjadmin api headers: {}'.format(api_headers))
 
             try:
                 r = requests.get(_api_endpoint, headers=api_headers, verify=False)
                 _json = r.json()
                 if _json['_success']:
-                    logger.debug('SASL username (%s) is a member of mailing list (%s).' % (sasl_username, sender))
+                    logger.debug('SASL username ({}) is a member of mailing list ({}).'.format(sasl_username, sender))
                     return SMTP_ACTIONS['default']
             except Exception as e:
-                logger.error("Error while querying mlmmjadmin api: {0}".format(e))
+                logger.error("Error while querying mlmmjadmin api: {}".format(e))
 
     return action_reject

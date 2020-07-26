@@ -67,9 +67,9 @@ def restriction(**kwargs):
                                          sender=_wl_sender)
 
         if qr[0]:
-            logger.info('Recipient %s has been whitelisted for %s.' % (_wl_sender, _wl_account))
+            logger.info('Recipient {} has been whitelisted for {}.'.format(_wl_sender, _wl_account))
         else:
-            logger.error('<!> Error while whitelisting recipient %s for %s: %s' % (_wl_sender, _wl_account, qr[1]))
+            logger.error('<!> Error while whitelisting recipient {} for {}: {}'.format(_wl_sender, _wl_account, qr[1]))
 
     if settings.WL_RCPT_FOR_GREYLISTING:
         if settings.WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING:
@@ -80,7 +80,7 @@ def restriction(**kwargs):
             if qr[0]:
                 logger.info('Domain %s has been whitelisted globally for greylisting service.' % recipient_domain)
             else:
-                logger.error('<!> Error while whitelisting domain %s globally for greylisting service: %s' % (recipient_domain, qr[1]))
+                logger.error('<!> Error while whitelisting domain {} globally for greylisting service: {}'.format(recipient_domain, qr[1]))
         else:
             # Whitelist recipient for greylisting
             qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
@@ -89,8 +89,8 @@ def restriction(**kwargs):
                                              comment='AUTO-WHITELISTED')
 
             if qr[0]:
-                logger.info('Address %s has been whitelisted for greylisting service for local user %s.' % (recipient, sasl_username))
+                logger.info('Address {} has been whitelisted for greylisting service for local user {}.'.format(recipient, sasl_username))
             else:
-                logger.error('<!> Error while whitelisting address %s for greylisting service for local user %s: %s' % (recipient, sasl_username, qr[1]))
+                logger.error('<!> Error while whitelisting address {} for greylisting service for local user {}: {}'.format(recipient, sasl_username, qr[1]))
 
     return SMTP_ACTIONS['default']

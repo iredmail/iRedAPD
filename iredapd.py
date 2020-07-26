@@ -37,8 +37,8 @@ def main():
     db_conns = utils.get_required_db_conns()
 
     # Initialize policy daemon.
-    logger.info("Starting iRedAPD (version: {0}, backend: {1}), "
-                "listening on {2}:{3}.".format(
+    logger.info("Starting iRedAPD (version: {}, backend: {}), "
+                "listening on {}:{}.".format(
                     __version__, settings.backend,
                     settings.listen_address, settings.listen_port))
     local_addr = (settings.listen_address, int(settings.listen_port))
@@ -49,14 +49,14 @@ def main():
 
     if (settings.srs_secrets and settings.srs_domain):
         logger.info("Starting SRS sender rewriting channel, listening on "
-                    "{0}:{1}".format(settings.listen_address, settings.srs_forward_port))
+                    "{}:{}".format(settings.listen_address, settings.srs_forward_port))
         local_addr = (settings.listen_address, int(settings.srs_forward_port))
         DaemonSocket(local_addr=local_addr,
                      db_conns=db_conns,
                      policy_channel='srs_sender')
 
         logger.info("Starting SRS recipient rewriting channel, listening on "
-                    "{0}:{1}".format(settings.listen_address, settings.srs_reverse_port))
+                    "{}:{}".format(settings.listen_address, settings.srs_reverse_port))
         local_addr = (settings.listen_address, int(settings.srs_reverse_port))
         DaemonSocket(local_addr=local_addr,
                      db_conns=db_conns,
@@ -69,7 +69,7 @@ def main():
         try:
             daemon.daemonize(no_close=True)
         except Exception as e:
-            logger.error("Error in daemon.daemonize: {0}".format(repr(e)))
+            logger.error("Error in daemon.daemonize: {}".format(repr(e)))
 
     # Write pid number into pid file.
     f = open(settings.pid_file, 'w')
@@ -97,7 +97,7 @@ def main():
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        logger.error("Error in asyncore.loop: {0}".format(repr(e)))
+        logger.error("Error in asyncore.loop: {}".format(repr(e)))
 
 
 if __name__ == '__main__':

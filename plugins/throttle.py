@@ -275,14 +275,14 @@ def apply_throttle(conn,
          ORDER BY priority DESC
          """ % (sqlquote(throttle_kind), sqlquote(possible_addrs))
 
-    logger.debug('[SQL] Query throttle setting: {0}'.format(sql))
+    logger.debug('[SQL] Query throttle setting: {}'.format(sql))
     qr = conn.execute(sql)
     throttle_records = qr.fetchall()
 
-    logger.debug('[SQL] Query result: {0}'.format(throttle_records))
+    logger.debug('[SQL] Query result: {}'.format(throttle_records))
 
     if not throttle_records:
-        logger.debug('No {0} throttle setting.'.format(throttle_type))
+        logger.debug('No {} throttle setting.'.format(throttle_type))
         return SMTP_ACTIONS['default']
 
     # Time of now. used for init_time and last_time.
@@ -366,10 +366,10 @@ def apply_throttle(conn,
             throttle_info += 'max_quota=%(value)d (bytes)/id=%(tid)d/account=%(account)s; ' % t_settings['max_quota']
 
     if not t_settings:
-        logger.debug('No valid {0} throttle setting.'.format(throttle_type))
+        logger.debug('No valid {} throttle setting.'.format(throttle_type))
         return SMTP_ACTIONS['default']
     else:
-        logger.debug('{0} throttle setting: {1}'.format(throttle_type, throttle_info))
+        logger.debug('{} throttle setting: {}'.format(throttle_type, throttle_info))
 
     # Update track_key.
     for (_, v) in list(t_settings.items()):
@@ -393,11 +393,11 @@ def apply_throttle(conn,
               WHERE %s
               """ % ' OR '.join(tracking_sql_where)
 
-    logger.debug('[SQL] Query throttle tracking data: {0}'.format(sql))
+    logger.debug('[SQL] Query throttle tracking data: {}'.format(sql))
     qr = conn.execute(sql)
     tracking_records = qr.fetchall()
 
-    logger.debug('[SQL] Query result: {0}'.format(tracking_records))
+    logger.debug('[SQL] Query result: {}'.format(tracking_records))
 
     # `throttle.id`. syntax: {(tid, account): id}
     tracking_ids = {}
@@ -421,7 +421,7 @@ def apply_throttle(conn,
                 t_settings[t_name]['last_time'] = _last_time
                 t_settings[t_name]['last_notify_time'] = _last_notify_time
 
-    logger.debug('Tracking IDs: {0}'.format(tracking_ids))
+    logger.debug('Tracking IDs: {}'.format(tracking_ids))
 
     # Apply throttle setting on different protocol_state:
     #
@@ -470,13 +470,13 @@ def apply_throttle(conn,
             _real_max_msgs_cur_msgs = max_msgs_cur_msgs + _num_processed
 
             if _real_max_msgs_cur_msgs >= max_msgs > 0:
-                logger.info('[{0}] [{1}] Quota exceeded: {2} throttle for '
-                            'max_msgs, current: {3}. '
-                            '({4})'.format(client_address,
-                                           user,
-                                           throttle_type,
-                                           max_msgs_cur_msgs,
-                                           throttle_info))
+                logger.info('[{}] [{}] Quota exceeded: {} throttle for '
+                            'max_msgs, current: {}. '
+                            '({})'.format(client_address,
+                                          user,
+                                          throttle_type,
+                                          max_msgs_cur_msgs,
+                                          throttle_info))
 
                 # Send notification email if matches any of:
                 # 1: first exceed
@@ -496,15 +496,15 @@ def apply_throttle(conn,
                 # Show the time tracking record is about to expire
                 _left_seconds = _init_time + _period - _last_time
 
-                logger.info('[{0}] {1} throttle, {2} -> max_msgs '
-                            '({3}/{4}, period: {5} seconds, '
-                            '{6})'.format(client_address,
-                                          throttle_type,
-                                          user,
-                                          max_msgs_cur_msgs,
-                                          max_msgs,
-                                          _period,
-                                          utils.pretty_left_seconds(_left_seconds)))
+                logger.info('[{}] {} throttle, {} -> max_msgs '
+                            '({}/{}, period: {} seconds, '
+                            '{})'.format(client_address,
+                                         throttle_type,
+                                         user,
+                                         max_msgs_cur_msgs,
+                                         max_msgs,
+                                         _period,
+                                         utils.pretty_left_seconds(_left_seconds)))
 
     elif protocol_state == 'END-OF-MESSAGE':
         # Check `msg_size`
@@ -519,13 +519,13 @@ def apply_throttle(conn,
 
             # Check message size
             if size > msg_size > 0:
-                logger.info('[{0}] [{1}] Quota exceeded: {2} throttle for '
-                            'msg_size, current: {3} bytes. '
-                            '({4})'.format(client_address,
-                                           user,
-                                           throttle_type,
-                                           size,
-                                           throttle_info))
+                logger.info('[{}] [{}] Quota exceeded: {} throttle for '
+                            'msg_size, current: {} bytes. '
+                            '({})'.format(client_address,
+                                          user,
+                                          throttle_type,
+                                          size,
+                                          throttle_info))
 
                 if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
                     __sendmail(conn=conn,
@@ -549,22 +549,22 @@ def apply_throttle(conn,
 
                     utils.sendmail(subject=_subject, mail_body=_body)
                 except Exception as e:
-                    logger.error('Error while sending notification email: {0}'.format(e))
+                    logger.error('Error while sending notification email: {}'.format(e))
 
                 return SMTP_ACTIONS['reject_quota_exceeded']
             else:
                 # Show the time tracking record is about to expire
                 _left_seconds = _init_time + _period - _last_time
 
-                logger.info('[{0}] {1} throttle, {2} -> msg_size '
-                            '({3}/{4}, period: {5} seconds, '
-                            '{6})'.format(client_address,
-                                          throttle_type,
-                                          user,
-                                          size,
-                                          msg_size,
-                                          _period,
-                                          utils.pretty_left_seconds(_left_seconds)))
+                logger.info('[{}] {} throttle, {} -> msg_size '
+                            '({}/{}, period: {} seconds, '
+                            '{})'.format(client_address,
+                                         throttle_type,
+                                         user,
+                                         size,
+                                         msg_size,
+                                         _period,
+                                         utils.pretty_left_seconds(_left_seconds)))
 
         # Check `max_quota`
         if 'max_quota' in t_settings:
@@ -583,12 +583,12 @@ def apply_throttle(conn,
                 _cur_quota = 0
 
             if _cur_quota > max_quota > 0:
-                logger.info('[{0}] [{1}] Quota exceeded: {2} throttle for '
-                            'max_quota, current: {3}. ({4})'.format(client_address,
-                                                                    user,
-                                                                    throttle_type,
-                                                                    _cur_quota,
-                                                                    throttle_info))
+                logger.info('[{}] [{}] Quota exceeded: {} throttle for '
+                            'max_quota, current: {}. ({})'.format(client_address,
+                                                                  user,
+                                                                  throttle_type,
+                                                                  _cur_quota,
+                                                                  throttle_info))
 
                 if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
                     __sendmail(conn=conn,
@@ -606,15 +606,15 @@ def apply_throttle(conn,
                 # Show the time tracking record is about to expire
                 _left_seconds = _init_time + _period - _last_time
 
-                logger.info('[{0}] {1} throttle, {2} -> max_quota '
-                            '({3}/{4}, period: {5} seconds, '
-                            '{6})'.format(client_address,
-                                          throttle_type,
-                                          user,
-                                          _cur_quota,
-                                          max_quota,
-                                          _period,
-                                          utils.pretty_left_seconds(_left_seconds)))
+                logger.info('[{}] {} throttle, {} -> max_quota '
+                            '({}/{}, period: {} seconds, '
+                            '{})'.format(client_address,
+                                         throttle_type,
+                                         user,
+                                         _cur_quota,
+                                         max_quota,
+                                         _period,
+                                         utils.pretty_left_seconds(_left_seconds)))
 
         # Update tracking record.
         #
@@ -661,26 +661,26 @@ def apply_throttle(conn,
                           VALUES """
             sql += ','.join(set(sql_inserts))
 
-            logger.debug('[SQL] Insert new tracking record(s): {0}'.format(sql))
+            logger.debug('[SQL] Insert new tracking record(s): {}'.format(sql))
             conn.execute(sql)
 
         for (_tracking_id, _kv) in list(sql_updates.items()):
             _sql = """UPDATE throttle_tracking
-                         SET period={0},
-                             last_time={1},
-                             init_time={2},
-                             cur_msgs={3},
-                             cur_quota={4}
-                       WHERE id={5}""".format(_kv['period'],
-                                              _kv['last_time'],
-                                              _kv['init_time'],
-                                              _kv['cur_msgs'],
-                                              _kv['cur_quota'],
-                                              _tracking_id)
-            logger.debug('[SQL] Update tracking record: {0}'.format(_sql))
+                         SET period={},
+                             last_time={},
+                             init_time={},
+                             cur_msgs={},
+                             cur_quota={}
+                       WHERE id={}""".format(_kv['period'],
+                                             _kv['last_time'],
+                                             _kv['init_time'],
+                                             _kv['cur_msgs'],
+                                             _kv['cur_quota'],
+                                             _tracking_id)
+            logger.debug('[SQL] Update tracking record: {}'.format(_sql))
             conn.execute(_sql)
 
-    logger.debug('[OK] Passed all {0} throttle settings.'.format(throttle_type))
+    logger.debug('[OK] Passed all {} throttle settings.'.format(throttle_type))
     return SMTP_ACTIONS['default']
 
 

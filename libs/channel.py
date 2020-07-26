@@ -57,18 +57,18 @@ class DaemonSocket(asyncore.dispatcher):
                        sender_search_attrlist=self.sender_search_attrlist,
                        recipient_search_attrlist=self.recipient_search_attrlist)
             except Exception as e:
-                logger.error("Error while applying policy channel: {0}".format(repr(e)))
+                logger.error("Error while applying policy channel: {}".format(repr(e)))
         elif self.policy_channel == 'srs_sender':
             try:
                 SRS(sock, db_conns=self.db_conns, rewrite_address_type='sender')
             except Exception as e:
-                logger.error("Error while applying srs (sender): {0}".format(repr(e)))
+                logger.error("Error while applying srs (sender): {}".format(repr(e)))
 
         elif self.policy_channel == 'srs_recipient':
             try:
                 SRS(sock, db_conns=self.db_conns, rewrite_address_type='recipient')
             except Exception as e:
-                logger.error("Error while applying srs (recipient): {0}".format(repr(e)))
+                logger.error("Error while applying srs (recipient): {}".format(repr(e)))
 
 
 class Policy(asynchat.async_chat):
@@ -93,7 +93,7 @@ class Policy(asynchat.async_chat):
         try:
             asynchat.async_chat.push(self, (msg + '\n').encode())
         except Exception as e:
-            logger.error("Error while pushing message: msg={0}, error={1}".format(msg, repr(e)))
+            logger.error("Error while pushing message: msg={}, error={}".format(msg, repr(e)))
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -104,7 +104,7 @@ class Policy(asynchat.async_chat):
             line = self.buffer.pop().decode()
 
             if '=' in line:
-                logger.debug("[policy] {0}".format(line))
+                logger.debug("[policy] {}".format(line))
                 (k, v) = line.split('=', 1)
 
                 if k in SMTP_SESSION_ATTRIBUTES:
@@ -118,7 +118,7 @@ class Policy(asynchat.async_chat):
                         if v:
                             if not utils.is_email(v):
                                 # Don't waste time on invalid email addresses.
-                                action = SMTP_ACTIONS['default'] + ' Error: Invalid %s address: %s' % (k, v)
+                                action = SMTP_ACTIONS['default'] + ' Error: Invalid {} address: {}'.format(k, v)
                                 self.push('action=' + action + '\n')
 
                         self.smtp_session_data[k] = v
@@ -132,7 +132,7 @@ class Policy(asynchat.async_chat):
                     else:
                         self.smtp_session_data[k] = v
                 else:
-                    logger.debug("[policy] Drop invalid smtp session input: {0}".format(line))
+                    logger.debug("[policy] Drop invalid smtp session input: {}".format(line))
 
         elif self.smtp_session_data:
             # Track how long a request takes
@@ -171,11 +171,11 @@ class Policy(asynchat.async_chat):
                     action = result
                 else:
                     action = SMTP_ACTIONS['default']
-                    logger.error("No result returned by modeler, fallback to default action: {0}.".format(action))
+                    logger.error("No result returned by modeler, fallback to default action: {}.".format(action))
 
             except Exception as e:
                 action = SMTP_ACTIONS['default']
-                logger.error("Unexpected error: {0}. Fallback to default action: {1}".format(repr(e), action))
+                logger.error("Unexpected error: {}. Fallback to default action: {}".format(repr(e), action))
 
             # Remove tracking data when:
             #
@@ -213,7 +213,7 @@ class Policy(asynchat.async_chat):
                                        **self.smtp_session_data)
         else:
             action = SMTP_ACTIONS['default']
-            logger.debug("replying: {0}".format(action))
+            logger.debug("replying: {}".format(action))
             self.push('action=' + action + '\n')
             logger.debug("Session ended")
 
@@ -237,7 +237,7 @@ class SRS(asynchat.async_chat):
         try:
             asynchat.async_chat.push(self, (msg + '\n').encode())
         except Exception as e:
-            logger.error("Error while pushing message: error={0}, message={1}".format(repr(e), msg))
+            logger.error("Error while pushing message: error={}, message={}".format(repr(e), msg))
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -256,7 +256,7 @@ class SRS(asynchat.async_chat):
                 conn_vmail = self.db_conns['conn_vmail']
                 _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
             except Exception as e:
-                logger.error("{0} Error while verifying domain: {1}".format(self.log_prefix, repr(e)))
+                logger.error("{} Error while verifying domain: {}".format(self.log_prefix, repr(e)))
 
             if _is_local_domain:
                 reply = TCP_REPLIES['not_exist'] + 'Domain is a local mail domain, bypassed.'
@@ -272,14 +272,14 @@ class SRS(asynchat.async_chat):
 
                 conn_iredapd = self.db_conns['conn_iredapd']
                 sql = """SELECT id FROM srs_exclude_domains WHERE domain IN %s LIMIT 1""" % sqlquote(list(possible_domains))
-                logger.debug("{0} [SQL] Query srs_exclude_domains: {1}".format(self.log_prefix, sql))
+                logger.debug("{} [SQL] Query srs_exclude_domains: {}".format(self.log_prefix, sql))
 
                 try:
                     qr = conn_iredapd.execute(sql)
                     sql_record = qr.fetchone()
-                    logger.debug("{0} [SQL] Query result: {1}".format(self.log_prefix, sql_record))
+                    logger.debug("{} [SQL] Query result: {}".format(self.log_prefix, sql_record))
                 except Exception as e:
-                    logger.debug("{0} Error while querying SQL: {1}".format(self.log_prefix, repr(e)))
+                    logger.debug("{} Error while querying SQL: {}".format(self.log_prefix, repr(e)))
                     reply = TCP_REPLIES['not_exist']
                     return reply
 
@@ -289,11 +289,11 @@ class SRS(asynchat.async_chat):
                 else:
                     try:
                         new_addr = str(self.srslib_instance.forward(addr, settings.srs_domain))
-                        logger.info("{0} rewrited: {1} -> {2}".format(self.log_prefix, addr, new_addr))
+                        logger.info("{} rewrited: {} -> {}".format(self.log_prefix, addr, new_addr))
                         reply = TCP_REPLIES['success'] + new_addr
                         return reply
                     except Exception as e:
-                        logger.debug("{0} Error while generating forward address: {1}".format(self.log_prefix, repr(e)))
+                        logger.debug("{} Error while generating forward address: {}".format(self.log_prefix, repr(e)))
                         # Return original address.
                         reply = TCP_REPLIES['not_exist']
                         return reply
@@ -306,10 +306,10 @@ class SRS(asynchat.async_chat):
             # Reverse
             try:
                 new_addr = str(self.srslib_instance.reverse(addr))
-                logger.info("{0} reversed: {1} -> {2}".format(self.log_prefix, addr, new_addr))
+                logger.info("{} reversed: {} -> {}".format(self.log_prefix, addr, new_addr))
                 reply = TCP_REPLIES['success'] + new_addr
             except Exception as e:
-                logger.debug("{0} Error while generating reverse address: {1}".format(self.log_prefix, repr(e)))
+                logger.debug("{} Error while generating reverse address: {}".format(self.log_prefix, repr(e)))
 
                 # Return original address.
                 reply = TCP_REPLIES['not_exist']
@@ -321,7 +321,7 @@ class SRS(asynchat.async_chat):
     def found_terminator(self):
         if self.buffer:
             line = self.buffer.pop().decode()
-            logger.debug("{0} input: {1}".format(self.log_prefix, line))
+            logger.debug("{} input: {}".format(self.log_prefix, line))
 
             if line.startswith('get '):
                 addr = line.strip().split(' ', 1)[-1]
@@ -331,15 +331,15 @@ class SRS(asynchat.async_chat):
 
                     if self.rewrite_address_type == 'sender':
                         reply = self.srs_forward(addr=addr, domain=domain)
-                        logger.debug("{0} {1}".format(self.log_prefix, reply))
+                        logger.debug("{} {}".format(self.log_prefix, reply))
                         self.push(reply)
                     else:
                         reply = self.srs_reverse(addr=addr)
-                        logger.debug("{0} {1}".format(self.log_prefix, reply))
+                        logger.debug("{} {}".format(self.log_prefix, reply))
                         self.push(reply)
                 else:
-                    logger.debug("{0} Not a valid email address, bypassed.".format(self.log_prefix))
+                    logger.debug("{} Not a valid email address, bypassed.".format(self.log_prefix))
                     self.push(TCP_REPLIES['not_exist'] + 'Not a valid email address, bypassed.')
             else:
-                logger.debug("{0} Unexpected input: {1}".format(self.log_prefix, line))
-                self.push(TCP_REPLIES['not_exist'] + 'Unexpected input: {0}'.format(line))
+                logger.debug("{} Unexpected input: {}".format(self.log_prefix, line))
+                self.push(TCP_REPLIES['not_exist'] + 'Unexpected input: {}'.format(line))

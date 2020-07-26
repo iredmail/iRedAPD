@@ -65,11 +65,11 @@ def restriction(**kwargs):
             score = int(row[0])
             cache_matched = True
         except Exception as e:
-            logger.error("[{0}] senderscore -> Error while converting score "
-                         "to integer: {1}".format(client_address, e))
+            logger.error("[{}] senderscore -> Error while converting score "
+                         "to integer: {}".format(client_address, e))
     else:
         (o1, o2, o3, o4) = client_address.split(".")
-        lookup_domain = "{0}.{1}.{2}.{3}.score.senderscore.com".format(o4, o3, o2, o1)
+        lookup_domain = "{}.{}.{}.{}.score.senderscore.com".format(o4, o3, o2, o1)
 
         try:
             qr = resv.query(lookup_domain, "A")
@@ -80,15 +80,15 @@ def restriction(**kwargs):
             score = int(ip.split(".")[-1])
             cache_the_score = True
         except (resolver.NoAnswer):
-            logger.debug("[{0}] senderscore -> NoAnswer".format(client_address))
+            logger.debug("[{}] senderscore -> NoAnswer".format(client_address))
             cache_the_score = True
         except resolver.NXDOMAIN:
-            logger.debug("[{0}] senderscore -> NXDOMAIN".format(client_address))
+            logger.debug("[{}] senderscore -> NXDOMAIN".format(client_address))
             cache_the_score = True
         except (resolver.Timeout):
-            logger.debug("[{0}] senderscore -> Timeout".format(client_address))
+            logger.debug("[{}] senderscore -> Timeout".format(client_address))
         except Exception as e:
-            logger.error("[{0}] senderscore -> Error: {1}".format(client_address, e))
+            logger.error("[{}] senderscore -> Error: {}".format(client_address, e))
 
     if 0 <= score <= 100:
         if cache_the_score:
@@ -101,19 +101,19 @@ def restriction(**kwargs):
             try:
                 conn_iredapd.execute(sql)
             except Exception as e:
-                logger.error("[{0}] senderscore -> Error while caching score: {1}".format(client_address, e))
+                logger.error("[{}] senderscore -> Error while caching score: {}".format(client_address, e))
     else:
         logger.error("Invalid sender score: %d (must between 0-100)" % score)
         return SMTP_ACTIONS['default']
 
     sender_domain = kwargs["sasl_username_domain"] or kwargs["sender_domain"]
 
-    log_msg = "[{0}] [{1}] senderscore: {2}".format(client_address, sender_domain, score)
+    log_msg = "[{}] [{}] senderscore: {}".format(client_address, sender_domain, score)
     if cache_matched:
         log_msg += " (cache matched)"
 
     if score <= reject_score:
-        log_msg += " [REJECT (<= {0})]".format(reject_score)
+        log_msg += " [REJECT (<= {})]".format(reject_score)
         logger.info(log_msg)
         return SMTP_ACTIONS["reject_low_sender_score"] + client_address
 

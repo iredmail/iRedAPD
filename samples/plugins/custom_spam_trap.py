@@ -64,7 +64,7 @@ def restriction(**kwargs):
     for rcpt in settings.SPAM_TRAP_ACCOUNTS:
         if rcpt.endswith('@'):
             if recipient.startswith(rcpt):
-                logger.debug('Spam trap recipient found (matches: %s): %s.' % (rcpt, recipient))
+                logger.debug('Spam trap recipient found (matches: {}): {}.'.format(rcpt, recipient))
                 _block_sender(sender=sender)
                 return settings.SPAM_TRAP_SMTP_ACTION
 

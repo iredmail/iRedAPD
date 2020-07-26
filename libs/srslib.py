@@ -17,7 +17,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """Sender Rewriting Scheme (SRS) library for Python."""
 
-# from typing import List, Tuple, Union
+from typing import Tuple, Union
 import base64
 import hashlib
 import hmac
@@ -42,7 +42,7 @@ class InvalidTimestampError(Error):
     """Invalid timestamp in an SRS address."""
 
 
-class SRS(object):
+class SRS:
     """A Sender Rewriting Scheme (SRS) instance.
 
     This class implements the Guarded scheme described in the original SRS paper
@@ -207,7 +207,7 @@ class SRS(object):
         m = self._SRS1.match(from_local_part)
         if m:
             self.check_hash(m.group(1), m.group(2) + m.group(3), srs_addr)
-            return 'SRS0%s@%s' % (m.group(3), m.group(2))
+            return 'SRS0{}@{}'.format(m.group(3), m.group(2))
 
         # Case 2: Address is an SRS0 address. We were the first hop in the
         # forwarding chain, and we will bounce back to the original envelope sender.
@@ -216,7 +216,7 @@ class SRS(object):
             self.check_hash(
                 m.group(1), m.group(2) + m.group(3) + m.group(4), srs_addr)
             self.check_ts(m.group(2), srs_addr)
-            return '%s@%s' % (m.group(4), m.group(3))
+            return '{}@{}'.format(m.group(4), m.group(3))
 
         raise InvalidAddressError('Unrecognized SRS address: "%s"' % srs_addr)
 
@@ -256,7 +256,7 @@ class SRS(object):
           str: The rewritten SRS0 address.
         """
         ts = self.generate_ts()
-        return 'SRS0=%s=%s=%s=%s@%s' % (
+        return 'SRS0={}={}={}={}@{}'.format(
             self.generate_hash(
                 ts + orig_host + orig_local_part,
                 self._secret,
@@ -282,7 +282,7 @@ class SRS(object):
         Returns:
           str: The rewritten SRS1 address.
         """
-        return 'SRS1=%s=%s=%s@%s' % (
+        return 'SRS1={}={}={}@{}'.format(
             self.generate_hash(
                 first_hop_host + first_hop_local_part,
                 self._secret,
@@ -371,8 +371,7 @@ class SRS(object):
         Raises:
           :obj:`srslib.InvalidTimestampError`: timestamp is invalid.
         """
-        if (self._valid_ts_cache is None or
-                self._valid_ts_cache[0] != self.generate_ts()):
+        if (self._valid_ts_cache is None) or (self._valid_ts_cache[0] != self.generate_ts()):
             now = self._time_fn()
             self._valid_ts_cache = [
                 self.generate_ts(now - i * self._SECONDS_IN_DAY)

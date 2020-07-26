@@ -57,7 +57,7 @@ conn = web.database(dbn=sql_dbn,
 
 conn.supports_multiple_insert = True
 
-logger.info("* Backend: {0}".format(backend))
+logger.info("* Backend: {}".format(backend))
 
 # --------------------------
 # Get throttle settings.
@@ -154,7 +154,7 @@ if qr:
         elif _type == 'MessageCumulativeSize':
             t_settings[_id]['max_quota'] = _counterlimit
 
-logger.info("Total {0} throttle settings.".format(len(t_settings)))
+logger.info("Total {} throttle settings.".format(len(t_settings)))
 
 conn = get_db_conn('iredapd')
 for t in t_settings:
@@ -172,4 +172,4 @@ for t in t_settings:
     try:
         conn.query(sql)
     except Exception as e:
-        logger.error("<<< Error >>> {0}".format(repr(e)))
+        logger.error("<<< Error >>> {}".format(repr(e)))

@@ -68,4 +68,4 @@ if action == 'whitelist':
 
     # Insert whitelist.
     conn.multiple_insert("senderscore_cache", rows)
-    logger.info("Whitelisted: {0}".format(", ".join(ips)))
+    logger.info("Whitelisted: {}".format(", ".join(ips)))

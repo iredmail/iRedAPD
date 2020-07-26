@@ -11,7 +11,7 @@ def create_mailaddr(conn, addresses) -> bool:
         if addr_type in utils.MAILADDR_PRIORITIES:
             priority = utils.MAILADDR_PRIORITIES[addr_type]
             try:
-                sql = "INSERT INTO mailaddr (email, priority) VALUES (%s, %s)" % (sqlquote(addr), sqlquote(priority))
+                sql = "INSERT INTO mailaddr (email, priority) VALUES ({}, {})".format(sqlquote(addr), sqlquote(priority))
                 conn.execute(sql)
             except:
                 pass
@@ -97,40 +97,40 @@ def add_wblist(conn,
 
     # Remove duplicate.
     if wl_senders:
-        wl_senders = set([str(s).lower()
-                          for s in wl_senders
-                          if utils.is_valid_amavisd_address(s)])
+        wl_senders = {str(s).lower()
+                      for s in wl_senders
+                      if utils.is_valid_amavisd_address(s)}
     else:
         wl_senders = set()
 
     # Whitelist has higher priority, don't include whitelisted sender.
     if bl_senders:
-        bl_senders = set([str(s).lower()
-                          for s in bl_senders
-                          if utils.is_valid_amavisd_address(s)])
+        bl_senders = {str(s).lower()
+                      for s in bl_senders
+                      if utils.is_valid_amavisd_address(s)}
     else:
         bl_senders = set()
 
     if wl_rcpts:
-        wl_rcpts = set([str(s).lower()
-                        for s in wl_rcpts
-                        if utils.is_valid_amavisd_address(s)])
+        wl_rcpts = {str(s).lower()
+                    for s in wl_rcpts
+                    if utils.is_valid_amavisd_address(s)}
     else:
         wl_rcpts = set()
 
     if bl_rcpts:
-        bl_rcpts = set([str(s).lower()
-                        for s in bl_rcpts
-                        if utils.is_valid_amavisd_address(s)])
+        bl_rcpts = {str(s).lower()
+                    for s in bl_rcpts
+                    if utils.is_valid_amavisd_address(s)}
     else:
         bl_rcpts = set()
 
     if flush_before_import:
         if wl_senders:
-            bl_senders = set([s for s in bl_senders if s not in wl_senders])
+            bl_senders = {s for s in bl_senders if s not in wl_senders}
 
         if wl_rcpts:
-            bl_rcpts = set([s for s in bl_rcpts if s not in wl_rcpts])
+            bl_rcpts = {s for s in bl_rcpts if s not in wl_rcpts}
 
     sender_addresses = set(wl_senders) | set(bl_senders)
     rcpt_addresses = set(wl_rcpts) | set(bl_rcpts)
@@ -220,18 +220,18 @@ def add_wblist(conn,
         if values:
             for v in values:
                 try:
-                    conn.execute("INSERT INTO wblist (sid, rid, wb) VALUES (%s, %s, %s)" % (sqlquote(v['sid']),
-                                                                                            sqlquote(v['rid']),
-                                                                                            sqlquote(v['wb'])))
+                    conn.execute("INSERT INTO wblist (sid, rid, wb) VALUES ({}, {}, {})".format(sqlquote(v['sid']),
+                                                                                                sqlquote(v['rid']),
+                                                                                                sqlquote(v['wb'])))
                 except Exception as e:
                     logger.error(e)
 
         if rcpt_values:
             for v in rcpt_values:
                 try:
-                    conn.execute("INSERT INTO outbound_wblist (sid, rid, wb) VALUES (%s, %s, %s)" % (sqlquote(v['sid']),
-                                                                                                     sqlquote(v['rid']),
-                                                                                                     sqlquote(v['wb'])))
+                    conn.execute("INSERT INTO outbound_wblist (sid, rid, wb) VALUES ({}, {}, {})".format(sqlquote(v['sid']),
+                                                                                                         sqlquote(v['rid']),
+                                                                                                         sqlquote(v['wb'])))
                 except Exception as e:
                     logger.error(e)
 
@@ -252,25 +252,25 @@ def delete_wblist(conn,
 
     # Remove duplicate.
     if wl_senders:
-        wl_senders = list(set([str(s).lower()
-                               for s in wl_senders
-                               if utils.is_valid_amavisd_address(s)]))
+        wl_senders = list({str(s).lower()
+                           for s in wl_senders
+                           if utils.is_valid_amavisd_address(s)})
 
     # Whitelist has higher priority, don't include whitelisted sender.
     if bl_senders:
-        bl_senders = list(set([str(s).lower()
-                               for s in bl_senders
-                               if utils.is_valid_amavisd_address(s)]))
+        bl_senders = list({str(s).lower()
+                           for s in bl_senders
+                           if utils.is_valid_amavisd_address(s)})
 
     if wl_rcpts:
-        wl_rcpts = list(set([str(s).lower()
-                             for s in wl_rcpts
-                             if utils.is_valid_amavisd_address(s)]))
+        wl_rcpts = list({str(s).lower()
+                         for s in wl_rcpts
+                         if utils.is_valid_amavisd_address(s)})
 
     if bl_rcpts:
-        bl_rcpts = list(set([str(s).lower()
-                             for s in bl_rcpts
-                             if utils.is_valid_amavisd_address(s)]))
+        bl_rcpts = list({str(s).lower()
+                         for s in bl_rcpts
+                         if utils.is_valid_amavisd_address(s)})
 
     # Get account id from `amavisd.users`
     qr = get_user_record(conn=conn, account=account)
@@ -302,7 +302,7 @@ def delete_wblist(conn,
                 wl_smails.append(utils.bytes2str(_email))
 
             if sids:
-                conn.execute("DELETE FROM wblist WHERE rid=%s AND sid IN %s AND wb='W'" % (sqlquote(user_id), sqlquote(sids)))
+                conn.execute("DELETE FROM wblist WHERE rid={} AND sid IN {} AND wb='W'".format(sqlquote(user_id), sqlquote(sids)))
 
         if bl_senders:
             sids = []
@@ -317,7 +317,7 @@ def delete_wblist(conn,
                 bl_smails.append(utils.bytes2str(_email))
 
             if sids:
-                conn.execute("DELETE FROM wblist WHERE rid=%s AND sid IN %s AND wb='B'" % (sqlquote(user_id), sqlquote(sids)))
+                conn.execute("DELETE FROM wblist WHERE rid={} AND sid IN {} AND wb='B'".format(sqlquote(user_id), sqlquote(sids)))
 
         if wl_rcpts:
             rids = []
@@ -332,7 +332,7 @@ def delete_wblist(conn,
                 wl_rmails.append(utils.bytes2str(_email))
 
             if rids:
-                conn.execute("DELETE FROM outbound_wblist WHERE sid=%s AND rid IN %s AND wb='W'" % (sqlquote(user_id), sqlquote(rids)))
+                conn.execute("DELETE FROM outbound_wblist WHERE sid={} AND rid IN {} AND wb='W'".format(sqlquote(user_id), sqlquote(rids)))
 
         if bl_rcpts:
             rids = []
@@ -347,7 +347,7 @@ def delete_wblist(conn,
                 bl_rmails.append(utils.bytes2str(_email))
 
             if rids:
-                conn.execute("DELETE FROM outbound_wblist WHERE sid=%s AND rid IN %s AND wb='B'" % (sqlquote(user_id), sqlquote(rids)))
+                conn.execute("DELETE FROM outbound_wblist WHERE sid={} AND rid IN {} AND wb='B'".format(sqlquote(user_id), sqlquote(rids)))
 
     except Exception as e:
         return (False, str(e))

@@ -88,7 +88,7 @@ def cleanup_sql_table(conn,
     while True:
         remove_values = []
         _qr = conn.select(sql_table,
-                          what="{0}".format(unique_index_column),
+                          what="{}".format(unique_index_column),
                           where=sql_where,
                           limit=settings.CLEANUP_QUERY_SIZE_LIMIT)
 
@@ -101,16 +101,16 @@ def cleanup_sql_table(conn,
 
             conn.delete(sql_table,
                         vars={'values': remove_values},
-                        where='{0} IN $values'.format(unique_index_column))
+                        where='{} IN $values'.format(unique_index_column))
 
-            logger.info("* {0:20}: {1} records removed.".format(sql_table, num_removed_rows))
+            logger.info("* {:20}: {} records removed.".format(sql_table, num_removed_rows))
         else:
             break
 
         loops += 1
 
     if print_left_rows:
-        _qr = conn.select(sql_table, what="COUNT({0}) AS total".format(unique_index_column))
+        _qr = conn.select(sql_table, what="COUNT({}) AS total".format(unique_index_column))
         total = _qr[0].total or 0
 
-        logger.info("* {0:20}: {1} left.".format(sql_table, total))
+        logger.info("* {:20}: {} left.".format(sql_table, total))
