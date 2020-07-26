@@ -289,7 +289,7 @@ class SRS(asynchat.async_chat):
                 else:
                     try:
                         new_addr = str(self.srslib_instance.forward(addr, settings.srs_domain))
-                        logger.info("{} rewrited: {} -> {}".format(self.log_prefix, addr, new_addr))
+                        logger.info("{} rewrote: {} -> {}".format(self.log_prefix, addr, new_addr))
                         reply = TCP_REPLIES['success'] + new_addr
                         return reply
                     except Exception as e:
