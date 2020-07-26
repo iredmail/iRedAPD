@@ -1015,8 +1015,8 @@ EOF
 fi
 
 echo "* Replace py2 by py3 in cron jobs."
-perl -pi -e 's#(.*) python (.*/opt/iredapd/tools/.*)#${1}$ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}
-perl -pi -e 's#(.*) python2 (.*/opt/iredapd/tools/.*)#${1}$ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}
+perl -pi -e 's#(.*) python (.*/opt/iredapd/tools/.*)#${1} $ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}
+perl -pi -e 's#(.*) python2 (.*/opt/iredapd/tools/.*)#${1} $ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}
 perl -pi -e 's#(.*)/usr/bin/python (.*/opt/iredapd/tools/.*)#${1}$ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}
 perl -pi -e 's#(.*)/usr/bin/python2 (.*/opt/iredapd/tools/.*)#${1}$ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}
 perl -pi -e 's#(.*)/usr/local/bin/python (.*/opt/iredapd/tools/.*)#${1}$ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}
