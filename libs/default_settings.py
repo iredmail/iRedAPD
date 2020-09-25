@@ -124,7 +124,11 @@ CHECK_FORGED_SENDER = True
 # For example, if some ISPs may send email as 'user@mydomain.com' (mydomain.com
 # is hosted on your server) to you, you should add `user@mydomain.com` as one
 # of forged senders.
-# Sample: ALLOWED_FORGED_SENDERS = ['user@mydomain.com', 'mydomain.com']
+#
+# Another solution is enabling `CHECK_SPF_IF_LOGIN_MISMATCH = True` below, and
+# list sender server IP in SPF record of the mail domain.
+#
+# Sample setting: ALLOWED_FORGED_SENDERS = ['user@mydomain.com', 'mydomain.com']
 ALLOWED_FORGED_SENDERS = []
 
 # Check DNS SPF record of sender domain if sender login mismatch.
