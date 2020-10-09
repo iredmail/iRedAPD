@@ -402,7 +402,7 @@ echo "  + [required] web.py"
 if [ X"$(has_python_module web)" == X'NO' ]; then
     # FreeBSD ports has 0.40. So we install the latest with pip.
     # Note: `>=` doesn't work on CentOS 7, has to use `==` instead.
-    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py==0.51"
+    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py>=0.61"
 fi
 
 if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
@@ -1006,13 +1006,13 @@ EOF
 fi
 
 # cron job for updating IP addresses/networks of greylisting whitelist domains.
-if ! grep 'spf_to_greylist_whitelists.py' ${CRON_FILE_ROOT} &>/dev/null; then
-    cat >> ${CRON_FILE_ROOT} <<EOF
-# iRedAPD: Convert specified SPF DNS record of specified domain names to IP
-#          addresses/networks every 10 minutes.
-*/30   *   *   *   *   ${CMD_PYTHON3} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylist_whitelists.py &>/dev/null
-EOF
-fi
+#if ! grep 'spf_to_greylist_whitelists.py' ${CRON_FILE_ROOT} &>/dev/null; then
+#    cat >> ${CRON_FILE_ROOT} <<EOF
+## iRedAPD: Convert specified SPF DNS record of specified domain names to IP
+##          addresses/networks every 10 minutes.
+#*/30   *   *   *   *   ${CMD_PYTHON3} ${IREDAPD_ROOT_DIR}/tools/spf_to_greylist_whitelists.py &>/dev/null
+#EOF
+#fi
 
 echo "* Replace py2 by py3 in cron jobs."
 perl -pi -e 's#(.*) python (.*/opt/iredapd/tools/.*)#${1} $ENV{CMD_PYTHON3} ${2}#' ${CRON_FILE_ROOT}

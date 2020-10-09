@@ -9,6 +9,7 @@ import smtplib
 import ipaddress
 import uuid
 import sqlite3
+from typing import Union, List, Tuple, Set, Dict, Any
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -770,13 +771,65 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
     return None
 
 
-def bytes2str(b):
-    """Convert `b` from bytes to string. If `b` is not bytes, return original
-    `b` directly.
+def __bytes2str(b) -> str:
+    """Convert object `b` to string.
+
+    >>> __bytes2str("a")
+    'a'
+    >>> __bytes2str(b"a")
+    'a'
+    >>> __bytes2str(["a"])  # list: return `repr()`
+    "['a']"
+    >>> __bytes2str(("a",)) # tuple: return `repr()`
+    "('a',)"
+    >>> __bytes2str({"a"})  # set: return `repr()`
+    "{'a'}"
     """
+    if isinstance(b, str):
+        return b
+
     if isinstance(b, (bytes, bytearray)):
         return b.decode()
     elif isinstance(b, memoryview):
         return b.tobytes().decode()
     else:
-        return b
+        return repr(b)
+
+
+def bytes2str(b: Union[bytes, str, List, Tuple, Set, Dict])\
+        -> Union[str, List[str], Tuple[str], Dict[Any, str]]:
+    """Convert `b` from bytes-like type to string.
+
+    - If `b` is a string object, returns original `b`.
+    - If `b` is a bytes, returns `b.decode()`.
+
+    bytes-like object, return `repr(b)` directly.
+
+    >>> bytes2str("a")
+    'a'
+    >>> bytes2str(b"a")
+    'a'
+    >>> bytes2str(["a"])
+    ['a']
+    >>> bytes2str((b"a",))
+    ('a',)
+    >>> bytes2str({b"a"})
+    {'a'}
+    >>> bytes2str({"a": b"a"})      # used to convert LDAP query result.
+    {'a': 'a'}
+    """
+    if isinstance(b, list):
+        s = [bytes2str(i) for i in b]
+    elif isinstance(b, tuple):
+        s = tuple([bytes2str(i) for i in b])
+    elif isinstance(b, set):
+        s = {bytes2str(i) for i in b}
+    elif isinstance(b, dict):
+        new_dict = {}
+        for (k, v) in list(b.items()):
+            new_dict[k] = bytes2str(v)  # v could be list/tuple/dict
+        s = new_dict
+    else:
+        s = __bytes2str(b)
+
+    return s

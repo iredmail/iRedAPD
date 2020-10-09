@@ -39,8 +39,9 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
 
         if result:
             logger.debug("result: {}".format(repr(result)))
-            # (dn, entry = result[0])
-            return result[0]
+            (_dn, _ldif) = result[0]
+            _ldif = utils.bytes2str(_ldif)
+            return (_dn, _ldif)
         else:
             logger.debug('No such account.')
             return (None, None)

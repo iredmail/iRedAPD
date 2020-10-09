@@ -1,3 +1,7 @@
+iRedAPD-4.5:
+    - Fixed issues:
+        - Not convert LDAP data (bytes) to string.
+
 iRedAPD-4.4:
     - Fixed issues:
         - tools/wblist_admin.py: Can not correctly add or remove whitelists
