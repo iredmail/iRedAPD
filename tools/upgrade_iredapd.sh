@@ -400,8 +400,6 @@ fi
 
 echo "  + [required] web.py"
 if [ X"$(has_python_module web)" == X'NO' ]; then
-    # FreeBSD ports has 0.40. So we install the latest with pip.
-    # Note: `>=` doesn't work on CentOS 7, has to use `==` instead.
     DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py>=0.61"
 fi
 
@@ -409,62 +407,72 @@ if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
     # LDAP backend
     export IREDMAIL_BACKEND='OPENLDAP'
 
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        if [ X"${DISTRO_VERSION}" == X'7' ]; then
-            DEP_PKGS="${DEP_PKGS} python36-PyMySQL gcc python3-devel openldap-devel"
-            DEP_PIP3_MODS="${DEP_PIP3_MODS} python-ldap==3.3.1"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-ldap python3-PyMySQL"
+    if [ X"$(has_python_module ldap)" == X'NO' ]; then
+        if [ X"${DISTRO}" == X'RHEL' ]; then
+            if [ X"${DISTRO_VERSION}" == X'7' ]; then
+                DEP_PKGS="${DEP_PKGS} python36-PyMySQL gcc python3-devel openldap-devel"
+                DEP_PIP3_MODS="${DEP_PIP3_MODS} python-ldap==3.3.1"
+            else
+                DEP_PKGS="${DEP_PKGS} python3-ldap python3-PyMySQL"
+            fi
+
+        elif [ X"${DISTRO}" == X'DEBIAN' ]; then
+            DEP_PKGS="${DEP_PKGS} python3-pymysql"
+
+            if [ X"${DISTRO_VERSION}" == X'9' ]; then
+                DEP_PKGS="${DEP_PKGS} python3-pyldap"
+            else
+                DEP_PKGS="${DEP_PKGS} python3-ldap"
+            fi
         fi
+
+        [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-ldap python3-pymysql"
+        [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} net/py-ldap databases/py-pymysql"
+        [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-ldap py3-mysqlclient"
     fi
-
-    if [ X"${DISTRO}" == X'DEBIAN' ]; then
-        DEP_PKGS="${DEP_PKGS} python3-pymysql"
-
-        if [ X"${DISTRO_VERSION}" == X'9' ]; then
-            DEP_PKGS="${DEP_PKGS} python3-pyldap"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-ldap"
-        fi
-    fi
-
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-ldap python3-pymysql"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} net/py-ldap databases/py-pymysql"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-ldap py3-mysqlclient"
 
 elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'mysql' &>/dev/null; then
     # MySQL/MariaDB backend
     export IREDMAIL_BACKEND='MYSQL'
 
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        if [ X"${DISTRO_VERSION}" == X'7' ]; then
-            DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
+    if [ X"$(has_python_module pymysql)" == X'NO' ]; then
+        if [ X"${DISTRO}" == X'RHEL' ]; then
+            if [ X"${DISTRO_VERSION}" == X'7' ]; then
+                DEP_PKGS="${DEP_PKGS} python36-PyMySQL"
+            else
+                DEP_PKGS="${DEP_PKGS} python3-PyMySQL"
+            fi
         fi
+
+        [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
+        [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
+        [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-pymysql"
     fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-pymysql"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-mysqlclient"
+    if [ X"${DISTRO}" == X'OPENBSD' ]; then
+        if [ X"$(has_python_module MySQLdb)" == X'NO' ]; then
+            DEP_PKGS="${DEP_PKGS} py3-mysqlclient"
+        fi
+    fi
 
 elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'pgsql' &>/dev/null; then
     # PostgreSQL backend
     export IREDMAIL_BACKEND='PGSQL'
 
-    if [ X"${DISTRO}" == X'RHEL' ]; then
-        if [ X"${DISTRO_VERSION}" == X'7' ]; then
-            DEP_PKGS="${DEP_PKGS} python36-psycopg2"
-        else
-            DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+    if [ X"$(has_python_module psycopg2)" == X'NO' ]; then
+        if [ X"${DISTRO}" == X'RHEL' ]; then
+            if [ X"${DISTRO_VERSION}" == X'7' ]; then
+                DEP_PKGS="${DEP_PKGS} python36-psycopg2"
+            else
+                DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+            fi
         fi
-    fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-psycopg2"
-    [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-psycopg2"
+        [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+        [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-psycopg2"
+        [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-psycopg2"
+        [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-psycopg2"
+    fi
 fi
 
 if [ X"${DEP_PKGS}" != X'' ]; then

@@ -35,7 +35,7 @@ with command line tools: [Manage iRedAPD](http://www.iredmail.org/docs/manage.ir
 
 Plugins are files placed under `plugins/` directory, plugin name is file name
 without file extension `.py`. It's recommended to read comment lines in plugin
-source files to understand how it works and what it does.
+source files to understand what it does and how it works.
 
 ## Plugins for all backends
 
