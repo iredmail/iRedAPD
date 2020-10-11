@@ -135,6 +135,7 @@ def restriction(**kwargs):
 
         allowed_senders = []
         for (_dn, _ldif) in qr:
+            _ldif = utils.bytes2str(_ldif)
             for k in search_attrs:
                 allowed_senders += _ldif.get(k, [])
 
@@ -164,6 +165,7 @@ def restriction(**kwargs):
 
             # Collect values of all search attributes
             for (_dn, _ldif) in qr:
+                _ldif = utils.bytes2str(_ldif)
                 for k in search_attrs:
                     allowed_senders += _ldif.get(k, [])
 
@@ -233,6 +235,7 @@ def restriction(**kwargs):
             logger.debug('query result: %s' % str(qr))
 
             for (_dn, _ldif) in qr:
+                _ldif = utils.bytes2str(_ldif)
                 for k in _search_attrs:
                     allowed_senders += _ldif.get(k, [])
 
