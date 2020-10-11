@@ -1,6 +1,7 @@
 iRedAPD-4.5:
     - Fixed issues:
-        - Not convert LDAP data (bytes) to string.
+        - Not convert LDAP data (bytes) to string. This causes few issues
+          while comparing strings against LDAP data.
 
 iRedAPD-4.4:
     - Fixed issues:
