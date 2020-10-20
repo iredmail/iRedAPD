@@ -777,9 +777,18 @@ EOF
     mv ${NEW_IREDAPD_CONF}_tmp ${NEW_IREDAPD_CONF}
 fi
 
-# Set correct SQL driver for SQLAlchemy.
+# Set correct SQL driver for SQLAlchemy. Defaults to `MySQLdb`.
 if [ X"${IREDMAIL_BACKEND}" == X"OPENLDAP" -o X"${IREDMAIL_BACKEND}" == X'MYSQL' ]; then
-    if [ X"${DISTRO}" != X'OPENBSD' ]; then
+    # OpenBSD 6.7 and earlier releases doesn't have binary package `py3-pymysql`.
+    if [ X"${DISTRO}" == X'OPENBSD' ]; then
+        if [ X"${DISTRO_VERSION}" == X'6.8' ]; then
+            export SQL_DB_DRIVER='pymysql'
+        fi
+    else
+        export SQL_DB_DRIVER='pymysql'
+    fi
+
+    if [ X"${SQL_DB_DRIVER}" != X'' ]; then
         if ! grep '^SQL_DB_DRIVER' ${NEW_IREDAPD_CONF} &>/dev/null; then
             echo "" >> ${NEW_IREDAPD_CONF}
             echo "SQL_DB_DRIVER = 'pymysql'" >> ${NEW_IREDAPD_CONF}
