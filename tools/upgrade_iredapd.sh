@@ -437,11 +437,18 @@ elif grep '^backend' ${IREDAPD_CONF_PY} | grep 'mysql' &>/dev/null; then
         [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
         [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pymysql"
         [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} databases/py-pymysql"
+        if [ X"${DISTRO}" == X'OPENBSD' ]; then
+            if [ X"${DISTRO_VERSION}" == X'6.8' ]; then
+                DEP_PKGS="${DEP_PKGS} py3-pymysql"
+            fi
+        fi
     fi
 
     if [ X"${DISTRO}" == X'OPENBSD' ]; then
-        if [ X"$(has_python_module MySQLdb)" == X'NO' ]; then
-            DEP_PKGS="${DEP_PKGS} py3-mysqlclient"
+        if [ X"${DISTRO_VERSION}" == X'6.6' -o X"${DISTRO_VERSION}" == X'6.7' ]; then
+            if [ X"$(has_python_module MySQLdb)" == X'NO' ]; then
+                DEP_PKGS="${DEP_PKGS} py3-mysqlclient"
+            fi
         fi
     fi
 
