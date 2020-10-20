@@ -132,26 +132,24 @@ elif [ X"${KERNEL_NAME}" == X'FREEBSD' ]; then
 
 elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export DISTRO='OPENBSD'
+    export DISTRO_VERSION="$(uname -r)"
     export SYS_GROUP_ROOT='wheel'
     export SYS_GROUP_SYSLOG='wheel'
     export PGSQL_SYS_USER='_postgresql'
     export DIR_RC_SCRIPTS='/etc/rc.d'
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
-    export CMD_PYTHON3='/usr/local/bin/python3'
-    export CMD_PIP3='/usr/local/bin/pip3'
 
-    if [ -x ${CMD_PIP3} ]; then
-        :
+    if [ X"${DISTRO_VERSION}" == X'6.8' ]; then
+        export CMD_PYTHON3='/usr/local/bin/python3.8'
+        export CMD_PIP3='/usr/local/bin/pip3.8'
+    elif [ X"${DISTRO_VERSION}" == X'6.6' -o X"${DISTRO_VERSION}" == X'6.7' ]; then
+        export CMD_PYTHON3='/usr/local/bin/python3.7'
+        export CMD_PIP3='/usr/local/bin/pip3.7'
     else
-        for version in 3.7 3.6 3.5; do
-            if [ -x /usr/local/bin/pip${version} ]; then
-                export CMD_PIP3="/usr/local/bin/pip${version}"
-                break
-            fi
-        done
+        echo "Unsupported OpenBSD release: ${DISTRO_VERSION}. Abort."
+        exit 255
     fi
-
 else
     echo "Cannot detect Linux/BSD distribution. Exit."
     echo "Please contact author iRedMail team <support@iredmail.org> to solve it."
@@ -324,17 +322,9 @@ if [ ! -x ${CMD_PYTHON3} ]; then
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip"
 
     if [ X"${DISTRO}" == X'OPENBSD' ]; then
-        # Create symbol link.
-        for v in 3.7 3.6 3.5 3.4; do
-            if [ -x /usr/local/bin/python${v} ]; then
-                ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
-                break
-            fi
-        done
-
-        if [ -x ${CMD_PYTHON3} ]; then
-            # OpenBSD 6.6, 6.7 should use Python 3.7 because all `py3-*` binary
-            # packages were built against Python 3.7.
+        if [ X"${DISTRO_VERSION}" == X'6.8' ]; then
+            DEP_PKGS="${DEP_PKGS} python%3.8"
+        elif [ X"${DISTRO_VERSION}" == X'6.6' -o X"${DISTRO_VERSION}" == X'6.7' ]; then
             DEP_PKGS="${DEP_PKGS} python%3.7"
         fi
     fi
@@ -485,14 +475,14 @@ fi
 
 # Re-check py3 and create symbol link.
 if [ X"${DISTRO}" == X'OPENBSD' ]; then
-    for v in 3.7 3.6 3.5 3.4; do
+    for v in 3.8 3.7; do
         if [ -x /usr/local/bin/python${v} ]; then
             ln -sf /usr/local/bin/python${v} /usr/local/bin/python3
             break
         fi
     done
 
-    for v in 3.7 3.6 3.5 3.4; do
+    for v in 3.8 3.7; do
         if [ -x /usr/local/bin/pip${v} ]; then
             ln -sf /usr/local/bin/pip${v} /usr/local/bin/pip3
             break
