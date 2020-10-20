@@ -1,3 +1,6 @@
+iRedAPD-4.6:
+    - Minor fixes in `tools/upgrade_iredapd.sh`.
+
 iRedAPD-4.5:
     - Fixed issues:
         - Not convert LDAP data (bytes) to string. This causes few issues
