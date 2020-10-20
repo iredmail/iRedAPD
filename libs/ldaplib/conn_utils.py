@@ -69,6 +69,7 @@ def get_primary_and_alias_domains(conn, domain):
                            ['domainName', 'domainAliasName'])
         if qr:
             (_dn, _ldif) = qr[0]
+            _ldif = utils.bytes2str(_ldif)
             _all_domains = _ldif.get('domainName', []) + _ldif.get('domainAliasName', [])
 
             return list(set(_all_domains))
@@ -141,6 +142,7 @@ def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
         logger.debug("result: {}".format(repr(qr)))
         if qr:
             (_dn, _ldif) = qr[0]
+            _ldif = utils.bytes2str(_ldif)
             _domain = _ldif['domainName'][0]
             return _domain
     except ldap.NO_SUCH_OBJECT:
