@@ -798,7 +798,7 @@ if [ X"${IREDMAIL_BACKEND}" == X"OPENLDAP" -o X"${IREDMAIL_BACKEND}" == X'MYSQL'
     if [ X"${SQL_DB_DRIVER}" != X'' ]; then
         if ! grep '^SQL_DB_DRIVER' ${NEW_IREDAPD_CONF} &>/dev/null; then
             echo "" >> ${NEW_IREDAPD_CONF}
-            echo "SQL_DB_DRIVER = 'pymysql'" >> ${NEW_IREDAPD_CONF}
+            echo "SQL_DB_DRIVER = '${SQL_DB_DRIVER}'" >> ${NEW_IREDAPD_CONF}
         fi
     fi
 fi
