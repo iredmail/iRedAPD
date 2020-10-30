@@ -52,7 +52,6 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
     if [ -f /etc/redhat-release ]; then
         # RHEL/CentOS
         export DISTRO='RHEL'
-        export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
         export CRON_SPOOL_DIR='/var/spool/cron'
 
         # Get an check relese version.
@@ -64,6 +63,13 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         else
             export UNSUPPORTED_RELEASE="YES"
         fi
+
+        for f in /var/www/iredadmin/settings.py /opt/www/iredadmin/settings.py; do
+            if [ -f ${f} ]; then
+                export IREDADMIN_CONF_PY="${f}"
+                break
+            fi
+        done
     elif [ -f /etc/lsb-release ]; then
         # Ubuntu
         export DISTRO='UBUNTU'
