@@ -226,7 +226,9 @@ elif action == 'delete':
 
 elif action == 'whitelist-domain':
     logger.info("* Whitelisting sender domain: {}".format(sender_domain))
-    lib_gl.add_whitelist_domain(conn=conn2, domain=sender_domain)
+    qr = lib_gl.add_whitelist_domain(conn=conn2, domain=sender_domain)
+    if not qr[0]:
+        logger.info(qr[1])
 
 elif action == 'remove-whitelist-domain':
     logger.info("* Remove whitelisted sender domain: {}".format(sender_domain))
