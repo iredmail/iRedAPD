@@ -19,10 +19,8 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
                        '(objectClass=mailAlias)' + \
                        '))'
 
-    logger.debug("search base dn: {}\n"
-                 "search scope: SUBTREE \n"
-                 "search filter: {}\n"
-                 "search attributes: {}".format(
+    logger.debug("search: base_dn={}, scope=SUBTREE, filter={}, "
+                 "attributes={}".format(
                      settings.ldap_basedn,
                      query_filter,
                      attrs))
