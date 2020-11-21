@@ -80,7 +80,7 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         export DISTRO_VERSION="$(awk -F'=' '/^DISTRIB_RELEASE/ {print $2}' /etc/lsb-release)"
         export DISTRO_CODENAME="$(awk -F'=' '/^DISTRIB_CODENAME/ {print $2}' /etc/lsb-release)"
 
-        if echo "${DISTRO_VERSION}" | grep '^1[4567]' &>/dev/null; then
+        if echo "${DISTRO_VERSION}" | grep '^1[457]' &>/dev/null; then
             echo "[ERROR] Your Ubuntu release ${DISTRO_VERSION} is too old and not supported."
             exit 255
         fi
