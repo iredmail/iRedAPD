@@ -139,23 +139,7 @@ class Policy(asynchat.async_chat):
             _start_time = time.time()
 
             # Gather data at RCPT , data will be used at END-OF-MESSAGE
-            _instance = self.smtp_session_data['instance']
             _protocol_state = self.smtp_session_data['protocol_state']
-
-            if _protocol_state == 'RCPT':
-                try:
-                    _db = self.db_conns['conn_tracking']
-                    _c = _db.cursor()
-                    _c.execute("SELECT * FROM tracking WHERE instance=? LIMIT 1", (_instance,))
-                    _row = _c.fetchone()
-                    if _row:
-                        logger.debug("Update `num_processed` for existing instance {}".format(_instance))
-                        _c.execute("UPDATE tracking set num_processed=num_processed+1 WHERE instance=?", (_instance,))
-                    else:
-                        logger.debug("Add new tracking record for instance {}".format(_instance))
-                        _c.execute("INSERT INTO tracking (instance, num_processed, init_time) values (?, ?, ?)", (_instance, 0, int(time.time())))
-                except Exception as e:
-                    logger.error("while adding or updating existing tracking record: {}".format(repr(e)))
 
             # Call modeler and apply plugins
             try:
@@ -176,22 +160,6 @@ class Policy(asynchat.async_chat):
             except Exception as e:
                 action = SMTP_ACTIONS['default']
                 logger.error("Unexpected error: {}. Fallback to default action: {}".format(repr(e), action))
-
-            # Remove tracking data when:
-            #
-            #   - session was rejected/discard/whitelisted ('OK') during
-            #     RCPT state (it never reach END-OF-MESSAGE state)
-            #   - session is in last state (END-OF-MESSAGE)
-            if (not action.startswith('DUNNO')) or (_protocol_state == 'END-OF-MESSAGE'):
-                # Remove expired tracking data.
-                try:
-                    _db = self.db_conns['conn_tracking']
-                    _c = _db.cursor()
-
-                    _expired_time = int(time.time()) + settings.TRACKING_EXPIRE_SECONDS
-                    _c.execute("DELETE FROM tracking WHERE init_time <=?", (_expired_time,))
-                except Exception as e:
-                    logger.error("while cleaning up expired tracking record: {}".format(repr(e)))
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended.")

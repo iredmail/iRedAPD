@@ -38,7 +38,6 @@ class Modeler:
             'conn_vmail': self.conn,
             'conn_amavisd': conn_amavisd,
             'conn_iredapd': conn_iredapd,
-            'conn_tracking': self.conns['conn_tracking'],
             'sender': sender,
             'sender_without_ext': smtp_session_data['sender_without_ext'],
             'recipient': recipient,
