@@ -1,6 +1,7 @@
 from web import sqlquote
 
 from libs.logger import logger
+from libs import MAILLIST_POLICY_PUBLIC
 from libs import utils
 
 
@@ -120,5 +121,9 @@ def get_access_policy(mail, account_type, conn):
 
     if record:
         _policy = str(record[0]).lower()
+
+        # access_policy is not set, treats it as public.
+        if not _policy:
+            _policy = MAILLIST_POLICY_PUBLIC
 
     return _policy

@@ -1,3 +1,8 @@
+iRedAPD-4.8:
+    - Fixed issues:
+        - [SQL] if access policy of (mlmmj) mailing list is not set, treats it
+          as public.
+
 iRedAPD-4.7:
     - Fixed: plugins/throttle.py: if user sends email with many recipients and
       excceeds the quota, plugin still (incorrectly) bypasses this email.
