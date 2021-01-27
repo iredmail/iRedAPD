@@ -17,6 +17,7 @@ if settings.backend == 'ldap':
 elif settings.backend in ['mysql', 'pgsql']:
     from libs.sql.modeler import Modeler
     from libs.sql import is_local_domain
+    from libs.sql import is_local_mailbox
 
 
 fqdn = socket.getfqdn()
@@ -222,7 +223,7 @@ class SRS(asynchat.async_chat):
             _is_local_domain = False
             try:
                 conn_vmail = self.db_conns['conn_vmail']
-                _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
+                _is_local_domain = is_local_mailbox(conn=conn_vmail, domain=domain)
             except Exception as e:
                 logger.error("{} Error while verifying domain: {}".format(self.log_prefix, repr(e)))
 
