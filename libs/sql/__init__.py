@@ -5,6 +5,42 @@ from libs import MAILLIST_POLICY_PUBLIC
 from libs import utils
 
 
+def is_local_mailbox(conn,
+                    mailbox,
+                    include_backupmx=True):
+    """Check whether given mailbox name is hosted on localhost and not disabled.
+
+    @conn -- SQL connection cursor
+    @mailbox -- a mailbox name
+    @include_backupmx -- whether we should include backup mx domain names in
+                         query result.
+    """
+
+    sql_quote_mailbox = sqlquote(mailbox)
+    try:
+        # include backup mx domains by default.
+        sql_backupmx = ''
+        if not include_backupmx:
+            sql_backupmx = 'AND backupmx=0'
+
+        sql = """SELECT username
+                   FROM mailbox
+                  WHERE username=%s AND active=1 %s
+                  LIMIT 1""" % (sql_quote_mailbox, sql_backupmx)
+        logger.debug("[SQL] query local mailbox ({}): \n{}".format(mailbox, sql))
+
+        qr = conn.execute(sql)
+        sql_record = qr.fetchone()
+        logger.debug("SQL query result: {}".format(repr(sql_record)))
+
+        if sql_record:
+            return True
+    except Exception as e:
+        logger.error("<!> Error while querying mailbox: {}".format(repr(e)))
+
+    return False
+  
+
 def is_local_domain(conn,
                     domain,
                     include_alias_domain=True,
