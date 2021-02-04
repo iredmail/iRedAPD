@@ -9,6 +9,9 @@ import settings
 resv = resolver.Resolver()
 resv.timeout = settings.DNS_QUERY_TIMEOUT
 resv.lifetime = settings.DNS_QUERY_TIMEOUT
+resv.retry_servfail = settings.DNS_QUERY_RETRY
+if settings.DNS_NAMESERVERS:
+    resv.nameservers = settings.DNS_NAMESERVERS
 
 
 def query_a(domains, queried_domains=None, returned_ips=None):
