@@ -12,6 +12,7 @@ resv.lifetime = settings.DNS_QUERY_TIMEOUT
 if settings.DNS_NAMESERVERS:
     resv.nameservers = settings.DNS_NAMESERVERS
     resv.retry_servfail = settings.DNS_QUERY_RETRY_IF_SERVFAIL
+    resv.timeout = settings.DNS_QUERY_TIMEOUT / len(settings.DNS_NAMESERVERS)
 
 
 def query_a(domains, queried_domains=None, returned_ips=None):
