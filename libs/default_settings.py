@@ -61,11 +61,12 @@ SQL_DB_DRIVER = ''
 # Timeout in seconds. Must be a float number.
 DNS_QUERY_TIMEOUT = 3.0
 
-# Should we retry a nameserver if it says SERVFAIL?
-DNS_QUERY_RETRY = False
-
 # List of dns servers to use (if we don't use system configuration)
 DNS_NAMESERVERS = []
+
+# Should we retry a nameserver if it says SERVFAIL?
+# works only if we have set DNS_NAMESERVERS
+DNS_QUERY_RETRY_IF_SERVFAIL = False
 
 # Log smtp actions returned by plugins in SQL database (table `smtp_actions`).
 LOG_SMTP_SESSIONS = True
