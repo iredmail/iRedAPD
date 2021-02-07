@@ -378,7 +378,12 @@ def restriction(**kwargs):
 
     # Bypass if sender server is listed in SPF DNS record of sender domain.
     if settings.GREYLISTING_BYPASS_SPF:
-        if dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
+        if sender_domain == settings.srs_domain:
+            # Don't check if sender domain (in smtp session) is same as SRS
+            # domain. It's probably local server has SRS enabled, and Postfix
+            # rewrites address before communicates with SMTP policy server (iRedAPD).
+            pass
+        elif dnsspf.is_allowed_server_in_spf(sender_domain=sender_domain, ip=client_address):
             logger.info('[{}] Bypass greylisting due to SPF match ({})'.format(client_address, sender_domain))
             return SMTP_ACTIONS['default']
 
