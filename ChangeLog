@@ -1,4 +1,5 @@
 iRedAPD-4.8:
+    - tools/upgrade_iredapd.sh: Support CentOS 8 Stream.
     - Fixed issues:
         - [SQL] if access policy of (mlmmj) mailing list is not set, treats it
           as public.

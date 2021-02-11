@@ -55,9 +55,9 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         export CRON_SPOOL_DIR='/var/spool/cron'
 
         # Get an check relese version.
-        if grep '\ 7\.' /etc/redhat-release &>/dev/null; then
+        if grep 'release 7' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='7'
-        elif grep '\ 8\.' /etc/redhat-release &>/dev/null; then
+        elif grep 'release 8' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='8'
             export CMD_PIP3='/usr/bin/pip3.6'
         else
