@@ -42,7 +42,7 @@ srs_domain = ''
 # For LDAP backend.
 #
 # LDAP server setting.
-# Uri must starts with ldap:// or ldaps:// (TLS/SSL).
+# URI must starts with ldap:// (plain/TLS) or ldaps:// (SSL).
 #
 # Tip: You can get binddn, bindpw from /etc/postfix/ldap/*.cf.
 #
@@ -50,6 +50,9 @@ ldap_uri = 'ldap://127.0.0.1:389'
 ldap_basedn = 'o=domains,dc=iredmail,dc=org'
 ldap_binddn = 'cn=vmail,dc=iredmail,dc=org'
 ldap_bindpw = 'password'
+# Enable TLS for secure connection.
+# `ldap_uri` should start with `ldap://` and use port 389.
+ldap_enable_tls = False
 
 # For SQL (MySQL/MariaDB/PostgreSQL) backends, used to query mail accounts.
 vmail_db_server = '127.0.0.1'

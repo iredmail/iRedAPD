@@ -565,8 +565,12 @@ def get_required_db_conns():
     """Establish SQL database connections."""
     if settings.backend == 'ldap':
         try:
+            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             conn_vmail = ldap.ldapobject.ReconnectLDAPObject(settings.ldap_uri)
             logger.debug('LDAP connection initialied success.')
+
+            if settings.ldap_enable_tls:
+                conn_vmail.start_tls_s()
 
             # Bind to ldap server.
             try:

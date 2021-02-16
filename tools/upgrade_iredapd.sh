@@ -867,6 +867,10 @@ systemctl daemon-reload &>/dev/null
 #
 # Add missing parameters or rename old parameter names."
 #
+if ! grep '^ldap_enable_tls' ${NEW_IREDAPD_CONF} &>/dev/null; then
+    add_missing_parameter 'ldap_enable_tls' 'False'
+fi
+
 # Get Amavisd related settings from iRedAdmin config file.
 if ! grep '^amavisd_db_' ${NEW_IREDAPD_CONF} &>/dev/null; then
     echo "* Add missing parameters used for plugin 'amavisd_wblist'."
