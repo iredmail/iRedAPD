@@ -444,12 +444,6 @@ def apply_throttle(conn,
         ts = t_settings['msg_size']
         msg_size = ts['value']
 
-        _tracking_id = ts['tracking_id']
-        _period = int(ts.get('period', 0))
-        _init_time = int(ts.get('init_time', 0))
-        _last_time = int(ts.get('last_time', 0))
-        _last_notify_time = int(ts.get('last_notify_time', 0))
-
         # Check message size
         if size > msg_size > 0:
             logger.info('[{}] [{}] Quota exceeded: {} throttle for '
@@ -460,57 +454,14 @@ def apply_throttle(conn,
                                       size,
                                       throttle_info))
 
-            if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
-                __sendmail(conn=conn,
-                           user=user,
-                           client_address=client_address,
-                           throttle_tracking_id=_tracking_id,
-                           throttle_name='msg_size',
-                           throttle_value=msg_size,
-                           throttle_kind=throttle_kind,
-                           throttle_info=throttle_info,
-                           throttle_value_unit='bytes')
-
-            # Construct and send notification email
-            try:
-                _subject = 'Throttle quota exceeded: %s, mssage_size=%d bytes' % (user, size)
-                _body = '- User: ' + user + '\n'
-                _body += '- Throttle type: ' + throttle_kind + '\n'
-                _body += '- Client IP address: ' + client_address + '\n'
-                _body += '- Limit of single message size: %d bytes\n' % msg_size
-                _body += '- Throttle setting(s): ' + throttle_info + '\n'
-
-                utils.sendmail(subject=_subject, mail_body=_body)
-            except Exception as e:
-                logger.error('Error while sending notification email: {}'.format(e))
-
-            return SMTP_ACTIONS['reject_quota_exceeded']
-        else:
-            # Show the time tracking record is about to expire
-            _left_seconds = _init_time + _period - _last_time
-
-            logger.info('[{}] {} throttle, {} -> msg_size '
-                        '({}/{}, period: {} seconds, '
-                        '{})'.format(client_address,
-                                     throttle_type,
-                                     user,
-                                     size,
-                                     msg_size,
-                                     _period,
-                                     utils.pretty_left_seconds(_left_seconds)))
+            return SMTP_ACTIONS['reject_msg_size_exceeded']
 
     if 'max_rcpts' in t_settings:
         ts = t_settings['max_rcpts']
         max_rcpts = ts['value']
 
-        _tracking_id = ts['tracking_id']
-        _period = int(ts.get('period', 0))
-        _init_time = int(ts.get('init_time', 0))
-        _last_time = int(ts.get('last_time', 0))
-        _last_notify_time = int(ts.get('last_notify_time', 0))
-
         # Check recipient count.
-        if max_rcpts > recipient_count:
+        if recipient_count > max_rcpts > 0:
             logger.info('[{}] [{}] Quota exceeded: {} throttle for '
                         'max_rcpts, current: {}. '
                         '({})'.format(client_address,
@@ -519,44 +470,7 @@ def apply_throttle(conn,
                                       recipient_count,
                                       throttle_info))
 
-            if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
-                __sendmail(conn=conn,
-                           user=user,
-                           client_address=client_address,
-                           throttle_tracking_id=_tracking_id,
-                           throttle_name='msg_size',
-                           throttle_value=msg_size,
-                           throttle_kind=throttle_kind,
-                           throttle_info=throttle_info,
-                           throttle_value_unit='bytes')
-
-            # Construct and send notification email
-            try:
-                _subject = 'Throttle quota exceeded: %s, max_rcpts=%d' % (user, recipient_count)
-                _body = '- User: ' + user + '\n'
-                _body += '- Throttle type: ' + throttle_kind + '\n'
-                _body += '- Client IP address: ' + client_address + '\n'
-                _body += '- Limit of max recipients in single message: %d\n' % max_rcpts
-                _body += '- Throttle setting(s): ' + throttle_info + '\n'
-
-                utils.sendmail(subject=_subject, mail_body=_body)
-            except Exception as e:
-                logger.error('Error while sending notification email: {}'.format(e))
-
-            return SMTP_ACTIONS['reject_quota_exceeded']
-        else:
-            # Show the time tracking record is about to expire
-            _left_seconds = _init_time + _period - _last_time
-
-            logger.info('[{}] {} throttle, {} -> max_rcpts'
-                        '({}/{}, period: {} seconds, '
-                        '{})'.format(client_address,
-                                     throttle_type,
-                                     user,
-                                     recipient_count,
-                                     max_rcpts,
-                                     _period,
-                                     utils.pretty_left_seconds(_left_seconds)))
+            return SMTP_ACTIONS['reject_max_rcpts_exceeded']
 
     if 'max_msgs' in t_settings:
         ts = t_settings['max_msgs']

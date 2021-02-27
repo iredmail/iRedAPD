@@ -20,6 +20,8 @@ SMTP_ACTIONS = {
     'reject_blacklisted_rdns': 'REJECT Blacklisted reverse DNS name of server IP address',
     # Throttling
     'reject_quota_exceeded': 'REJECT Throttling quota exceeded',
+    'reject_msg_size_exceeded': 'REJECT Message size is too large',
+    'reject_max_rcpts_exceeded': 'REJECT Too many recipients in single message',
     # Sender Score
     'reject_low_sender_score': 'REJECT Server IP address has bad reputation. FYI: https://www.senderscore.org/lookup.php?lookup=',
     'greylisting': '451 4.7.1',
