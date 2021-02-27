@@ -14,9 +14,14 @@ CREATE TABLE throttle (
     -- throttle settings.
     --  * set value to -1 to force check setting with lower priority
     --  * set value to 0 to unlimited, and stop checking settings with lower priority.
-    msg_size    BIGINT                  NOT NULL DEFAULT -1, -- Limit of single (received) message size, in bytes.
-    max_msgs    BIGINT                  NOT NULL DEFAULT -1, -- Number of max (received) messages in total.
-    max_quota   BIGINT                  NOT NULL DEFAULT -1 -- Number of current (received) messages.
+    -- msg_size: single message size (in bytes)
+    msg_size    BIGINT                  NOT NULL DEFAULT -1,
+    -- max_msgs: accumulate max messages in total
+    max_msgs    BIGINT                  NOT NULL DEFAULT -1,
+    -- max_quota: accumulate message size in total (in bytes)
+    max_quota   BIGINT                  NOT NULL DEFAULT -1,
+    -- max_rcpts: max recipients in one message.
+    max_rcpts   BIGINT                  NOT NULL DEFAULT -1
 );
 
 CREATE INDEX idx_account ON throttle (account);
