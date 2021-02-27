@@ -116,15 +116,17 @@
 #   * max size of single message is 10240000 bytes (msg_size)
 #   * max 100 messages (max_msgs)
 #   * max 4096000000 bytes (max_quota)
+#   * max 12 recipients in one single message (max_rcpts)
 #
-#  INSERT INTO throttle (account, kind, priority, period, msg_size, max_msgs, max_quota)
+#  INSERT INTO throttle (account, kind, priority, period, msg_size, max_msgs, max_quota, max_rcpts)
 #                VALUES ('user@domain.com',
 #                        'outbound',
 #                        10,
 #                        360,
 #                        10240000,
 #                        100,
-#                        4096000000);
+#                        4096000000,
+#                        12);
 #
 # *) Allow external user `user@not-my-domain.com` to send in 6 minutes (period=360):
 #
