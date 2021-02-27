@@ -1,3 +1,7 @@
+iRedAPD-5.0:
+    - Improvements:
+        + plugins/throttle.py: able to limit max recipients in single message.
+
 iRedAPD-4.9:
     - Fixed: not support TLS for LDAP connection.
 

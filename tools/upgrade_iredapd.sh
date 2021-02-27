@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-# Author: Zhang Huangbin <zhb@iredmail.org>
+#!/usr/bin/env bash # Author: Zhang Huangbin <zhb@iredmail.org>
 # Purpose: Upgrade iRedAPD from old release.
 
 # USAGE:
@@ -627,8 +626,40 @@ psql_conn="psql -h ${iredapd_db_server} \
                 -U ${iredapd_db_user} \
                 -d ${iredapd_db_name}"
 
-add_new_pgsql_tables()
-{
+update_sql_based_on_missing_column() {
+    # Usage: update_sql_based_on_missing_column <table> <column> <sql-file>
+
+    _table="${1}"
+    _column="${2}"
+    _file="${ROOTDIR}/../SQL/update/${3}"
+
+    if [[ ! -f ${_file} ]]; then
+        echo "File ${_file} does not exist. Abort."
+        exit 255
+    fi
+
+    if [ X"${IREDMAIL_BACKEND}" == X"OPENLDAP" -o X"${IREDMAIL_BACKEND}" == X'MYSQL' ]; then
+        (${mysql_conn} <<EOF
+DESC ${_table};
+EOF
+) | grep "\<${_column}\>" &>/dev/null
+
+        if [ X"$?" != X'0' ]; then
+            ${mysql_conn}  < ${_file}
+        fi
+    elif [ X"${IREDMAIL_BACKEND}" == X"PGSQL" ]; then
+        ${psql_conn} -c "\d+ ${_table}" | grep "\<${_column}\>" &>/dev/null
+
+        if [ X"$?" != X'0' ]; then
+            cp ${_file} /tmp/iredapd.pgsql
+            chmod 0555 /tmp/iredapd.pgsql
+            ${psql_conn} -c "\i /tmp/iredapd.pgsql;"
+            rm -f /tmp/iredapd.pgsql
+        fi
+    fi
+}
+
+add_new_pgsql_tables() {
     # Usage: add_new_pgsql_tables <sql-file-name> "SELECT ..."
 
     # name of SQL file under SQL/update/
@@ -700,19 +731,11 @@ EOF
         rm -f /tmp/wblist_rdns.sql &>/dev/null
     fi
 
-    #
     # iRedAPD-2.3: new column `throttle_tracking.last_notify_time`
-    #
-    (${mysql_conn} <<EOF
-DESC throttle_tracking;
-EOF
-) | grep 'last_notify_time' &>/dev/null
+    update_sql_based_on_missing_column throttle_tracking last_notify_time 2.3-last_notify_time.mysql
 
-    if [ X"$?" != X'0' ]; then
-        ${mysql_conn} <<EOF
-ALTER TABLE throttle_tracking ADD COLUMN last_notify_time INT(10) UNSIGNED NOT NULL DEFAULT 0;
-EOF
-    fi
+    # iRedAPD-5.0: new column `throttle.max_rcpts`
+    update_sql_based_on_missing_column throttle max_rcpts 5.0-max_rcpts.mysql
 
 elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
     export PGPASSWORD="${iredapd_db_password}"
@@ -733,20 +756,18 @@ elif egrep '^backend.*pgsql' ${IREDAPD_CONF_PY} &>/dev/null; then
         ${psql_conn} -c "CREATE INDEX idx_greylisting_tracking_client_address_passed ON greylisting_tracking (client_address, passed);"
     fi
 
-    #
     # v2.3: new column `throttle_tracking.last_notify_time`
-    #
-    ${psql_conn} -c "\d+ throttle_tracking" | grep 'last_notify_time' &>/dev/null
-    if [ X"$?" != X'0' ]; then
-        ${psql_conn} -c "ALTER TABLE throttle_tracking ADD COLUMN last_notify_time BIGINT NOT NULL DEFAULT 0;"
-    fi
+    update_sql_based_on_missing_column throttle_tracking last_notify_time 2.3-last_notify_time.pgsql
 
-    # v2.5: `srs_exclude_domains`
+    # v2.5: new table: `srs_exclude_domains`
     add_new_pgsql_tables 2.5-srs_exclude_domains.pgsql "SELECT id FROM srs_exclude_domains LIMIT 1"
 
-    # v3.2: `senderscore_cache`, `smtp_sessions`
+    # v3.2: new tables: `senderscore_cache`, `smtp_sessions`
     add_new_pgsql_tables 3.2-senderscore_cache.pgsql "SELECT client_address FROM senderscore_cache LIMIT 1"
     add_new_pgsql_tables 3.2-smtp_sessions.pgsql "SELECT client_address FROM smtp_sessions LIMIT 1"
+
+    # v5.0: new column: `throttle.max_rcpts`.
+    update_sql_based_on_missing_column throttle max_rcpts 5.0-max_rcpts.pgsql
 fi
 
 #
