@@ -103,7 +103,9 @@ class Modeler:
 
         # Close sql connections.
         try:
-            conn_amavisd.close()
+            if conn_amavisd:
+                conn_amavisd.close()
+
             conn_iredapd.close()
         except:
             pass

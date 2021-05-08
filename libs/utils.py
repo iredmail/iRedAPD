@@ -261,15 +261,25 @@ def get_db_conn(db_name):
     if settings.SQL_DB_DRIVER:
         dbn += '+' + settings.SQL_DB_DRIVER
 
+    _user = settings.__dict__[db_name + '_db_user']
+    _pw = settings.__dict__[db_name + '_db_password']
+    _server = settings.__dict__[db_name + '_db_server']
+    _port = settings.__dict__[db_name + '_db_port']
+    _name = settings.__dict__[db_name + '_db_name']
+
     try:
-        uri = '%s://%s:%s@%s:%d/%s' % (
-            dbn,
-            settings.__dict__[db_name + '_db_user'],
-            settings.__dict__[db_name + '_db_password'],
-            settings.__dict__[db_name + '_db_server'],
-            int(settings.__dict__[db_name + '_db_port']),
-            settings.__dict__[db_name + '_db_name'],
-        )
+        _port = int(_port)
+    except:
+        if dbn == 'postgres':
+            _port = 5432
+        else:
+            _port = 3306
+
+    if not all([_user, _pw, _server, _port, _name]):
+        return None
+
+    try:
+        uri = '%s://%s:%s@%s:%d/%s' % (dbn, _user, _pw, _server, _port, _name)
 
         if settings.backend == 'mysql':
             uri += '?charset=utf8'

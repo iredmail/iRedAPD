@@ -70,8 +70,10 @@ class Modeler:
         # Close sql connections.
         try:
             conn_vmail.close()
-            conn_amavisd.close()
             conn_iredapd.close()
+
+            if conn_amavisd:
+                conn_amavisd.close()
         except:
             pass
 
