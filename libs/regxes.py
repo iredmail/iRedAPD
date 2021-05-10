@@ -13,6 +13,9 @@ import re
 regx_email = r'''[\w\-\#\.\+\=\/\&\~]*@[\w\-][\w\-\.]*\.[a-zA-Z0-9\-]{2,15}'''
 cmp_email = re.compile(regx_email, re.IGNORECASE | re.DOTALL)
 
+regx_email_srs = r'''[\w\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\"]*@[\w\-][\w\-\.]*\.[a-zA-Z0-9\-]{2,15}'''
+cmp_email_srs = re.compile(regx_email_srs, re.IGNORECASE | re.DOTALL)
+
 # Domain name
 regx_domain = r'''[\w\-][\w\-\.]*\.[a-z]{2,15}'''
 cmp_domain = re.compile(regx_domain, re.IGNORECASE | re.DOTALL)

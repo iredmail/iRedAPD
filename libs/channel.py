@@ -313,7 +313,7 @@ class SRS(asynchat.async_chat):
             if line.startswith('get '):
                 addr = line.strip().split(' ', 1)[-1]
 
-                if utils.is_email(addr):
+                if utils.is_email_srs(addr):
                     domain = addr.split('@', 1)[-1]
 
                     if self.rewrite_address_type == 'sender':
