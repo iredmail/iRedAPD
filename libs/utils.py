@@ -108,6 +108,17 @@ def is_email(s):
 
     return False
 
+def is_email_srs(s):
+    try:
+        s = str(s).strip()
+    except UnicodeEncodeError:
+        return False
+
+    # match regular expression
+    if regxes.cmp_email.match(s):
+        return True
+
+    return False
 
 def is_tld_domain(s):
     s = str(s)
