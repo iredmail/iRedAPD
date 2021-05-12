@@ -45,11 +45,11 @@ def _is_whitelisted(conn,
     @ip_object -- object of IP address type (get by ipaddress.ip_address())
     """
 
-    whitelists = []
+    whitelists = set()
 
     for tbl in ['greylisting_whitelist_domain_spf', 'greylisting_whitelists']:
         # query whitelists based on recipient
-        sql = """SELECT sender
+        sql = """SELECT LOWER(sender)
                    FROM %s
                   WHERE account IN %s""" % (tbl, sqlquote(recipients))
 
@@ -57,7 +57,7 @@ def _is_whitelisted(conn,
         qr = conn.execute(sql)
         records = qr.fetchall()
 
-        _wls = [str(v[0]).lower() for v in records]
+        _wls = {v[0] for v in records}
 
         # check whether sender (email/domain/ip) is explicitly whitelisted
         if client_address in _wls:
@@ -69,7 +69,7 @@ def _is_whitelisted(conn,
             logger.info('[{}] Sender address is explictly whitelisted for greylisting service: {}'.format(client_address, ', '.join(_wl_senders)))
             return True
 
-        whitelists += _wls
+        whitelists.update(_wls)
 
     logger.debug('[%s] Client is not explictly whitelisted.' % (client_address))
 
