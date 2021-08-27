@@ -1,11 +1,14 @@
+5.0.3:
+    - Mark Debian 11 as supported release.
+
 5.0.2:
     - Fixed: If some application is not integrated or enabled (e.g. amavisd),
       do not try to establish SQL connection or perform any SQL query.
 
-iRedAPD-5.0.1:
+5.0.1:
     - tools/upgrade_iredapd.sh: Mark OpenBSD 6.9 as supported release.
 
-iRedAPD-5.0:
+5.0:
     - Improvements:
         + plugins/throttle.py: able to limit max recipients in single message.
 
