@@ -322,12 +322,11 @@ def is_allowed_server_in_spf(sender_domain, ip):
     qr = query_spf(domain=sender_domain, queried_domains=None)
 
     _spf = qr['spf']
-    queried_domains = qr['queried_domains']
-
     if not _spf:
         logger.debug("[SPF] Domain {} does not have a valid SPF DNS record.".format(sender_domain))
         return False
 
+    queried_domains = qr['queried_domains']
     qr = parse_spf(domain=sender_domain,
                    spf=_spf,
                    queried_domains=queried_domains)
@@ -342,7 +341,7 @@ def is_allowed_server_in_spf(sender_domain, ip):
 
     # Get CIDR networks
     if _ip_object.version == 4:
-        # if `ip=a.b.c.d`, ip prefix = `a.`
+        # if ip is `a.b.c.d`, then ip prefix is `a.`
         _ipv4_prefix = ip.split('.', 1)[0] + '.'
         _cidrs = [i for i in _ips if (i.startswith(_ipv4_prefix) and '.0/' in i)]
     elif _ip_object.version == 6:
