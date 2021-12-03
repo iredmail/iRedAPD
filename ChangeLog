@@ -1,3 +1,6 @@
+5.0.4:
+    - [LDAP] Fixed: Don't return mail domain which is disallowed to use mail service.
+
 5.0.3:
     - Mark Debian 11 as supported release.
 

@@ -88,7 +88,7 @@ def is_local_domain(conn,
         return True
 
     try:
-        _filter = '(&(objectClass=mailDomain)(accountStatus=active)'
+        _filter = '(&(objectClass=mailDomain)(accountStatus=active)(enabledService=mail)'
 
         if include_alias_domain:
             _filter += '(|(domainName={})(domainAliasName={}))'.format(domain, domain)
