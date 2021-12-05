@@ -147,7 +147,9 @@ elif [ X"${KERNEL_NAME}" == X'OPENBSD' ]; then
     export IREDADMIN_CONF_PY='/var/www/iredadmin/settings.py'
     export CRON_SPOOL_DIR='/var/cron/tabs'
 
-    if [ X"${DISTRO_VERSION}" == X'6.8' -o X"${DISTRO_VERSION}" == X'6.9' ]; then
+    if [ X"${DISTRO_VERSION}" == X'6.8' \
+        -o X"${DISTRO_VERSION}" == X'6.9' \
+        -o X"${DISTRO_VERSION}" == X'7.0' ]; then
         export CMD_PYTHON3='/usr/local/bin/python3.8'
         export CMD_PIP3='/usr/local/bin/pip3.8'
     elif [ X"${DISTRO_VERSION}" == X'6.6' -o X"${DISTRO_VERSION}" == X'6.7' ]; then
