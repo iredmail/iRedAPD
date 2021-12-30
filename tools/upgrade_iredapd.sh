@@ -13,6 +13,8 @@
 #       # cd /opt/iRedAPD-xxx/tools/
 #       # bash upgrade_iredapd.sh
 
+export LC_ALL='C'
+
 tmprootdir="$(dirname $0)"
 echo ${tmprootdir} | grep '^/' >/dev/null 2>&1
 if [ X"$?" == X"0" ]; then
