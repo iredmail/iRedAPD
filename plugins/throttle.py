@@ -49,6 +49,7 @@
 #   - amount of mails sent over a given period of time
 #   - accumulated mail size sent over a given period of time
 #   - size of singe message
+#   - number of recipietns in single message
 #
 # For example, you can enforce that user `user@domain.com` is not able to send
 # more than 1000 mails and / or 1GB of mail in 5 minutes, the first reached
