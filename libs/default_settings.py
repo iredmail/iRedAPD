@@ -74,6 +74,11 @@ LOG_SMTP_SESSIONS_BYPASS_WHITELIST = False
 # something wrong and need further troubleshooting.
 TRACKING_EXPIRE_SECONDS = 10
 
+# "SPF implementations MUST limit the total number of those terms to 10
+# during SPF evaluation, to avoid unreasonable load on the DNS."
+# FYI https://datatracker.ietf.org/doc/html/rfc7208#section-4.6
+SPF_MAX_DNS_QUERIES = 10
+
 # ---------------
 # Required by:
 #   - plugins/amavisd_wblist.py
