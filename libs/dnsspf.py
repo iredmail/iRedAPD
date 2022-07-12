@@ -123,7 +123,6 @@ def query_spf(domain, queried_domains=None, num_queries=0):
 
     queried_domains = queried_domains or set()
     if ('spf:' + domain in queried_domains) or (num_queries >= max_queries):
-        print("DEBUG RETURN")
         return {
             'spf': None,
             'queried_domains': queried_domains,
