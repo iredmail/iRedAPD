@@ -1,5 +1,7 @@
 # Introduction
 
+> Don't forget to check out our lightweight email archiving software: https://spiderd.io/
+
 * iRedAPD is a simple [Postfix policy server](http://www.postfix.org/SMTPD_POLICY_README.html),
   written in Python and runs as a low-privileged user (`iredapd` by default),
   with plugin support.
