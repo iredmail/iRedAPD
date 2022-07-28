@@ -70,3 +70,4 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
     else:
         logger.debug("Sender didn't change password in last %d days." % settings.CHANGE_PASSWORD_DAYS)
+        return SMTP_ACTIONS[reject_action]
