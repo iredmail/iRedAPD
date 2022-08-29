@@ -140,6 +140,7 @@ def restriction(**kwargs):
     client_address = kwargs['client_address']
 
     real_sasl_username = sasl_username
+    real_sasl_username_user = sasl_username_user
     real_sender = sender
 
     conn = kwargs['conn_vmail']
@@ -280,8 +281,10 @@ def restriction(**kwargs):
                 # Get per-user alias addresses
                 sql = """SELECT address
                            FROM forwardings
-                          WHERE address=%s AND forwarding=%s AND is_alias=1
-                          LIMIT 1""" % (sqlquote(sender), sqlquote(real_sasl_username))
+                          WHERE address=%s AND (forwarding=%s OR forwarding LIKE %s) AND is_alias=1
+                          LIMIT 1""" % (sqlquote(sender),
+                                        sqlquote(real_sasl_username),
+                                        sqlquote(real_sasl_username_user + '+%%@' + sasl_username_domain))
                 logger.debug('[SQL] query per-user alias address: \n%s' % sql)
 
                 qr = conn.execute(sql)

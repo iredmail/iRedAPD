@@ -1,3 +1,7 @@
+5.2:
+    - Fixed: plugin/reject_sender_login_mismatch.py, not query forwarding
+      destination address with address extension.
+
 5.1:
     - [SQL] Fixed: plugin 'sql_force_change_password' doesn't always return
       smtp action.
