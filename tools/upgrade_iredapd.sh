@@ -61,6 +61,9 @@ if [ X"${KERNEL_NAME}" == X'LINUX' ]; then
         elif grep 'release 8' /etc/redhat-release &>/dev/null; then
             export DISTRO_VERSION='8'
             export CMD_PIP3='/usr/bin/pip3.6'
+        elif grep 'release 9' /etc/redhat-release &>/dev/null; then
+            export DISTRO_VERSION='9'
+            export CMD_PIP3='/usr/bin/pip3'
         else
             export UNSUPPORTED_RELEASE="YES"
         fi
