@@ -1,6 +1,7 @@
-5.2:
+5.1.1:
     - Fixed: plugin/reject_sender_login_mismatch.py, not query forwarding
       destination address with address extension.
+    - Mark CentOS Stream / Rocky / AlmaLinux 9 as supported releases.
 
 5.1:
     - [SQL] Fixed: plugin 'sql_force_change_password' doesn't always return
