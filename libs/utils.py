@@ -254,7 +254,7 @@ def is_valid_amavisd_address(addr):
 def get_db_conn(db_name):
     """Return SQL connection instance with connection pool support."""
     if settings.backend == 'pgsql':
-        dbn = 'postgres'
+        dbn = 'postgresql'
     else:
         dbn = 'mysql'
 
@@ -270,7 +270,7 @@ def get_db_conn(db_name):
     try:
         _port = int(_port)
     except:
-        if dbn == 'postgres':
+        if dbn == 'postgresql':
             _port = 5432
         else:
             _port = 3306
