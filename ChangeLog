@@ -1,3 +1,7 @@
+5.1.2:
+    - Fix deprecated SQL dbn in SQLAlchemy: `postgres://` -> `postgresql://`.
+    - tools/upgrade_iredapd.sh: Mark OpenBSD 7.2 as supported release.
+
 5.1.1:
     - Fixed: plugin/reject_sender_login_mismatch.py, not query forwarding
       destination address with address extension.
