@@ -595,6 +595,7 @@ def apply_throttle(conn,
     # {tracking_id: ['last_time=xxx', 'init_time=xxx', ...]}
     sql_updates = {}
 
+    tracking_expired = False
     for (_, v) in list(t_settings.items()):
         tid = v['tid']
         for k in v['track_key']:
@@ -610,10 +611,11 @@ def apply_throttle(conn,
                 sql_updates[tracking_id]['last_time'] = now
 
                 if v['expired']:
+                    tracking_expired = True
                     sql_updates[tracking_id]['init_time'] = now
                     sql_updates[tracking_id]['cur_msgs'] = recipient_count
                     sql_updates[tracking_id]['cur_quota'] = size
-                else:
+                elif not tracking_expired:
                     sql_updates[tracking_id]['init_time'] = v['init_time']
                     sql_updates[tracking_id]['cur_msgs'] = 'cur_msgs + %d' % recipient_count
                     sql_updates[tracking_id]['cur_quota'] = 'cur_quota + %d' % size
