@@ -494,7 +494,7 @@ def apply_throttle(conn,
             _cur_msgs = 0
 
         _requested_max_msgs = _cur_msgs + recipient_count
-        if _requested_max_msgs >= max_msgs > 0:
+        if _requested_max_msgs > max_msgs > 0:
             logger.info('[{}] [{}] Quota exceeded: {} throttle for '
                         'max_msgs, recipient_count={}, {}->{}/{}. '
                         '({})'.format(client_address,
