@@ -1,6 +1,10 @@
 5.2:
     - Fixed: plugins/throttle.py: can not send last email when reaches the
       max messages limit.
+    - Fixed: plugins/throttle.py: if one throttle setting has multiple rules
+      (e.g. max_msgs, max_quota), tracking data may be incorrectly updated and
+      cause bypassing the throttle setting.
+      Thanks Jose Bravo (@jdbravo) for the feedback.
 
 5.1.3:
     - Ship Python module web.py (github.com/webpy/webpy, public domain).
