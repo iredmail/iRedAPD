@@ -307,7 +307,6 @@ def apply_throttle(conn,
     #       "last_notify_time": xx,     # value of `throttle_tracking.last_notify_time`
     #
     #       "track_key": xx,            # meta:
-    #       "expired": False,           # meta: track whether throttling record expired.
     #       ...
     #   },
     #   "max_quota": {
@@ -520,7 +519,6 @@ def apply_throttle(conn,
         if _period and (_init_time > 0) and now > (_init_time + _period):
             logger.debug('Existing max_msgs tracking expired, reset.')
             expired_tracking_ids.add(_tracking_id)
-            ts["cur_msgs"] = 0
             _cur_msgs = 0
             _init_time = now
             _last_time = now
@@ -581,7 +579,6 @@ def apply_throttle(conn,
             # tracking record expired
             logger.info('Existing max_quota tracking expired, reset.')
             expired_tracking_ids.add(_tracking_id)
-            ts['cur_quota'] = 0
             _init_time = now
             _last_time = now
             _cur_quota = 0
@@ -660,10 +657,12 @@ def apply_throttle(conn,
                 sql_updates[tracking_id]['last_time'] = now
 
                 if tracking_id in expired_tracking_ids:
+                    # Reset `init_time`, `cur_msgs`, `cur_quota`.
                     sql_updates[tracking_id]['init_time'] = now
                     sql_updates[tracking_id]['cur_msgs'] = recipient_count
                     sql_updates[tracking_id]['cur_quota'] = size
                 else:
+                    # keep original `init_time`, increase `cur_msgs` and `cur_quota`.
                     sql_updates[tracking_id]['init_time'] = ts['init_time']
                     sql_updates[tracking_id]['cur_msgs'] = 'cur_msgs + %d' % recipient_count
                     sql_updates[tracking_id]['cur_quota'] = 'cur_quota + %d' % size
