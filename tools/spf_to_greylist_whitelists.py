@@ -57,13 +57,14 @@
 import os
 import sys
 import logging
-import web
-web.config.debug = False
 
 os.environ['LC_ALL'] = 'C'
 
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
+
+import web
+web.config.debug = False
 
 from tools import logger, get_db_conn
 from libs import utils, dnsspf

@@ -18,12 +18,13 @@ cluebringer_db_password = '0T2JIsDuX7yHWAakgIcSJt2i6LZk2I'
 
 import os
 import sys
-import web
 
 os.environ['LC_ALL'] = 'C'
 
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
+
+import web
 import settings
 from libs import ACCOUNT_PRIORITIES
 from libs.utils import is_valid_amavisd_address

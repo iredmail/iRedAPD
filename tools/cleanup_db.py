@@ -6,17 +6,17 @@
 import os
 import sys
 import time
-import web
 
 os.environ['LC_ALL'] = 'C'
 
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
 
+import web
+web.config.debug = False
+
 import settings
 from tools import get_db_conn, cleanup_sql_table
-
-web.config.debug = False
 
 backend = settings.backend
 now = int(time.time())

@@ -19,12 +19,13 @@ cluebringer_db_password = ''
 
 import os
 import sys
-import web
 
 os.environ['LC_ALL'] = 'C'
 
 rootdir = os.path.abspath(os.path.dirname(__file__)) + '/../'
 sys.path.insert(0, rootdir)
+
+import web
 import settings
 from libs import ACCOUNT_PRIORITIES
 from libs.utils import is_email, is_domain
