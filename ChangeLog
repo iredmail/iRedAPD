@@ -1,3 +1,6 @@
+5.3:
+    - Fixed: imcorrect order of importing web.py module in tools/*.py.
+
 5.2:
     - Fixed: plugins/throttle.py: can not send last email when reaches the
       max messages limit.
