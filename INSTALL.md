@@ -183,7 +183,7 @@ touch /var/log/iredapd/iredapd.log
 chown -R iredapd:iredapd /var/log/iredapd
 ```
 
-* Copy `/opt/iredapd/samples/rsyslog.d/iredapd.conf` to `/etc/rsyslog.d/`
+* Copy `/opt/iredapd/samples/rsyslog.d/iredapd.conf` to `/etc/rsyslog.d/` and restart rsyslog service
 
 ```shell
 # —— on Linux ----
@@ -192,7 +192,7 @@ chown root:root /etc/rsyslog.d/iredapd.conf
 service rsyslog restart
 ```
 
-* To enable logrotate, copy `/opt/iredapd/samples/logrotate.d/iredapd` to `/etc/logrotate.d/`
+* Optional: To enable logrotate, copy `/opt/iredapd/samples/logrotate.d/iredapd` to `/etc/logrotate.d/` and restart logrotate service 
 
 ```shell
 # —— on Linux ----
