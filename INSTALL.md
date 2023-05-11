@@ -183,6 +183,21 @@ touch /var/log/iredapd/iredapd.log
 chown -R iredapd:iredapd /var/log/iredapd
 ```
 
+* Copy `/opt/iredapd/samples/rsyslog.d/iredapd.conf` to `/etc/rsyslog.d/`
+
+```shell
+# —— on Linux ----
+cp /opt/iredapd/samples/rsyslog.d/iredapd.conf /etc/rsyslog.d/
+chown root:root /etc/rsyslog.d/iredapd.conf
+```
+
+* To enable logrotate, copy `/opt/iredapd/samples/logrotate.d/iredapd` to `/etc/logrotate.d/`
+
+```shell
+# —— on Linux ----
+cp /opt/iredapd/samples/logrotate.d/iredapd /etc/logrotate.d/
+```
+
 * Run command `crontab -e -u root` to add cron jobs for root user:
 
 ```
