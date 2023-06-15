@@ -234,6 +234,7 @@ install_pkgs()
 
 has_python_module()
 {
+    cd ${ROOTDIR}
     for mod in $@; do
         ${CMD_PYTHON3} -c "import $mod" &>/dev/null
         if [ X"$?" == X'0' ]; then
