@@ -234,7 +234,6 @@ install_pkgs()
 
 has_python_module()
 {
-    cd ${ROOTDIR}
     for mod in $@; do
         ${CMD_PYTHON3} -c "import $mod" &>/dev/null
         if [ X"$?" == X'0' ]; then
@@ -394,11 +393,6 @@ if [ X"$(has_python_module requests)" == X'NO' ]; then
     [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-requests"
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} dns/py-requests"
     [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-requests"
-fi
-
-echo "  + [required] web.py"
-if [ X"$(has_python_module web)" == X'NO' ]; then
-    DEP_PIP3_MODS="${DEP_PIP3_MODS} web.py>=0.61"
 fi
 
 if grep '^backend' ${IREDAPD_CONF_PY} | grep 'ldap' &>/dev/null; then
