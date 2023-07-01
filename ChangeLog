@@ -1,3 +1,6 @@
+5.3.3:
+    - Mark Debian 12 as supported release.
+
 5.3.2:
     - tools/upgrade_iredapd.sh: do not check web.py module since it's shipped
       internally.
