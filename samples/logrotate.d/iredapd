@@ -8,6 +8,6 @@
     sharedscripts
 
     postrotate
-        /usr/sbin/service rsyslog restart
+        /usr/bin/systemctl -s HUP kill rsyslog.service >/dev/null 2>&1 || true
     endscript
 }
