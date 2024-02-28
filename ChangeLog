@@ -1,3 +1,7 @@
+5.4.0
+    - Fixed: iRedAPD should be ran after slapd.service on Linux.
+      Thanks to @bronkoo.
+
 5.3.3:
     - Mark Debian 12 as supported release.
 
