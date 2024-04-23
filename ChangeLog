@@ -1,5 +1,10 @@
+5.6.0
+    - Embed `asyncore` module which was removed in Python 3.12.
+      https://github.com/simonrob/pyasyncore
+
 5.5.0
     - Embed `asynchat` module which was removed in Python 3.12.
+      https://github.com/simonrob/pyasynchat
 
 5.4.0
     - Fixed: iRedAPD should be ran after slapd.service on Linux.
