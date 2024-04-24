@@ -8,7 +8,7 @@
   http://www.iredmail.org/docs/manage.iredapd.html
 
 * Understand greylisting:
-  http://greylisting.org/articles/whitepaper.shtml
+  http://projects.puremagic.com/greylisting/whitepaper.html
 """
 
 import time
