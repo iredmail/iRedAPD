@@ -142,4 +142,7 @@ SMTP_SESSION_ATTRIBUTES = [
     # Postfix version 3.2 and later:
     'server_address',
     'server_port',
+    # Postfix version 3.8 and later:
+    'compatibility_level',
+    'mail_version',
 ]
