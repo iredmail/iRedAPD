@@ -19,6 +19,7 @@ REQUIRE_LOCAL_RECIPIENT = True
 RECIPIENT_SEARCH_ATTRLIST = [
     'accountStatus', 'listAllowedUser',
     'accessPolicy', 'enabledService',
+    'listModerator', 'listOwner',
 ]
 
 
@@ -71,6 +72,14 @@ def restriction(**kwargs):
     valid_rcpt_domains = conn_utils.get_primary_and_alias_domains(conn=conn,
                                                                   domain=recipient_domain)
     logger.debug('Primary and all alias domain names of recipient domain ({}): {}'.format(recipient_domain, ', '.join(valid_rcpt_domains)))
+
+    if sender in recipient_ldif.get('listModerator', []):
+        logger.debug('Sender is a moderator. Bypass.')
+        return SMTP_ACTIONS['default']
+
+    if sender in recipient_ldif.get('listOwner', []):
+        logger.debug('Sender is an owner. Bypass.')
+        return SMTP_ACTIONS['default']
 
     #
     # No matter what access policy it has, bypass explictly allowed senders

@@ -87,6 +87,43 @@ def restriction(**kwargs):
     else:
         logger.debug('No alias domain.')
 
+    # Always bypass moderators.
+    addresses = [recipient]
+    if rcpt_alias_domains:
+        rcpt_username = recipient.split("@")[0]
+        addresses.extend([rcpt_username + "@" + d for d in rcpt_alias_domains])
+
+    sql = """SELECT address
+               FROM moderators
+              WHERE address IN %s
+                    AND moderator = %s
+              LIMIT 1""" % (sqlquote(addresses), sqlquote(sender))
+    logger.debug('[SQL] query moderator: \n%s' % sql)
+
+    _qr = conn.execute(sql)
+    _record = _qr.fetchone()
+    if _record:
+        logger.debug('Sender is a moderator. Bypass.')
+        return SMTP_ACTIONS['default']
+    else:
+        logger.debug('Sender is not a moderator.')
+
+    # Always bypass owners.
+    sql = """SELECT address
+               FROM maillist_owners
+              WHERE address IN %s
+                    AND owner = %s
+              LIMIT 1""" % (sqlquote(addresses), sqlquote(sender))
+    logger.debug('[SQL] query owner: \n%s' % sql)
+
+    _qr = conn.execute(sql)
+    _record = _qr.fetchone()
+    if _record:
+        logger.debug('Sender is an owner. Bypass.')
+        return SMTP_ACTIONS['default']
+    else:
+        logger.debug('Sender is not an owner.')
+
     if policy == MAILLIST_POLICY_DOMAIN:
         # Bypass all users under the same domain.
         if sender_domain == recipient_domain \
