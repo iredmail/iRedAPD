@@ -3,12 +3,9 @@ from dns import resolver
 
 from libs.logger import logger
 from libs import utils
+from libs.utils import get_dns_resolver
 import settings
 
-
-resv = resolver.Resolver()
-resv.timeout = settings.DNS_QUERY_TIMEOUT
-resv.lifetime = settings.DNS_QUERY_TIMEOUT
 
 max_queries = settings.SPF_MAX_DNS_QUERIES
 
@@ -34,7 +31,7 @@ def query_a(domains, queried_domains=None, returned_ips=None, num_queries=0):
 
         try:
             num_queries += 1
-            qr = resv.query(domain, 'A')
+            qr = get_dns_resolver().query(domain, 'A')
             if qr:
                 for r in qr:
                     _ip = str(r)
@@ -84,7 +81,7 @@ def query_mx(domains, queried_domains=None, returned_ips=None, num_queries=0):
 
         try:
             num_queries += 1
-            qr = resv.query(domain, 'MX')
+            qr = get_dns_resolver().query(domain, 'MX')
             if qr:
                 for r in qr:
                     hostname = str(r).split()[-1].rstrip('.')
@@ -132,7 +129,7 @@ def query_spf(domain, queried_domains=None, num_queries=0):
     try:
         # WARNING: DO NOT UPDATE queried_domains in this function
         num_queries += 1
-        qr = resv.query(domain, 'TXT')
+        qr = get_dns_resolver().query(domain, 'TXT')
         for r in qr:
             # Remove heading/ending quotes
             r = str(r).strip('"').strip("'")

@@ -1,3 +1,6 @@
+5.8.0:
+    - Fixed: do not use global DNS resolver.
+
 5.7.0
     - Fixed: not bypass email sent from mailing list moderators and owners.
 

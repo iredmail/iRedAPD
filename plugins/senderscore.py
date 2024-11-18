@@ -10,12 +10,9 @@ from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import utils
+from libs.utils import get_dns_resolver
 
 import settings
-
-resv = resolver.Resolver()
-resv.timeout = settings.DNS_QUERY_TIMEOUT
-resv.lifetime = settings.DNS_QUERY_TIMEOUT
 
 reject_score = settings.SENDERSCORE_REJECT_SCORE
 
@@ -72,7 +69,7 @@ def restriction(**kwargs):
         lookup_domain = "{}.{}.{}.{}.score.senderscore.com".format(o4, o3, o2, o1)
 
         try:
-            qr = resv.query(lookup_domain, "A")
+            qr = get_dns_resolver().query(lookup_domain, "A")
             if not qr:
                 return SMTP_ACTIONS["default"]
 

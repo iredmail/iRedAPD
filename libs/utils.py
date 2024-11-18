@@ -8,6 +8,7 @@ import subprocess
 import smtplib
 import ipaddress
 import uuid
+from dns import resolver
 from typing import Union, List, Tuple, Set, Dict, Any
 
 from email.mime.text import MIMEText
@@ -830,3 +831,11 @@ def bytes2str(b: Union[bytes, str, List, Tuple, Set, Dict])\
         s = __bytes2str(b)
 
     return s
+
+
+def get_dns_resolver():
+    resv = resolver.Resolver()
+    resv.timeout = settings.DNS_QUERY_TIMEOUT
+    resv.lifetime = settings.DNS_QUERY_TIMEOUT
+
+    return resv
