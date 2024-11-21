@@ -1,46 +1,31 @@
-# Introduction
+# Project Overview
+iRedAPD is a simple [Postfix policy server](http://www.postfix.org/SMTPD_POLICY_README.html), 
+written in Python and runs as a low-privileged user (`iredapd` by default), with plugin support.
 
-> Don't forget to check out our lightweight email archiving software: https://spiderd.io/
+**Key Features:**
+- Works with OpenLDAP, MySQL/MariaDB, and PostgreSQL backends.
+- License: GPL v3 (with exceptions for certain files).
+- Default listening ports:
+    - `7777`: Normal SMTP policy service.
+    - `7778`: Sender Rewriting Scheme (SRS) for sender address rewriting.
+    - `7779`: SRS for recipient address rewriting.
 
-* iRedAPD is a simple [Postfix policy server](http://www.postfix.org/SMTPD_POLICY_README.html),
-  written in Python and runs as a low-privileged user (`iredapd` by default),
-  with plugin support.
-* The latest iRedAPD works with OpenLDAP, MySQL/MariaDB and PostgreSQL backends.
-* __License: GPL v3__, except few files are in different licenses, shipped in
-  iRedAPD for easier setup, but not license change.
-    * file `libs/daemon.py` is BSD license.
-    * file `libs/srslib.py` is Apache License, Version 2.0.
-* Author: Zhang Huangbin <zhb _at_ iredmail.org>.
+**Notes:**
+- Sub-project of the [iRedMail project](http://www.iredmail.org).
+- Pre-installed and enabled in iRedMail by default.
+- Can be managed via the iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
 
-**NOTES**:
-
-* iRedAPD is a sub-project of [iRedMail project](http://www.iredmail.org).
-* iRedAPD is installed and enabled in iRedMail by default, you don’t need
-  this tutorial if you already have iRedMail running. For standard installation
-  please check document `INSTALL.md`.
-* iRedAPD listens on 3 ports by default:
-    - `7777`: normal smtp policy service
-    - `7778`: SRS (Sender Rewriting Scheme) for sender address rewriting
-    - `7779`: SRS (Sender Rewriting Scheme) for recipient address rewriting
-* You can manage iRedAPD with iRedMail [web admin panel - iRedAdmin-Pro](http://www.iredmail.org/admin_panel.html).
-
-# Requirements
-
+## Prerequisites
 - Python 3.5+
 
-# Manage iRedAPD with command line tools
+## Installation Steps
+**Standard Installation:** Refer to the `INSTALL.md` document for detailed installation instructions.
 
-iRedMail project has a detailed tutorial to show you how to manage iRedAPD
-with command line tools: [Manage iRedAPD](http://www.iredmail.org/docs/manage.iredapd.html)
+## Manage iRedAPD with Command-Line Tools
+Comprehensive documentation is available with detailed tutorial here: [Manage iRedAPD](http://www.iredmail.org/docs/manage.iredapd.html).
 
-# Available plugins
-
-Plugins are files placed under `plugins/` directory, plugin name is file name
-without file extension `.py`. It's recommended to read comment lines in plugin
-source files to understand what it does and how it works.
-
-## Plugins for all backends
-
+## Available Plugins
+### For All Backends
 * `reject_to_hostname`: reject emails sent to `xxx@<server hostname>` from
   external network.
 * `reject_sender_login_mismatch`: Reject sender login mismatch (addresses in
@@ -74,12 +59,23 @@ source files to understand what it does and how it works.
   whitelist single recipient address or domain for greylisting and normal
   white/blacklist.
 
-## Plugins for OpenLDAP backend
 
-* `ldap_maillist_access_policy`: restrict who can send email to mail list.
-* `ldap_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
+### For OpenLDAP Backend
+- `ldap_maillist_access_policy`: Restrict who can send emails to a mail list.
+- `ldap_force_change_password_in_days`: Enforce password changes after a set period.
 
-## Plugins for MySQL/MariaDB and PostgreSQL backends
+### For MySQL/MariaDB and PostgreSQL Backends
+- `sql_alias_access_policy`: Restrict who can send emails to an alias.
+- `sql_force_change_password_in_days`: Enforce password changes after a set period.
 
-* `sql_alias_access_policy`: restrict who can send email to mail alias.
-* `sql_force_change_password_in_days`: force users to change password in days (default 90 days). User cannot send email before resetting password.
+## External Documents
+Refer to additional documents like `INSTALL.md` and `CONTRIBUTE.md` for comprehensive guides.
+
+## Version History
+Please refer to the [Change Log](ChangeLog) for details.
+
+## Help and Support
+For FAQs, common issues, and user interactions, refer to GitHub Issues and Pull Requests.
+
+
+
