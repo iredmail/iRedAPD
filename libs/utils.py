@@ -621,16 +621,10 @@ def sendmail_with_cmd(from_address, recipients, message_text):
 
     cmd = [settings.CMD_SENDMAIL, "-f", from_address, recipients]
 
-    try:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-        p.stdin.write(message_text)
-        p.stdin.close()
-        p.wait()
-
-        return (True, )
-    except Exception as e:
-        return (False, repr(e))
-
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    p.stdin.write(message_text)
+    p.stdin.close()
+    p.wait()
 
 def sendmail(subject, mail_body, from_address=None, recipients=None):
     """Send email through smtp or with command `sendmail`.
@@ -678,21 +672,17 @@ def sendmail(subject, mail_body, from_address=None, recipients=None):
 
     if server and port and user and password:
         # Send email through standard smtp protocol
-        try:
-            s = smtplib.SMTP(server, port)
-            s.set_debuglevel(debug_level)
+        s = smtplib.SMTP(server, port)
+        s.set_debuglevel(debug_level)
 
-            if starttls:
-                s.ehlo()
-                s.starttls()
-                s.ehlo()
+        if starttls:
+            s.ehlo()
+            s.starttls()
+            s.ehlo()
 
-            s.login(user, password)
-            s.sendmail(from_address, recipients, message_text)
-            s.quit()
-            return (True, )
-        except Exception as e:
-            return (False, repr(e))
+        s.login(user, password)
+        s.sendmail(from_address, recipients, message_text)
+        s.quit()
     else:
         return sendmail_with_cmd(from_address=from_address,
                                  recipients=recipients,
