@@ -622,7 +622,7 @@ def sendmail_with_cmd(from_address, recipients, message_text):
     cmd = [settings.CMD_SENDMAIL, "-f", from_address, recipients]
 
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    p.stdin.write(message_text)
+    p.stdin.write(str.encode(message_text))
     p.stdin.close()
     p.wait()
 
