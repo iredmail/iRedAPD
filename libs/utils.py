@@ -623,7 +623,7 @@ def sendmail_with_cmd(from_address, recipients, message_text):
 
     try:
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-        p.stdin.write(message_text)
+        p.stdin.write(message_text.encode("utf-8"))
         p.stdin.close()
         p.wait()
 

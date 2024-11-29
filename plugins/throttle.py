@@ -210,8 +210,11 @@ def __sendmail(conn,
         _body += '- Limit: %d %s\n' % (throttle_value, throttle_value_unit)
         _body += '- Detailed setting: ' + throttle_info + '\n'
 
-        utils.sendmail(subject=_subject, mail_body=_body)
-        logger.info('Sent notification email to admin(s) to report quota exceed: user=%s, %s=%d.' % (user, throttle_name, throttle_value))
+        r = utils.sendmail(subject=_subject, mail_body=_body)
+        if r[0]:
+            logger.info('Sent notification email to admin(s) to report quota exceed: user=%s, %s=%d.' % (user, throttle_name, throttle_value))
+        else:
+            logger.warn('Failed in senting notification email to admin(s) to report quota exceed: user=%s, %s=%d, error=%s.' % (user, throttle_name, throttle_value, r[1]))
 
         if throttle_tracking_id:
             _now = int(time.time())
