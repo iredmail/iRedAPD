@@ -136,9 +136,9 @@ def query_spf(domain, queried_domains=None, num_queries=0):
 
             # Some SPF records contains splited IP address like below:
             #   v=spf1 ... ip4:66.220.157" ".0/25 ...
-            # We should remove '"' and combine them.
-            _v = [v for v in r.split('"') if not v.startswith(' ')]
-            r = ''.join(_v)
+            #   v=spf1 ... ip4:157.255.1.64/29" " ip4:106.39.212.64/29 ...
+            # We should remove '" "' and combine them.
+            r = r.replace('" "', '')
 
             if r.startswith('v=spf1'):
                 spf = r
