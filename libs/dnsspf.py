@@ -131,8 +131,8 @@ def query_spf(domain, queried_domains=None, num_queries=0):
         num_queries += 1
         qr = get_dns_resolver().query(domain, 'TXT')
         for r in qr:
-            # Remove heading/ending quotes
-            r = str(r).strip('"').strip("'")
+            # Remove quotes
+            r = str(r).replace('"', '').replace("'", "")
 
             # Some SPF records contains splited IP address like below:
             #   v=spf1 ... ip4:66.220.157" ".0/25 ...
