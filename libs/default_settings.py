@@ -76,7 +76,7 @@ TRACKING_EXPIRE_SECONDS = 10
 
 # Max SPF DNS queries.
 #
-# RFC 7208 (https://datatracker.ietf.org/doc/html/rfc7208#section-4.6)
+# RFC 7208 (https://datatracker.ietf.org/doc/html/rfc7208#section-4.6.4)
 #
 # "SPF implementations MUST limit the total number of those terms to 10
 # during SPF evaluation, to avoid unreasonable load on the DNS."
