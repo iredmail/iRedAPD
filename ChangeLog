@@ -1,3 +1,6 @@
+5.9.1:
+    - Mark CentOS/Rocky/AlmaLinux 10 as supported release.
+
 5.9.0:
     - Fixed: not correctly parse SPF record with whitespaces.
 
