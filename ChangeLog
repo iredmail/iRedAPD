@@ -1,5 +1,6 @@
 5.9.2:
     - Mark Debian 13 as supported release.
+    - Update embedded web.py to 0.70.
 
 5.9.1:
     - Mark CentOS/Rocky/AlmaLinux 10 as supported release.
