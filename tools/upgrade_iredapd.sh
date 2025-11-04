@@ -328,13 +328,17 @@ if [ ! -x ${CMD_PYTHON3} ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
         [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
         [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python36 python3-pip"
+        [[ X"${DISTRO_VERSION}" == X'9' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
+        [[ X"${DISTRO_VERSION}" == X'10' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
     fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip"
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip python3-multipart"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pippython3-multipart"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip devel/py-multipart"
 
     if [ X"${DISTRO}" == X'OPENBSD' ]; then
+        DEP_PKGS="${DEP_PKGS} py3-multipart"
+
         if [ X"${DISTRO_VERSION}" == X'6.8' ]; then
             DEP_PKGS="${DEP_PKGS} python%3.8"
         elif [ X"${DISTRO_VERSION}" == X'6.6' -o X"${DISTRO_VERSION}" == X'6.7' ]; then
@@ -1090,6 +1094,9 @@ fi
 if [ X"$?" != X'0' ]; then
     echo "Failed, please restart iRedAPD service manually."
 fi
+
+# Fix incorrect priority of throttle accounts which introduced by EE.
+${CMD_PYTHON3} ${IREDAPD_ROOT_DIR}/tools/fix_throttle_priority.py >/dev/null
 
 echo "* Upgrade completed."
 

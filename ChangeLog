@@ -1,3 +1,8 @@
+5.9.3:
+    - Add python-multipart as dependent packages. fixes #27
+    - New: tools/fix_throttle_priority.py, used to fix priority of throttle
+      accounts introduced by EE v1.5.1 and earlier releases.
+
 5.9.2:
     - Mark Debian 13 as supported release.
     - Update embedded web.py to 0.70.
