@@ -333,7 +333,7 @@ if [ ! -x ${CMD_PYTHON3} ]; then
     fi
 
     [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip python3-multipart"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pippython3-multipart"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip python3-multipart"
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip devel/py-multipart"
 
     if [ X"${DISTRO}" == X'OPENBSD' ]; then
