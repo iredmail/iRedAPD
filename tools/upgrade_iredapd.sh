@@ -328,17 +328,13 @@ if [ ! -x ${CMD_PYTHON3} ]; then
     if [ X"${DISTRO}" == X'RHEL' ]; then
         [[ X"${DISTRO_VERSION}" == X'7' ]] && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
         [[ X"${DISTRO_VERSION}" == X'8' ]] && DEP_PKGS="${DEP_PKGS} python36 python3-pip"
-        [[ X"${DISTRO_VERSION}" == X'9' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
-        [[ X"${DISTRO_VERSION}" == X'10' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
     fi
 
-    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip python3-multipart"
-    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip python3-multipart"
-    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip devel/py-multipart"
+    [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+    [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3 python3-pip"
+    [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} lang/python38 devel/py-pip"
 
     if [ X"${DISTRO}" == X'OPENBSD' ]; then
-        DEP_PKGS="${DEP_PKGS} py3-multipart"
-
         if [ X"${DISTRO_VERSION}" == X'6.8' ]; then
             DEP_PKGS="${DEP_PKGS} python%3.8"
         elif [ X"${DISTRO_VERSION}" == X'6.6' -o X"${DISTRO_VERSION}" == X'6.7' ]; then
@@ -353,6 +349,20 @@ if [ ! -x ${CMD_PIP3} ]; then
     [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-pip"
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} devel/py-pip"
     [ X"${DISTRO}" == X'OPENBSD' ]  && DEP_PKGS="${DEP_PKGS} py3-pip"
+fi
+
+# Required packages.
+if [ X"${DISTRO}" == X'RHEL' ]; then
+    [[ X"${DISTRO_VERSION}" == X'9' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
+    [[ X"${DISTRO_VERSION}" == X'10' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
+elif [ X"${DISTRO}" == X'DEBIAN' ]; then
+    DEP_PKGS="${DEP_PKGS} python3-multipart"
+elif [ X"${DISTRO}" == X'UBUNTU' ]; then
+    DEP_PKGS="${DEP_PKGS} python3-multipart"
+elif [ X"${DISTRO}" == X'FREEBSD' ]; then
+    DEP_PKGS="${DEP_PKGS} devel/py-multipart"
+elif [ X"${DISTRO}" == X'OPENBSD' ]; then
+    DEP_PKGS="${DEP_PKGS} py3-multipart"
 fi
 
 echo "* Checking dependent Python modules:"

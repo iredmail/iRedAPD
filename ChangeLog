@@ -1,3 +1,7 @@
+5.9.4:
+    - Fixed: tools/upgrade_iredapd.sh: not correctly install dependent
+      'multipart' package.
+
 5.9.3:
     - Add python-multipart as dependent packages. fixes #27
     - New: tools/fix_throttle_priority.py, used to fix priority of throttle
