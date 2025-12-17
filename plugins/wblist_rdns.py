@@ -83,7 +83,7 @@ def restriction(**kwargs):
               WHERE rdns IN %s AND wb='W'
               LIMIT 1""" % sqlquote(_policy_rdns_names)
     logger.debug('[SQL] Query whitelisted rDNS names: \n%s' % sql)
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     record = qr.fetchone()
     if record:
         rdns = str(record[0]).lower()
@@ -98,7 +98,7 @@ def restriction(**kwargs):
               WHERE rdns IN %s AND wb='B'
               LIMIT 1""" % sqlquote(_policy_rdns_names)
     logger.debug('[SQL] Query blacklisted rDNS names: \n%s' % sql)
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     record = qr.fetchone()
     if record:
         rdns = str(record[0]).lower()

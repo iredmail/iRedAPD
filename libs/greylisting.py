@@ -27,7 +27,7 @@ def delete_setting(conn, account, sender):
         sql = """DELETE FROM greylisting WHERE account='%(account)s'
                                            AND sender='%(sender)s'""" % sql_vars
 
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
 
         return (True, )
     except Exception as e:
@@ -46,7 +46,7 @@ def enable_greylisting(conn, account, sender):
                                   VALUES ('%(account)s', %(priority)d,
                                           '%(sender)s', %(sender_priority)d,
                                           %(active)d)""" % gl_setting
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
 
         return (True, )
     except Exception as e:
@@ -65,7 +65,7 @@ def disable_greylisting(conn, account, sender):
                                   VALUES ('%(account)s', %(priority)d,
                                           '%(sender)s', %(sender_priority)d,
                                           %(active)d)""" % gl_setting
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
 
         return (True, )
     except Exception as e:
@@ -84,7 +84,7 @@ def add_whitelist_sender(conn, account, sender, comment=None):
     try:
         sql = """INSERT INTO greylisting_whitelists (account, sender, comment)
                                              VALUES ('%s', '%s', '%s')""" % (account, sender, comment)
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
     except Exception as e:
         error = str(e).lower()
         if 'duplicate key' in error or 'duplicate entry' in error:
@@ -102,7 +102,7 @@ def add_whitelist_domain(conn, domain):
 
     try:
         sql = """INSERT INTO greylisting_whitelist_domains (domain) VALUES ('%s')""" % domain
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
     except Exception as e:
         error = str(e).lower()
         if 'duplicate key' in error or 'duplicate entry' in error:
@@ -120,10 +120,10 @@ def remove_whitelisted_domain(domain, conn):
 
     try:
         sql = """DELETE FROM greylisting_whitelist_domains WHERE domain='%s'""" % domain
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
 
         sql = """DELETE FROM greylisting_whitelists WHERE COMMENT='AUTO-UPDATE: %s'""" % domain
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
     except Exception as e:
         error = str(e).lower()
         if 'duplicate key' in error or 'duplicate entry' in error:

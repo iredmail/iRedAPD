@@ -52,7 +52,7 @@ def get_members(conn, mail):
 
     logger.debug('[SQL] query alias members: \n%s' % sql)
 
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     records = qr.fetchall()
     logger.debug('SQL query result: %s' % str(records))
 
@@ -74,7 +74,7 @@ def get_moderators(conn, mail):
 
     logger.debug('[SQL] query moderators: \n%s' % sql)
 
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     records = qr.fetchall()
     logger.debug('SQL query result: %s' % str(records))
 
@@ -137,7 +137,7 @@ def restriction(**kwargs):
               """ % (sqlquote(sender_domain), sqlquote(real_recipient_domain))
     logger.debug('[SQL] query alias domain: \n%s' % sql)
 
-    _qr = utils.conn_execute(conn, sql)
+    _qr = utils.execute_sql(conn, sql)
     _record = _qr.fetchone()
 
     if _record:

@@ -90,7 +90,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
     logger.debug("[SQL] Query CIDR network: \n{}".format(sql))
 
     try:
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         qr_cidr = qr.fetchall()
     except Exception as e:
         logger.error("Error while querying CIDR network: {}, SQL: \n{}".format(repr(e), sql))
@@ -135,7 +135,7 @@ def get_id_of_external_addresses(conn, addresses):
     logger.debug("[SQL] Query external addresses: \n{}".format(sql))
 
     try:
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         qr_addresses = qr.fetchall()
     except Exception as e:
         logger.error("Error while getting list of id of external addresses: {}, SQL: {}".format(repr(e), sql))
@@ -165,7 +165,7 @@ def get_id_of_local_addresses(conn, addresses):
 
     ids = []
     try:
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         qr_addresses = qr.fetchall()
         if qr_addresses:
             ids = [int(r.id) for r in qr_addresses]
@@ -193,7 +193,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
               WHERE sid IN %s
                 AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug("[SQL] Query inbound wblist (in `wblist`): \n{}".format(sql))
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     wblists = qr.fetchall()
 
     if not wblists:
@@ -236,7 +236,7 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
               WHERE sid IN %s
                 AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug("[SQL] Query outbound wblist: \n{}".format(sql))
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     wblists = qr.fetchall()
 
     if not wblists:

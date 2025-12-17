@@ -12,7 +12,7 @@ def create_mailaddr(conn, addresses) -> bool:
             priority = utils.MAILADDR_PRIORITIES[addr_type]
             try:
                 sql = "INSERT INTO mailaddr (email, priority) VALUES ({}, {})".format(sqlquote(addr), sqlquote(priority))
-                utils.conn_execute(conn, sql)
+                utils.execute_sql(conn, sql)
             except:
                 pass
 
@@ -25,11 +25,11 @@ def create_user(conn, account, return_record=True):
     try:
         # Use policy_id=0 to make sure it's not linked to any policy.
         sql = "INSERT INTO users (policy_id, email, priority) VALUES (%d, '%s', %d)" % (0, account, utils.MAILADDR_PRIORITIES[addr_type])
-        utils.conn_execute(conn, sql)
+        utils.execute_sql(conn, sql)
 
         if return_record:
             sql = "SELECT id, priority, policy_id, email FROM users WHERE email='%s' LIMIT 1" % account
-            qr = utils.conn_execute(conn, sql)
+            qr = utils.execute_sql(conn, sql)
             sql_record = qr.fetchone()
             return (True, sql_record)
         else:
@@ -44,7 +44,7 @@ def get_user_record(conn, account, create_if_missing=True):
                    FROM users
                   WHERE email='%s'
                   LIMIT 1""" % account
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         sql_record = qr.fetchall()
 
         if sql_record:
@@ -147,10 +147,10 @@ def add_wblist(conn,
     # Delete old records
     if flush_before_import:
         # user_id = wblist.rid
-        utils.conn_execute(conn, 'DELETE FROM wblist WHERE rid=%s' % sqlquote(user_id))
+        utils.execute_sql(conn, 'DELETE FROM wblist WHERE rid=%s' % sqlquote(user_id))
 
         # user_id = outbound_wblist.sid
-        utils.conn_execute(conn, 'DELETE FROM outbound_wblist WHERE sid=%s' % sqlquote(user_id))
+        utils.execute_sql(conn, 'DELETE FROM outbound_wblist WHERE sid=%s' % sqlquote(user_id))
 
     if not all_addresses:
         return (True, )
@@ -162,7 +162,7 @@ def add_wblist(conn,
     sender_records = {}
     if sender_addresses:
         sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(list(sender_addresses))
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         sql_records = qr.fetchall()
         for r in sql_records:
             (_id, _email) = r
@@ -173,7 +173,7 @@ def add_wblist(conn,
     rcpt_records = {}
     if rcpt_addresses:
         sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(list(rcpt_addresses))
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         sql_records = qr.fetchall()
 
         for r in sql_records:
@@ -185,11 +185,11 @@ def add_wblist(conn,
     try:
         if sender_records:
             sql = "DELETE FROM wblist WHERE rid=%d AND sid IN %s" % (user_id, sqlquote(list(sender_records.values())))
-            utils.conn_execute(conn, sql)
+            utils.execute_sql(conn, sql)
 
         if rcpt_records:
             sql = "DELETE FROM outbound_wblist WHERE sid=%d AND rid IN %s" % (user_id, sqlquote(list(rcpt_records.values())))
-            utils.conn_execute(conn, sql)
+            utils.execute_sql(conn, sql)
     except Exception as e:
         return (False, e)
 
@@ -220,7 +220,7 @@ def add_wblist(conn,
         if values:
             for v in values:
                 try:
-                    utils.conn_execute(conn, "INSERT INTO wblist (sid, rid, wb) VALUES ({}, {}, {})".format(sqlquote(v['sid']),
+                    utils.execute_sql(conn, "INSERT INTO wblist (sid, rid, wb) VALUES ({}, {}, {})".format(sqlquote(v['sid']),
                                                                                                 sqlquote(v['rid']),
                                                                                                 sqlquote(v['wb'])))
                 except Exception as e:
@@ -229,7 +229,7 @@ def add_wblist(conn,
         if rcpt_values:
             for v in rcpt_values:
                 try:
-                    utils.conn_execute(conn, "INSERT INTO outbound_wblist (sid, rid, wb) VALUES ({}, {}, {})".format(sqlquote(v['sid']),
+                    utils.execute_sql(conn, "INSERT INTO outbound_wblist (sid, rid, wb) VALUES ({}, {}, {})".format(sqlquote(v['sid']),
                                                                                                          sqlquote(v['rid']),
                                                                                                          sqlquote(v['wb'])))
                 except Exception as e:
@@ -293,7 +293,7 @@ def delete_wblist(conn,
             sids = []
 
             sql = "SELECT id, email FROM mailaddr WHERE email in %s" % sqlquote(wl_senders)
-            qr = utils.conn_execute(conn, sql)
+            qr = utils.execute_sql(conn, sql)
             sql_records = qr.fetchall()
 
             for r in sql_records:
@@ -302,13 +302,13 @@ def delete_wblist(conn,
                 wl_smails.append(utils.bytes2str(_email))
 
             if sids:
-                utils.conn_execute(conn, "DELETE FROM wblist WHERE rid={} AND sid IN {} AND wb='W'".format(sqlquote(user_id), sqlquote(sids)))
+                utils.execute_sql(conn, "DELETE FROM wblist WHERE rid={} AND sid IN {} AND wb='W'".format(sqlquote(user_id), sqlquote(sids)))
 
         if bl_senders:
             sids = []
 
             sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(bl_senders)
-            qr = utils.conn_execute(conn, sql)
+            qr = utils.execute_sql(conn, sql)
             sql_records = qr.fetchall()
 
             for r in sql_records:
@@ -317,13 +317,13 @@ def delete_wblist(conn,
                 bl_smails.append(utils.bytes2str(_email))
 
             if sids:
-                utils.conn_execute(conn, "DELETE FROM wblist WHERE rid={} AND sid IN {} AND wb='B'".format(sqlquote(user_id), sqlquote(sids)))
+                utils.execute_sql(conn, "DELETE FROM wblist WHERE rid={} AND sid IN {} AND wb='B'".format(sqlquote(user_id), sqlquote(sids)))
 
         if wl_rcpts:
             rids = []
 
             sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(wl_rcpts)
-            qr = utils.conn_execute(conn, sql)
+            qr = utils.execute_sql(conn, sql)
             sql_records = qr.fetchall()
 
             for r in sql_records:
@@ -332,13 +332,13 @@ def delete_wblist(conn,
                 wl_rmails.append(utils.bytes2str(_email))
 
             if rids:
-                utils.conn_execute(conn, "DELETE FROM outbound_wblist WHERE sid={} AND rid IN {} AND wb='W'".format(sqlquote(user_id), sqlquote(rids)))
+                utils.execute_sql(conn, "DELETE FROM outbound_wblist WHERE sid={} AND rid IN {} AND wb='W'".format(sqlquote(user_id), sqlquote(rids)))
 
         if bl_rcpts:
             rids = []
 
             sql = "SELECT id, email FROM mailaddr WHERE email IN %s" % sqlquote(bl_rcpts)
-            qr = utils.conn_execute(conn, sql)
+            qr = utils.execute_sql(conn, sql)
             sql_records = qr.fetchall()
 
             for r in sql_records:
@@ -347,7 +347,7 @@ def delete_wblist(conn,
                 bl_rmails.append(utils.bytes2str(_email))
 
             if rids:
-                utils.conn_execute(conn, "DELETE FROM outbound_wblist WHERE sid={} AND rid IN {} AND wb='B'".format(sqlquote(user_id), sqlquote(rids)))
+                utils.execute_sql(conn, "DELETE FROM outbound_wblist WHERE sid={} AND rid IN {} AND wb='B'".format(sqlquote(user_id), sqlquote(rids)))
 
     except Exception as e:
         return (False, str(e))
@@ -381,19 +381,19 @@ def delete_all_wblist(conn,
     try:
         if wl_senders:
             sql = "DELETE FROM wblist WHERE rid=%d AND wb='W'" % int(user_id)
-            utils.conn_execute(conn, sql)
+            utils.execute_sql(conn, sql)
 
         if bl_senders:
             sql = "DELETE FROM wblist WHERE rid=%d AND wb='B'" % int(user_id)
-            utils.conn_execute(conn, sql)
+            utils.execute_sql(conn, sql)
 
         if wl_rcpts:
             sql = "DELETE FROM outbound_wblist WHERE sid=%d AND wb='W'" % int(user_id)
-            utils.conn_execute(conn, sql)
+            utils.execute_sql(conn, sql)
 
         if bl_rcpts:
             sql = "DELETE FROM outbound_wblist WHERE sid=%d AND wb='B'" % int(user_id)
-            utils.conn_execute(conn, sql)
+            utils.execute_sql(conn, sql)
     except Exception as e:
         return (False, str(e))
 
@@ -420,7 +420,7 @@ def get_account_wblist(conn,
                    FROM mailaddr, users, wblist
                   WHERE %s
                   """ % sql_where
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         sql_records = qr.fetchall()
 
         for r in sql_records:
@@ -454,7 +454,7 @@ def get_account_outbound_wblist(conn,
         sql = """SELECT mailaddr.email, outbound_wblist.wb
                    FROM mailaddr, users, outbound_wblist
                   WHERE %s""" % sql_where
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         sql_records = qr.fetchall()
 
         for r in sql_records:

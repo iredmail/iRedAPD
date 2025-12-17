@@ -288,7 +288,7 @@ def restriction(**kwargs):
                                         sqlquote(real_sasl_username_user + '+%%@' + sasl_username_domain))
                 logger.debug('[SQL] query per-user alias address: \n%s' % sql)
 
-                qr = utils.conn_execute(conn, sql)
+                qr = utils.execute_sql(conn, sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 
@@ -306,7 +306,7 @@ def restriction(**kwargs):
                               LIMIT 1""" % (sqlquote(sender_domain), sqlquote(sasl_username_domain))
                     logger.debug('[SQL] query alias domains: \n%s' % sql)
 
-                    qr = utils.conn_execute(conn, sql)
+                    qr = utils.execute_sql(conn, sql)
                     sql_record = qr.fetchone()
                     logger.debug('SQL query result: %s' % str(sql_record))
 
@@ -333,7 +333,7 @@ def restriction(**kwargs):
                           LIMIT 1""" % (sqlquote(real_sender), sqlquote(real_sasl_username))
                 logger.debug('[SQL] query members of mail alias account ({}): \n{}'.format(real_sender, sql))
 
-                qr = utils.conn_execute(conn, sql)
+                qr = utils.execute_sql(conn, sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 
@@ -347,7 +347,7 @@ def restriction(**kwargs):
                 sql = """SELECT id FROM maillists WHERE address=%s AND active=1 LIMIT 1""" % sqlquote(real_sender)
                 logger.debug('[SQL] query mailing list account ({}): \n{}'.format(real_sender, sql))
 
-                qr = utils.conn_execute(conn, sql)
+                qr = utils.execute_sql(conn, sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 

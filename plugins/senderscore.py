@@ -54,7 +54,7 @@ def restriction(**kwargs):
         LIMIT 1
         """ % sqlquote(client_address)
 
-    qr = utils.conn_execute(conn_iredapd,  sql)
+    qr = utils.execute_sql(conn_iredapd,  sql)
     row = qr.fetchone()
 
     if row:
@@ -96,7 +96,7 @@ def restriction(**kwargs):
                 """ % (sqlquote(client_address), sqlquote(score), int(time.time()))
 
             try:
-                utils.conn_execute(conn_iredapd,  sql)
+                utils.execute_sql(conn_iredapd,  sql)
             except Exception as e:
                 logger.error("[{}] senderscore -> Error while caching score: {}".format(client_address, e))
     else:

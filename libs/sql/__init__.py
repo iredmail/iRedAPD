@@ -35,7 +35,7 @@ def is_local_domain(conn,
                   LIMIT 1""" % (sql_quote_domain, sql_backupmx)
         logger.debug("[SQL] query local domain ({}): \n{}".format(domain, sql))
 
-        qr = utils.conn_execute(conn, sql)
+        qr = utils.execute_sql(conn, sql)
         sql_record = qr.fetchone()
         logger.debug("SQL query result: {}".format(repr(sql_record)))
 
@@ -56,7 +56,7 @@ def is_local_domain(conn,
 
             logger.debug("[SQL] query alias domain ({}): \n{}".format(domain, repr(sql)))
 
-            qr = utils.conn_execute(conn, sql)
+            qr = utils.execute_sql(conn, sql)
             sql_record = qr.fetchone()
             logger.debug("[SQL] query result: {}".format(repr(sql_record)))
 
@@ -84,7 +84,7 @@ def get_alias_target_domain(alias_domain, conn):
 
     logger.debug("[SQL] query target domain of given alias domain ({}): \n{}".format(alias_domain, repr(sql)))
 
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     sql_record = qr.fetchone()
     logger.debug("[SQL] query result: {}".format(repr(sql_record)))
 
@@ -112,7 +112,7 @@ def get_access_policy(mail, account_type, conn):
 
     logger.debug("[SQL] query access policy: \n{}".format(sql))
 
-    qr = utils.conn_execute(conn, sql)
+    qr = utils.execute_sql(conn, sql)
     record = qr.fetchone()
     logger.debug("[SQL] query result: {}".format(repr(record)))
 
