@@ -54,7 +54,7 @@ def _is_whitelisted(conn,
                   WHERE account IN %s""" % (tbl, sqlquote(recipients))
 
         logger.debug('[SQL] Query greylisting whitelists from `{}`: \n{}'.format(tbl, sql))
-        qr = conn.execute(sql)
+        qr = utils.conn_execute(conn, sql)
         records = qr.fetchall()
 
         _wls = {v[0] for v in records}
@@ -111,7 +111,7 @@ def _client_address_passed_in_tracking(conn, client_address):
               LIMIT 1""" % sqlquote(client_address)
 
     logger.debug('[SQL] check whether client address ({}) passed greylisting: \n{}'.format(client_address, sql))
-    qr = conn.execute(sql)
+    qr = utils.conn_execute(conn, sql)
     sql_record = qr.fetchone()
 
     if sql_record:
@@ -141,7 +141,7 @@ def _should_be_greylisted_by_setting(conn,
               ORDER BY priority DESC, sender_priority DESC""" % sqlquote(recipients)
     logger.debug('[SQL] query greylisting settings: \n%s' % sql)
 
-    qr = conn.execute(sql)
+    qr = utils.conn_execute(conn, sql)
     records = qr.fetchall()
     logger.debug('[SQL] query result: %s' % str(records))
 
@@ -223,7 +223,7 @@ def _should_be_greylisted_by_tracking(conn,
     logger.debug('[SQL] query greylisting tracking: \n%s' % sql)
     sql_record = None
     try:
-        qr = conn.execute(sql)
+        qr = utils.conn_execute(conn, sql)
         sql_record = qr.fetchone()
     except Exception as e:
         logger.error('Error while querying greylisting tracking: {}. SQL: {}'.format(repr(e), sql))
@@ -246,7 +246,7 @@ def _should_be_greylisted_by_tracking(conn,
                                                                        block_expired, unauth_triplet_expire)
         logger.debug('[SQL] New tracking: \n%s' % sql)
         try:
-            conn.execute(sql)
+            utils.conn_execute(conn, sql)
         except Exception as e:
             if e.__class__.__name__ == 'IntegrityError':
                 pass
@@ -269,7 +269,7 @@ def _should_be_greylisted_by_tracking(conn,
                         AND client_address=%s""" % (now, block_expired, unauth_triplet_expire,
                                                     sender, recipient, client_address_sql)
         logger.debug('[SQL] Update expired tracking as first seen: \n%s' % sql)
-        conn.execute(sql)
+        utils.conn_execute(conn, sql)
         return True
 
     # Tracking record doesn't expire, check whether client retries too soon.
@@ -284,10 +284,10 @@ def _should_be_greylisted_by_tracking(conn,
 
         logger.debug('[SQL] Update tracking record: \n%s' % sql)
         try:
-            conn.execute(sql)
+            utils.conn_execute(conn, sql)
         except Exception as e:
             logger.error('Error while updating greylisting tracking: %s' % repr(e))
-            conn.execute(sql)
+            utils.conn_execute(conn, sql)
             logger.error('Re-updated. It is safe to ignore above error message.')
         return True
     else:
@@ -307,7 +307,7 @@ def _should_be_greylisted_by_tracking(conn,
 
             logger.debug('[SQL] Update expired date: \n%s' % sql)
             try:
-                conn.execute(sql)
+                utils.conn_execute(conn, sql)
             except Exception as e:
                 logger.error('[{}] Error while Updating expired date for passed client: {}'.format(client_address, repr(e)))
 
@@ -318,7 +318,7 @@ def _should_be_greylisted_by_tracking(conn,
 
             logger.debug('[SQL] Remove other tracking records from same client IP address: \n%s' % sql)
             try:
-                conn.execute(sql)
+                utils.conn_execute(conn, sql)
             except Exception as e:
                 logger.error('[{}] Error while removing other tracking records from passed client: {}'.format(client_address, repr(e)))
 
@@ -395,7 +395,7 @@ def restriction(**kwargs):
                      SET record_expired=%d
                    WHERE client_address=%s AND passed=1""" % (_new_expire_time, sqlquote(client_address))
         logger.debug('[SQL] Update expire time of passed client: \n%s' % _sql)
-        conn_iredapd.execute(_sql)
+        utils.conn_execute(conn_iredapd,  _sql)
 
         return SMTP_ACTIONS['default']
 

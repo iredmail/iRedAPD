@@ -11,6 +11,7 @@
 
 from web import sqlquote
 from libs.logger import logger
+from libs import utils
 from libs import SMTP_ACTIONS
 from libs import MAILLIST_POLICY_PUBLIC
 from libs import MAILLIST_POLICY_DOMAIN
@@ -51,7 +52,7 @@ def get_members(conn, mail):
 
     logger.debug('[SQL] query alias members: \n%s' % sql)
 
-    qr = conn.execute(sql)
+    qr = utils.conn_execute(conn, sql)
     records = qr.fetchall()
     logger.debug('SQL query result: %s' % str(records))
 
@@ -73,7 +74,7 @@ def get_moderators(conn, mail):
 
     logger.debug('[SQL] query moderators: \n%s' % sql)
 
-    qr = conn.execute(sql)
+    qr = utils.conn_execute(conn, sql)
     records = qr.fetchall()
     logger.debug('SQL query result: %s' % str(records))
 
@@ -136,7 +137,7 @@ def restriction(**kwargs):
               """ % (sqlquote(sender_domain), sqlquote(real_recipient_domain))
     logger.debug('[SQL] query alias domain: \n%s' % sql)
 
-    _qr = conn.execute(sql)
+    _qr = utils.conn_execute(conn, sql)
     _record = _qr.fetchone()
 
     if _record:

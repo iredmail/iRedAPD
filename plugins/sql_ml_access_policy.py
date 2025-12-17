@@ -11,6 +11,7 @@
 
 from web import sqlquote
 from libs.logger import logger
+from libs import utils
 from libs import SMTP_ACTIONS
 from libs import MAILLIST_POLICY_PUBLIC
 from libs import MAILLIST_POLICY_DOMAIN
@@ -78,7 +79,7 @@ def restriction(**kwargs):
               """ % (sqlquote(sender_domain), sqlquote(real_recipient_domain))
     logger.debug('[SQL] query alias domain: \n%s' % sql)
 
-    _qr = conn.execute(sql)
+    _qr = utils.conn_execute(conn, sql)
     _record = _qr.fetchone()
 
     if _record:
@@ -100,7 +101,7 @@ def restriction(**kwargs):
               LIMIT 1""" % (sqlquote(addresses), sqlquote(sender))
     logger.debug('[SQL] query moderator: \n%s' % sql)
 
-    _qr = conn.execute(sql)
+    _qr = utils.conn_execute(conn, sql)
     _record = _qr.fetchone()
     if _record:
         logger.debug('Sender is a moderator. Bypass.')
@@ -116,7 +117,7 @@ def restriction(**kwargs):
               LIMIT 1""" % (sqlquote(addresses), sqlquote(sender))
     logger.debug('[SQL] query owner: \n%s' % sql)
 
-    _qr = conn.execute(sql)
+    _qr = utils.conn_execute(conn, sql)
     _record = _qr.fetchone()
     if _record:
         logger.debug('Sender is an owner. Bypass.')

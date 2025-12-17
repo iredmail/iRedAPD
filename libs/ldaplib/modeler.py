@@ -27,11 +27,11 @@ class Modeler:
 
         conn_amavisd = None
         if self.conns['conn_amavisd']:
-            conn_amavisd = self.conns['conn_amavisd'].connect()
+            conn_amavisd = self.conns['conn_amavisd']
 
         conn_iredapd = None
         if self.conns['conn_iredapd']:
-            conn_iredapd = self.conns['conn_iredapd'].connect()
+            conn_iredapd = self.conns['conn_iredapd']
 
         plugin_kwargs = {
             'smtp_session_data': smtp_session_data,

@@ -8,6 +8,7 @@ import subprocess
 import smtplib
 import ipaddress
 import uuid
+import sqlalchemy
 from dns import resolver
 from typing import Union, List, Tuple, Set, Dict, Any
 
@@ -24,6 +25,9 @@ from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
 from libs import SMTP_ACTIONS
 from libs import regxes
 import settings
+
+if sqlalchemy.__version__.startswith('2.'):
+    from sqlalchemy import text
 
 if settings.backend == 'ldap':
     import ldap
@@ -267,6 +271,7 @@ def get_db_conn(db_name):
     _server = settings.__dict__[db_name + '_db_server']
     _port = settings.__dict__[db_name + '_db_port']
     _name = settings.__dict__[db_name + '_db_name']
+    _use_ssl = settings.__dict__[db_name + '_db_use_ssl']
 
     try:
         _port = int(_port)
@@ -285,14 +290,28 @@ def get_db_conn(db_name):
         if settings.backend == 'mysql':
             uri += '?charset=utf8'
 
-        conn = create_engine(uri,
+        if _use_ssl:
+            uri += '&ssl_verify_cert=False'
+
+        logger.debug("sqlalchemy version: {}".format(sqlalchemy.__version__))
+        logger.debug("sqlalchemy uri: {}".format(uri))
+
+        return create_engine(uri,
                              pool_size=settings.SQL_CONNECTION_POOL_SIZE,
                              pool_recycle=settings.SQL_CONNECTION_POOL_RECYCLE,
                              max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
-        return conn
     except Exception as e:
         logger.error("Error while creating SQL connection: {}".format(repr(e)))
         return None
+
+def conn_execute(conn, sql, params=None):
+    """Execute SQL query with given connection instance."""
+    if sqlalchemy.__version__.startswith('2.'):
+        sql = text(sql)
+
+    with conn.connect() as c:
+        with c.begin():
+            return c.execute(sql, params or {})
 
 
 def wildcard_ipv4(s):
@@ -762,7 +781,8 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
 
     try:
         logger.debug("[SQL] Insert into smtp_sessions: {}".format(sql))
-        conn.execute(sql)
+        conn_execute(conn, sql)
+
     except Exception as e:
         logger.error("<!> Error while logging smtp action: {}".format(repr(e)))
 

@@ -243,7 +243,7 @@ class SRS(asynchat.async_chat):
                 logger.debug("{} [SQL] Query srs_exclude_domains: {}".format(self.log_prefix, sql))
 
                 try:
-                    qr = conn_iredapd.execute(sql)
+                    qr = utils.conn_execute(conn_iredapd, sql)
                     sql_record = qr.fetchone()
                     logger.debug("{} [SQL] Query result: {}".format(self.log_prefix, sql_record))
                 except Exception as e:

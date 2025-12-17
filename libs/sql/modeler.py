@@ -22,15 +22,15 @@ class Modeler:
         client_address = smtp_session_data.get('client_address', '')
         sasl_username = smtp_session_data.get('sasl_username', '')
 
-        conn_vmail = self.conns['conn_vmail'].connect()
+        conn_vmail = self.conns['conn_vmail']
 
         conn_amavisd = None
         if self.conns['conn_amavisd']:
-            conn_amavisd = self.conns['conn_amavisd'].connect()
+            conn_amavisd = self.conns['conn_amavisd']
 
         conn_iredapd = None
         if self.conns['conn_iredapd']:
-            conn_iredapd = self.conns['conn_iredapd'].connect()
+            conn_iredapd = self.conns['conn_iredapd']
 
         plugin_kwargs = {
             'smtp_session_data': smtp_session_data,

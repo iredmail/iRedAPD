@@ -170,7 +170,7 @@ def restriction(**kwargs):
         logger.debug('[SQL] Query custom relayhost with highest priority: \n%s' % sql)
 
         try:
-            qr = conn_relay.execute(sql)
+            qr = utils.conn_execute(conn_relay, sql)
             qr_relay = qr.fetchone()[0]
 
             logger.debug('[SQL] Query result: %s' % qr_relay)

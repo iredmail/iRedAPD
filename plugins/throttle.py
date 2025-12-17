@@ -226,7 +226,7 @@ def __sendmail(conn,
                        """ % (_now, throttle_tracking_id)
 
             try:
-                conn.execute(_sql)
+                utils.conn_execute(conn, _sql)
                 logger.debug('Updated last notify time.')
             except Exception as e:
                 logger.error('Error while updating last notify time of quota exceed: %s.' % (repr(e)))
@@ -280,7 +280,7 @@ def apply_throttle(conn,
          """ % (sqlquote(throttle_kind), sqlquote(possible_addrs))
 
     logger.debug('[SQL] Query throttle setting: {}'.format(sql))
-    qr = conn.execute(sql)
+    qr = utils.conn_execute(conn, sql)
     throttle_records = qr.fetchall()
 
     logger.debug('[SQL] Query result: {}'.format(throttle_records))
@@ -470,7 +470,7 @@ def apply_throttle(conn,
               """ % ' OR '.join(tracking_sql_where)
 
     logger.debug('[SQL] Query throttle tracking data: {}'.format(sql))
-    qr = conn.execute(sql)
+    qr = utils.conn_execute(conn, sql)
     tracking_records = qr.fetchall()
 
     logger.debug('[SQL] Query result: {}'.format(tracking_records))
@@ -685,7 +685,7 @@ def apply_throttle(conn,
             sql += ','.join(values)
 
             logger.debug('[SQL] Insert new tracking record(s): {}'.format(sql))
-            conn.execute(sql)
+            utils.conn_execute(conn, sql)
         except Exception as e:
             logger.error("Failed in inserting new throttle tracking record(s): {}".format(e))
 
@@ -706,7 +706,7 @@ def apply_throttle(conn,
         logger.debug('[SQL] Update tracking record: {}'.format(_sql))
 
         try:
-            conn.execute(_sql)
+            utils.conn_execute(conn, _sql)
         except Exception as e:
             logger.error("[SQL] Failed in updating throttle tracking data: {}".format(e))
 

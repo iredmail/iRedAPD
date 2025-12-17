@@ -25,6 +25,7 @@
 
 import datetime
 from web import sqlquote
+from libs import utils
 from libs.logger import logger
 import settings
 from libs import SMTP_ACTIONS
@@ -50,7 +51,7 @@ def restriction(**kwargs):
     logger.debug('SQL to get mailbox.passwordlastchange of sender ({}): {}'.format(sasl_username, sql))
 
     conn = kwargs['conn_vmail']
-    qr = conn.execute(sql)
+    qr = utils.conn_execute(conn, sql)
     sql_record = qr.fetchone()
     logger.debug('Returned SQL Record: %s' % str(sql_record))
 
