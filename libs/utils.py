@@ -302,7 +302,7 @@ def get_db_conn(db_name):
                              pool_recycle=settings.SQL_CONNECTION_POOL_RECYCLE,
                              max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
     except Exception as e:
-        logger.error("Error while creating SQL connection: {}".format(repr(e)))
+        logger.error(f"Error while creating SQL connection: {repr(e)}")
         return None
 
 def execute_sql(engine, sql, params=None):
@@ -478,11 +478,11 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
 
     if sasl_username:
         if sasl_username == sender:
-            _log_sender_to_rcpt = "{} => {}".format(sasl_username, recipient)
+            _log_sender_to_rcpt = f"{sasl_username} => {recipient}"
         else:
-            _log_sender_to_rcpt = "{} => {} -> {}".format(sasl_username, sender, recipient)
+            _log_sender_to_rcpt = f"{sasl_username} => {sender} -> {recipient}"
     else:
-        _log_sender_to_rcpt = "{} -> {}".format(sender, recipient)
+        _log_sender_to_rcpt = f"{sender} -> {recipient}"
 
     _time = ''
     if start_time and end_time:
@@ -543,7 +543,7 @@ def load_enabled_plugins(plugins):
 
         # Skip non-existing plugin.
         if not os.path.isfile(plugin_file):
-            logger.error("Plugin {} ({}) does not exist.".format(p, plugin_file))
+            logger.error(f"Plugin {p} ({plugin_file}) does not exist.")
             continue
 
         # If plugin doesn't have a pre-defined priority, set it to 0 (lowest)
@@ -564,9 +564,9 @@ def load_enabled_plugins(plugins):
     for plugin in ordered_plugins:
         try:
             loaded_plugins.append(__import__(plugin))
-            logger.info("Loading plugin (priority: {}): {}".format(_plugin_priorities[plugin], plugin))
+            logger.info(f"Loading plugin (priority: {_plugin_priorities[plugin]}): {plugin}")
         except Exception as e:
-            logger.error("Error while loading plugin '{}': {}".format(plugin, repr(e)))
+            logger.error(f"Error while loading plugin '{plugin}': {repr(e)}")
 
     # Get list of LDAP query attributes
     sender_search_attrlist = []
