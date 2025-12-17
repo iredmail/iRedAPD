@@ -610,9 +610,9 @@ def get_required_db_conns():
             except ldap.INVALID_CREDENTIALS:
                 logger.error('LDAP bind failed: incorrect bind dn or password.')
             except Exception as e:
-                logger.error("LDAP bind failed: {}".format(repr(e)))
+                logger.error(f"LDAP bind failed: {repr(e)}")
         except Exception as e:
-            logger.error("Fail2ed to establish LDAP connection: {}".format(repr(e)))
+            logger.error(f"Failed to establish LDAP connection: {repr(e)}")
             conn_vmail = None
     else:
         # settings.backend in ['mysql', 'pgsql']
@@ -781,11 +781,11 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
            sqlquote(smtp_session_data.get('recipient_domain', '')))
 
     try:
-        logger.debug("[SQL] Insert into smtp_sessions: {}".format(sql))
+        logger.debug(f"[SQL] Insert into smtp_sessions: {sql}")
         execute_sql(conn, sql)
 
     except Exception as e:
-        logger.error("<!> Error while logging smtp action: {}".format(repr(e)))
+        logger.error(f"<!> Error while logging smtp action: {repr(e)}")
 
     return None
 
