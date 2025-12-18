@@ -1,3 +1,4 @@
+from sqlalchemy import Engine
 import os
 import sys
 import traceback
@@ -262,7 +263,7 @@ def is_valid_amavisd_address(addr):
     return False
 
 
-def create_db_engine(db_name):
+def create_db_engine(db_name) -> List[Engine|None]:
     """Return SQL connection instance with connection pool support."""
     if settings.backend == 'pgsql':
         dbn = 'postgresql'
