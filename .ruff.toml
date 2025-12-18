@@ -1,0 +1,11 @@
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    "web",
+    "asyncore",
+    "asynchat",
+    ]
+
+[lint]
+# E402 Module level import not at top of file
+# E722 Do not use bare `except`
+ignore = ["E402", "E722"]

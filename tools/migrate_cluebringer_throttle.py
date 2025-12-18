@@ -160,10 +160,10 @@ logger.info("Total {} throttle settings.".format(len(t_settings)))
 conn = get_db_conn('iredapd')
 for t in t_settings:
     v = t_settings[t]
-    if not ('max_msgs' in v):
+    if 'max_msgs' not in v:
         v['max_msgs'] = -1
 
-    if not ('max_quota' in v):
+    if 'max_quota' not in v:
         v['max_quota'] = -1
 
     sql = """INSERT INTO throttle (account, kind, priority, period, msg_size, max_msgs, max_quota)
