@@ -18,7 +18,9 @@ from email.utils import formatdate
 
 from web import sqlquote
 import sqlalchemy
-from sqlalchemy import create_engine, Engine, CursorResult
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.cursor import CursorResult
 
 # Default SQLAlchemy version: 1.4.x.
 __sqlalchemy_version = 1
@@ -309,7 +311,7 @@ def create_db_engine(db_name) -> List[Engine|None]:
         return None
 
 
-def execute_sql(engine: Engine, sql: str, params=None) -> CursorResult[Any]:
+def execute_sql(engine: Engine, sql: str, params=None) -> CursorResult:
     """Execute SQL query with given db engine, supports both SQLAlchemy 1.4.x and 2.0.x."""
     if __sqlalchemy_version == 2:
         sql = text(sql)
