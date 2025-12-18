@@ -95,7 +95,7 @@ def get_alias_target_domain(conn_vmail, alias_domain):
         return None
 
 
-def get_access_policy(mail, account_type, conn):
+def get_access_policy(mail, account_type, conn_vmail):
     """Get access policy of (mlmmj) mailing list or mail alias account.
 
     Returns access policy (string) or None if account doesn't exist."""
@@ -115,7 +115,7 @@ def get_access_policy(mail, account_type, conn):
 
     logger.debug("[SQL] query access policy: \n{}".format(sql))
 
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(conn_vmail, sql)
     record = qr.fetchone()
     logger.debug("[SQL] query result: {}".format(repr(record)))
 

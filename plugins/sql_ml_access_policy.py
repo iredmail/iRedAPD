@@ -34,7 +34,7 @@ def restriction(**kwargs):
     # used when recipient_domain is an alias domain
     real_recipient_domain = recipient_domain
 
-    policy = get_access_policy(mail=recipient, account_type='maillist', conn=conn_vmail)
+    policy = get_access_policy(mail=recipient, account_type='maillist', conn_vmail=conn_vmail)
 
     # Recipient account doesn't exist.
     if not policy:
@@ -49,7 +49,7 @@ def restriction(**kwargs):
         real_recipient_domain = _target_domain
         real_recipient = recipient.split('@', 1)[0] + '@' + real_recipient_domain
 
-        policy = get_access_policy(mail=real_recipient, account_type='maillist', conn=conn_vmail)
+        policy = get_access_policy(mail=real_recipient, account_type='maillist', conn_vmail=conn_vmail)
         if not policy:
             return SMTP_ACTIONS['default'] + ' (Recipient is not a mailing list account)'
 
