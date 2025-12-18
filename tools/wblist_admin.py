@@ -161,14 +161,14 @@ if action == 'add':
         logger.info("* Add senders: {}".format(', '.join(wb_senders)))
 
         if inout_type == 'inbound':
-            qr = wblist.add_wblist(conn=engine_amavisd,
+            qr = wblist.add_wblist(engine_amavisd=engine_amavisd,
                                    account=wb_account,
                                    wl_senders=wl,
                                    bl_senders=bl,
                                    flush_before_import=False)
         else:
             # inout_type == 'outbound'
-            qr = wblist.add_wblist(conn=engine_amavisd,
+            qr = wblist.add_wblist(engine_amavisd=engine_amavisd,
                                    account=wb_account,
                                    wl_rcpts=wl,
                                    bl_rcpts=bl,
@@ -182,13 +182,13 @@ if action == 'add':
 elif action == 'delete':
     try:
         if inout_type == 'inbound':
-            qr = wblist.delete_wblist(conn=engine_amavisd,
+            qr = wblist.delete_wblist(engine_amavisd=engine_amavisd,
                                       account=wb_account,
                                       wl_senders=wl,
                                       bl_senders=bl)
         else:
             # inout_type == 'outbound':
-            qr = wblist.delete_wblist(conn=engine_amavisd,
+            qr = wblist.delete_wblist(engine_amavisd=engine_amavisd,
                                       account=wb_account,
                                       wl_rcpts=wl,
                                       bl_rcpts=bl)
@@ -233,7 +233,7 @@ else:
     # action == 'list'
     try:
         if inout_type == 'inbound':
-            qr = wblist.get_account_wblist(conn=engine_amavisd,
+            qr = wblist.get_account_wblist(engine_amavisd=engine_amavisd,
                                            account=wb_account,
                                            whitelist=for_whitelist,
                                            blacklist=for_blacklist)

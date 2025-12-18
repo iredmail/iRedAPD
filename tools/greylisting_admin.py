@@ -232,7 +232,7 @@ elif action == 'whitelist-domain':
 
 elif action == 'remove-whitelist-domain':
     logger.info("* Remove whitelisted sender domain: {}".format(sender_domain))
-    lib_gl.remove_whitelisted_domain(domain=sender_domain, conn=engine_iredapd)
+    lib_gl.remove_whitelisted_domain(engine_iredapd=engine_iredapd, domain=sender_domain)
 
 elif action == 'list':
     # show existing greylisting settings.

@@ -42,9 +42,9 @@ def _block_sender(sender):
     if not settings.SPAM_TRAP_BLOCK_SENDER:
         return (True, )
 
-    conn = utils.create_db_engine('amavisd')
+    engine_amavisd = utils.create_db_engine('amavisd')
     _s = utils.strip_mail_ext_address(mail=sender)
-    qr = wblist.add_wblist(engine_amavisd=conn,
+    qr = wblist.add_wblist(engine_amavisd=engine_amavisd,
                            account='@.',    # server-wide block
                            bl_senders=[_s],
                            flush_before_import=False)

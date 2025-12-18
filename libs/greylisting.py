@@ -113,17 +113,17 @@ def add_whitelist_domain(conn, domain):
     return (True, )
 
 
-def remove_whitelisted_domain(domain, conn):
+def remove_whitelisted_domain(engine_iredapd, domain):
     # Insert domain into sql table `iredapd.greylisting_whitelist_domains`
     if not utils.is_domain(domain):
         return (False, 'INVALID_DOMAIN')
 
     try:
         sql = """DELETE FROM greylisting_whitelist_domains WHERE domain='%s'""" % domain
-        utils.execute_sql(conn, sql)
+        utils.execute_sql(engine_iredapd, sql)
 
         sql = """DELETE FROM greylisting_whitelists WHERE COMMENT='AUTO-UPDATE: %s'""" % domain
-        utils.execute_sql(conn, sql)
+        utils.execute_sql(engine_iredapd, sql)
     except Exception as e:
         error = str(e).lower()
         if 'duplicate key' in error or 'duplicate entry' in error:
