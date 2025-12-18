@@ -307,12 +307,12 @@ def restriction(**kwargs):
     if utils.is_ipv4(client_address):
         valid_senders += utils.wildcard_ipv4(client_address)
 
-    alias_target_sender_domain = get_alias_target_domain(alias_domain=sender_domain, conn=conn_vmail)
+    alias_target_sender_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=sender_domain)
     if alias_target_sender_domain:
         _mail = sender.split("@", 1)[0] + "@" + alias_target_sender_domain
         valid_senders += utils.get_policy_addresses_from_email(mail=_mail)
 
-    alias_target_rcpt_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
+    alias_target_rcpt_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=recipient_domain)
     if alias_target_rcpt_domain:
         _mail = recipient.split("@", 1)[0] + "@" + alias_target_rcpt_domain
         valid_recipients += utils.get_policy_addresses_from_email(mail=_mail)

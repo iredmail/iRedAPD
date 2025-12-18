@@ -252,7 +252,7 @@ def apply_throttle(engine_iredapd,
         possible_addrs += utils.get_policy_addresses_from_email(mail=user)
 
         (_username, _domain) = user.split('@', 1)
-        alias_target_sender_domain = get_alias_target_domain(alias_domain=_domain, conn=conn_vmail)
+        alias_target_sender_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=_domain)
         if alias_target_sender_domain:
             _mail = _username + '@' + alias_target_sender_domain
             possible_addrs += utils.get_policy_addresses_from_email(mail=_mail)

@@ -68,7 +68,7 @@ def is_local_domain(conn_vmail,
     return False
 
 
-def get_alias_target_domain(alias_domain, conn):
+def get_alias_target_domain(conn_vmail, alias_domain):
     """Query target domain of given alias domain name."""
     alias_domain = str(alias_domain).lower()
     if not utils.is_domain(alias_domain):
@@ -84,7 +84,7 @@ def get_alias_target_domain(alias_domain, conn):
 
     logger.debug("[SQL] query target domain of given alias domain ({}): \n{}".format(alias_domain, repr(sql)))
 
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(conn_vmail, sql)
     sql_record = qr.fetchone()
     logger.debug("[SQL] query result: {}".format(repr(sql_record)))
 

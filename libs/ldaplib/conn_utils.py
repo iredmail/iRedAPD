@@ -114,7 +114,7 @@ def is_local_domain(conn_vmail,
         return False
 
 
-def get_alias_target_domain(alias_domain, conn_vmail, include_backupmx=True):
+def get_alias_target_domain(conn_vmail, alias_domain, include_backupmx=True):
     """Query target domain of given alias domain name."""
     alias_domain = str(alias_domain).lower()
 

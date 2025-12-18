@@ -347,7 +347,7 @@ def restriction(**kwargs):
     # If recipient_domain is an alias domain name, we should check the target
     # domain.
     conn_vmail = kwargs['conn_vmail']
-    alias_target_rcpt_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
+    alias_target_rcpt_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=recipient_domain)
     if alias_target_rcpt_domain:
         _addr = recipient.split('@', 1)[0] + '@' + alias_target_rcpt_domain
         policy_recipients += utils.get_policy_addresses_from_email(mail=_addr)

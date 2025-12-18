@@ -101,7 +101,7 @@ def restriction(**kwargs):
 
     # Recipient account doesn't exist.
     if not policy:
-        _target_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
+        _target_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=recipient_domain)
         if not _target_domain:
             logger.debug('Recipient domain is not an alias domain.')
             return SMTP_ACTIONS['default'] + ' Recipient is not a mail alias account or no access policy'
