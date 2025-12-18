@@ -20,11 +20,13 @@ from web import sqlquote
 import sqlalchemy
 from sqlalchemy import create_engine
 
-sqlalchemy_version = 1
+# Default SQLAlchemy version: 1.4.x.
+__sqlalchemy_version = 1
 
 if sqlalchemy.__version__.startswith('2.'):
+    # SQLAlchemy version: 2.x.
     from sqlalchemy import text
-    sqlalchemy_version = 2
+    __sqlalchemy_version = 2
 
 
 from libs.logger import logger
@@ -309,7 +311,7 @@ def create_db_engine(db_name):
 
 def execute_sql(engine, sql, params=None):
     """Execute SQL query with given db engine, supports both SQLAlchemy 1.4.x and 2.0.x."""
-    if sqlalchemy_version == 2:
+    if __sqlalchemy_version == 2:
         sql = text(sql)
 
     with engine.connect() as conn:

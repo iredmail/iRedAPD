@@ -144,7 +144,7 @@ def restriction(**kwargs):
     real_sasl_username_user = sasl_username_user
     real_sender = sender
 
-    conn = kwargs['conn_vmail']
+    conn_vmail = kwargs['conn_vmail']
 
     # Check emails sent from external network.
     if not sasl_username:
@@ -173,7 +173,7 @@ def restriction(**kwargs):
             logger.debug('Sender domain is same as recipient domain.')
             _is_local_sender_domain = True
         else:
-            if is_local_domain(conn=conn, domain=sender_domain, include_backupmx=False):
+            if is_local_domain(conn=conn_vmail, domain=sender_domain, include_backupmx=False):
                 logger.debug('Sender domain is hosted locally, smtp authentication is required.')
                 _is_local_sender_domain = True
             else:
@@ -256,7 +256,7 @@ def restriction(**kwargs):
                 query_filter = '(|' + filter_user_alias + filter_list_member + filter_alias_member + ')'
                 success_msg = 'Sender ({}) is an user alias address or list/alias member ({}).'.format(sasl_username, sender)
 
-            qr = conn_utils.get_account_ldif(conn=conn,
+            qr = conn_utils.get_account_ldif(conn=conn_vmail,
                                              account=sasl_username,
                                              query_filter=query_filter,
                                              attrs=['dn'])
@@ -269,7 +269,7 @@ def restriction(**kwargs):
 
             # Check mlmmj
             query_filter = "(&(objectClass=mailList)(enabledService=mlmmj)(accountStatus=active))"
-            qr = conn_utils.get_account_ldif(conn=conn,
+            qr = conn_utils.get_account_ldif(conn=conn_vmail,
                                              account=sender,
                                              query_filter=query_filter,
                                              attrs=['dn'])
@@ -288,7 +288,7 @@ def restriction(**kwargs):
                                         sqlquote(real_sasl_username_user + '+%%@' + sasl_username_domain))
                 logger.debug('[SQL] query per-user alias address: \n%s' % sql)
 
-                qr = utils.execute_sql(conn, sql)
+                qr = utils.execute_sql(conn_vmail, sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 
@@ -306,7 +306,7 @@ def restriction(**kwargs):
                               LIMIT 1""" % (sqlquote(sender_domain), sqlquote(sasl_username_domain))
                     logger.debug('[SQL] query alias domains: \n%s' % sql)
 
-                    qr = utils.execute_sql(conn, sql)
+                    qr = utils.execute_sql(conn_vmail, sql)
                     sql_record = qr.fetchone()
                     logger.debug('SQL query result: %s' % str(sql_record))
 
@@ -333,7 +333,7 @@ def restriction(**kwargs):
                           LIMIT 1""" % (sqlquote(real_sender), sqlquote(real_sasl_username))
                 logger.debug('[SQL] query members of mail alias account ({}): \n{}'.format(real_sender, sql))
 
-                qr = utils.execute_sql(conn, sql)
+                qr = utils.execute_sql(conn_vmail, sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 
@@ -347,7 +347,7 @@ def restriction(**kwargs):
                 sql = """SELECT id FROM maillists WHERE address=%s AND active=1 LIMIT 1""" % sqlquote(real_sender)
                 logger.debug('[SQL] query mailing list account ({}): \n{}'.format(real_sender, sql))
 
-                qr = utils.execute_sql(conn, sql)
+                qr = utils.execute_sql(conn_vmail, sql)
                 sql_record = qr.fetchone()
                 logger.debug('SQL query result: %s' % str(sql_record))
 

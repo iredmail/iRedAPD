@@ -178,7 +178,7 @@ SMTP_PROTOCOL_STATE = ['END-OF-MESSAGE']
 REQUIRE_IREDAPD_DB = True
 
 
-def __sendmail(conn,
+def __sendmail(engine_iredapd,
                user,
                client_address,
                throttle_tracking_id,
@@ -214,7 +214,7 @@ def __sendmail(conn,
         if r[0]:
             logger.info('Sent notification email to admin(s) to report quota exceed: user=%s, %s=%d.' % (user, throttle_name, throttle_value))
         else:
-            logger.warn('Failed in senting notification email to admin(s) to report quota exceed: user=%s, %s=%d, error=%s.' % (user, throttle_name, throttle_value, r[1]))
+            logger.warning('Failed in senting notification email to admin(s) to report quota exceed: user=%s, %s=%d, error=%s.' % (user, throttle_name, throttle_value, r[1]))
 
         if throttle_tracking_id:
             _now = int(time.time())
@@ -226,7 +226,7 @@ def __sendmail(conn,
                        """ % (_now, throttle_tracking_id)
 
             try:
-                utils.execute_sql(conn, _sql)
+                utils.execute_sql(engine_iredapd, _sql)
                 logger.debug('Updated last notify time.')
             except Exception as e:
                 logger.error('Error while updating last notify time of quota exceed: %s.' % (repr(e)))
@@ -238,7 +238,7 @@ def __sendmail(conn,
 
 
 # Apply throttle setting and return smtp action.
-def apply_throttle(conn,
+def apply_throttle(engine_iredapd,
                    conn_vmail,
                    user,
                    client_address,
@@ -280,7 +280,7 @@ def apply_throttle(conn,
          """ % (sqlquote(throttle_kind), sqlquote(possible_addrs))
 
     logger.debug('[SQL] Query throttle setting: {}'.format(sql))
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(engine_iredapd, sql)
     throttle_records = qr.fetchall()
 
     logger.debug('[SQL] Query result: {}'.format(throttle_records))
@@ -470,7 +470,7 @@ def apply_throttle(conn,
               """ % ' OR '.join(tracking_sql_where)
 
     logger.debug('[SQL] Query throttle tracking data: {}'.format(sql))
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(engine_iredapd, sql)
     tracking_records = qr.fetchall()
 
     logger.debug('[SQL] Query result: {}'.format(tracking_records))
@@ -543,7 +543,7 @@ def apply_throttle(conn,
             # 1: first exceed
             # 2: last notify time is not between _init_time and (_init_time + _period)
             if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
-                __sendmail(conn=conn,
+                __sendmail(engine_iredapd=engine_iredapd,
                            user=user,
                            client_address=client_address,
                            throttle_tracking_id=_tracking_id,
@@ -595,7 +595,7 @@ def apply_throttle(conn,
                                                               throttle_info))
 
             if (not _last_notify_time) or (not (_init_time < _last_notify_time <= (_init_time + _period))):
-                __sendmail(conn=conn,
+                __sendmail(engine_iredapd=engine_iredapd,
                            user=user,
                            client_address=client_address,
                            throttle_tracking_id=_tracking_id,
@@ -685,7 +685,7 @@ def apply_throttle(conn,
             sql += ','.join(values)
 
             logger.debug('[SQL] Insert new tracking record(s): {}'.format(sql))
-            utils.execute_sql(conn, sql)
+            utils.execute_sql(engine_iredapd, sql)
         except Exception as e:
             logger.error("Failed in inserting new throttle tracking record(s): {}".format(e))
 
@@ -706,7 +706,7 @@ def apply_throttle(conn,
         logger.debug('[SQL] Update tracking record: {}'.format(_sql))
 
         try:
-            utils.execute_sql(conn, _sql)
+            utils.execute_sql(engine_iredapd, _sql)
         except Exception as e:
             logger.error("[SQL] Failed in updating throttle tracking data: {}".format(e))
 
@@ -758,7 +758,7 @@ def restriction(**kwargs):
 
     # Apply sender throttling to only sasl auth users.
     logger.debug('Check sender throttling.')
-    action = apply_throttle(conn=engine_iredapd,
+    action = apply_throttle(engine_iredapd=engine_iredapd,
                             conn_vmail=conn_vmail,
                             user=sender,
                             client_address=client_address,
@@ -776,7 +776,7 @@ def restriction(**kwargs):
         logger.debug('Bypass recipient throttling (found sasl_username).')
     else:
         logger.debug('Check recipient throttling.')
-        action = apply_throttle(conn=engine_iredapd,
+        action = apply_throttle(engine_iredapd=engine_iredapd,
                                 conn_vmail=conn_vmail,
                                 user=recipient,
                                 client_address=client_address,

@@ -41,7 +41,7 @@ def is_allowed_alias_domain_user(sender,
     return False
 
 
-def get_members(conn, mail):
+def get_members(conn_vmail, mail):
     """Return a list of members of mail alias account."""
     _members = []
 
@@ -52,7 +52,7 @@ def get_members(conn, mail):
 
     logger.debug('[SQL] query alias members: \n%s' % sql)
 
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(conn_vmail, sql)
     records = qr.fetchall()
     logger.debug('SQL query result: %s' % str(records))
 
@@ -63,7 +63,7 @@ def get_members(conn, mail):
     return _members
 
 
-def get_moderators(conn, mail):
+def get_moderators(conn_vmail, mail):
     """Return a list of moderators of mail alias account."""
     _moderators = []
 
@@ -74,7 +74,7 @@ def get_moderators(conn, mail):
 
     logger.debug('[SQL] query moderators: \n%s' % sql)
 
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(conn_vmail, sql)
     records = qr.fetchall()
     logger.debug('SQL query result: %s' % str(records))
 
@@ -86,7 +86,7 @@ def get_moderators(conn, mail):
 
 
 def restriction(**kwargs):
-    conn = kwargs['conn_vmail']
+    conn_vmail = kwargs['conn_vmail']
     sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
     sender_username = sender.split('@', 1)[0]
@@ -97,11 +97,11 @@ def restriction(**kwargs):
     # used when recipient_domain is an alias domain
     real_recipient_domain = recipient_domain
 
-    policy = get_access_policy(mail=recipient, account_type='alias', conn=conn)
+    policy = get_access_policy(mail=recipient, account_type='alias', conn=conn_vmail)
 
     # Recipient account doesn't exist.
     if not policy:
-        _target_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn)
+        _target_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
         if not _target_domain:
             logger.debug('Recipient domain is not an alias domain.')
             return SMTP_ACTIONS['default'] + ' Recipient is not a mail alias account or no access policy'
@@ -110,7 +110,7 @@ def restriction(**kwargs):
         real_recipient_domain = _target_domain
         real_recipient = recipient.split('@', 1)[0] + '@' + real_recipient_domain
 
-        policy = get_access_policy(mail=real_recipient, account_type='alias', conn=conn)
+        policy = get_access_policy(mail=real_recipient, account_type='alias', conn=conn_vmail)
         if not policy:
             return SMTP_ACTIONS['default'] + ' (Recipient domain is an alias domain, but recipient is not a mail alias account)'
 
@@ -137,7 +137,7 @@ def restriction(**kwargs):
               """ % (sqlquote(sender_domain), sqlquote(real_recipient_domain))
     logger.debug('[SQL] query alias domain: \n%s' % sql)
 
-    _qr = utils.execute_sql(conn, sql)
+    _qr = utils.execute_sql(conn_vmail, sql)
     _record = _qr.fetchone()
 
     if _record:
@@ -149,11 +149,11 @@ def restriction(**kwargs):
     members = []
     moderators = []
     if policy in (MAILLIST_POLICY_MEMBERSONLY, MAILLIST_POLICY_MEMBERSANDMODERATORSONLY):
-        members = get_members(conn=conn, mail=real_recipient)
+        members = get_members(conn_vmail=conn_vmail, mail=real_recipient)
         logger.debug('Members: %s' % ', '.join(members))
 
     if policy in (MAILLIST_POLICY_MODERATORS, MAILLIST_POLICY_MEMBERSANDMODERATORSONLY):
-        moderators = get_moderators(conn=conn, mail=real_recipient)
+        moderators = get_moderators(conn_vmail=conn_vmail, mail=real_recipient)
         logger.debug('Moderators: %s' % ', '.join(moderators))
 
     if policy == MAILLIST_POLICY_DOMAIN:

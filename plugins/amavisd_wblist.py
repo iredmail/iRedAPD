@@ -65,7 +65,7 @@ else:
     reject_action = SMTP_ACTIONS["reject_blacklisted"]
 
 
-def get_id_of_possible_cidr_network(conn, client_address):
+def get_id_of_possible_cidr_network(engine_amavisd, client_address):
     """Return list of `mailaddr.id` which are CIDR network addresses."""
     ids = []
 
@@ -90,7 +90,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
     logger.debug("[SQL] Query CIDR network: \n{}".format(sql))
 
     try:
-        qr = utils.execute_sql(conn, sql)
+        qr = utils.execute_sql(engine_amavisd, sql)
         qr_cidr = qr.fetchall()
     except Exception as e:
         logger.error("Error while querying CIDR network: {}, SQL: \n{}".format(repr(e), sql))
@@ -119,7 +119,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
     return ids
 
 
-def get_id_of_external_addresses(conn, addresses):
+def get_id_of_external_addresses(engine_amavisd, addresses):
     """Return list of `mailaddr.id` of external addresses."""
     ids = []
 
@@ -135,7 +135,7 @@ def get_id_of_external_addresses(conn, addresses):
     logger.debug("[SQL] Query external addresses: \n{}".format(sql))
 
     try:
-        qr = utils.execute_sql(conn, sql)
+        qr = utils.execute_sql(engine_amavisd, sql)
         qr_addresses = qr.fetchall()
     except Exception as e:
         logger.error("Error while getting list of id of external addresses: {}, SQL: {}".format(repr(e), sql))
@@ -153,7 +153,7 @@ def get_id_of_external_addresses(conn, addresses):
         return ids
 
 
-def get_id_of_local_addresses(conn, addresses):
+def get_id_of_local_addresses(engine_amavisd, addresses):
     """Return list of `users.id` of local addresses."""
 
     # Get `users.id` of local addresses
@@ -165,7 +165,7 @@ def get_id_of_local_addresses(conn, addresses):
 
     ids = []
     try:
-        qr = utils.execute_sql(conn, sql)
+        qr = utils.execute_sql(engine_amavisd, sql)
         qr_addresses = qr.fetchall()
         if qr_addresses:
             ids = [int(r.id) for r in qr_addresses]
@@ -181,7 +181,7 @@ def get_id_of_local_addresses(conn, addresses):
         return ids
 
 
-def apply_inbound_wblist(conn, sender_ids, recipient_ids):
+def apply_inbound_wblist(engine_amavisd, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
         logger.debug("No valid sender id or recipient id.")
@@ -193,7 +193,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
               WHERE sid IN %s
                 AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug("[SQL] Query inbound wblist (in `wblist`): \n{}".format(sql))
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(engine_amavisd, sql)
     wblists = qr.fetchall()
 
     if not wblists:
@@ -219,7 +219,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
     return SMTP_ACTIONS["default"]
 
 
-def apply_outbound_wblist(conn, sender_ids, recipient_ids):
+def apply_outbound_wblist(engine_amavisd, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
         logger.debug("No valid sender id or recipient id.")
@@ -236,7 +236,7 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
               WHERE sid IN %s
                 AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug("[SQL] Query outbound wblist: \n{}".format(sql))
-    qr = utils.execute_sql(conn, sql)
+    qr = utils.execute_sql(engine_amavisd, sql)
     wblists = qr.fetchall()
 
     if not wblists:

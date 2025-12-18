@@ -24,7 +24,7 @@ from libs.sql import get_access_policy, get_alias_target_domain
 
 
 def restriction(**kwargs):
-    conn = kwargs['conn_vmail']
+    conn_vmail = kwargs['conn_vmail']
     sender = kwargs['sender_without_ext']
     sender_domain = kwargs['sender_domain']
     # sender_username = sender.split('@', 1)[0]
@@ -34,11 +34,11 @@ def restriction(**kwargs):
     # used when recipient_domain is an alias domain
     real_recipient_domain = recipient_domain
 
-    policy = get_access_policy(mail=recipient, account_type='maillist', conn=conn)
+    policy = get_access_policy(mail=recipient, account_type='maillist', conn=conn_vmail)
 
     # Recipient account doesn't exist.
     if not policy:
-        _target_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn)
+        _target_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
         if not _target_domain:
             logger.debug('Recipient domain is not an alias domain.')
             return SMTP_ACTIONS['default'] + ' Recipient is not a mailing list account.'
@@ -49,7 +49,7 @@ def restriction(**kwargs):
         real_recipient_domain = _target_domain
         real_recipient = recipient.split('@', 1)[0] + '@' + real_recipient_domain
 
-        policy = get_access_policy(mail=real_recipient, account_type='maillist', conn=conn)
+        policy = get_access_policy(mail=real_recipient, account_type='maillist', conn=conn_vmail)
         if not policy:
             return SMTP_ACTIONS['default'] + ' (Recipient is not a mailing list account)'
 
@@ -79,7 +79,7 @@ def restriction(**kwargs):
               """ % (sqlquote(sender_domain), sqlquote(real_recipient_domain))
     logger.debug('[SQL] query alias domain: \n%s' % sql)
 
-    _qr = utils.execute_sql(conn, sql)
+    _qr = utils.execute_sql(conn_vmail, sql)
     _record = _qr.fetchone()
 
     if _record:
@@ -101,7 +101,7 @@ def restriction(**kwargs):
               LIMIT 1""" % (sqlquote(addresses), sqlquote(sender))
     logger.debug('[SQL] query moderator: \n%s' % sql)
 
-    _qr = utils.execute_sql(conn, sql)
+    _qr = utils.execute_sql(conn_vmail, sql)
     _record = _qr.fetchone()
     if _record:
         logger.debug('Sender is a moderator. Bypass.')
@@ -117,7 +117,7 @@ def restriction(**kwargs):
               LIMIT 1""" % (sqlquote(addresses), sqlquote(sender))
     logger.debug('[SQL] query owner: \n%s' % sql)
 
-    _qr = utils.execute_sql(conn, sql)
+    _qr = utils.execute_sql(conn_vmail, sql)
     _record = _qr.fetchone()
     if _record:
         logger.debug('Sender is an owner. Bypass.')
