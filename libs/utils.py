@@ -16,14 +16,26 @@ from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from email.utils import formatdate
 
-from sqlalchemy import create_engine
 from web import sqlquote
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.cursor import CursorResult
+
+# Default SQLAlchemy version: 1.4.x.
+__sqlalchemy_version = 1
+
+if sqlalchemy.__version__.startswith('2.'):
+    # SQLAlchemy version: 2.x.
+    from sqlalchemy import text
+    __sqlalchemy_version = 2
+
 
 from libs.logger import logger
 from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
 from libs import SMTP_ACTIONS
 from libs import regxes
-import settings
+import settings # type: ignore
 
 if settings.backend == 'ldap':
     import ldap
@@ -252,7 +264,7 @@ def is_valid_amavisd_address(addr):
     return False
 
 
-def get_db_conn(db_name):
+def create_db_engine(db_name) -> List[Engine|None]:
     """Return SQL connection instance with connection pool support."""
     if settings.backend == 'pgsql':
         dbn = 'postgresql'
@@ -267,6 +279,8 @@ def get_db_conn(db_name):
     _server = settings.__dict__[db_name + '_db_server']
     _port = settings.__dict__[db_name + '_db_port']
     _name = settings.__dict__[db_name + '_db_name']
+    # New in v6.0, supports SSL connection.
+    _use_ssl = settings.__dict__.get(db_name + '_db_use_ssl', False)
 
     try:
         _port = int(_port)
@@ -285,14 +299,26 @@ def get_db_conn(db_name):
         if settings.backend == 'mysql':
             uri += '?charset=utf8'
 
-        conn = create_engine(uri,
+            if _use_ssl:
+                uri += '&ssl_verify_cert=False'
+
+        return create_engine(uri,
                              pool_size=settings.SQL_CONNECTION_POOL_SIZE,
                              pool_recycle=settings.SQL_CONNECTION_POOL_RECYCLE,
                              max_overflow=settings.SQL_CONNECTION_MAX_OVERFLOW)
-        return conn
     except Exception as e:
-        logger.error("Error while creating SQL connection: {}".format(repr(e)))
+        logger.error(f"Error while creating SQL connection: {repr(e)}")
         return None
+
+
+def execute_sql(engine: Engine, sql: str, params=None) -> CursorResult:
+    """Execute SQL query with given db engine, supports both SQLAlchemy 1.4.x and 2.0.x."""
+    if __sqlalchemy_version == 2:
+        sql = text(sql)
+
+    with engine.connect() as conn:
+        with conn.begin():
+            return conn.execute(sql, params or {})
 
 
 def wildcard_ipv4(s):
@@ -458,11 +484,11 @@ def log_policy_request(smtp_session_data, action, start_time=None, end_time=None
 
     if sasl_username:
         if sasl_username == sender:
-            _log_sender_to_rcpt = "{} => {}".format(sasl_username, recipient)
+            _log_sender_to_rcpt = f"{sasl_username} => {recipient}"
         else:
-            _log_sender_to_rcpt = "{} => {} -> {}".format(sasl_username, sender, recipient)
+            _log_sender_to_rcpt = f"{sasl_username} => {sender} -> {recipient}"
     else:
-        _log_sender_to_rcpt = "{} -> {}".format(sender, recipient)
+        _log_sender_to_rcpt = f"{sender} -> {recipient}"
 
     _time = ''
     if start_time and end_time:
@@ -523,7 +549,7 @@ def load_enabled_plugins(plugins):
 
         # Skip non-existing plugin.
         if not os.path.isfile(plugin_file):
-            logger.error("Plugin {} ({}) does not exist.".format(p, plugin_file))
+            logger.error(f"Plugin {p} ({plugin_file}) does not exist.")
             continue
 
         # If plugin doesn't have a pre-defined priority, set it to 0 (lowest)
@@ -544,9 +570,9 @@ def load_enabled_plugins(plugins):
     for plugin in ordered_plugins:
         try:
             loaded_plugins.append(__import__(plugin))
-            logger.info("Loading plugin (priority: {}): {}".format(_plugin_priorities[plugin], plugin))
+            logger.info(f"Loading plugin (priority: {_plugin_priorities[plugin]}): {plugin}")
         except Exception as e:
-            logger.error("Error while loading plugin '{}': {}".format(plugin, repr(e)))
+            logger.error(f"Error while loading plugin '{plugin}': {repr(e)}")
 
     # Get list of LDAP query attributes
     sender_search_attrlist = []
@@ -590,21 +616,21 @@ def get_required_db_conns():
             except ldap.INVALID_CREDENTIALS:
                 logger.error('LDAP bind failed: incorrect bind dn or password.')
             except Exception as e:
-                logger.error("LDAP bind failed: {}".format(repr(e)))
+                logger.error(f"LDAP bind failed: {repr(e)}")
         except Exception as e:
-            logger.error("Fail2ed to establish LDAP connection: {}".format(repr(e)))
+            logger.error(f"Failed to establish LDAP connection: {repr(e)}")
             conn_vmail = None
     else:
         # settings.backend in ['mysql', 'pgsql']
-        conn_vmail = get_db_conn('vmail')
+        conn_vmail = create_db_engine('vmail')
 
-    conn_amavisd = get_db_conn('amavisd')
-    conn_iredapd = get_db_conn('iredapd')
+    engine_amavisd = create_db_engine('amavisd')
+    engine_iredapd = create_db_engine('iredapd')
 
     return {
         'conn_vmail': conn_vmail,
-        'conn_amavisd': conn_amavisd,
-        'conn_iredapd': conn_iredapd,
+        'engine_amavisd': engine_amavisd,
+        'engine_iredapd': engine_iredapd,
     }
 
 
@@ -699,7 +725,7 @@ def sendmail(subject, mail_body, from_address=None, recipients=None):
                                  message_text=message_text)
 
 
-def log_smtp_session(conn, smtp_action, **smtp_session_data):
+def log_smtp_session(engine_iredapd, smtp_action, **smtp_session_data):
     """Store smtp action in SQL table `iredapd.smtp_sessions`."""
     if not settings.LOG_SMTP_SESSIONS:
         return None
@@ -761,10 +787,10 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
            sqlquote(smtp_session_data.get('recipient_domain', '')))
 
     try:
-        logger.debug("[SQL] Insert into smtp_sessions: {}".format(sql))
-        conn.execute(sql)
+        logger.debug(f"[SQL] Insert into smtp_sessions: {sql}")
+        execute_sql(engine_iredapd, sql)
     except Exception as e:
-        logger.error("<!> Error while logging smtp action: {}".format(repr(e)))
+        logger.error(f"<!> Error while logging smtp action: {repr(e)}")
 
     return None
 

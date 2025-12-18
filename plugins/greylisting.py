@@ -18,7 +18,7 @@ from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
 from libs import utils, dnsspf
-import settings
+import settings # pyright: ignore[reportMissingImports]
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import get_alias_target_domain
@@ -29,7 +29,7 @@ else:
 action_greylisting = SMTP_ACTIONS['greylisting'] + ' ' + settings.GREYLISTING_MESSAGE
 
 
-def _is_whitelisted(conn,
+def _is_whitelisted(engine_iredapd,
                     senders,
                     recipients,
                     client_address,
@@ -54,7 +54,7 @@ def _is_whitelisted(conn,
                   WHERE account IN %s""" % (tbl, sqlquote(recipients))
 
         logger.debug('[SQL] Query greylisting whitelists from `{}`: \n{}'.format(tbl, sql))
-        qr = conn.execute(sql)
+        qr = utils.execute_sql(engine_iredapd, sql)
         records = qr.fetchall()
 
         _wls = {v[0] for v in records}
@@ -104,14 +104,14 @@ def _is_whitelisted(conn,
     return False
 
 
-def _client_address_passed_in_tracking(conn, client_address):
+def _client_address_passed_in_tracking(engine_iredapd, client_address):
     sql = """SELECT id
                FROM greylisting_tracking
               WHERE client_address=%s AND passed=1
               LIMIT 1""" % sqlquote(client_address)
 
     logger.debug('[SQL] check whether client address ({}) passed greylisting: \n{}'.format(client_address, sql))
-    qr = conn.execute(sql)
+    qr = utils.execute_sql(engine_iredapd, sql)
     sql_record = qr.fetchone()
 
     if sql_record:
@@ -122,7 +122,7 @@ def _client_address_passed_in_tracking(conn, client_address):
         return False
 
 
-def _should_be_greylisted_by_setting(conn,
+def _should_be_greylisted_by_setting(engine_iredapd,
                                      recipients,
                                      senders,
                                      client_address,
@@ -141,7 +141,7 @@ def _should_be_greylisted_by_setting(conn,
               ORDER BY priority DESC, sender_priority DESC""" % sqlquote(recipients)
     logger.debug('[SQL] query greylisting settings: \n%s' % sql)
 
-    qr = conn.execute(sql)
+    qr = utils.execute_sql(engine_iredapd, sql)
     records = qr.fetchall()
     logger.debug('[SQL] query result: %s' % str(records))
 
@@ -190,7 +190,7 @@ def _should_be_greylisted_by_setting(conn,
     return False
 
 
-def _should_be_greylisted_by_tracking(conn,
+def _should_be_greylisted_by_tracking(engine_iredapd,
                                       sender,
                                       sender_domain,
                                       recipient,
@@ -223,7 +223,7 @@ def _should_be_greylisted_by_tracking(conn,
     logger.debug('[SQL] query greylisting tracking: \n%s' % sql)
     sql_record = None
     try:
-        qr = conn.execute(sql)
+        qr = utils.execute_sql(engine_iredapd, sql)
         sql_record = qr.fetchone()
     except Exception as e:
         logger.error('Error while querying greylisting tracking: {}. SQL: {}'.format(repr(e), sql))
@@ -246,7 +246,7 @@ def _should_be_greylisted_by_tracking(conn,
                                                                        block_expired, unauth_triplet_expire)
         logger.debug('[SQL] New tracking: \n%s' % sql)
         try:
-            conn.execute(sql)
+            utils.execute_sql(engine_iredapd, sql)
         except Exception as e:
             if e.__class__.__name__ == 'IntegrityError':
                 pass
@@ -269,7 +269,7 @@ def _should_be_greylisted_by_tracking(conn,
                         AND client_address=%s""" % (now, block_expired, unauth_triplet_expire,
                                                     sender, recipient, client_address_sql)
         logger.debug('[SQL] Update expired tracking as first seen: \n%s' % sql)
-        conn.execute(sql)
+        utils.execute_sql(engine_iredapd, sql)
         return True
 
     # Tracking record doesn't expire, check whether client retries too soon.
@@ -284,10 +284,10 @@ def _should_be_greylisted_by_tracking(conn,
 
         logger.debug('[SQL] Update tracking record: \n%s' % sql)
         try:
-            conn.execute(sql)
+            utils.execute_sql(engine_iredapd, sql)
         except Exception as e:
             logger.error('Error while updating greylisting tracking: %s' % repr(e))
-            conn.execute(sql)
+            utils.execute_sql(engine_iredapd, sql)
             logger.error('Re-updated. It is safe to ignore above error message.')
         return True
     else:
@@ -307,7 +307,7 @@ def _should_be_greylisted_by_tracking(conn,
 
             logger.debug('[SQL] Update expired date: \n%s' % sql)
             try:
-                conn.execute(sql)
+                utils.execute_sql(engine_iredapd, sql)
             except Exception as e:
                 logger.error('[{}] Error while Updating expired date for passed client: {}'.format(client_address, repr(e)))
 
@@ -318,7 +318,7 @@ def _should_be_greylisted_by_tracking(conn,
 
             logger.debug('[SQL] Remove other tracking records from same client IP address: \n%s' % sql)
             try:
-                conn.execute(sql)
+                utils.execute_sql(engine_iredapd, sql)
             except Exception as e:
                 logger.error('[{}] Error while removing other tracking records from passed client: {}'.format(client_address, repr(e)))
 
@@ -347,7 +347,7 @@ def restriction(**kwargs):
     # If recipient_domain is an alias domain name, we should check the target
     # domain.
     conn_vmail = kwargs['conn_vmail']
-    alias_target_rcpt_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
+    alias_target_rcpt_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=recipient_domain)
     if alias_target_rcpt_domain:
         _addr = recipient.split('@', 1)[0] + '@' + alias_target_rcpt_domain
         policy_recipients += utils.get_policy_addresses_from_email(mail=_addr)
@@ -359,9 +359,9 @@ def restriction(**kwargs):
     # Get object of IP address type
     _ip_object = ipaddress.ip_address(client_address)
 
-    conn_iredapd = kwargs['conn_iredapd']
+    engine_iredapd = kwargs['engine_iredapd']
     # Check greylisting whitelists
-    if _is_whitelisted(conn=conn_iredapd,
+    if _is_whitelisted(engine_iredapd=engine_iredapd,
                        senders=policy_senders,
                        recipients=policy_recipients,
                        client_address=client_address,
@@ -369,7 +369,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     # Check greylisting settings
-    if not _should_be_greylisted_by_setting(conn=conn_iredapd,
+    if not _should_be_greylisted_by_setting(engine_iredapd=engine_iredapd,
                                             recipients=policy_recipients,
                                             senders=policy_senders,
                                             client_address=client_address,
@@ -387,7 +387,7 @@ def restriction(**kwargs):
             logger.info('[{}] Bypass greylisting due to SPF match ({})'.format(client_address, sender_domain))
             return SMTP_ACTIONS['default']
 
-    if _client_address_passed_in_tracking(conn=conn_iredapd, client_address=client_address):
+    if _client_address_passed_in_tracking(engine_iredapd=engine_iredapd, client_address=client_address):
         # Update expire time
         _now = int(time.time())
         _new_expire_time = _now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60 * 60
@@ -395,12 +395,12 @@ def restriction(**kwargs):
                      SET record_expired=%d
                    WHERE client_address=%s AND passed=1""" % (_new_expire_time, sqlquote(client_address))
         logger.debug('[SQL] Update expire time of passed client: \n%s' % _sql)
-        conn_iredapd.execute(_sql)
+        utils.execute_sql(engine_iredapd,  _sql)
 
         return SMTP_ACTIONS['default']
 
     # check greylisting tracking.
-    if _should_be_greylisted_by_tracking(conn=conn_iredapd,
+    if _should_be_greylisted_by_tracking(engine_iredapd=engine_iredapd,
                                          sender=sender,
                                          sender_domain=sender_domain,
                                          recipient=recipient,

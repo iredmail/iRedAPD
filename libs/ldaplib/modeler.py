@@ -1,7 +1,7 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
 from libs.logger import logger
-import settings
+import settings # type: ignore
 from libs import SMTP_ACTIONS, utils
 from libs.ldaplib import conn_utils
 
@@ -25,19 +25,19 @@ class Modeler:
         sasl_username = smtp_session_data.get('sasl_username', '')
         client_address = smtp_session_data.get('client_address', '')
 
-        conn_amavisd = None
-        if self.conns['conn_amavisd']:
-            conn_amavisd = self.conns['conn_amavisd'].connect()
+        engine_amavisd = None
+        if self.conns['engine_amavisd']:
+            engine_amavisd = self.conns['engine_amavisd']
 
-        conn_iredapd = None
-        if self.conns['conn_iredapd']:
-            conn_iredapd = self.conns['conn_iredapd'].connect()
+        engine_iredapd = None
+        if self.conns['engine_iredapd']:
+            engine_iredapd = self.conns['engine_iredapd']
 
         plugin_kwargs = {
             'smtp_session_data': smtp_session_data,
             'conn_vmail': self.conn,
-            'conn_amavisd': conn_amavisd,
-            'conn_iredapd': conn_iredapd,
+            'engine_amavisd': engine_amavisd,
+            'engine_iredapd': engine_iredapd,
             'sender': sender,
             'sender_without_ext': smtp_session_data['sender_without_ext'],
             'recipient': recipient,
@@ -73,7 +73,7 @@ class Modeler:
 
             if require_local_sender and plugin_kwargs['sender_dn'] is None:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
-                    conn=self.conn,
+                    conn_vmail=self.conn,
                     account=sasl_username,
                     attrs=sender_search_attrlist,
                 )
@@ -88,7 +88,7 @@ class Modeler:
 
             if require_local_recipient and plugin_kwargs['recipient_dn'] is None:
                 recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
-                    conn=self.conn,
+                    conn_vmail=self.conn,
                     account=recipient,
                     attrs=recipient_search_attrlist,
                 )
@@ -103,10 +103,10 @@ class Modeler:
 
         # Close sql connections.
         try:
-            if conn_amavisd:
-                conn_amavisd.close()
+            if engine_amavisd:
+                engine_amavisd.close()
 
-            conn_iredapd.close()
+            engine_iredapd.close()
         except:
             pass
 

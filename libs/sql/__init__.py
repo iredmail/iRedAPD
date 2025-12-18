@@ -5,7 +5,7 @@ from libs import MAILLIST_POLICY_PUBLIC
 from libs import utils
 
 
-def is_local_domain(conn,
+def is_local_domain(conn_vmail,
                     domain,
                     include_alias_domain=True,
                     include_backupmx=True):
@@ -35,7 +35,7 @@ def is_local_domain(conn,
                   LIMIT 1""" % (sql_quote_domain, sql_backupmx)
         logger.debug("[SQL] query local domain ({}): \n{}".format(domain, sql))
 
-        qr = conn.execute(sql)
+        qr = utils.execute_sql(conn_vmail, sql)
         sql_record = qr.fetchone()
         logger.debug("SQL query result: {}".format(repr(sql_record)))
 
@@ -56,7 +56,7 @@ def is_local_domain(conn,
 
             logger.debug("[SQL] query alias domain ({}): \n{}".format(domain, repr(sql)))
 
-            qr = conn.execute(sql)
+            qr = utils.execute_sql(conn_vmail, sql)
             sql_record = qr.fetchone()
             logger.debug("[SQL] query result: {}".format(repr(sql_record)))
 
@@ -68,7 +68,7 @@ def is_local_domain(conn,
     return False
 
 
-def get_alias_target_domain(alias_domain, conn):
+def get_alias_target_domain(conn_vmail, alias_domain):
     """Query target domain of given alias domain name."""
     alias_domain = str(alias_domain).lower()
     if not utils.is_domain(alias_domain):
@@ -84,7 +84,7 @@ def get_alias_target_domain(alias_domain, conn):
 
     logger.debug("[SQL] query target domain of given alias domain ({}): \n{}".format(alias_domain, repr(sql)))
 
-    qr = conn.execute(sql)
+    qr = utils.execute_sql(conn_vmail, sql)
     sql_record = qr.fetchone()
     logger.debug("[SQL] query result: {}".format(repr(sql_record)))
 
@@ -95,7 +95,7 @@ def get_alias_target_domain(alias_domain, conn):
         return None
 
 
-def get_access_policy(mail, account_type, conn):
+def get_access_policy(mail, account_type, conn_vmail):
     """Get access policy of (mlmmj) mailing list or mail alias account.
 
     Returns access policy (string) or None if account doesn't exist."""
@@ -115,7 +115,7 @@ def get_access_policy(mail, account_type, conn):
 
     logger.debug("[SQL] query access policy: \n{}".format(sql))
 
-    qr = conn.execute(sql)
+    qr = utils.execute_sql(conn_vmail, sql)
     record = qr.fetchone()
     logger.debug("[SQL] query result: {}".format(repr(record)))
 

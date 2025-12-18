@@ -7,7 +7,7 @@ from libs import greylisting as lib_gl
 from libs.utils import is_email
 from libs.logger import logger
 
-import settings
+import settings # type: ignore
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import is_local_domain
@@ -42,11 +42,11 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     conn_vmail = kwargs['conn_vmail']
-    if is_local_domain(conn=conn_vmail, domain=recipient_domain):
+    if is_local_domain(conn_vmail=conn_vmail, domain=recipient_domain):
         logger.debug('Recipient domain is local domain, skip.')
         return SMTP_ACTIONS['default']
 
-    conn_iredapd = kwargs['conn_iredapd']
+    engine_iredapd = kwargs['engine_iredapd']
 
     # Submit recipient as whitelisted sender directly
     if settings.WL_RCPT_WITHOUT_SPF:
@@ -62,7 +62,7 @@ def restriction(**kwargs):
         else:
             _wl_sender = recipient
 
-        qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
+        qr = lib_gl.add_whitelist_sender(engine_iredapd=engine_iredapd,
                                          account=_wl_account,
                                          sender=_wl_sender)
 
@@ -74,7 +74,7 @@ def restriction(**kwargs):
     if settings.WL_RCPT_FOR_GREYLISTING:
         if settings.WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING:
             # Whitelist recipient domain for greylisting
-            qr = lib_gl.add_whitelist_domain(conn=conn_iredapd,
+            qr = lib_gl.add_whitelist_domain(engine_iredapd=engine_iredapd,
                                              domain=recipient_domain)
 
             if qr[0]:
@@ -83,7 +83,7 @@ def restriction(**kwargs):
                 logger.error('<!> Error while whitelisting domain {} globally for greylisting service: {}'.format(recipient_domain, qr[1]))
         else:
             # Whitelist recipient for greylisting
-            qr = lib_gl.add_whitelist_sender(conn=conn_iredapd,
+            qr = lib_gl.add_whitelist_sender(engine_iredapd=engine_iredapd,
                                              account=sasl_username,
                                              sender=recipient,
                                              comment='AUTO-WHITELISTED')

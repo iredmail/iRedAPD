@@ -79,7 +79,7 @@ elif not len(sys.argv) >= 3:
     sys.exit()
 
 logger.info('* Establishing SQL connection.')
-conn = utils.get_db_conn('amavisd')
+engine_amavisd = utils.create_db_engine('amavisd')
 
 args = [v for v in sys.argv[1:]]
 
@@ -161,14 +161,14 @@ if action == 'add':
         logger.info("* Add senders: {}".format(', '.join(wb_senders)))
 
         if inout_type == 'inbound':
-            qr = wblist.add_wblist(conn=conn,
+            qr = wblist.add_wblist(engine_amavisd=engine_amavisd,
                                    account=wb_account,
                                    wl_senders=wl,
                                    bl_senders=bl,
                                    flush_before_import=False)
         else:
             # inout_type == 'outbound'
-            qr = wblist.add_wblist(conn=conn,
+            qr = wblist.add_wblist(engine_amavisd=engine_amavisd,
                                    account=wb_account,
                                    wl_rcpts=wl,
                                    bl_rcpts=bl,
@@ -182,13 +182,13 @@ if action == 'add':
 elif action == 'delete':
     try:
         if inout_type == 'inbound':
-            qr = wblist.delete_wblist(conn=conn,
+            qr = wblist.delete_wblist(engine_amavisd=engine_amavisd,
                                       account=wb_account,
                                       wl_senders=wl,
                                       bl_senders=bl)
         else:
             # inout_type == 'outbound':
-            qr = wblist.delete_wblist(conn=conn,
+            qr = wblist.delete_wblist(engine_amavisd=engine_amavisd,
                                       account=wb_account,
                                       wl_rcpts=wl,
                                       bl_rcpts=bl)
@@ -214,13 +214,13 @@ elif action == 'delete':
 elif action == 'delete-all':
     try:
         if inout_type == 'inbound':
-            qr = wblist.delete_all_wblist(conn=conn,
+            qr = wblist.delete_all_wblist(engine_amavisd=engine_amavisd,
                                           account=wb_account,
                                           wl_senders=for_whitelist,
                                           bl_senders=for_blacklist)
         else:
             # inout_type == 'outbound':
-            qr = wblist.delete_all_wblist(conn=conn,
+            qr = wblist.delete_all_wblist(engine_amavisd=engine_amavisd,
                                           account=wb_account,
                                           wl_rcpts=for_whitelist,
                                           bl_rcpts=for_blacklist)
@@ -233,13 +233,13 @@ else:
     # action == 'list'
     try:
         if inout_type == 'inbound':
-            qr = wblist.get_account_wblist(conn=conn,
+            qr = wblist.get_account_wblist(engine_amavisd=engine_amavisd,
                                            account=wb_account,
                                            whitelist=for_whitelist,
                                            blacklist=for_blacklist)
         else:
             # inout_type == 'outbound'
-            qr = wblist.get_account_outbound_wblist(conn=conn,
+            qr = wblist.get_account_outbound_wblist(engine_amavisd=engine_amavisd,
                                                     account=wb_account,
                                                     whitelist=for_whitelist,
                                                     blacklist=for_blacklist)

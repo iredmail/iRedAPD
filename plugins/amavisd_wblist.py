@@ -48,7 +48,7 @@ import ipaddress
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, utils
-import settings
+import settings # type: ignore
 
 SMTP_PROTOCOL_STATE = ["RCPT"]
 REQUIRE_AMAVISD_DB = True
@@ -65,7 +65,7 @@ else:
     reject_action = SMTP_ACTIONS["reject_blacklisted"]
 
 
-def get_id_of_possible_cidr_network(conn, client_address):
+def get_id_of_possible_cidr_network(engine_amavisd, client_address):
     """Return list of `mailaddr.id` which are CIDR network addresses."""
     ids = []
 
@@ -90,7 +90,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
     logger.debug("[SQL] Query CIDR network: \n{}".format(sql))
 
     try:
-        qr = conn.execute(sql)
+        qr = utils.execute_sql(engine_amavisd, sql)
         qr_cidr = qr.fetchall()
     except Exception as e:
         logger.error("Error while querying CIDR network: {}, SQL: \n{}".format(repr(e), sql))
@@ -119,7 +119,7 @@ def get_id_of_possible_cidr_network(conn, client_address):
     return ids
 
 
-def get_id_of_external_addresses(conn, addresses):
+def get_id_of_external_addresses(engine_amavisd, addresses):
     """Return list of `mailaddr.id` of external addresses."""
     ids = []
 
@@ -135,7 +135,7 @@ def get_id_of_external_addresses(conn, addresses):
     logger.debug("[SQL] Query external addresses: \n{}".format(sql))
 
     try:
-        qr = conn.execute(sql)
+        qr = utils.execute_sql(engine_amavisd, sql)
         qr_addresses = qr.fetchall()
     except Exception as e:
         logger.error("Error while getting list of id of external addresses: {}, SQL: {}".format(repr(e), sql))
@@ -153,7 +153,7 @@ def get_id_of_external_addresses(conn, addresses):
         return ids
 
 
-def get_id_of_local_addresses(conn, addresses):
+def get_id_of_local_addresses(engine_amavisd, addresses):
     """Return list of `users.id` of local addresses."""
 
     # Get `users.id` of local addresses
@@ -165,7 +165,7 @@ def get_id_of_local_addresses(conn, addresses):
 
     ids = []
     try:
-        qr = conn.execute(sql)
+        qr = utils.execute_sql(engine_amavisd, sql)
         qr_addresses = qr.fetchall()
         if qr_addresses:
             ids = [int(r.id) for r in qr_addresses]
@@ -181,7 +181,7 @@ def get_id_of_local_addresses(conn, addresses):
         return ids
 
 
-def apply_inbound_wblist(conn, sender_ids, recipient_ids):
+def apply_inbound_wblist(engine_amavisd, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
         logger.debug("No valid sender id or recipient id.")
@@ -193,7 +193,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
               WHERE sid IN %s
                 AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug("[SQL] Query inbound wblist (in `wblist`): \n{}".format(sql))
-    qr = conn.execute(sql)
+    qr = utils.execute_sql(engine_amavisd, sql)
     wblists = qr.fetchall()
 
     if not wblists:
@@ -219,7 +219,7 @@ def apply_inbound_wblist(conn, sender_ids, recipient_ids):
     return SMTP_ACTIONS["default"]
 
 
-def apply_outbound_wblist(conn, sender_ids, recipient_ids):
+def apply_outbound_wblist(engine_amavisd, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
         logger.debug("No valid sender id or recipient id.")
@@ -236,7 +236,7 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
               WHERE sid IN %s
                 AND rid IN %s""" % (sqlquote(sender_ids), sqlquote(recipient_ids))
     logger.debug("[SQL] Query outbound wblist: \n{}".format(sql))
-    qr = conn.execute(sql)
+    qr = utils.execute_sql(engine_amavisd, sql)
     wblists = qr.fetchall()
 
     if not wblists:
@@ -262,10 +262,10 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
 
 
 def restriction(**kwargs):
-    conn = kwargs["conn_amavisd"]
+    engine_amavisd = kwargs["engine_amavisd"]
     conn_vmail = kwargs["conn_vmail"]
 
-    if not conn:
+    if not engine_amavisd:
         logger.error("Error, no valid Amavisd database connection.")
         return SMTP_ACTIONS["default"]
 
@@ -307,12 +307,12 @@ def restriction(**kwargs):
     if utils.is_ipv4(client_address):
         valid_senders += utils.wildcard_ipv4(client_address)
 
-    alias_target_sender_domain = get_alias_target_domain(alias_domain=sender_domain, conn=conn_vmail)
+    alias_target_sender_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=sender_domain)
     if alias_target_sender_domain:
         _mail = sender.split("@", 1)[0] + "@" + alias_target_sender_domain
         valid_senders += utils.get_policy_addresses_from_email(mail=_mail)
 
-    alias_target_rcpt_domain = get_alias_target_domain(alias_domain=recipient_domain, conn=conn_vmail)
+    alias_target_rcpt_domain = get_alias_target_domain(conn_vmail=conn_vmail, alias_domain=recipient_domain)
     if alias_target_rcpt_domain:
         _mail = recipient.split("@", 1)[0] + "@" + alias_target_rcpt_domain
         valid_recipients += utils.get_policy_addresses_from_email(mail=_mail)
@@ -327,16 +327,16 @@ def restriction(**kwargs):
     if kwargs["sasl_username"]:
         logger.debug("Apply wblist for outbound message.")
 
-        id_of_local_addresses = get_id_of_local_addresses(conn, valid_senders)
+        id_of_local_addresses = get_id_of_local_addresses(engine_amavisd, valid_senders)
 
         id_of_ext_addresses = []
         if id_of_local_addresses:
-            id_of_ext_addresses = get_id_of_external_addresses(conn, valid_recipients)
+            id_of_ext_addresses = get_id_of_external_addresses(engine_amavisd, valid_recipients)
 
-            id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
+            id_of_client_cidr_networks = get_id_of_possible_cidr_network(engine_amavisd, client_address)
             client_cidr_network_checked = True
 
-        action = apply_outbound_wblist(conn,
+        action = apply_outbound_wblist(engine_amavisd,
                                        sender_ids=id_of_local_addresses + id_of_client_cidr_networks,
                                        recipient_ids=id_of_ext_addresses)
 
@@ -352,7 +352,10 @@ def restriction(**kwargs):
         check_inbound = True
 
     if not check_inbound:
-        rcpt_domain_is_local = is_local_domain(conn=conn_vmail, domain=recipient_domain, include_alias_domain=False)
+        rcpt_domain_is_local = is_local_domain(conn_vmail=conn_vmail,
+                                               domain=recipient_domain,
+                                               include_alias_domain=False)
+
         if alias_target_rcpt_domain or rcpt_domain_is_local:
             # Local user sends to another local user in different domain
             check_inbound = True
@@ -361,14 +364,14 @@ def restriction(**kwargs):
         logger.debug("Apply wblist for inbound message.")
 
         id_of_ext_addresses = []
-        id_of_local_addresses = get_id_of_local_addresses(conn, valid_recipients)
+        id_of_local_addresses = get_id_of_local_addresses(engine_amavisd, valid_recipients)
         if id_of_local_addresses:
-            id_of_ext_addresses = get_id_of_external_addresses(conn, valid_senders)
+            id_of_ext_addresses = get_id_of_external_addresses(engine_amavisd, valid_senders)
 
             if not client_cidr_network_checked:
-                id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
+                id_of_client_cidr_networks = get_id_of_possible_cidr_network(engine_amavisd, client_address)
 
-        action = apply_inbound_wblist(conn,
+        action = apply_inbound_wblist(engine_amavisd,
                                       sender_ids=id_of_ext_addresses + id_of_client_cidr_networks,
                                       recipient_ids=id_of_local_addresses)
 

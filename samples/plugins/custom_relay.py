@@ -102,7 +102,7 @@ from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import utils
-import settings
+import settings # type: ignore
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import is_local_domain
@@ -137,9 +137,9 @@ def restriction(**kwargs):
     # Get db cursor
     conn_vmail = kwargs['conn_vmail']
     if settings.backend == 'ldap':
-        conn_relay = kwargs['conn_iredapd']
+        conn_relay = kwargs['engine_iredapd']
     else:
-        conn_relay = kwargs['conn_vmail']
+        conn_relay = kwargs['engine_vmail']
 
     recipient_domain = kwargs['recipient_domain']
     if kwargs['smtp_session_data']['protocol_state'] == 'RCPT':
@@ -147,7 +147,7 @@ def restriction(**kwargs):
             logger.debug('SASL username domain is same as recipient domain ({}), use default relay: {}'.format(recipient_domain, relay_for_local_recipient))
             return 'FILTER %s' % relay_for_local_recipient
 
-        if is_local_domain(conn=conn_vmail, domain=recipient_domain, include_backupmx=True):
+        if is_local_domain(conn_vmail=conn_vmail, domain=recipient_domain, include_backupmx=True):
             logger.debug('Recipient domain ({}) is locally hosted, use default relay: {}'.format(recipient_domain, relay_for_local_recipient))
             return 'FILTER %s' % relay_for_local_recipient
 
@@ -170,7 +170,7 @@ def restriction(**kwargs):
         logger.debug('[SQL] Query custom relayhost with highest priority: \n%s' % sql)
 
         try:
-            qr = conn_relay.execute(sql)
+            qr = utils.execute_sql(conn_relay, sql)
             qr_relay = qr.fetchone()[0]
 
             logger.debug('[SQL] Query result: %s' % qr_relay)

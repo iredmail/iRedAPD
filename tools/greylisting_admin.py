@@ -14,7 +14,7 @@ import web
 from libs import utils
 from libs import greylisting as lib_gl
 from tools import logger, get_db_conn
-from libs.utils import get_db_conn as get_db_conn2
+from libs.utils import create_db_engine
 
 web.config.debug = False
 
@@ -191,7 +191,7 @@ if utils.is_valid_amavisd_address(sender) in ['domain', 'subdomain']:
 conn = get_db_conn('iredapd')
 
 # Connection cursor with SQLAlchemy
-conn2 = get_db_conn2('iredapd')
+engine_iredapd = create_db_engine('iredapd')
 
 gl_setting = lib_gl.get_gl_base_setting(account=rcpt, sender=sender)
 
@@ -199,7 +199,7 @@ gl_setting = lib_gl.get_gl_base_setting(account=rcpt, sender=sender)
 if action == 'enable':
     logger.info("* Enable greylisting: {} -> {}".format(sender, rcpt))
 
-    qr = lib_gl.enable_greylisting(conn=conn2,
+    qr = lib_gl.enable_greylisting(engine_iredapd=engine_iredapd,
                                    account=rcpt,
                                    sender=sender)
     if not qr[0]:
@@ -208,7 +208,7 @@ if action == 'enable':
 elif action == 'disable':
     logger.info("* Disable greylisting: {} -> {}".format(sender, rcpt))
 
-    qr = lib_gl.disable_greylisting(conn=conn2,
+    qr = lib_gl.disable_greylisting(engine_iredapd=engine_iredapd,
                                     account=rcpt,
                                     sender=sender)
 
@@ -217,7 +217,7 @@ elif action == 'disable':
 
 elif action == 'delete':
     logger.info("* Delete greylisting setting: {} -> {}".format(sender, rcpt))
-    qr = lib_gl.delete_setting(conn=conn2,
+    qr = lib_gl.delete_setting(engine_iredapd=engine_iredapd,
                                account=rcpt,
                                sender=sender)
 
@@ -226,13 +226,13 @@ elif action == 'delete':
 
 elif action == 'whitelist-domain':
     logger.info("* Whitelisting sender domain: {}".format(sender_domain))
-    qr = lib_gl.add_whitelist_domain(conn=conn2, domain=sender_domain)
+    qr = lib_gl.add_whitelist_domain(engine_iredapd=engine_iredapd, domain=sender_domain)
     if not qr[0]:
         logger.info(qr[1])
 
 elif action == 'remove-whitelist-domain':
     logger.info("* Remove whitelisted sender domain: {}".format(sender_domain))
-    lib_gl.remove_whitelisted_domain(domain=sender_domain, conn=conn2)
+    lib_gl.remove_whitelisted_domain(engine_iredapd=engine_iredapd, domain=sender_domain)
 
 elif action == 'list':
     # show existing greylisting settings.

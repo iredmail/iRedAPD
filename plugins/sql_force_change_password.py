@@ -25,8 +25,9 @@
 
 import datetime
 from web import sqlquote
+from libs import utils
 from libs.logger import logger
-import settings
+import settings # type: ignore
 from libs import SMTP_ACTIONS
 
 
@@ -49,8 +50,8 @@ def restriction(**kwargs):
     sql = """SELECT passwordlastchange FROM mailbox WHERE username=%s LIMIT 1""" % sqlquote(sasl_username)
     logger.debug('SQL to get mailbox.passwordlastchange of sender ({}): {}'.format(sasl_username, sql))
 
-    conn = kwargs['conn_vmail']
-    qr = conn.execute(sql)
+    conn_vmail = kwargs['conn_vmail']
+    qr = utils.execute_sql(conn_vmail, sql)
     sql_record = qr.fetchone()
     logger.debug('Returned SQL Record: %s' % str(sql_record))
 

@@ -17,7 +17,6 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """Sender Rewriting Scheme (SRS) library for Python."""
 
-from typing import Tuple, Union
 import base64
 import hashlib
 import hmac
