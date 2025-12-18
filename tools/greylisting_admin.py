@@ -199,7 +199,7 @@ gl_setting = lib_gl.get_gl_base_setting(account=rcpt, sender=sender)
 if action == 'enable':
     logger.info("* Enable greylisting: {} -> {}".format(sender, rcpt))
 
-    qr = lib_gl.enable_greylisting(conn=engine_iredapd,
+    qr = lib_gl.enable_greylisting(engine_iredapd=engine_iredapd,
                                    account=rcpt,
                                    sender=sender)
     if not qr[0]:
@@ -208,7 +208,7 @@ if action == 'enable':
 elif action == 'disable':
     logger.info("* Disable greylisting: {} -> {}".format(sender, rcpt))
 
-    qr = lib_gl.disable_greylisting(conn=engine_iredapd,
+    qr = lib_gl.disable_greylisting(engine_iredapd=engine_iredapd,
                                     account=rcpt,
                                     sender=sender)
 
@@ -217,7 +217,7 @@ elif action == 'disable':
 
 elif action == 'delete':
     logger.info("* Delete greylisting setting: {} -> {}".format(sender, rcpt))
-    qr = lib_gl.delete_setting(conn=engine_iredapd,
+    qr = lib_gl.delete_setting(engine_iredapd=engine_iredapd,
                                account=rcpt,
                                sender=sender)
 
@@ -226,7 +226,7 @@ elif action == 'delete':
 
 elif action == 'whitelist-domain':
     logger.info("* Whitelisting sender domain: {}".format(sender_domain))
-    qr = lib_gl.add_whitelist_domain(conn=engine_iredapd, domain=sender_domain)
+    qr = lib_gl.add_whitelist_domain(engine_iredapd=engine_iredapd, domain=sender_domain)
     if not qr[0]:
         logger.info(qr[1])
 

@@ -62,7 +62,7 @@ def restriction(**kwargs):
         else:
             _wl_sender = recipient
 
-        qr = lib_gl.add_whitelist_sender(conn=engine_iredapd,
+        qr = lib_gl.add_whitelist_sender(engine_iredapd=engine_iredapd,
                                          account=_wl_account,
                                          sender=_wl_sender)
 
@@ -74,7 +74,7 @@ def restriction(**kwargs):
     if settings.WL_RCPT_FOR_GREYLISTING:
         if settings.WL_RCPT_WHITELIST_DOMAIN_FOR_GREYLISTING:
             # Whitelist recipient domain for greylisting
-            qr = lib_gl.add_whitelist_domain(conn=engine_iredapd,
+            qr = lib_gl.add_whitelist_domain(engine_iredapd=engine_iredapd,
                                              domain=recipient_domain)
 
             if qr[0]:
@@ -83,7 +83,7 @@ def restriction(**kwargs):
                 logger.error('<!> Error while whitelisting domain {} globally for greylisting service: {}'.format(recipient_domain, qr[1]))
         else:
             # Whitelist recipient for greylisting
-            qr = lib_gl.add_whitelist_sender(conn=engine_iredapd,
+            qr = lib_gl.add_whitelist_sender(engine_iredapd=engine_iredapd,
                                              account=sasl_username,
                                              sender=recipient,
                                              comment='AUTO-WHITELISTED')
