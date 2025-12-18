@@ -1,3 +1,7 @@
+6.0:
+
+- Supports both SQLAlchemy 1.4.x and 2.0.x.
+
 5.9.4:
     - Fixed: tools/upgrade_iredapd.sh: not correctly install dependent
       'multipart' package.
