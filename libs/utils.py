@@ -260,7 +260,7 @@ def is_valid_amavisd_address(addr):
     return False
 
 
-def get_db_conn(db_name):
+def create_db_engine(db_name):
     """Return SQL connection instance with connection pool support."""
     if settings.backend == 'pgsql':
         dbn = 'postgresql'
@@ -616,10 +616,10 @@ def get_required_db_conns():
             conn_vmail = None
     else:
         # settings.backend in ['mysql', 'pgsql']
-        conn_vmail = get_db_conn('vmail')
+        conn_vmail = create_db_engine('vmail')
 
-    conn_amavisd = get_db_conn('amavisd')
-    conn_iredapd = get_db_conn('iredapd')
+    conn_amavisd = create_db_engine('amavisd')
+    conn_iredapd = create_db_engine('iredapd')
 
     return {
         'conn_vmail': conn_vmail,
