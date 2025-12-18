@@ -27,7 +27,7 @@ import datetime
 from web import sqlquote
 from libs import utils
 from libs.logger import logger
-import settings
+import settings # type: ignore
 from libs import SMTP_ACTIONS
 
 

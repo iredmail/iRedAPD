@@ -1,4 +1,4 @@
-web.py >= 0.51
+web.py >= 0.70
 sqlalchemy >= 1.3.16
 dnspython >= 1.16.0
 requests >= 2.23.0

@@ -5,7 +5,7 @@ import socket
 
 from web import sqlquote
 
-import settings
+import settings # type: ignore
 from libs import SMTP_ACTIONS, TCP_REPLIES, SMTP_SESSION_ATTRIBUTES
 from libs import utils, srslib
 from libs.logger import logger

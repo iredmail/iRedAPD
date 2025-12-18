@@ -8,7 +8,7 @@ import subprocess
 import smtplib
 import ipaddress
 import uuid
-from dns import resolver
+from dns import resolver # type: ignore
 from typing import Union, List, Tuple, Set, Dict, Any
 
 from email.mime.text import MIMEText

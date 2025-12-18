@@ -7,7 +7,7 @@ from libs import greylisting as lib_gl
 from libs.utils import is_email
 from libs.logger import logger
 
-import settings
+import settings # type: ignore
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import is_local_domain
