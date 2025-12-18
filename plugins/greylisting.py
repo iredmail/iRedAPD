@@ -359,9 +359,9 @@ def restriction(**kwargs):
     # Get object of IP address type
     _ip_object = ipaddress.ip_address(client_address)
 
-    conn_iredapd = kwargs['conn_iredapd']
+    engine_iredapd = kwargs['engine_iredapd']
     # Check greylisting whitelists
-    if _is_whitelisted(conn=conn_iredapd,
+    if _is_whitelisted(conn=engine_iredapd,
                        senders=policy_senders,
                        recipients=policy_recipients,
                        client_address=client_address,
@@ -369,7 +369,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     # Check greylisting settings
-    if not _should_be_greylisted_by_setting(conn=conn_iredapd,
+    if not _should_be_greylisted_by_setting(conn=engine_iredapd,
                                             recipients=policy_recipients,
                                             senders=policy_senders,
                                             client_address=client_address,
@@ -387,7 +387,7 @@ def restriction(**kwargs):
             logger.info('[{}] Bypass greylisting due to SPF match ({})'.format(client_address, sender_domain))
             return SMTP_ACTIONS['default']
 
-    if _client_address_passed_in_tracking(conn=conn_iredapd, client_address=client_address):
+    if _client_address_passed_in_tracking(conn=engine_iredapd, client_address=client_address):
         # Update expire time
         _now = int(time.time())
         _new_expire_time = _now + settings.GREYLISTING_AUTH_TRIPLET_EXPIRE * 24 * 60 * 60
@@ -395,12 +395,12 @@ def restriction(**kwargs):
                      SET record_expired=%d
                    WHERE client_address=%s AND passed=1""" % (_new_expire_time, sqlquote(client_address))
         logger.debug('[SQL] Update expire time of passed client: \n%s' % _sql)
-        utils.execute_sql(conn_iredapd,  _sql)
+        utils.execute_sql(engine_iredapd,  _sql)
 
         return SMTP_ACTIONS['default']
 
     # check greylisting tracking.
-    if _should_be_greylisted_by_tracking(conn=conn_iredapd,
+    if _should_be_greylisted_by_tracking(conn=engine_iredapd,
                                          sender=sender,
                                          sender_domain=sender_domain,
                                          recipient=recipient,

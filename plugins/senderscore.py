@@ -35,7 +35,7 @@ def restriction(**kwargs):
     score = 100
     cache_the_score = False
     cache_matched = False
-    conn_iredapd = kwargs['conn_iredapd']
+    engine_iredapd = kwargs['engine_iredapd']
 
     # Check cached score from SQL db to speed it up.
     #
@@ -54,7 +54,7 @@ def restriction(**kwargs):
         LIMIT 1
         """ % sqlquote(client_address)
 
-    qr = utils.execute_sql(conn_iredapd,  sql)
+    qr = utils.execute_sql(engine_iredapd,  sql)
     row = qr.fetchone()
 
     if row:
@@ -96,7 +96,7 @@ def restriction(**kwargs):
                 """ % (sqlquote(client_address), sqlquote(score), int(time.time()))
 
             try:
-                utils.execute_sql(conn_iredapd,  sql)
+                utils.execute_sql(engine_iredapd,  sql)
             except Exception as e:
                 logger.error("[{}] senderscore -> Error while caching score: {}".format(client_address, e))
     else:

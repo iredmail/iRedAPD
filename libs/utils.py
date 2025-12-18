@@ -618,13 +618,13 @@ def get_required_db_conns():
         # settings.backend in ['mysql', 'pgsql']
         conn_vmail = create_db_engine('vmail')
 
-    conn_amavisd = create_db_engine('amavisd')
-    conn_iredapd = create_db_engine('iredapd')
+    engine_amavisd = create_db_engine('amavisd')
+    engine_iredapd = create_db_engine('iredapd')
 
     return {
         'conn_vmail': conn_vmail,
-        'conn_amavisd': conn_amavisd,
-        'conn_iredapd': conn_iredapd,
+        'engine_amavisd': engine_amavisd,
+        'engine_iredapd': engine_iredapd,
     }
 
 

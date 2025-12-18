@@ -176,7 +176,7 @@ class Policy(asynchat.async_chat):
             # "duplicate" logging here.
             if _protocol_state == 'END-OF-MESSAGE' or \
                (_protocol_state == 'RCPT' and not action.startswith('DUNNO')):
-                utils.log_smtp_session(conn=self.db_conns['conn_iredapd'],
+                utils.log_smtp_session(conn=self.db_conns['engine_iredapd'],
                                        smtp_action=action,
                                        **self.smtp_session_data)
         else:
@@ -238,12 +238,12 @@ class SRS(asynchat.async_chat):
                     _part2 = '.' + _part1
                     possible_domains += [_part1, _part2]
 
-                conn_iredapd = self.db_conns['conn_iredapd']
+                engine_iredapd = self.db_conns['engine_iredapd']
                 sql = """SELECT id FROM srs_exclude_domains WHERE domain IN %s LIMIT 1""" % sqlquote(list(possible_domains))
                 logger.debug("{} [SQL] Query srs_exclude_domains: {}".format(self.log_prefix, sql))
 
                 try:
-                    qr = utils.execute_sql(conn_iredapd, sql)
+                    qr = utils.execute_sql(engine_iredapd, sql)
                     sql_record = qr.fetchone()
                     logger.debug("{} [SQL] Query result: {}".format(self.log_prefix, sql_record))
                 except Exception as e:

@@ -44,7 +44,7 @@ def _block_sender(sender):
 
     conn = utils.create_db_engine('amavisd')
     _s = utils.strip_mail_ext_address(mail=sender)
-    qr = wblist.add_wblist(conn=conn,
+    qr = wblist.add_wblist(engine=conn,
                            account='@.',    # server-wide block
                            bl_senders=[_s],
                            flush_before_import=False)

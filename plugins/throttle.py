@@ -715,7 +715,7 @@ def apply_throttle(conn,
 
 
 def restriction(**kwargs):
-    conn = kwargs['conn_iredapd']
+    engine_iredapd = kwargs['engine_iredapd']
     conn_vmail = kwargs['conn_vmail']
 
     # Use SASL username as sender. if not available, use sender in 'From:'.
@@ -758,7 +758,7 @@ def restriction(**kwargs):
 
     # Apply sender throttling to only sasl auth users.
     logger.debug('Check sender throttling.')
-    action = apply_throttle(conn=conn,
+    action = apply_throttle(conn=engine_iredapd,
                             conn_vmail=conn_vmail,
                             user=sender,
                             client_address=client_address,
@@ -776,7 +776,7 @@ def restriction(**kwargs):
         logger.debug('Bypass recipient throttling (found sasl_username).')
     else:
         logger.debug('Check recipient throttling.')
-        action = apply_throttle(conn=conn,
+        action = apply_throttle(conn=engine_iredapd,
                                 conn_vmail=conn_vmail,
                                 user=recipient,
                                 client_address=client_address,

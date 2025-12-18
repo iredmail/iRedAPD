@@ -262,10 +262,10 @@ def apply_outbound_wblist(conn, sender_ids, recipient_ids):
 
 
 def restriction(**kwargs):
-    conn = kwargs["conn_amavisd"]
+    engine_amavisd = kwargs["engine_amavisd"]
     conn_vmail = kwargs["conn_vmail"]
 
-    if not conn:
+    if not engine_amavisd:
         logger.error("Error, no valid Amavisd database connection.")
         return SMTP_ACTIONS["default"]
 
@@ -327,16 +327,16 @@ def restriction(**kwargs):
     if kwargs["sasl_username"]:
         logger.debug("Apply wblist for outbound message.")
 
-        id_of_local_addresses = get_id_of_local_addresses(conn, valid_senders)
+        id_of_local_addresses = get_id_of_local_addresses(engine_amavisd, valid_senders)
 
         id_of_ext_addresses = []
         if id_of_local_addresses:
-            id_of_ext_addresses = get_id_of_external_addresses(conn, valid_recipients)
+            id_of_ext_addresses = get_id_of_external_addresses(engine_amavisd, valid_recipients)
 
-            id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
+            id_of_client_cidr_networks = get_id_of_possible_cidr_network(engine_amavisd, client_address)
             client_cidr_network_checked = True
 
-        action = apply_outbound_wblist(conn,
+        action = apply_outbound_wblist(engine_amavisd,
                                        sender_ids=id_of_local_addresses + id_of_client_cidr_networks,
                                        recipient_ids=id_of_ext_addresses)
 
@@ -361,14 +361,14 @@ def restriction(**kwargs):
         logger.debug("Apply wblist for inbound message.")
 
         id_of_ext_addresses = []
-        id_of_local_addresses = get_id_of_local_addresses(conn, valid_recipients)
+        id_of_local_addresses = get_id_of_local_addresses(engine_amavisd, valid_recipients)
         if id_of_local_addresses:
-            id_of_ext_addresses = get_id_of_external_addresses(conn, valid_senders)
+            id_of_ext_addresses = get_id_of_external_addresses(engine_amavisd, valid_senders)
 
             if not client_cidr_network_checked:
-                id_of_client_cidr_networks = get_id_of_possible_cidr_network(conn, client_address)
+                id_of_client_cidr_networks = get_id_of_possible_cidr_network(engine_amavisd, client_address)
 
-        action = apply_inbound_wblist(conn,
+        action = apply_inbound_wblist(engine_amavisd,
                                       sender_ids=id_of_ext_addresses + id_of_client_cidr_networks,
                                       recipient_ids=id_of_local_addresses)
 

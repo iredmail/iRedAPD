@@ -137,9 +137,9 @@ def restriction(**kwargs):
     # Get db cursor
     conn_vmail = kwargs['conn_vmail']
     if settings.backend == 'ldap':
-        conn_relay = kwargs['conn_iredapd']
+        conn_relay = kwargs['engine_iredapd']
     else:
-        conn_relay = kwargs['conn_vmail']
+        conn_relay = kwargs['engine_vmail']
 
     recipient_domain = kwargs['recipient_domain']
     if kwargs['smtp_session_data']['protocol_state'] == 'RCPT':
