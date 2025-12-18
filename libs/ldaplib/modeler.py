@@ -1,7 +1,7 @@
 # Author: Zhang Huangbin <zhb _at_ iredmail.org>
 
 from libs.logger import logger
-import settings
+import settings # type: ignore
 from libs import SMTP_ACTIONS, utils
 from libs.ldaplib import conn_utils
 

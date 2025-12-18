@@ -164,7 +164,7 @@
 import time
 from web import sqlquote
 from libs.logger import logger
-import settings
+import settings # type: ignore
 from libs import SMTP_ACTIONS, utils
 
 if settings.backend == 'ldap':

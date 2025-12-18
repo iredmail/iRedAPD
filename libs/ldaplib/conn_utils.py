@@ -3,7 +3,7 @@
 from libs.logger import logger
 from libs import utils
 import ldap
-import settings
+import settings # type: ignore
 
 
 def get_account_ldif(conn_vmail, account, query_filter=None, attrs=None):

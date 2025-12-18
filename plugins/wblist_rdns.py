@@ -41,7 +41,7 @@ from libs import utils
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs.utils import is_trusted_client
-import settings
+import settings # type: ignore
 
 if settings.WBLIST_DISCARD_INSTEAD_OF_REJECT:
     reject_action = SMTP_ACTIONS['discard']

@@ -13,7 +13,7 @@ from libs import MAILLIST_POLICY_MODERATORS
 from libs import MAILLIST_POLICY_MEMBERSANDMODERATORSONLY
 
 from libs.ldaplib import conn_utils
-import settings
+import settings # type: ignore
 
 REQUIRE_LOCAL_RECIPIENT = True
 RECIPIENT_SEARCH_ATTRLIST = [

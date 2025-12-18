@@ -102,7 +102,7 @@ from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import utils
-import settings
+import settings # type: ignore
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import is_local_domain

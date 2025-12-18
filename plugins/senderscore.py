@@ -12,7 +12,7 @@ from libs import SMTP_ACTIONS
 from libs import utils
 from libs.utils import get_dns_resolver
 
-import settings
+import settings # type: ignore
 
 reject_score = settings.SENDERSCORE_REJECT_SCORE
 

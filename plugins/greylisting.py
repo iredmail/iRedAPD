@@ -18,7 +18,7 @@ from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
 from libs import utils, dnsspf
-import settings
+import settings # pyright: ignore[reportMissingImports]
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import get_alias_target_domain

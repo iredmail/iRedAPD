@@ -33,7 +33,7 @@
 from libs.logger import logger
 from libs import SMTP_ACTIONS
 from libs import utils, wblist
-import settings
+import settings # type: ignore
 
 _action = settings.SPAM_TRAP_SMTP_ACTION
 
