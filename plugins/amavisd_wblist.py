@@ -48,7 +48,7 @@ import ipaddress
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, utils
-import settings
+import settings # type: ignore
 
 SMTP_PROTOCOL_STATE = ["RCPT"]
 REQUIRE_AMAVISD_DB = True
@@ -352,7 +352,10 @@ def restriction(**kwargs):
         check_inbound = True
 
     if not check_inbound:
-        rcpt_domain_is_local = is_local_domain(conn=conn_vmail, domain=recipient_domain, include_alias_domain=False)
+        rcpt_domain_is_local = is_local_domain(conn_vmail=conn_vmail,
+                                               domain=recipient_domain,
+                                               include_alias_domain=False)
+
         if alias_target_rcpt_domain or rcpt_domain_is_local:
             # Local user sends to another local user in different domain
             check_inbound = True

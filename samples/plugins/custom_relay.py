@@ -147,7 +147,7 @@ def restriction(**kwargs):
             logger.debug('SASL username domain is same as recipient domain ({}), use default relay: {}'.format(recipient_domain, relay_for_local_recipient))
             return 'FILTER %s' % relay_for_local_recipient
 
-        if is_local_domain(conn=conn_vmail, domain=recipient_domain, include_backupmx=True):
+        if is_local_domain(conn_vmail=conn_vmail, domain=recipient_domain, include_backupmx=True):
             logger.debug('Recipient domain ({}) is locally hosted, use default relay: {}'.format(recipient_domain, relay_for_local_recipient))
             return 'FILTER %s' % relay_for_local_recipient
 

@@ -222,7 +222,7 @@ class SRS(asynchat.async_chat):
             _is_local_domain = False
             try:
                 conn_vmail = self.db_conns['conn_vmail']
-                _is_local_domain = is_local_domain(conn=conn_vmail, domain=domain)
+                _is_local_domain = is_local_domain(conn_vmail=conn_vmail, domain=domain)
             except Exception as e:
                 logger.error("{} Error while verifying domain: {}".format(self.log_prefix, repr(e)))
 

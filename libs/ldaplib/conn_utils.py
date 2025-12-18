@@ -6,7 +6,7 @@ import ldap
 import settings
 
 
-def get_account_ldif(conn, account, query_filter=None, attrs=None):
+def get_account_ldif(conn_vmail, account, query_filter=None, attrs=None):
     logger.debug("[+] Getting LDIF data of account: {}".format(account))
 
     if not query_filter:
@@ -30,10 +30,10 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
         attrs = None
 
     try:
-        result = conn.search_s(settings.ldap_basedn,
-                               ldap.SCOPE_SUBTREE,
-                               query_filter,
-                               attrs)
+        result = conn_vmail.search_s(settings.ldap_basedn,
+                                     ldap.SCOPE_SUBTREE,
+                                     query_filter,
+                                     attrs)
 
         if result:
             logger.debug("result: {}".format(repr(result)))
@@ -48,7 +48,7 @@ def get_account_ldif(conn, account, query_filter=None, attrs=None):
         return (None, None)
 
 
-def get_primary_and_alias_domains(conn, domain):
+def get_primary_and_alias_domains(conn_vmail, domain):
     """Query LDAP to get all available alias domain names of given domain.
 
     Return list of alias domain names.
@@ -61,10 +61,11 @@ def get_primary_and_alias_domains(conn, domain):
 
     try:
         _f = "(&(objectClass=mailDomain)(|(domainName={})(domainAliasName={})))".format(domain, domain)
-        qr = conn.search_s(settings.ldap_basedn,
-                           1,  # 1 == ldap.SCOPE_ONELEVEL
-                           _f,
-                           ['domainName', 'domainAliasName'])
+        qr = conn_vmail.search_s(settings.ldap_basedn,
+                                 1,  # 1 == ldap.SCOPE_ONELEVEL
+                                 _f,
+                                 ['domainName', 'domainAliasName'])
+
         if qr:
             (_dn, _ldif) = qr[0]
             _ldif = utils.bytes2str(_ldif)
@@ -77,7 +78,7 @@ def get_primary_and_alias_domains(conn, domain):
         return []
 
 
-def is_local_domain(conn,
+def is_local_domain(conn_vmail,
                     domain,
                     include_alias_domain=True,
                     include_backupmx=True):
@@ -100,10 +101,10 @@ def is_local_domain(conn,
 
         _filter += ')'
 
-        qr = conn.search_s(settings.ldap_basedn,
-                           1,   # 1 == ldap.SCOPE_ONELEVEL
-                           _filter,
-                           ['dn'])
+        qr = conn_vmail.search_s(settings.ldap_basedn,
+                                 1,   # 1 == ldap.SCOPE_ONELEVEL
+                                 _filter,
+                                 ['dn'])
         if qr:
             return True
     except ldap.NO_SUCH_OBJECT:
@@ -113,7 +114,7 @@ def is_local_domain(conn,
         return False
 
 
-def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
+def get_alias_target_domain(alias_domain, conn_vmail, include_backupmx=True):
     """Query target domain of given alias domain name."""
     alias_domain = str(alias_domain).lower()
 
@@ -132,10 +133,10 @@ def get_alias_target_domain(alias_domain, conn, include_backupmx=True):
 
         logger.debug("[LDAP] query target domain of given alias domain: {}\n"
                      "[LDAP] query filter: {}".format(alias_domain, _filter))
-        qr = conn.search_s(settings.ldap_basedn,
-                           1,   # 1 == ldap.SCOPE_ONELEVEL
-                           _filter,
-                           ['domainName'])
+        qr = conn_vmail.search_s(settings.ldap_basedn,
+                                 1,   # 1 == ldap.SCOPE_ONELEVEL
+                                 _filter,
+                                 ['domainName'])
 
         logger.debug("result: {}".format(repr(qr)))
         if qr:

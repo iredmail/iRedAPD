@@ -73,7 +73,7 @@ class Modeler:
 
             if require_local_sender and plugin_kwargs['sender_dn'] is None:
                 sender_dn, sender_ldif = conn_utils.get_account_ldif(
-                    conn=self.conn,
+                    conn_vmail=self.conn,
                     account=sasl_username,
                     attrs=sender_search_attrlist,
                 )
@@ -88,7 +88,7 @@ class Modeler:
 
             if require_local_recipient and plugin_kwargs['recipient_dn'] is None:
                 recipient_dn, recipient_ldif = conn_utils.get_account_ldif(
-                    conn=self.conn,
+                    conn_vmail=self.conn,
                     account=recipient,
                     attrs=recipient_search_attrlist,
                 )

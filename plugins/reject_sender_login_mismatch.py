@@ -100,7 +100,7 @@ from libs import utils
 from libs.logger import logger
 from libs import SMTP_ACTIONS, dnsspf
 from libs.utils import is_trusted_client
-import settings
+import settings # type: ignore
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import is_local_domain
@@ -173,7 +173,7 @@ def restriction(**kwargs):
             logger.debug('Sender domain is same as recipient domain.')
             _is_local_sender_domain = True
         else:
-            if is_local_domain(conn=conn_vmail, domain=sender_domain, include_backupmx=False):
+            if is_local_domain(conn_vmail=conn_vmail, domain=sender_domain, include_backupmx=False):
                 logger.debug('Sender domain is hosted locally, smtp authentication is required.')
                 _is_local_sender_domain = True
             else:
@@ -256,7 +256,7 @@ def restriction(**kwargs):
                 query_filter = '(|' + filter_user_alias + filter_list_member + filter_alias_member + ')'
                 success_msg = 'Sender ({}) is an user alias address or list/alias member ({}).'.format(sasl_username, sender)
 
-            qr = conn_utils.get_account_ldif(conn=conn_vmail,
+            qr = conn_utils.get_account_ldif(conn_vmail=conn_vmail,
                                              account=sasl_username,
                                              query_filter=query_filter,
                                              attrs=['dn'])
@@ -269,7 +269,7 @@ def restriction(**kwargs):
 
             # Check mlmmj
             query_filter = "(&(objectClass=mailList)(enabledService=mlmmj)(accountStatus=active))"
-            qr = conn_utils.get_account_ldif(conn=conn_vmail,
+            qr = conn_utils.get_account_ldif(conn_vmail=conn_vmail,
                                              account=sender,
                                              query_filter=query_filter,
                                              attrs=['dn'])

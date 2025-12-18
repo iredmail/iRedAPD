@@ -8,7 +8,7 @@ import subprocess
 import smtplib
 import ipaddress
 import uuid
-from dns import resolver # type: ignore
+from dns import resolver
 from typing import Union, List, Tuple, Set, Dict, Any
 
 from email.mime.text import MIMEText
@@ -33,7 +33,7 @@ from libs.logger import logger
 from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
 from libs import SMTP_ACTIONS
 from libs import regxes
-import settings
+import settings # type: ignore
 
 if settings.backend == 'ldap':
     import ldap

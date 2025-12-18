@@ -42,7 +42,7 @@ def restriction(**kwargs):
         return SMTP_ACTIONS['default']
 
     conn_vmail = kwargs['conn_vmail']
-    if is_local_domain(conn=conn_vmail, domain=recipient_domain):
+    if is_local_domain(conn_vmail=conn_vmail, domain=recipient_domain):
         logger.debug('Recipient domain is local domain, skip.')
         return SMTP_ACTIONS['default']
 

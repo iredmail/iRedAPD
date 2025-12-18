@@ -5,7 +5,7 @@ from libs import MAILLIST_POLICY_PUBLIC
 from libs import utils
 
 
-def is_local_domain(conn,
+def is_local_domain(conn_vmail,
                     domain,
                     include_alias_domain=True,
                     include_backupmx=True):
@@ -35,7 +35,7 @@ def is_local_domain(conn,
                   LIMIT 1""" % (sql_quote_domain, sql_backupmx)
         logger.debug("[SQL] query local domain ({}): \n{}".format(domain, sql))
 
-        qr = utils.execute_sql(conn, sql)
+        qr = utils.execute_sql(conn_vmail, sql)
         sql_record = qr.fetchone()
         logger.debug("SQL query result: {}".format(repr(sql_record)))
 
@@ -56,7 +56,7 @@ def is_local_domain(conn,
 
             logger.debug("[SQL] query alias domain ({}): \n{}".format(domain, repr(sql)))
 
-            qr = utils.execute_sql(conn, sql)
+            qr = utils.execute_sql(conn_vmail, sql)
             sql_record = qr.fetchone()
             logger.debug("[SQL] query result: {}".format(repr(sql_record)))
 

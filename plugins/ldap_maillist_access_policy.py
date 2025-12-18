@@ -69,7 +69,7 @@ def restriction(**kwargs):
     recipient_domain = kwargs['recipient_domain']
 
     # Get primary recipient domain and all its alias domains
-    valid_rcpt_domains = conn_utils.get_primary_and_alias_domains(conn=conn,
+    valid_rcpt_domains = conn_utils.get_primary_and_alias_domains(conn_vmail=conn,
                                                                   domain=recipient_domain)
     logger.debug('Primary and all alias domain names of recipient domain ({}): {}'.format(recipient_domain, ', '.join(valid_rcpt_domains)))
 
