@@ -108,7 +108,10 @@ def get_access_policy(mail, account_type, conn):
     else:
         return _policy
 
-    sql = """SELECT accesspolicy FROM %s WHERE address=%s LIMIT 1""" % (table, sqlquote(mail))
+    sql = """SELECT accesspolicy
+               FROM %s
+              WHERE address=%s
+              LIMIT 1""" % (table, sqlquote(mail))
 
     logger.debug("[SQL] query access policy: \n{}".format(sql))
 

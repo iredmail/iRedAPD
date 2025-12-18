@@ -17,13 +17,6 @@ from email.header import Header
 from email.utils import formatdate
 
 from web import sqlquote
-
-from libs.logger import logger
-from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
-from libs import SMTP_ACTIONS
-from libs import regxes
-import settings
-
 import sqlalchemy
 from sqlalchemy import create_engine
 
@@ -32,6 +25,13 @@ sqlalchemy_version = 1
 if sqlalchemy.__version__.startswith('2.'):
     from sqlalchemy import text
     sqlalchemy_version = 2
+
+
+from libs.logger import logger
+from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
+from libs import SMTP_ACTIONS
+from libs import regxes
+import settings
 
 if settings.backend == 'ldap':
     import ldap
@@ -275,6 +275,7 @@ def create_db_engine(db_name):
     _server = settings.__dict__[db_name + '_db_server']
     _port = settings.__dict__[db_name + '_db_port']
     _name = settings.__dict__[db_name + '_db_name']
+    # New in v6.0, supports SSL connection.
     _use_ssl = settings.__dict__.get(db_name + '_db_use_ssl', False)
 
     try:
@@ -305,8 +306,9 @@ def create_db_engine(db_name):
         logger.error(f"Error while creating SQL connection: {repr(e)}")
         return None
 
+
 def execute_sql(engine, sql, params=None):
-    """Execute SQL query with given connection instance."""
+    """Execute SQL query with given db engine, supports both SQLAlchemy 1.4.x and 2.0.x."""
     if sqlalchemy_version == 2:
         sql = text(sql)
 
@@ -719,7 +721,7 @@ def sendmail(subject, mail_body, from_address=None, recipients=None):
                                  message_text=message_text)
 
 
-def log_smtp_session(conn, smtp_action, **smtp_session_data):
+def log_smtp_session(engine_iredapd, smtp_action, **smtp_session_data):
     """Store smtp action in SQL table `iredapd.smtp_sessions`."""
     if not settings.LOG_SMTP_SESSIONS:
         return None
@@ -782,8 +784,7 @@ def log_smtp_session(conn, smtp_action, **smtp_session_data):
 
     try:
         logger.debug(f"[SQL] Insert into smtp_sessions: {sql}")
-        execute_sql(conn, sql)
-
+        execute_sql(engine_iredapd, sql)
     except Exception as e:
         logger.error(f"<!> Error while logging smtp action: {repr(e)}")
 

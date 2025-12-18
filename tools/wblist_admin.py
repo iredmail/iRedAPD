@@ -214,13 +214,13 @@ elif action == 'delete':
 elif action == 'delete-all':
     try:
         if inout_type == 'inbound':
-            qr = wblist.delete_all_wblist(conn=engine_amavisd,
+            qr = wblist.delete_all_wblist(engine_amavisd=engine_amavisd,
                                           account=wb_account,
                                           wl_senders=for_whitelist,
                                           bl_senders=for_blacklist)
         else:
             # inout_type == 'outbound':
-            qr = wblist.delete_all_wblist(conn=engine_amavisd,
+            qr = wblist.delete_all_wblist(engine_amavisd=engine_amavisd,
                                           account=wb_account,
                                           wl_rcpts=for_whitelist,
                                           bl_rcpts=for_blacklist)
@@ -239,7 +239,7 @@ else:
                                            blacklist=for_blacklist)
         else:
             # inout_type == 'outbound'
-            qr = wblist.get_account_outbound_wblist(conn=engine_amavisd,
+            qr = wblist.get_account_outbound_wblist(engine_amavisd=engine_amavisd,
                                                     account=wb_account,
                                                     whitelist=for_whitelist,
                                                     blacklist=for_blacklist)

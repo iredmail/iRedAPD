@@ -176,7 +176,7 @@ class Policy(asynchat.async_chat):
             # "duplicate" logging here.
             if _protocol_state == 'END-OF-MESSAGE' or \
                (_protocol_state == 'RCPT' and not action.startswith('DUNNO')):
-                utils.log_smtp_session(conn=self.db_conns['engine_iredapd'],
+                utils.log_smtp_session(engine_iredapd=self.db_conns['engine_iredapd'],
                                        smtp_action=action,
                                        **self.smtp_session_data)
         else:
