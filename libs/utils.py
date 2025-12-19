@@ -35,7 +35,7 @@ from libs.logger import logger
 from libs import PLUGIN_PRIORITIES, ACCOUNT_PRIORITIES
 from libs import SMTP_ACTIONS
 from libs import regxes
-import settings # type: ignore
+import settings  # type: ignore
 
 if settings.backend == 'ldap':
     import ldap
@@ -264,7 +264,7 @@ def is_valid_amavisd_address(addr):
     return False
 
 
-def create_db_engine(db_name) -> List[Engine|None]:
+def create_db_engine(db_name):
     """Return SQL connection instance with connection pool support."""
     if settings.backend == 'pgsql':
         dbn = 'postgresql'
