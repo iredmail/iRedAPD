@@ -356,7 +356,12 @@ if [ X"${DISTRO}" == X'RHEL' ]; then
     [[ X"${DISTRO_VERSION}" == X'9' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
     [[ X"${DISTRO_VERSION}" == X'10' ]] && DEP_PKGS="${DEP_PKGS} python3-python-multipart"
 elif [ X"${DISTRO}" == X'DEBIAN' ]; then
-    DEP_PKGS="${DEP_PKGS} python3-multipart"
+    if [[ X"${DISTRO_CODENAME}" == X"focol" ]]; then
+        # Ubuntu 20.04 doesn't have `python3-multipart`.
+        DEP_PIP3_MODS="${DEP_PIP3_MODS} multipart"
+    else
+        DEP_PKGS="${DEP_PKGS} python3-multipart"
+    fi
 elif [ X"${DISTRO}" == X'UBUNTU' ]; then
     DEP_PKGS="${DEP_PKGS} python3-multipart"
 elif [ X"${DISTRO}" == X'FREEBSD' ]; then
