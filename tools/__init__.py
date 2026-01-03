@@ -43,14 +43,21 @@ def get_gmttime():
 
 def get_db_conn(db_name):
     try:
+        kw = {}
+        if settings.backend == "pgsql":
+            if settings.__dict__.get(db_name + '_db_use_ssl', False):
+                kw["sslmode"] = "prefer"
+        else:
+            kw["ssl"] = {"ssl": settings.__dict__.get(db_name + '_db_use_ssl', False)}
+
         conn = web.database(
             dbn=sql_dbn,
             host=settings.__dict__[db_name + '_db_server'],
             port=int(settings.__dict__[db_name + '_db_port']),
-            ssl={"ssl": settings.__dict__.get(db_name + '_db_use_ssl', False)},
             db=settings.__dict__[db_name + '_db_name'],
             user=settings.__dict__[db_name + '_db_user'],
             pw=settings.__dict__[db_name + '_db_password'],
+            **kw
         )
 
         conn.supports_multiple_insert = True
