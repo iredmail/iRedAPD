@@ -18,7 +18,7 @@ from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, ACCOUNT_PRIORITIES
 from libs import utils, dnsspf
-import settings # pyright: ignore[reportMissingImports]
+import settings  # pyright: ignore[reportMissingImports]
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import get_alias_target_domain
@@ -395,7 +395,7 @@ def restriction(**kwargs):
                      SET record_expired=%d
                    WHERE client_address=%s AND passed=1""" % (_new_expire_time, sqlquote(client_address))
         logger.debug('[SQL] Update expire time of passed client: \n%s' % _sql)
-        utils.execute_sql(engine_iredapd,  _sql)
+        utils.execute_sql(engine_iredapd, _sql)
 
         return SMTP_ACTIONS['default']
 
