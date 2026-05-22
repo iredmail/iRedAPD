@@ -374,7 +374,13 @@ echo "* Checking dependent Python modules:"
 
 echo "  + [required] wheel"
 if [ X"$(has_python_module wheel)" == X'NO' ]; then
-    [ X"${DISTRO}" == X'RHEL' ] && DEP_PKGS="${DEP_PKGS} python3-wheel"
+    if [ X"${DISTRO}" == X'RHEL' ]; then
+        if [[ ${DISTRO_VERSION} == "10" ]]; then
+            DEP_PKGS="${DEP_PKGS} python3-pip-wheel"
+        else
+            DEP_PKGS="${DEP_PKGS} python3-wheel"
+        fi
+    fi
     [ X"${DISTRO}" == X'DEBIAN' ]   && DEP_PKGS="${DEP_PKGS} python3-wheel"
     [ X"${DISTRO}" == X'UBUNTU' ]   && DEP_PKGS="${DEP_PKGS} python3-wheel"
     [ X"${DISTRO}" == X'FREEBSD' ]  && DEP_PKGS="${DEP_PKGS} devel/py-wheel"

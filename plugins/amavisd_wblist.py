@@ -48,7 +48,7 @@ import ipaddress
 from web import sqlquote
 from libs.logger import logger
 from libs import SMTP_ACTIONS, utils
-import settings # type: ignore
+import settings  # type: ignore
 
 SMTP_PROTOCOL_STATE = ["RCPT"]
 REQUIRE_AMAVISD_DB = True
@@ -181,7 +181,7 @@ def get_id_of_local_addresses(engine_amavisd, addresses):
         return ids
 
 
-def apply_inbound_wblist(engine_amavisd, sender_ids, recipient_ids):
+def apply_inbound_wblist(engine_amavisd, client_address, sender_ids, recipient_ids):
     # Return if no valid sender or recipient id.
     if not (sender_ids and recipient_ids):
         logger.debug("No valid sender id or recipient id.")
@@ -209,11 +209,11 @@ def apply_inbound_wblist(engine_amavisd, sender_ids, recipient_ids):
         # sids/senders are sorted by priority
         for sid in sender_ids:
             if (rid, sid, "W") in wblists:
-                logger.info("Whitelisted: wblist=({}, {}, 'W')".format(rid, sid))
+                logger.info("Whitelisted: {}, wblist=({}, {}, 'W')".format(client_address, rid, sid))
                 return SMTP_ACTIONS["whitelist"]
 
             if (rid, sid, "B") in wblists:
-                logger.info("Blacklisted: wblist=({}, {}, 'B')".format(rid, sid))
+                logger.info("Blacklisted: {}, wblist=({}, {}, 'B')".format(client_address, rid, sid))
                 return reject_action
 
     return SMTP_ACTIONS["default"]
@@ -372,6 +372,7 @@ def restriction(**kwargs):
                 id_of_client_cidr_networks = get_id_of_possible_cidr_network(engine_amavisd, client_address)
 
         action = apply_inbound_wblist(engine_amavisd,
+                                      client_address=client_address,
                                       sender_ids=id_of_ext_addresses + id_of_client_cidr_networks,
                                       recipient_ids=id_of_local_addresses)
 
