@@ -100,7 +100,7 @@ from libs import utils
 from libs.logger import logger
 from libs import SMTP_ACTIONS, dnsspf
 from libs.utils import is_trusted_client
-import settings # type: ignore
+import settings  # type: ignore
 
 if settings.backend == 'ldap':
     from libs.ldaplib.conn_utils import is_local_domain

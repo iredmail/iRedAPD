@@ -153,7 +153,9 @@ CHECK_SPF_IF_LOGIN_MISMATCH = True
 #   ALLOWED_LOGIN_MISMATCH_SENDERS = ['user@mydomain1.com', 'mydomain2.com']
 ALLOWED_LOGIN_MISMATCH_SENDERS = []
 
-# Strictly allow sender to send as one of user alias addresses. Default is True.
+# Allow sender to send as one of user alias addresses, or alias domain.
+# When set to `False`, sender must be same as smtp auth username.
+# Default is True.
 ALLOWED_LOGIN_MISMATCH_STRICTLY = True
 
 # Allow member of mail lists/alias account to send email as mail list/alias
