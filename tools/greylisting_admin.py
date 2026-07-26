@@ -310,7 +310,7 @@ elif action == 'list-whitelists':
     except Exception as e:
         logger.info(repr(e))
 elif action == 'add-whitelist':
-    # show whitelisted senders in `greylisting_whitelists` table.
+    # add whitelisted senders in `greylisting_whitelists` table.
     try:
         qr = conn.insert('greylisting_whitelists',
                          account=rcpt,
