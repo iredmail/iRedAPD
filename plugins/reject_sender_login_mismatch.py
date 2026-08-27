@@ -240,9 +240,11 @@ def restriction(**kwargs):
             logger.debug('Apply list/alias member restriction (ALLOWED_LOGIN_MISMATCH_LIST_MEMBER=True).')
 
         if settings.backend == 'ldap':
-            filter_user_alias = '(&(objectClass=mailUser)(mail={})(shadowAddress={}))'.format(sasl_username, sender)
-            filter_list_member = '(&(objectClass=mailUser)(|(mail={})(shadowAddress={}))(memberOfGroup={}))'.format(sasl_username, sasl_username, sender)
-            filter_alias_member = '(&(objectClass=mailAlias)(|(mail={})(shadowAddress={}))(mailForwardingAddress={}))'.format(sender, sender, sasl_username)
+            _safe_sasl_username = conn_utils.escape_filter_value(sasl_username)
+            _safe_sender = conn_utils.escape_filter_value(sender)
+            filter_user_alias = '(&(objectClass=mailUser)(mail={})(shadowAddress={}))'.format(_safe_sasl_username, _safe_sender)
+            filter_list_member = '(&(objectClass=mailUser)(|(mail={})(shadowAddress={}))(memberOfGroup={}))'.format(_safe_sasl_username, _safe_sasl_username, _safe_sender)
+            filter_alias_member = '(&(objectClass=mailAlias)(|(mail={})(shadowAddress={}))(mailForwardingAddress={}))'.format(_safe_sender, _safe_sender, _safe_sasl_username)
 
             if is_strict and (not allow_list_member):
                 # Query mail account directly

@@ -3,16 +3,22 @@
 from libs.logger import logger
 from libs import utils
 import ldap
+from ldap.filter import escape_filter_chars as ldap_escape_filter_chars
 import settings # type: ignore
+
+
+def escape_filter_value(value):
+    return ldap_escape_filter_chars(str(value))
 
 
 def get_account_ldif(conn_vmail, account, query_filter=None, attrs=None):
     logger.debug("[+] Getting LDIF data of account: {}".format(account))
 
     if not query_filter:
+        _safe_account = escape_filter_value(account)
         query_filter = '(&' + \
                        '(!(domainStatus=disabled))' + \
-                       '(|(mail={account})(shadowAddress={account}))'.format(account=account) + \
+                       '(|(mail={account})(shadowAddress={account}))'.format(account=_safe_account) + \
                        '(|' + \
                        '(objectClass=mailUser)' + \
                        '(objectClass=mailList)' + \
@@ -60,7 +66,8 @@ def get_primary_and_alias_domains(conn_vmail, domain):
         return []
 
     try:
-        _f = "(&(objectClass=mailDomain)(|(domainName={})(domainAliasName={})))".format(domain, domain)
+        _safe_domain = escape_filter_value(domain)
+        _f = "(&(objectClass=mailDomain)(|(domainName={})(domainAliasName={})))".format(_safe_domain, _safe_domain)
         qr = conn_vmail.search_s(settings.ldap_basedn,
                                  1,  # 1 == ldap.SCOPE_ONELEVEL
                                  _f,
@@ -92,9 +99,10 @@ def is_local_domain(conn_vmail,
         _filter = '(&(objectClass=mailDomain)(accountStatus=active)(enabledService=mail)'
 
         if include_alias_domain:
-            _filter += '(|(domainName={})(domainAliasName={}))'.format(domain, domain)
+            _safe_domain = escape_filter_value(domain)
+            _filter += '(|(domainName={})(domainAliasName={}))'.format(_safe_domain, _safe_domain)
         else:
-            _filter += '(domainName=%s)' % domain
+            _filter += '(domainName=%s)' % escape_filter_value(domain)
 
         if not include_backupmx:
             _filter += '(!(domainBackupMX=yes))'
@@ -124,7 +132,7 @@ def get_alias_target_domain(conn_vmail, alias_domain, include_backupmx=True):
 
     try:
         _filter = '(&(objectClass=mailDomain)(accountStatus=active)'
-        _filter += '(domainAliasName=%s)' % alias_domain
+        _filter += '(domainAliasName=%s)' % escape_filter_value(alias_domain)
 
         if not include_backupmx:
             _filter += '(!(domainBackupMX=yes))'

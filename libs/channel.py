@@ -82,6 +82,7 @@ class Policy(asynchat.async_chat):
         asynchat.async_chat.__init__(self, sock)
         self.buffer = []
         self.smtp_session_data = {}
+        self.invalid_request_action = None
         self.set_terminator(b'\n')
 
         self.db_conns = db_conns
@@ -118,8 +119,8 @@ class Policy(asynchat.async_chat):
                         if v:
                             if not utils.is_email(v):
                                 # Don't waste time on invalid email addresses.
-                                action = SMTP_ACTIONS['default'] + ' Error: Invalid {} address: {}'.format(k, v)
-                                self.push('action=' + action + '\n')
+                                if not self.invalid_request_action:
+                                    self.invalid_request_action = SMTP_ACTIONS['default'] + ' Error: Invalid {} address: {}'.format(k, v)
 
                         self.smtp_session_data[k] = v
 
@@ -141,25 +142,28 @@ class Policy(asynchat.async_chat):
             # Gather data at RCPT , data will be used at END-OF-MESSAGE
             _protocol_state = self.smtp_session_data['protocol_state']
 
-            # Call modeler and apply plugins
-            try:
-                modeler = Modeler(conns=self.db_conns)
-                result = modeler.handle_data(
-                    smtp_session_data=self.smtp_session_data,
-                    plugins=self.plugins,
-                    sender_search_attrlist=self.sender_search_attrlist,
-                    recipient_search_attrlist=self.recipient_search_attrlist,
-                )
+            if self.invalid_request_action:
+                action = self.invalid_request_action
+            else:
+                # Call modeler and apply plugins
+                try:
+                    modeler = Modeler(conns=self.db_conns)
+                    result = modeler.handle_data(
+                        smtp_session_data=self.smtp_session_data,
+                        plugins=self.plugins,
+                        sender_search_attrlist=self.sender_search_attrlist,
+                        recipient_search_attrlist=self.recipient_search_attrlist,
+                    )
 
-                if result:
-                    action = result
-                else:
+                    if result:
+                        action = result
+                    else:
+                        action = SMTP_ACTIONS['default']
+                        logger.error("No result returned by modeler, fallback to default action: {}.".format(action))
+
+                except Exception as e:
                     action = SMTP_ACTIONS['default']
-                    logger.error("No result returned by modeler, fallback to default action: {}.".format(action))
-
-            except Exception as e:
-                action = SMTP_ACTIONS['default']
-                logger.error("Unexpected error: {}. Fallback to default action: {}".format(repr(e), action))
+                    logger.error("Unexpected error: {}. Fallback to default action: {}".format(repr(e), action))
 
             self.push('action=' + action + '\n')
             logger.debug("Session ended.")

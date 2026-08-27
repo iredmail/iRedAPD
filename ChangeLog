@@ -1,3 +1,8 @@
+6.2:
+
+- Fixed: not escape values used in LDAP search filter.
+  Thanks to Majd Nicolas <majdnicolas _at_ gmail> for the detailed report.
+
 6.1:
 
 - Fixed ssl mode for postgresql backend in tools/*.py.

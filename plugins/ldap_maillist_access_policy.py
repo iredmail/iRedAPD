@@ -127,8 +127,9 @@ def restriction(**kwargs):
 
     elif policy == MAILLIST_POLICY_MEMBERSONLY:
         # Get all members of mailing list.
+        _safe_recipient = conn_utils.escape_filter_value(recipient)
         _f = '(&' + \
-             '(accountStatus=active)(memberOfGroup=%s)' % (recipient) + \
+             '(accountStatus=active)(memberOfGroup=%s)' % _safe_recipient + \
              '(|(objectclass=mailUser)(objectClass=mailExternalUser))' + \
              ')'
 
@@ -156,9 +157,10 @@ def restriction(**kwargs):
 
     elif policy == MAILLIST_POLICY_MEMBERSANDMODERATORSONLY:
         # Get both members and moderators.
+        _safe_recipient = conn_utils.escape_filter_value(recipient)
         _f = '(|' + \
-             '(&(memberOfGroup=%s)(|(objectClass=mailUser)(objectClass=mailExternalUser)))' % recipient + \
-             '(&(objectclass=mailList)(mail=%s))' % recipient + \
+             '(&(memberOfGroup=%s)(|(objectClass=mailUser)(objectClass=mailExternalUser)))' % _safe_recipient + \
+             '(&(objectclass=mailList)(mail=%s))' % _safe_recipient + \
              ')'
         search_attrs = ['mail', 'shadowAddress', 'listAllowedUser']
 
@@ -228,8 +230,9 @@ def restriction(**kwargs):
             logger.debug("[+] Getting per-account alias addresses of allowed senders.")
 
             _basedn = 'ou=Users,' + dn_rcpt_domain
+            _safe_users = [conn_utils.escape_filter_value(i) for i in _users]
             _f = '(&(objectClass=mailUser)(enabledService=shadowaddress)(|'
-            for i in _users:
+            for i in _safe_users:
                 _f += '(mail={})(shadowAddress={})'.format(i, i)
             _f += '))'
 
@@ -252,8 +255,9 @@ def restriction(**kwargs):
             logger.debug('[+] Getting alias domains of allowed sender (sub-)domains.')
 
             _basedn = settings.ldap_basedn
+            _safe_domains = [conn_utils.escape_filter_value(i) for i in _domains]
             _f = '(&(objectClass=mailDomain)(enabledService=domainalias)(|'
-            for i in _domains:
+            for i in _safe_domains:
                 _f += '(domainName={})(domainAliasName={})'.format(i, i)
             _f += '))'
 
