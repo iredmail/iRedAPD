@@ -11,6 +11,7 @@ SMTP_ACTIONS = {
     # reject
     'reject': 'REJECT Policy rejection',
     # reject with reason
+    'reject_invalid_email_address': 'REJECT Invalid email address',
     'reject_null_sender': 'REJECT Policy rejection due to null sender',
     'reject_forged_sender': 'REJECT SMTP AUTH is required for users under this sender domain',
     'reject_sender_login_mismatch': 'REJECT Sender is not same as SMTP authenticate username',

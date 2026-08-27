@@ -120,7 +120,7 @@ class Policy(asynchat.async_chat):
                             if not utils.is_email(v):
                                 # Don't waste time on invalid email addresses.
                                 if not self.invalid_request_action:
-                                    self.invalid_request_action = SMTP_ACTIONS['default'] + ' Error: Invalid {} address: {}'.format(k, v)
+                                    self.invalid_request_action = SMTP_ACTIONS['reject_invalid_email_address']
 
                         self.smtp_session_data[k] = v
 
