@@ -183,6 +183,10 @@ class Policy(asynchat.async_chat):
                 utils.log_smtp_session(engine_iredapd=self.db_conns['engine_iredapd'],
                                        smtp_action=action,
                                        **self.smtp_session_data)
+
+            # Reset per-request state for reused policy connections.
+            self.smtp_session_data = {}
+            self.invalid_request_action = None
         else:
             action = SMTP_ACTIONS['default']
             logger.debug("replying: {}".format(action))
