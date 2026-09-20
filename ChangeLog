@@ -1,3 +1,7 @@
+6.4:
+
+- Support more special characters in email address.
+
 6.3:
 
 - Fix a state leak introduced in version 6.2.

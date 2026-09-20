@@ -8,6 +8,8 @@ else
     export ROOTDIR="$(pwd)"
 fi
 
+py.test test_regxes.py
+
 # Make sure custom config file exists.
 touch ${ROOTDIR}/tsettings.py
 
